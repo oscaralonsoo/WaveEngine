@@ -382,8 +382,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.cpp" />
+    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.h" />
     <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Main.cpp" />
     <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.cpp" />
+    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.h" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

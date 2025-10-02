@@ -5,7 +5,8 @@ project(Engine)
 find_package(fmt CONFIG REQUIRED)
 find_package(SDL3 CONFIG REQUIRED)
 
-file(GLOB SOURCES "src/*.cpp")
+file(GLOB SOURCES "src/*.cpp" "src/*.h")
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src FILES ${SOURCES})
 add_executable(Engine ${SOURCES})
 
 target_link_libraries(Engine PRIVATE fmt::fmt)

@@ -1,22 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.cpp" />
+    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Main.cpp" />
+    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.h" />
+    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{AEDDAC25-D8DC-3A2A-B360-D96D408E30EC}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
 </Project>

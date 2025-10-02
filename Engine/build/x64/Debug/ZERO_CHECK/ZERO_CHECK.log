@@ -28,6 +28,6 @@
   All requested installations completed successfully in: 1.15 ms
   -- Running vcpkg install - done
   -- Selecting Windows SDK version 10.0.22621.0 to target Windows 10.0.19045.
-  -- Configuring done (5.3s)
-  -- Generating done (0.2s)
+  -- Configuring done (3.4s)
+  -- Generating done (0.1s)
   -- Build files have been written to: C:/Users/aalca/Documents/GitHub/-engine/Engine/build
