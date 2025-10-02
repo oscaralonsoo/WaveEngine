@@ -1,6 +1,1 @@
-﻿  Application.cpp
-C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.cpp(1,1): warning C4828: The file contains a character starting at offset 0x48e that is illegal in the current source character set (codepage 65001).
-  Main.cpp
-  Window.cpp
-  Generating Code...
-  Engine.vcxproj -> C:\Users\aalca\Documents\GitHub\-engine\Engine\build\Debug\Engine.exe
+﻿  Engine.vcxproj -> C:\Users\aalca\Documents\GitHub\-engine\Engine\build\Debug\Engine.exe

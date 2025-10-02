@@ -38,7 +38,7 @@
               "RelativeDocumentMoniker": "..\\src\\Window.h",
               "ToolTip": "C:\\Users\\aalca\\Documents\\GitHub\\-engine\\Engine\\src\\Window.h",
               "RelativeToolTip": "..\\src\\Window.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB8AAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-10-02T06:30:24.291Z",
               "EditorCaption": ""
@@ -53,8 +53,7 @@
               "RelativeToolTip": "..\\src\\Application.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-10-02T06:30:23.129Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-02T06:30:23.129Z"
             },
             {
               "$type": "Document",
@@ -66,8 +65,7 @@
               "RelativeToolTip": "..\\src\\Application.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-10-02T06:30:21.123Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-02T06:30:21.123Z"
             },
             {
               "$type": "Document",
@@ -79,8 +77,7 @@
               "RelativeToolTip": "..\\src\\Window.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-10-02T06:30:07.49Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-02T06:30:07.49Z"
             },
             {
               "$type": "Document",
@@ -92,8 +89,7 @@
               "RelativeToolTip": "..\\src\\Main.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-10-02T06:30:04.575Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-02T06:30:04.575Z"
             },
             {
               "$type": "Document",
@@ -105,8 +101,7 @@
               "RelativeToolTip": "..\\CMakeLists.txt",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
-              "WhenOpened": "2025-09-30T17:16:15.492Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-30T17:16:15.492Z"
             }
           ]
         }

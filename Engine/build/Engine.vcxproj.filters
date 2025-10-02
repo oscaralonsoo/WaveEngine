@@ -1,17 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.cpp" />
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Main.cpp" />
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.cpp" />
+    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Main.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.h" />
-    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.h" />
+    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{A7F826B4-204A-391F-B3BF-9177FD7C22A0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
