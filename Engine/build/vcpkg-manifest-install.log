@@ -1,10 +1,69 @@
 Detecting compiler hash for triplet x64-windows...
-Compiler found: C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/cl.exe
+Compiler found: C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe
 The following packages are already installed:
     fmt:x64-windows@12.0.0 -- git+https://github.com/microsoft/vcpkg@c5dcb90bc1da6e7ba3d6e62e62a0b7df3192f51c
     sdl3:x64-windows@3.2.22 -- git+https://github.com/microsoft/vcpkg@ef1517d02481885e951bcb8aee2e41d7cec6c2ab
   * vcpkg-cmake:x64-windows@2024-04-23 -- git+https://github.com/microsoft/vcpkg@e74aa1e8f93278a8e71372f1fa08c3df420eb840
   * vcpkg-cmake-config:x64-windows@2024-05-23 -- git+https://github.com/microsoft/vcpkg@97a63e4bc1a17422ffe4eff71da53b4b561a7841
+The following packages will be built and installed:
+  * egl-registry:x64-windows@2024-01-25 -- git+https://github.com/microsoft/vcpkg@d883db43133dd223c4ffdbef4193943f6784d43a
+    glad[core,loader]:x64-windows@0.1.36 -- git+https://github.com/microsoft/vcpkg@fa93b14c1581057e1d14650f5f15c9b0757dd548
+  * opengl-registry:x64-windows@2024-02-10#1 -- git+https://github.com/microsoft/vcpkg@22f7aa58ee78c9f0db904b6251e9265f2be26f9d
+Additional packages (*) will be modified to complete this operation.
+Restored 0 package(s) from C:\Users\anaam7\AppData\Local\vcpkg\archives in 136 us. Use --debug to see more details.
+Installing 1/3 egl-registry:x64-windows@2024-01-25...
+Building egl-registry:x64-windows@2024-01-25...
+C:\Users\anaam7\AppData\Local\vcpkg\registries\git-trees\d883db43133dd223c4ffdbef4193943f6784d43a: info: installing from git registry git+https://github.com/microsoft/vcpkg@d883db43133dd223c4ffdbef4193943f6784d43a
+Downloading https://github.com/KhronosGroup/EGL-Registry/archive/7db3005d4c2cb439f129a0adc931f3274f9019e6.tar.gz -> KhronosGroup-EGL-Registry-7db3005d4c2cb439f129a0adc931f3274f9019e6.tar.gz
+Successfully downloaded KhronosGroup-EGL-Registry-7db3005d4c2cb439f129a0adc931f3274f9019e6.tar.gz
+-- Extracting source C:/Users/anaam7/Desktop/Engine/vcpkg/downloads/KhronosGroup-EGL-Registry-7db3005d4c2cb439f129a0adc931f3274f9019e6.tar.gz
+-- Using source at C:/Users/anaam7/Desktop/Engine/vcpkg/buildtrees/egl-registry/src/274f9019e6-49d6bdb34a.clean
+-- Installing: C:/Users/anaam7/Desktop/Engine/vcpkg/packages/egl-registry_x64-windows/share/egl-registry/copyright
+-- Performing post-build validation
+Starting submission of egl-registry:x64-windows@2024-01-25 to 1 binary cache(s) in the background
+Elapsed time to handle egl-registry:x64-windows: 2.6 s
+egl-registry:x64-windows package ABI: 78cf36c181dc01e11d60afad274f34fda48af818aef1436c7e15015f12ba20d7
+Installing 2/3 opengl-registry:x64-windows@2024-02-10#1...
+Building opengl-registry:x64-windows@2024-02-10#1...
+C:\Users\anaam7\AppData\Local\vcpkg\registries\git-trees\22f7aa58ee78c9f0db904b6251e9265f2be26f9d: info: installing from git registry git+https://github.com/microsoft/vcpkg@22f7aa58ee78c9f0db904b6251e9265f2be26f9d
+Downloading https://github.com/KhronosGroup/OpenGL-Registry/archive/3530768138c5ba3dfbb2c43c830493f632f7ea33.tar.gz -> KhronosGroup-OpenGL-Registry-3530768138c5ba3dfbb2c43c830493f632f7ea33.tar.gz
+Successfully downloaded KhronosGroup-OpenGL-Registry-3530768138c5ba3dfbb2c43c830493f632f7ea33.tar.gz
+-- Extracting source C:/Users/anaam7/Desktop/Engine/vcpkg/downloads/KhronosGroup-OpenGL-Registry-3530768138c5ba3dfbb2c43c830493f632f7ea33.tar.gz
+-- Using source at C:/Users/anaam7/Desktop/Engine/vcpkg/buildtrees/opengl-registry/src/f632f7ea33-4952f9ace9.clean
+-- Installing: C:/Users/anaam7/Desktop/Engine/vcpkg/packages/opengl-registry_x64-windows/share/opengl-registry/copyright
+-- Performing post-build validation
+Starting submission of opengl-registry:x64-windows@2024-02-10#1 to 1 binary cache(s) in the background
+Elapsed time to handle opengl-registry:x64-windows: 1.1 min
+opengl-registry:x64-windows package ABI: 5cde297011a89ea198c64f16be92b335260430a00de42760b9afc2e6c9ae76d7
+Completed submission of egl-registry:x64-windows@2024-01-25 to 1 binary cache(s) in 47.1 ms
+Installing 3/3 glad[core,loader]:x64-windows@0.1.36...
+Building glad[core,loader]:x64-windows@0.1.36...
+C:\Users\anaam7\AppData\Local\vcpkg\registries\git-trees\fa93b14c1581057e1d14650f5f15c9b0757dd548: info: installing from git registry git+https://github.com/microsoft/vcpkg@fa93b14c1581057e1d14650f5f15c9b0757dd548
+-- Note: glad only supports static library linkage. Building static library.
+Downloading https://github.com/Dav1dde/glad/archive/1ecd45775d96f35170458e6b148eb0708967e402.tar.gz -> Dav1dde-glad-1ecd45775d96f35170458e6b148eb0708967e402.tar.gz
+Successfully downloaded Dav1dde-glad-1ecd45775d96f35170458e6b148eb0708967e402.tar.gz
+-- Extracting source C:/Users/anaam7/Desktop/Engine/vcpkg/downloads/Dav1dde-glad-1ecd45775d96f35170458e6b148eb0708967e402.tar.gz
+-- Applying patch encoding.patch
+-- Applying patch find_python.patch
+-- Using source at C:/Users/anaam7/Desktop/Engine/vcpkg/buildtrees/glad/src/708967e402-274d415499.clean
+-- This version of glad uses the compatibility profile. To use the core profile instead, create an overlay port of this with GLAD_PROFILE set to 'core' or set GLAD_PROFILE to 'core' in a custom triplet.
+-- This recipe is at C:/Users/anaam7/AppData/Local/vcpkg/registries/git-trees/fa93b14c1581057e1d14650f5f15c9b0757dd548
+-- See the overlay ports documentation at https://github.com/microsoft/vcpkg/blob/master/docs/specifications/ports-overlay.md
+Downloading https://www.python.org/ftp/python/3.12.7/python-3.12.7-embed-amd64.zip -> python-3.12.7-embed-amd64.zip
+Successfully downloaded python-3.12.7-embed-amd64.zip
+-- Found external ninja('1.12.1').
+-- Configuring x64-windows
+-- Building x64-windows-dbg
+-- Building x64-windows-rel
+-- Installing: C:/Users/anaam7/Desktop/Engine/vcpkg/packages/glad_x64-windows/share/glad/copyright
+-- Performing post-build validation
+Starting submission of glad[core,loader]:x64-windows@0.1.36 to 1 binary cache(s) in the background
+Elapsed time to handle glad:x64-windows: 5.5 s
+glad:x64-windows package ABI: 3223685eeb40e7732c4817da8fcab0531ec5a1d30c0e8f7930f5b149e6ecdf5a
+Installed contents are licensed to you by owners. Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+Some packages did not declare an SPDX license. Check the `copyright` file for each package for more information about their licensing.
+Packages installed in this vcpkg installation declare the following licenses:
+MIT
 The package fmt provides CMake targets:
 
     find_package(fmt CONFIG REQUIRED)
@@ -14,9 +73,18 @@ The package fmt provides CMake targets:
     find_package(fmt CONFIG REQUIRED)
     target_link_libraries(main PRIVATE fmt::fmt-header-only)
 
+glad provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(glad CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE glad::glad)
+
 sdl3 provides CMake targets:
 
   find_package(SDL3 CONFIG REQUIRED)
   target_link_libraries(main PRIVATE SDL3::SDL3)
 
-All requested installations completed successfully in: 1.07 ms
+Completed submission of opengl-registry:x64-windows@2024-02-10#1 to 1 binary cache(s) in 199 ms
+Waiting for 1 remaining binary cache submissions...
+Completed submission of glad[core,loader]:x64-windows@0.1.36 to 1 binary cache(s) in 171 ms (1/1)
+All requested installations completed successfully in: 1.2 min

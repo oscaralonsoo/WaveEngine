@@ -1,45 +1,45 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.cpp">
-      <Filter>Source\Core</Filter>
+    <ClCompile Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Application.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Main.cpp">
-      <Filter>Source\Core</Filter>
+    <ClCompile Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Input.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.cpp">
-      <Filter>Source\Modules</Filter>
+    <ClCompile Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Main.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Input.cpp">
-      <Filter>Source\Modules</Filter>
+    <ClCompile Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\OpenGL.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Window.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\Module.h">
-      <Filter>Source\Core</Filter>
+    <ClInclude Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Application.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.h">
-      <Filter>Source\Core</Filter>
+    <ClInclude Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Input.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.h">
-      <Filter>Source\Modules</Filter>
+    <ClInclude Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Module.h">
+      <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Input.h">
-      <Filter>Source\Modules</Filter>
+    <ClInclude Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\OpenGL.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Window.h">
+      <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\CMakeLists.txt" />
+    <CustomBuild Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
-      <UniqueIdentifier>{A7F826B4-204A-391F-B3BF-9177FD7C22A0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source\Core">
-      <UniqueIdentifier>{fbd4ab45-ea63-425f-b090-af7f0de71dda}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source\Modules">
-      <UniqueIdentifier>{2a1958a4-6acf-4ebc-b2f2-c5043ffc1605}</UniqueIdentifier>
+      <UniqueIdentifier>{EEBCA8D6-AA2B-36D4-BFE6-0C34F9C2CAA4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

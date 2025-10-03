@@ -2,14 +2,14 @@ Package: vcpkg-cmake-config
 Version: 2024-05-23
 Architecture: x64-windows
 Multi-Arch: same
-Abi: 1d7a2d53fa22bcfd0c90327d0709bcd56ea8bcbdd0915f4b03b3387cbf44f513
+Abi: f1a7db635c7056b82ea1d142fe66c1bb5dcd0613877d408c9c71f715dcd26ab6
 Status: install ok installed
 
 Package: vcpkg-cmake
 Version: 2024-04-23
 Architecture: x64-windows
 Multi-Arch: same
-Abi: d9492c7c5677e3badb1abc80b01ab507528f7c94a062dd82440b4afd93153818
+Abi: 1bb2b7658cba61732713750e972efc3cfbed33997945d0f208adca48f40d478a
 Status: install ok installed
 
 Package: fmt
@@ -17,7 +17,7 @@ Version: 12.0.0
 Depends: vcpkg-cmake, vcpkg-cmake-config
 Architecture: x64-windows
 Multi-Arch: same
-Abi: 41b434b7ded9a5f3722b3f1bd89d6007fb952ee87907590acbe27d84ff8d23e3
+Abi: 0f5c5431e3ae1ecb85d631a5a66f5f5fc9d877e7cd0dab75d93c2d0b926d179e
 Description: {fmt} is an open-source formatting library providing a fast and safe alternative to C stdio and C++ iostreams.
 Status: install ok installed
 
@@ -26,7 +26,42 @@ Version: 3.2.22
 Depends: vcpkg-cmake, vcpkg-cmake-config
 Architecture: x64-windows
 Multi-Arch: same
-Abi: cd9b414f45a399392626f76e8663acb958c932bd0c23a3a1a983be723703da4e
+Abi: cd96482b7477718b13f82c506a66d5e2a41d97f4571ba10fe6bb1f5d4de7a604
 Description: Simple DirectMedia Layer is a cross-platform development library designed to provide low level access to audio, keyboard, mouse, joystick, and graphics hardware via OpenGL and Direct3D.
+Status: install ok installed
+
+Package: egl-registry
+Version: 2024-01-25
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 78cf36c181dc01e11d60afad274f34fda48af818aef1436c7e15015f12ba20d7
+Description: EGL API and Extension Registry
+Status: install ok installed
+
+Package: opengl-registry
+Version: 2024-02-10
+Port-Version: 1
+Depends: egl-registry
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 5cde297011a89ea198c64f16be92b335260430a00de42760b9afc2e6c9ae76d7
+Description: OpenGL, OpenGL ES, and OpenGL ES-SC API and Extension Registry
+Status: install ok installed
+
+Package: glad
+Version: 0.1.36
+Depends: egl-registry, opengl-registry, vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 3223685eeb40e7732c4817da8fcab0531ec5a1d30c0e8f7930f5b149e6ecdf5a
+Description: Multi-Language Vulkan/GL/GLES/EGL/GLX/WGL Loader-Generator based on the official specs.
+Default-Features: loader
+Status: install ok installed
+
+Package: glad
+Feature: loader
+Architecture: x64-windows
+Multi-Arch: same
+Description: Generate loader logic.
 Status: install ok installed
 

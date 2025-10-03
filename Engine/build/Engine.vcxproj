@@ -22,10 +22,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3A8ED133-D7B5-39CA-9D62-519B206C183E}</ProjectGuid>
+    <ProjectGuid>{9DB57694-9416-3A78-A898-7108D8E182A3}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <VcpkgEnabled>false</VcpkgEnabled>
-    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <Platform>x64</Platform>
     <ProjectName>Engine</ProjectName>
     <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
@@ -60,25 +60,25 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\aalca\Documents\GitHub\-engine\Engine\build\Debug\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Engine.dir\Debug\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Engine</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\aalca\Documents\GitHub\-engine\Engine\build\Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Engine.dir\Release\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Engine</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\aalca\Documents\GitHub\-engine\Engine\build\MinSizeRel\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\MinSizeRel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Engine.dir\MinSizeRel\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Engine</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\aalca\Documents\GitHub\-engine\Engine\build\RelWithDebInfo\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\RelWithDebInfo\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Engine.dir\RelWithDebInfo\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Engine</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
@@ -87,21 +87,22 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/aalca/Documents/GitHub/-engine/Engine/build/vcpkg_installed/x64-windows/include" /utf-8</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/vcpkg_installed/x64-windows/include" /utf-8</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;FMT_SHARED;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
@@ -110,10 +111,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;FMT_SHARED;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -121,10 +122,9 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>
-      </Message>
+      <Message></Message>
       <Command>setlocal
-C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -executionpolicy Bypass -file C:/Users/aalca/Documents/GitHub/-engine/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary C:/Users/aalca/Documents/GitHub/-engine/Engine/build/Debug/Engine.exe -installedDir C:/Users/aalca/Documents/GitHub/-engine/Engine/build/vcpkg_installed/x64-windows/debug/bin -OutVariable out
+C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -executionpolicy Bypass -file C:/Users/anaam7/Desktop/Engine/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/Debug/Engine.exe -installedDir C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/vcpkg_installed/x64-windows/debug/bin -OutVariable out
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -134,13 +134,17 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>vcpkg_installed\x64-windows\debug\lib\fmtd.lib;vcpkg_installed\x64-windows\debug\lib\SDL3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>vcpkg_installed\x64-windows\debug\lib\fmtd.lib;vcpkg_installed\x64-windows\debug\lib\SDL3.lib;vcpkg_installed\x64-windows\debug\lib\glad.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/aalca/Documents/GitHub/-engine/Engine/build/Debug/Engine.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/aalca/Documents/GitHub/-engine/Engine/build/Debug/Engine.pdb</ProgramDataBaseFile>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/Debug/Engine.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/Debug/Engine.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -149,20 +153,21 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/aalca/Documents/GitHub/-engine/Engine/build/vcpkg_installed/x64-windows/include" /utf-8</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/vcpkg_installed/x64-windows/include" /utf-8</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <ExceptionHandling>Sync</ExceptionHandling>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;FMT_SHARED;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
@@ -173,10 +178,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;FMT_SHARED;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -184,10 +189,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>
-      </Message>
+      <Message></Message>
       <Command>setlocal
-C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -executionpolicy Bypass -file C:/Users/aalca/Documents/GitHub/-engine/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary C:/Users/aalca/Documents/GitHub/-engine/Engine/build/Release/Engine.exe -installedDir C:/Users/aalca/Documents/GitHub/-engine/Engine/build/vcpkg_installed/x64-windows/bin -OutVariable out
+C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -executionpolicy Bypass -file C:/Users/anaam7/Desktop/Engine/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/Release/Engine.exe -installedDir C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/vcpkg_installed/x64-windows/bin -OutVariable out
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -197,13 +201,17 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>vcpkg_installed\x64-windows\lib\fmt.lib;vcpkg_installed\x64-windows\lib\SDL3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>vcpkg_installed\x64-windows\lib\fmt.lib;vcpkg_installed\x64-windows\lib\SDL3.lib;vcpkg_installed\x64-windows\lib\glad.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/aalca/Documents/GitHub/-engine/Engine/build/Release/Engine.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/aalca/Documents/GitHub/-engine/Engine/build/Release/Engine.pdb</ProgramDataBaseFile>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/Release/Engine.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/Release/Engine.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -212,20 +220,21 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/aalca/Documents/GitHub/-engine/Engine/build/vcpkg_installed/x64-windows/include" /utf-8</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/vcpkg_installed/x64-windows/include" /utf-8</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <ExceptionHandling>Sync</ExceptionHandling>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>MinSpace</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;FMT_SHARED;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
@@ -236,10 +245,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;FMT_SHARED;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -247,10 +256,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>
-      </Message>
+      <Message></Message>
       <Command>setlocal
-C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -executionpolicy Bypass -file C:/Users/aalca/Documents/GitHub/-engine/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary C:/Users/aalca/Documents/GitHub/-engine/Engine/build/MinSizeRel/Engine.exe -installedDir C:/Users/aalca/Documents/GitHub/-engine/Engine/build/vcpkg_installed/x64-windows/bin -OutVariable out
+C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -executionpolicy Bypass -file C:/Users/anaam7/Desktop/Engine/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/MinSizeRel/Engine.exe -installedDir C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/vcpkg_installed/x64-windows/bin -OutVariable out
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -260,13 +268,17 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>vcpkg_installed\x64-windows\lib\fmt.lib;vcpkg_installed\x64-windows\lib\SDL3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>vcpkg_installed\x64-windows\lib\fmt.lib;vcpkg_installed\x64-windows\lib\SDL3.lib;vcpkg_installed\x64-windows\lib\glad.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/aalca/Documents/GitHub/-engine/Engine/build/MinSizeRel/Engine.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/aalca/Documents/GitHub/-engine/Engine/build/MinSizeRel/Engine.pdb</ProgramDataBaseFile>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/MinSizeRel/Engine.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/MinSizeRel/Engine.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -275,21 +287,22 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/aalca/Documents/GitHub/-engine/Engine/build/vcpkg_installed/x64-windows/include" /utf-8</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/vcpkg_installed/x64-windows/include" /utf-8</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;FMT_SHARED;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
@@ -298,10 +311,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;FMT_SHARED;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -309,10 +322,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>
-      </Message>
+      <Message></Message>
       <Command>setlocal
-C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -executionpolicy Bypass -file C:/Users/aalca/Documents/GitHub/-engine/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary C:/Users/aalca/Documents/GitHub/-engine/Engine/build/RelWithDebInfo/Engine.exe -installedDir C:/Users/aalca/Documents/GitHub/-engine/Engine/build/vcpkg_installed/x64-windows/bin -OutVariable out
+C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -executionpolicy Bypass -file C:/Users/anaam7/Desktop/Engine/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 -targetBinary C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/RelWithDebInfo/Engine.exe -installedDir C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/vcpkg_installed/x64-windows/bin -OutVariable out
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -322,13 +334,17 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>vcpkg_installed\x64-windows\lib\fmt.lib;vcpkg_installed\x64-windows\lib\SDL3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>vcpkg_installed\x64-windows\lib\fmt.lib;vcpkg_installed\x64-windows\lib\SDL3.lib;vcpkg_installed\x64-windows\lib\glad.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/aalca/Documents/GitHub/-engine/Engine/build/RelWithDebInfo/Engine.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/aalca/Documents/GitHub/-engine/Engine/build/RelWithDebInfo/Engine.pdb</ProgramDataBaseFile>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/RelWithDebInfo/Engine.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/RelWithDebInfo/Engine.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -336,11 +352,11 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\CMakeLists.txt">
+    <CustomBuild Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\CMakeLists.txt">
       <UseUtf8Encoding>Always</UseUtf8Encoding>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/aalca/Documents/GitHub/-engine/Engine/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/anaam7/Documents/GitHub/Engine/Engine/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/aalca/Documents/GitHub/-engine/Engine -BC:/Users/aalca/Documents/GitHub/-engine/Engine/build --check-stamp-file C:/Users/aalca/Documents/GitHub/-engine/Engine/build/CMakeFiles/generate.stamp
+C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\bin\cmake.exe -SC:/Users/anaam7/Documents/GitHub/Engine/Engine -BC:/Users/anaam7/Documents/GitHub/Engine/Engine/build --check-stamp-file C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -348,12 +364,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeDependentOption.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\FeatureSummary.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\WindowsPaths.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeCCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeCXXCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeRCCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeSystem.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config-version.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-debug.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-release.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3Config.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3ConfigVersion.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3headersTargets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-debug.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-release.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\vcpkg-configuration.json;C:\Users\aalca\Documents\GitHub\-engine\Engine\vcpkg.json;C:\Users\aalca\Documents\GitHub\-engine\vcpkg\scripts\buildsystems\vcpkg.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\anaam7\Desktop\Engine\vcpkg\scripts\buildsystems\vcpkg.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeCCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeCXXCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeRCCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeSystem.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config-version.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladConfig.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladConfigVersion.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3Config.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3ConfigVersion.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3headersTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\vcpkg-configuration.json;C:\Users\anaam7\Documents\GitHub\Engine\Engine\vcpkg.json;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCXXInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCommonLanguageInclude.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeDependentOption.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeGenericSystem.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeInitializeConfigs.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeLanguageInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeRCInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeSystemSpecificInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeSystemSpecificInitialize.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\FeatureSummary.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-Initialize.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/aalca/Documents/GitHub/-engine/Engine/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/anaam7/Documents/GitHub/Engine/Engine/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/aalca/Documents/GitHub/-engine/Engine -BC:/Users/aalca/Documents/GitHub/-engine/Engine/build --check-stamp-file C:/Users/aalca/Documents/GitHub/-engine/Engine/build/CMakeFiles/generate.stamp
+C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\bin\cmake.exe -SC:/Users/anaam7/Documents/GitHub/Engine/Engine -BC:/Users/anaam7/Documents/GitHub/Engine/Engine/build --check-stamp-file C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -361,12 +377,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeDependentOption.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\FeatureSummary.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\WindowsPaths.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeCCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeCXXCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeRCCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeSystem.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config-version.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-debug.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-release.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3Config.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3ConfigVersion.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3headersTargets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-debug.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-release.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\vcpkg-configuration.json;C:\Users\aalca\Documents\GitHub\-engine\Engine\vcpkg.json;C:\Users\aalca\Documents\GitHub\-engine\vcpkg\scripts\buildsystems\vcpkg.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\anaam7\Desktop\Engine\vcpkg\scripts\buildsystems\vcpkg.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeCCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeCXXCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeRCCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeSystem.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config-version.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladConfig.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladConfigVersion.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3Config.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3ConfigVersion.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3headersTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\vcpkg-configuration.json;C:\Users\anaam7\Documents\GitHub\Engine\Engine\vcpkg.json;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCXXInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCommonLanguageInclude.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeDependentOption.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeGenericSystem.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeInitializeConfigs.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeLanguageInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeRCInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeSystemSpecificInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeSystemSpecificInitialize.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\FeatureSummary.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-Initialize.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/aalca/Documents/GitHub/-engine/Engine/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/anaam7/Documents/GitHub/Engine/Engine/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/aalca/Documents/GitHub/-engine/Engine -BC:/Users/aalca/Documents/GitHub/-engine/Engine/build --check-stamp-file C:/Users/aalca/Documents/GitHub/-engine/Engine/build/CMakeFiles/generate.stamp
+C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\bin\cmake.exe -SC:/Users/anaam7/Documents/GitHub/Engine/Engine -BC:/Users/anaam7/Documents/GitHub/Engine/Engine/build --check-stamp-file C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -374,12 +390,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeDependentOption.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\FeatureSummary.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\WindowsPaths.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeCCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeCXXCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeRCCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeSystem.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config-version.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-debug.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-release.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3Config.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3ConfigVersion.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3headersTargets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-debug.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-release.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\vcpkg-configuration.json;C:\Users\aalca\Documents\GitHub\-engine\Engine\vcpkg.json;C:\Users\aalca\Documents\GitHub\-engine\vcpkg\scripts\buildsystems\vcpkg.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\anaam7\Desktop\Engine\vcpkg\scripts\buildsystems\vcpkg.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeCCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeCXXCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeRCCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeSystem.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config-version.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladConfig.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladConfigVersion.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3Config.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3ConfigVersion.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3headersTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\vcpkg-configuration.json;C:\Users\anaam7\Documents\GitHub\Engine\Engine\vcpkg.json;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCXXInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCommonLanguageInclude.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeDependentOption.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeGenericSystem.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeInitializeConfigs.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeLanguageInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeRCInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeSystemSpecificInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeSystemSpecificInitialize.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\FeatureSummary.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-Initialize.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/aalca/Documents/GitHub/-engine/Engine/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/anaam7/Documents/GitHub/Engine/Engine/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/aalca/Documents/GitHub/-engine/Engine -BC:/Users/aalca/Documents/GitHub/-engine/Engine/build --check-stamp-file C:/Users/aalca/Documents/GitHub/-engine/Engine/build/CMakeFiles/generate.stamp
+C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\bin\cmake.exe -SC:/Users/anaam7/Documents/GitHub/Engine/Engine -BC:/Users/anaam7/Documents/GitHub/Engine/Engine/build --check-stamp-file C:/Users/anaam7/Documents/GitHub/Engine/Engine/build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -387,25 +403,27 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeDependentOption.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\FeatureSummary.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.0\Modules\Platform\WindowsPaths.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeCCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeCXXCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeRCCompiler.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\4.0.0\CMakeSystem.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config-version.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-debug.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-release.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3Config.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3ConfigVersion.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3headersTargets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-debug.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-release.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets.cmake;C:\Users\aalca\Documents\GitHub\-engine\Engine\vcpkg-configuration.json;C:\Users\aalca\Documents\GitHub\-engine\Engine\vcpkg.json;C:\Users\aalca\Documents\GitHub\-engine\vcpkg\scripts\buildsystems\vcpkg.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\aalca\Documents\GitHub\-engine\Engine\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\anaam7\Desktop\Engine\vcpkg\scripts\buildsystems\vcpkg.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeCCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeCXXCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeRCCompiler.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\4.1.2\CMakeSystem.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config-version.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-config.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\fmt\fmt-targets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladConfig.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladConfigVersion.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\glad\gladTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3Config.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3ConfigVersion.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3headersTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-debug.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets-release.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\vcpkg_installed\x64-windows\share\sdl3\SDL3sharedTargets.cmake;C:\Users\anaam7\Documents\GitHub\Engine\Engine\vcpkg-configuration.json;C:\Users\anaam7\Documents\GitHub\Engine\Engine\vcpkg.json;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCXXInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeCommonLanguageInclude.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeDependentOption.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeGenericSystem.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeInitializeConfigs.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeLanguageInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeRCInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeSystemSpecificInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\CMakeSystemSpecificInitialize.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Compiler\MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\FeatureSummary.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Linker\MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-Initialize.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC-C.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows-MSVC.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\Windows.cmake;C:\Users\anaam7\Downloads\cmake-4.1.2-windows-x86_64\cmake-4.1.2-windows-x86_64\share\cmake-4.1\Modules\Platform\WindowsPaths.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\Input.cpp" />
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.cpp" />
-    <ClInclude Include="..\src\Input.h" />
-    <ClInclude Include="..\src\Module.h" />
-    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Application.h" />
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Main.cpp" />
-    <ClCompile Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.cpp" />
-    <ClInclude Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\src\Window.h" />
+    <ClCompile Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Application.cpp" />
+    <ClInclude Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Application.h" />
+    <ClCompile Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Input.cpp" />
+    <ClInclude Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Input.h" />
+    <ClCompile Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Main.cpp" />
+    <ClInclude Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Module.h" />
+    <ClCompile Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\OpenGL.cpp" />
+    <ClInclude Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\OpenGL.h" />
+    <ClCompile Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Window.cpp" />
+    <ClInclude Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\src\Window.h" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="C:\Users\aalca\Documents\GitHub\-engine\Engine\build\ZERO_CHECK.vcxproj">
-      <Project>{BB6066CB-670E-3A8F-BAE3-4A41FFA614F3}</Project>
+    <ProjectReference Include="C:\Users\anaam7\Documents\GitHub\Engine\Engine\build\ZERO_CHECK.vcxproj">
+      <Project>{16360768-AA8C-3EF9-BB43-EAEEA9BA55D1}</Project>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
