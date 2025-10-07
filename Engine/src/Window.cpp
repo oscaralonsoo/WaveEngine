@@ -21,9 +21,9 @@ bool Window::Start()
         return false;
     }
 
-    // Set OpenGL version to 3.3
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);  // Major version
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);  // Minor version
+    // Set OpenGL version to 4.6
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);  // Major version
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);  // Minor version
 
     // Use the core OpenGL profile (modern functions only)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
