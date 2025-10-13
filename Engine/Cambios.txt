@@ -1,0 +1,16 @@
+Modules/
+├── Core/
+│   ├── Window (gestión ventana SDL)
+│   ├── Input (eventos)
+│   └── Application (orquestación)
+├── Rendering/
+│   ├── RenderContext (inicialización OpenGL/contexto)
+│   ├── Shader (compilación y gestión de shaders)
+│   ├── Renderer (lógica de dibujado)
+│   └── Material (propiedades visuales)
+├── Resources/
+│   ├── MeshLoader (carga FBX/OBJ con Assimp)
+│   ├── MeshManager (almacenamiento de meshes)
+│   └── ResourceManager (gestión general de recursos)
+└── Scene/
+    └── GameObject/Entity (objetos con transform + mesh)

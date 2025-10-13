@@ -4,6 +4,9 @@
 #include <glad/glad.h>
 #include <iostream>
 #include "FileSystem.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 OpenGL::OpenGL() : glContext(nullptr), shaderProgram(0), VAO_Triangle(0), VBO(0), VAO_Cube(0), VAO_Pyramid(0), VAO_Cylinder(0), EBO(0)
 {
@@ -211,6 +214,39 @@ unsigned int OpenGL::CreatePyramid()
     return VAO;
 }
 
+void OpenGL::LoadMesh(Mesh& mesh)
+{
+    Uint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    Uint VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, mesh.num_vertices * 3 * sizeof(float), mesh.vertices, GL_STATIC_DRAW);
+
+    Uint EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.num_indices * sizeof(unsigned int), mesh.indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // Guardar los IDs en el mesh
+    mesh.id_vertex = VBO;
+    mesh.id_index = EBO;
+    mesh.id_VAO = VAO;
+
+    glBindVertexArray(0);
+}
+
+void OpenGL::DrawMesh(const Mesh& mesh)
+{
+    glBindVertexArray(mesh.id_VAO);  
+    glDrawElements(GL_TRIANGLES, mesh.num_indices, GL_UNSIGNED_INT, nullptr);
+}
+
 bool OpenGL::Update()
 {
     glUseProgram(shaderProgram);
@@ -220,8 +256,15 @@ bool OpenGL::Update()
     //glBindVertexArray(VAO_Cube);
     //glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-    glBindVertexArray(VAO_Pyramid);
-    glDrawElements(GL_TRIANGLES, 16, GL_UNSIGNED_INT, 0);
+    //glBindVertexArray(VAO_Pyramid);
+    //glDrawElements(GL_TRIANGLES, 16, GL_UNSIGNED_INT, 0);
+
+    const std::vector<Mesh>& meshes = Application::GetInstance().filesystem->GetMeshes();
+
+    for (const auto& mesh : meshes)
+    {
+        DrawMesh(mesh);
+    }
     return true;
 }
 
