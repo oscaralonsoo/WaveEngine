@@ -15,12 +15,46 @@ bool FileSystem::Awake()
 
 bool FileSystem::Start()
 {
-    LoadFBX("C:\\Users\\aalca\\Documents\\GitHub\\-engine\\Engine\\Assets\\warrior.FBX");
 	return true;
 }
 
 bool FileSystem::Update()
 {
+	if (Application::GetInstance().input->HasDroppedFile())
+	{
+		std::string filePath = Application::GetInstance().input->GetDroppedFilePath();
+		Application::GetInstance().input->ClearDroppedFile();
+
+		// Verificar si es un archivo FBX
+		if (filePath.size() >= 4)
+		{
+			std::string extension = filePath.substr(filePath.size() - 4);
+			// Convertir a minúsculas para comparar
+			for (char& c : extension)
+				c = tolower(c);
+
+			if (extension == ".fbx")
+			{
+				// Limpiar meshes anteriores antes de cargar nuevos
+				ClearMeshes();
+
+				// Cargar el nuevo archivo
+				if (LoadFBX(filePath))
+				{
+					std::cout << "Successfully loaded FBX file!" << std::endl;
+				}
+				else
+				{
+					std::cerr << "Failed to load FBX file!" << std::endl;
+				}
+			}
+			else
+			{
+				std::cerr << "Invalid file format. Please drop an FBX file." << std::endl;
+			}
+		}
+	}
+
 	return true;
 }
 
@@ -96,6 +130,7 @@ void FileSystem::ClearMeshes()
 		delete[] mesh.indices;
 	}
 	meshes.clear();
+	std::cout << "All meshes cleared" << std::endl;
 }
 
 bool FileSystem::CleanUp()

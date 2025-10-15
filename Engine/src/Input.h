@@ -1,5 +1,6 @@
 #pragma once
 #include "Module.h"
+#include <string>
 
 #define NUM_MOUSE_BUTTONS 5
 
@@ -55,6 +56,11 @@ public:
 	// Check if a certain window event happened
 	bool GetWindowEvent(EventWindow ev);
 
+	// Drag and Drop functions
+	bool HasDroppedFile() const { return droppedFile; }
+	const std::string& GetDroppedFilePath() const { return droppedFilePath; }
+	void ClearDroppedFile() { droppedFile = false; droppedFilePath.clear(); }
+
 	// Get mouse / axis position
 	//Vector2D GetMousePosition();
 	//Vector2D GetMouseMotion();
@@ -68,4 +74,7 @@ private:
 	int mouseX;
 	int mouseY;
 
+	// Drag and Drop
+	bool droppedFile;
+	std::string droppedFilePath;
 };

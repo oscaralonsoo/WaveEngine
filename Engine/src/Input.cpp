@@ -1,13 +1,12 @@
 #include "Input.h"
 #include "Window.h"
 #include "Application.h"
+#include <iostream>
 
 #define MAX_KEYS 300
 
-Input::Input() : Module()
+Input::Input() : Module(), droppedFile(false), droppedFilePath("")
 {
-	//name = "input";
-
 	keyboard = new KeyState[MAX_KEYS];
 	// reserve memory
 	memset(keyboard, KEY_IDLE, sizeof(KeyState) * MAX_KEYS);
@@ -34,7 +33,7 @@ bool Input::Awake()
 }
 
 // Called before the first frame
-bool Input::Start() 
+bool Input::Start()
 {
 	return true;
 }
@@ -44,6 +43,10 @@ bool Input::PreUpdate()
 {
 	static SDL_Event event;
 	const bool* keys = SDL_GetKeyboardState(NULL);
+
+	// Reset dropped file flag each frame
+	droppedFile = false;
+
 	for (int i = 0; i < MAX_KEYS; ++i)
 	{
 		if (keys[i])
@@ -68,6 +71,7 @@ bool Input::PreUpdate()
 		if (mouseButtons[i] == KEY_UP)
 			mouseButtons[i] = KEY_IDLE;
 	}
+
 	while (SDL_PollEvent(&event))
 	{
 		switch (event.type)
@@ -101,6 +105,16 @@ bool Input::PreUpdate()
 			mouseY = event.motion.y / scale;
 		}
 		break;
+
+		// Drag and Drop - Solo archivos FBX ahora
+		case SDL_EVENT_DROP_FILE:
+			if (event.drop.data != nullptr)
+			{
+				droppedFilePath = event.drop.data;
+				droppedFile = true;
+				std::cout << "File dropped: " << droppedFilePath << std::endl;
+			}
+			break;
 		}
 	}
 	return true;

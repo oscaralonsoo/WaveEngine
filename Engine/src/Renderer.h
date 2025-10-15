@@ -3,6 +3,7 @@
 #include "FileSystem.h"
 #include "Shaders.h"
 #include <memory>
+#include "Primitives.h"
 
 class Renderer : public Module
 {
@@ -21,5 +22,7 @@ public:
     Shader* GetDefaultShader() const { return defaultShader.get(); }
 
 private:
+
     std::unique_ptr<Shader> defaultShader;
+    Mesh sphere, cube, pyramid, cylinder, plane;
 };

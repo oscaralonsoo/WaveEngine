@@ -26,6 +26,15 @@ bool Renderer::Start()
     }
 
     std::cout << "Renderer initialized successfully" << std::endl;
+
+    // Para pruebas
+    sphere = Primitives::CreateSphere();
+    LoadMesh(sphere);
+    cylinder = Primitives::CreateCylinder();
+    LoadMesh(cylinder);
+    pyramid = Primitives::CreatePyramid();
+    LoadMesh(pyramid);
+
     return true;
 }
 
@@ -96,11 +105,21 @@ bool Renderer::Update()
 {
     defaultShader->Use();
 
+    // Renderizar todos los meshes cargados desde FileSystem
     const std::vector<Mesh>& meshes = Application::GetInstance().filesystem->GetMeshes();
 
-    for (const auto& mesh : meshes)
+    if (!meshes.empty())
     {
-        DrawMesh(mesh);
+        // Si hay meshes cargados, dibujarlos
+        for (const auto& mesh : meshes)
+        {
+            DrawMesh(mesh);
+        }
+    }
+    else
+    {
+        // Si no hay meshes, mostrar la piramide por defecto
+        DrawMesh(pyramid);
     }
 
     return true;
