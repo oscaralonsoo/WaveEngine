@@ -24,6 +24,8 @@ public:
 
     Shader* GetDefaultShader() const { return defaultShader.get(); }
 
+    Camera* GetCamera() { return camera.get(); } 
+
 private:
     std::unique_ptr<Shader> defaultShader;
     std::unique_ptr<Texture> checkerTexture;  

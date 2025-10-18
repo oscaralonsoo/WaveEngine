@@ -2,6 +2,7 @@
 #include "Window.h"
 #include "Application.h"
 #include <iostream>
+#include "Camera.h"
 
 #define MAX_KEYS 300
 
@@ -72,7 +73,7 @@ bool Input::PreUpdate()
 			mouseButtons[i] = KEY_IDLE;
 	}
 
-	while (SDL_PollEvent(&event))
+	while (SDL_PollEvent(&event)) 
 	{
 		switch (event.type)
 		{
@@ -117,6 +118,21 @@ bool Input::PreUpdate()
 			break;
 		}
 	}
+
+	const float cameraSpeed = 0.05f;
+	Camera* camera = Application::GetInstance().renderer->GetCamera();
+	glm::vec3 cameraFront = camera->GetFront();
+	glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, camera->GetUp()));
+
+	if (keys[SDL_SCANCODE_W])
+		camera->SetPosition(camera->GetPosition() + cameraSpeed * cameraFront);
+	if (keys[SDL_SCANCODE_S])
+		camera->SetPosition(camera->GetPosition() - cameraSpeed * cameraFront);
+	if (keys[SDL_SCANCODE_A])
+		camera->SetPosition(camera->GetPosition() - cameraRight * cameraSpeed);
+	if (keys[SDL_SCANCODE_D])
+		camera->SetPosition(camera->GetPosition() + cameraRight * cameraSpeed);
+
 	return true;
 }
 
