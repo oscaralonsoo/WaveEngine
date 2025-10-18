@@ -87,10 +87,6 @@ bool FileSystem::LoadFBX(const std::string& file_path, unsigned int flag)
 		mesh.vertices = new float[mesh.num_vertices * 3];
 		memcpy(mesh.vertices, aiMesh->mVertices, sizeof(float) * mesh.num_vertices * 3);
 
-		// Scale
-		for (unsigned int k = 0; k < mesh.num_vertices * 3; ++k)
-			mesh.vertices[k] *= 0.005f;
-
 		// Indices
 		if (aiMesh->HasFaces())
 		{

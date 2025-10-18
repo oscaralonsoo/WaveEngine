@@ -3,10 +3,14 @@
 #include <glad/glad.h>
 #include <iostream>
 #include "Texture.h"
+#include "Shaders.h"
+#include <glm/gtc/type_ptr.hpp>
+#include "Camera.h"
 
 Renderer::Renderer()
 {
     LOG("Renderer Constructor");
+    camera = make_unique<Camera>();
 }
 
 Renderer::~Renderer()
@@ -27,7 +31,7 @@ bool Renderer::Start()
     }
 
     // Crear textura checkerboard
-    checkerTexture = make_unique<Texture>(); // make_unique es como hacer un new pero mas seguro
+    checkerTexture = make_unique<Texture>();
     checkerTexture->CreateCheckerboard();
     LOG("Checkerboard texture created");
 
@@ -107,9 +111,21 @@ void Renderer::UnloadMesh(Mesh& mesh)
     }
 }
 
+bool Renderer::PreUpdate()
+{
+    return true;
+}
+
 bool Renderer::Update()
 {
     defaultShader->Use();
+
+    // Actualizar camara
+    camera->Update();
+
+    // Enviar matrices al shader
+    glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "projection"), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "view"), 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
 
     // Activar y bindear la textura
     glActiveTexture(GL_TEXTURE0);
@@ -142,7 +158,7 @@ bool Renderer::Update()
 
 bool Renderer::CleanUp()
 {
-    LOG( "Cleaning up Renderer");
+    LOG("Cleaning up Renderer");
 
     if (defaultShader)
     {

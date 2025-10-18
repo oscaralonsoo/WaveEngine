@@ -1,6 +1,7 @@
 #include "Shaders.h"
 #include <glad/glad.h>
 #include <iostream>
+#include <glm/gtc/type_ptr.hpp>
 
 Shader::Shader() : shaderProgram(0)
 {
@@ -13,15 +14,16 @@ Shader::~Shader()
 
 bool Shader::Create()
 {
-    // Vertex Shader - Ahora genera coordenadas UV desde la posicion
     const char* vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
         "out vec2 TexCoord;\n"
+        "uniform mat4 view;\n"
+        "uniform mat4 projection;\n"
         "void main()\n"
         "{\n"
-        "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+        "   gl_Position = projection * view * vec4(aPos, 1.0);\n"
         "   TexCoord = aPos.xy + 0.5;\n"
-        "}\0"; // usar xy como coordenadas uv
+        "}\0";
 
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
