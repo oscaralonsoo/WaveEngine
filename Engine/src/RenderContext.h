@@ -10,6 +10,7 @@ public:
 
     bool Start() override;
     bool Update() override;
+    bool PreUpdate() override;
     bool CleanUp() override;
 
     SDL_GLContext GetContext() const { return glContext; }
