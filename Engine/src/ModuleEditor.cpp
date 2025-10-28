@@ -8,6 +8,9 @@
 #include <IL/il.h>
 #include <windows.h>
 #include <psapi.h>
+#include "Log.h"
+#include <gl/GL.h>
+#include <SDL3/SDL_timer.h>
 
 ModuleEditor::ModuleEditor() : Module()
 {
@@ -63,7 +66,12 @@ bool ModuleEditor::PostUpdate()
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    return true;
+	ShowMenuBar();
+	ShowTest();
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	return true;
 }
 
 bool ModuleEditor::CleanUp()
@@ -75,6 +83,81 @@ bool ModuleEditor::CleanUp()
     ImGui::DestroyContext();
 
     return true;
+}
+
+bool ModuleEditor::ShowMenuBar() {
+	if (ImGui::BeginMainMenuBar()) {
+
+		if (ImGui::BeginMenu("File")) {
+			if (ImGui::MenuItem("Exit")) {
+				// Exit the application
+				Application::GetInstance().RequestExit();
+			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("View")) {
+			ImGui::MenuItem("Console", NULL, &showConsole);
+			ImGui::MenuItem("Hierarchy", NULL, &showHierarchy);
+			ImGui::MenuItem("Inspector", NULL, &showInspector);
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Help")) {
+			if (ImGui::MenuItem("Documentation")) {
+				// Open browser with documentation
+				SDL_OpenURL("https://github.com/Audra0000/Engine");
+			}
+			if (ImGui::MenuItem("Report a Bug")) {
+				// Open browser with issue tracker
+				SDL_OpenURL("https://github.com/Audra0000/Engine/issues");
+			}
+			if (ImGui::MenuItem("Download Latest")) {
+				// Open browser with latest releases
+				SDL_OpenURL("https://github.com/Audra0000/Engine/releases");
+			}
+			ImGui::Separator();
+			ImGui::MenuItem("About", NULL, &showAbout);
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMainMenuBar();
+	}
+	return true;
+}
+
+bool ModuleEditor::ShowTest() {
+	float f = 0.5f;
+	char buf[256] = "";
+
+    // FPS Graph
+    if (ImGui::CollapsingHeader("FPS", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        DrawFPSGraph();
+    }
+
+    ImGui::Separator();
+
+    // Window
+    if (ImGui::CollapsingHeader("Window", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        DrawWindowSettings();
+    }
+
+    ImGui::Separator();
+
+	ImGui::Text("FPS: %.f", fps);
+	ImGui::PlotLines("FPS", fpsHistory.data(), fpsHistory.size(), 0, NULL, 0.0f, FLT_MAX, ImVec2(0, 80));
+	ImGui::Separator();
+	ImGui::PlotHistogram("FPS", fpsHistory.data(), fpsHistory.size(), 0, NULL, 0.0f, FLT_MAX, ImVec2(0, 80));
+
+
+	if (ImGui::Button("Save")) {
+		//etc
+	}
+	ImGui::InputText("Input", buf, IM_ARRAYSIZE(buf));
+	ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+	return true;
 }
 
 void ModuleEditor::DrawConfigurationWindow()
@@ -188,7 +271,7 @@ void ModuleEditor::DrawWindowSettings()
 
     ImGui::Text("Window Size: %dx%d", width, height);
 
-    // Width 
+    // Width slider
     int tempWidth = width;
     if (ImGui::InputInt("Width", &tempWidth, 10, 100))
     {
@@ -198,7 +281,7 @@ void ModuleEditor::DrawWindowSettings()
         }
     }
 
-    // Height
+    // Height slider
     int tempHeight = height;
     if (ImGui::InputInt("Height", &tempHeight, 10, 100))
     {

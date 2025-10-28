@@ -4,63 +4,70 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <glm/glm.hpp>
 
 class GameObject;
 struct aiNode;
 struct aiScene;
+struct aiMesh;
+struct aiMaterial;
 
+// Modern vertex structure
+struct Vertex {
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec2 texCoords;
+};
+
+// Texture information
+struct TextureInfo {
+    unsigned int id;
+    std::string type;   // e.g., "texture_diffuse", "texture_specular"
+    std::string path;
+};
+
+// Mesh data container (no OpenGL logic)
 struct Mesh {
-	unsigned int num_vertices = 0;
-	float* vertices = nullptr;
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    std::vector<TextureInfo> textures;
 
-	unsigned int num_indices = 0;
-	unsigned int* indices = nullptr;
+    // OpenGL buffer IDs 
+    unsigned int VAO = 0;
+    unsigned int VBO = 0;
+    unsigned int EBO = 0;
+};
 
-	float* texCoords = nullptr;  
+// Model containing multiple meshes
+class Model {
+public:
+    std::vector<Mesh> meshes;
+    std::string directory;
 
-	unsigned int id_vertex = 0;   // VBO
-	unsigned int id_index = 0;    // EBO
-	unsigned int id_texcoord = 0; 
-	unsigned int id_VAO = 0;
+    Model() = default;
+    ~Model() = default;
 };
 
 class FileSystem : public Module
 {
 public:
-	FileSystem();
-	~FileSystem();
+    FileSystem();
+    ~FileSystem();
 
-	bool Awake() override;
-	bool Start() override;
-	bool Update() override;
-	bool CleanUp() override;
+    bool Awake() override;
+    bool Start() override;
+    bool Update() override;
+    bool CleanUp() override;
 
-	// Load a specific FBX file
-	bool LoadFBX(const std::string& file_path, unsigned int flag = 0);
-
-	// Load FBX from assets folder (relative path)
-	bool LoadFBXFromAssets(const std::string& filename);
-
-	// Add a mesh to the list
-	void AddMesh(const Mesh& mesh);
-
-	// Get all loaded meshes
-	const std::vector<Mesh>& GetMeshes() const { return meshes; }
-
-	// Clear all meshes
-	void ClearMeshes();
-	
-	// Load FBX and convert to GameObject 
-	GameObject* LoadFBXAsGameObject(const std::string& file_path);
-
+    // Loads an FBX file and converts it into a GameObject hierarchy
+    GameObject* LoadFBXAsGameObject(const std::string& file_path);
 
 private:
+    GameObject* ProcessNode(aiNode* node, const aiScene* scene, const std::string& directory);
+    Mesh ProcessMesh(aiMesh* aiMesh, const aiScene* scene);
+    std::vector<TextureInfo> LoadMaterialTextures(aiMaterial* mat, unsigned int type, const std::string& typeName, const std::string& directory);
 
-	GameObject* ProcessNode(aiNode* node, const aiScene* scene);
+    int CountNodes(aiNode* node);
 
-	int CountNodes(aiNode* node);
-
-	std::vector<Mesh> meshes;
-	std::string assetsPath;
-
+    std::string assetsPath;
 };

@@ -11,7 +11,6 @@
 #include "ComponentMesh.h"
 #include "ComponentMaterial.h"
 
-
 Renderer::Renderer()
 {
     LOG("Renderer Constructor");
@@ -34,8 +33,12 @@ bool Renderer::Start()
         LOG("Failed to create default shader");
         return false;
     }
-
-    // Crear textura desde archivo
+    else
+    {
+        std::cout << "Shader created successfully!" << std::endl;
+        std::cout << "Shader Program ID: " << defaultShader->GetProgramID() << std::endl;
+    }
+    // Create default texture
     defaultTexture = make_unique<Texture>();
 
     if (!defaultTexture->LoadFromFile("Assets\\Baker_house.png"))
@@ -63,81 +66,76 @@ bool Renderer::Start()
 
 void Renderer::LoadMesh(Mesh& mesh)
 {
-    unsigned int VAO, VBO, EBO, texVBO;
+    // Generate VAO
+    glGenVertexArrays(1, &mesh.VAO);
+    glBindVertexArray(mesh.VAO);
 
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    // Generate and bind VBO for vertices
+    glGenBuffers(1, &mesh.VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.VBO);
+    glBufferData(GL_ARRAY_BUFFER, mesh.vertices.size() * sizeof(Vertex), &mesh.vertices[0], GL_STATIC_DRAW);
 
-    // VBO for vertices
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, mesh.num_vertices * 3 * sizeof(float), mesh.vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // Position attribute (location = 0)
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 
-    // VBO for texture coordinates
-    if (mesh.texCoords != nullptr)
-    {
-        glGenBuffers(1, &texVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, texVBO);
-        glBufferData(GL_ARRAY_BUFFER, mesh.num_vertices * 2 * sizeof(float), mesh.texCoords, GL_STATIC_DRAW);
+    // Normal attribute (location = 1)
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(1);
+    // Texture coordinate attribute (location = 2)
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
 
-        mesh.id_texcoord = texVBO;
-    }
-
-    // EBO for indices
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.num_indices * sizeof(unsigned int), mesh.indices, GL_STATIC_DRAW);
-
-    mesh.id_vertex = VBO;
-    mesh.id_index = EBO;
-    mesh.id_VAO = VAO;
+    // Generate and bind EBO for indices
+    glGenBuffers(1, &mesh.EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(unsigned int), &mesh.indices[0], GL_STATIC_DRAW);
 
     glBindVertexArray(0);
+
+    LOG("Mesh loaded - VAO: %d, Vertices: %d, Indices: %d", mesh.VAO, mesh.vertices.size(), mesh.indices.size());
 }
 
 void Renderer::DrawMesh(const Mesh& mesh)
 {
-    if (mesh.id_VAO == 0)
+    if (mesh.VAO == 0)
     {
         LOG("ERROR: Trying to draw mesh without VAO");
         return;
     }
 
-    glBindVertexArray(mesh.id_VAO);
-    glDrawElements(GL_TRIANGLES, mesh.num_indices, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(mesh.VAO);
+    glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
+
+    //std::cout << "=== LoadMesh DEBUG ===" << std::endl;
+    //std::cout << "Vertices: " << mesh.vertices.size() << std::endl;
+    //std::cout << "Indices: " << mesh.indices.size() << std::endl;
+    //std::cout << "VAO: " << mesh.VAO << std::endl;
+    //std::cout << "VBO: " << mesh.VBO << std::endl;
+    //std::cout << "EBO: " << mesh.EBO << std::endl;
+
 }
 
 void Renderer::UnloadMesh(Mesh& mesh)
 {
-    if (mesh.id_VAO != 0)
+    if (mesh.VAO != 0)
     {
-        glDeleteVertexArrays(1, &mesh.id_VAO);
-        mesh.id_VAO = 0;
+        glDeleteVertexArrays(1, &mesh.VAO);
+        mesh.VAO = 0;
     }
 
-    if (mesh.id_vertex != 0)
+    if (mesh.VBO != 0)
     {
-        glDeleteBuffers(1, &mesh.id_vertex);
-        mesh.id_vertex = 0;
+        glDeleteBuffers(1, &mesh.VBO);
+        mesh.VBO = 0;
     }
 
-    if (mesh.id_index != 0)
+    if (mesh.EBO != 0)
     {
-        glDeleteBuffers(1, &mesh.id_index);
-        mesh.id_index = 0;
-    }
-
-    if (mesh.id_texcoord != 0)
-    {
-        glDeleteBuffers(1, &mesh.id_texcoord);
-        mesh.id_texcoord = 0;
+        glDeleteBuffers(1, &mesh.EBO);
+        mesh.EBO = 0;
     }
 }
 
@@ -179,13 +177,11 @@ bool Renderer::Update()
 
     GLuint shaderProgram = defaultShader->GetProgramID();
 
-    // send matrix to shader
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
 
-    // activate and bind texture 
+    // Activate and bind default texture 
     glActiveTexture(GL_TEXTURE0);
-
     glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
 
     GameObject* root = Application::GetInstance().scene->GetRoot();
@@ -203,6 +199,11 @@ bool Renderer::Update()
 bool Renderer::CleanUp()
 {
     LOG("Cleaning up Renderer");
+
+    // Unload test primitives
+    UnloadMesh(sphere);
+    UnloadMesh(cylinder);
+    UnloadMesh(pyramid);
 
     if (defaultShader)
     {
@@ -249,10 +250,10 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject)
 
     ComponentMaterial* material = static_cast<ComponentMaterial*>(gameObject->GetComponent(ComponentType::MATERIAL));
 
-	// Check if material exists and is active
+    // Use material texture or default texture
     if (material != nullptr && material->IsActive())
     {
-        material->Use();  
+        material->Use();
     }
     else
     {
@@ -273,7 +274,7 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject)
         }
     }
 
-	// Desbind material or default texture
+    // Unbind material or default texture
     if (material != nullptr && material->IsActive())
     {
         material->Unbind();
@@ -283,11 +284,10 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject)
         defaultTexture->Unbind();
     }
 
-	// Recursively draw children
+    // Recursively draw children
     const std::vector<GameObject*>& children = gameObject->GetChildren();
     for (GameObject* child : children)
     {
-        DrawGameObjectRecursive(child);  
+        DrawGameObjectRecursive(child);
     }
 }
-

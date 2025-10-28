@@ -33,15 +33,18 @@ public:
     // Called before quitting
     bool CleanUp();
 
+    // Request application exit
+    void RequestExit() { isRunning = false; }
+
     // Modules
     std::shared_ptr<Window> window;
     std::shared_ptr<Input> input;
     std::shared_ptr<RenderContext> renderContext;
     std::shared_ptr<Renderer> renderer;
     std::shared_ptr<FileSystem> filesystem;
-    std::shared_ptr<Time> time; 
+    std::shared_ptr<Time> time;
     std::shared_ptr<ModuleScene> scene;
-	std::shared_ptr<ModuleEditor> editor;
+    std::shared_ptr<ModuleEditor> editor;
     std::shared_ptr<Grid> grid;
 
 private:

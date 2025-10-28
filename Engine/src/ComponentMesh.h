@@ -16,11 +16,13 @@ public:
     const Mesh& GetMesh() const { return mesh; }
     Mesh& GetMesh() { return mesh; }
 
-    bool HasMesh() const { return mesh.id_VAO != 0; }
+    bool HasMesh() const { return mesh.VAO != 0; }
 
-    unsigned int GetNumVertices() const { return mesh.num_vertices; }
-    unsigned int GetNumIndices() const { return mesh.num_indices; }
-    unsigned int GetNumTriangles() const { return mesh.num_indices / 3; }
+    // Helper functions
+    unsigned int GetNumVertices() const { return static_cast<unsigned int>(mesh.vertices.size()); }
+    unsigned int GetNumIndices() const { return static_cast<unsigned int>(mesh.indices.size()); }
+    unsigned int GetNumTriangles() const { return static_cast<unsigned int>(mesh.indices.size() / 3); }
+    unsigned int GetNumTextures() const { return static_cast<unsigned int>(mesh.textures.size()); }
 
 private:
     Mesh mesh;

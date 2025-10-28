@@ -14,17 +14,22 @@ Shader::~Shader()
 
 bool Shader::Create()
 {
+    // Vertex Shader - Simple y funcional
     const char* vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
-        "layout (location = 1) in vec2 aTexCoord;\n"  
+        "layout (location = 1) in vec3 aNormal;\n"
+        "layout (location = 2) in vec2 aTexCoord;\n"
+        "\n"
         "out vec2 TexCoord;\n"
+        "\n"
+        "uniform mat4 model;\n"
         "uniform mat4 view;\n"
         "uniform mat4 projection;\n"
-		"uniform mat4 model;\n"
+        "\n"
         "void main()\n"
         "{\n"
-        "   gl_Position = projection * view * vec4(aPos, 1.0);\n"
-        "   TexCoord = aTexCoord;\n"  
+        "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+        "   TexCoord = aTexCoord;\n"
         "}\0";
 
     unsigned int vertexShader;
@@ -43,7 +48,7 @@ bool Shader::Create()
         return false;
     }
 
-    // Fragment Shader - Ahora usa la textura
+    // Fragment Shader
     const char* fragmentShaderSource = "#version 330 core\n"
         "out vec4 FragColor;\n"
         "in vec2 TexCoord;\n"
@@ -89,6 +94,8 @@ bool Shader::Create()
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
+    std::cout << "Shader created successfully!" << std::endl;
+
     return true;
 }
 
@@ -104,4 +111,19 @@ void Shader::Delete()
         glDeleteProgram(shaderProgram);
         shaderProgram = 0;
     }
+}
+
+void Shader::SetVec3(const std::string& name, const glm::vec3& value) const
+{
+    glUniform3fv(glGetUniformLocation(shaderProgram, name.c_str()), 1, &value[0]);
+}
+
+void Shader::SetFloat(const std::string& name, float value) const
+{
+    glUniform1f(glGetUniformLocation(shaderProgram, name.c_str()), value);
+}
+
+void Shader::SetMat4(const std::string& name, const glm::mat4& mat) const
+{
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 }

@@ -19,13 +19,13 @@ public:
 
 private:
 
-    // Configuraci¨®n
+    // Configuraciï¿½ï¿½n
     void DrawConfigurationWindow();
     void DrawFPSGraph();
     void DrawHardwareInfo();
     void DrawWindowSettings();
 
-    // Jerarq¨ªa
+    // Jerarqï¿½ï¿½a
     void DrawHierarchyWindow();
 
     // Inspector
@@ -35,10 +35,6 @@ private:
     void DrawConsoleWindow();
 
 private:
-    bool showConsole = true;
-    bool showConfiguration = true;
-    bool showHierarchy = true;
-    bool showInspector = true;
 
     bool fullscreen = false;
     float brightness = 1.0f;
@@ -47,4 +43,14 @@ private:
     std::vector<float> fpsHistory;
     const int maxFPSHistory = 100;
     float fpsTimer = 0.0f;
+
+	bool ShowMenuBar();
+	bool ShowTest();
+
+    bool showConsole = true;
+    bool showConfiguration = true;
+    bool showHierarchy = true;
+    bool showInspector = true;
+    bool showAbout = false;
+
 };
