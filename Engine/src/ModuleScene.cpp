@@ -30,19 +30,6 @@ bool ModuleScene::Start()
     renderer->DrawScene();
     root = new GameObject("Root");
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
-    ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
-	//Imgui::StyleColorsClassic();
-
-    ImGui_ImplSDL3_InitForOpenGL(Application::GetInstance().window->GetWindow(), Application::GetInstance().renderContext->GetContext());
-    ImGui_ImplOpenGL3_Init("#version 330");
-
-    LOG("ImGui initialized");
     return true;
 }
 
@@ -57,24 +44,12 @@ bool ModuleScene::Update()
 
 bool ModuleScene::PostUpdate()
 {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL3_NewFrame();
-    ImGui::NewFrame();
-
-    ImGui::ShowDemoWindow();
-
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     return true;
 }
 
 bool ModuleScene::CleanUp()
 {
     LOG("Cleaning up Scene");
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
 
     if (root)
     {

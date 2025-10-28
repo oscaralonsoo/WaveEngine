@@ -9,6 +9,7 @@ Application::Application() : isRunning(true)
     renderContext = std::make_shared<RenderContext>();
     renderer = std::make_shared<Renderer>();
     scene = std::make_shared<ModuleScene>();
+	editor = std::make_shared<ModuleEditor>();
     filesystem = std::make_shared<FileSystem>();
     time = std::make_shared<Time>();
     grid = std::make_shared<Grid>();
@@ -18,6 +19,7 @@ Application::Application() : isRunning(true)
     AddModule(std::static_pointer_cast<Module>(renderContext));
     AddModule(std::static_pointer_cast<Module>(renderer));
     AddModule(std::static_pointer_cast<Module>(scene));
+	AddModule(std::static_pointer_cast<Module>(editor));
     AddModule(std::static_pointer_cast<Module>(filesystem));
     AddModule(std::static_pointer_cast<Module>(time));
     AddModule(std::static_pointer_cast<Module>(grid)); 

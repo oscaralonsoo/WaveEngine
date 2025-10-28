@@ -11,6 +11,7 @@
 #include "Time.h"
 #include "ModuleScene.h"
 #include "Grid.h"
+#include "ModuleEditor.h"
 
 class Module;
 
@@ -40,6 +41,7 @@ public:
     std::shared_ptr<FileSystem> filesystem;
     std::shared_ptr<Time> time; 
     std::shared_ptr<ModuleScene> scene;
+	std::shared_ptr<ModuleEditor> editor;
     std::shared_ptr<Grid> grid;
 
 private:
