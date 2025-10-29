@@ -211,16 +211,18 @@ bool Input::PreUpdate()
 	//	camera->FocusOnTarget(selectedObjectPosition, selectedObjectRadius);
 	//}
 
+	Camera* camera = Application::GetInstance().renderer->GetCamera();
+	const float cameraBaseSpeed = 2.5f;
+	float speedMultiplier = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT] ? 2.0f : 1.0f;
+	float cameraSpeed = cameraBaseSpeed * speedMultiplier * Application::GetInstance().time->GetDeltaTime();
 	// Only active when you press right-click (WASD movement)
-	if (!io.WantCaptureKeyboard && (mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_DOWN)) 
+	if (!io.WantCaptureKeyboard && (mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_DOWN))
 	{
-		const float cameraBaseSpeed = 2.5f;
-		float speedMultiplier = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT] ? 2.0f : 1.0f;
-		float cameraSpeed = cameraBaseSpeed * speedMultiplier * Application::GetInstance().time->GetDeltaTime();
-		Camera* camera = Application::GetInstance().renderer->GetCamera();
 		glm::vec3 cameraFront = camera->GetFront();
 		glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, camera->GetUp()));
+		glm::vec3 cameraUp = camera->GetUp();
 
+		// WASD - Movimiento horizontal
 		if (keys[SDL_SCANCODE_W])
 			camera->SetPosition(camera->GetPosition() + cameraSpeed * cameraFront);
 		if (keys[SDL_SCANCODE_S])
@@ -230,6 +232,14 @@ bool Input::PreUpdate()
 		if (keys[SDL_SCANCODE_D])
 			camera->SetPosition(camera->GetPosition() + cameraRight * cameraSpeed);
 	}
+	glm::vec3 cameraUp = camera->GetUp();
+	// Up
+	if (keys[SDL_SCANCODE_SPACE])
+		camera->SetPosition(camera->GetPosition() + cameraUp * cameraSpeed);
+
+	// Down
+	if (keys[SDL_SCANCODE_LCTRL] || keys[SDL_SCANCODE_RCTRL])
+		camera->SetPosition(camera->GetPosition() - cameraUp * cameraSpeed);
 
 	return true;
 }
