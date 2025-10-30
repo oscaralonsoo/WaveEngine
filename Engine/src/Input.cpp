@@ -45,13 +45,12 @@ bool Input::Start()
 	return true;
 }
 
-// Called each loop iteration
 bool Input::PreUpdate()
 {
 	static SDL_Event event;
 	const bool* keys = SDL_GetKeyboardState(NULL);
 
-	// Reset dropped file flag each frame
+	// Reset dropped file flag every frame
 	droppedFile = false;
 
 	for (int i = 0; i < MAX_KEYS; ++i)
@@ -79,14 +78,15 @@ bool Input::PreUpdate()
 			mouseButtons[i] = KEY_IDLE;
 	}
 
-	ImGuiIO& io = ImGui::GetIO();
-	bool imguiWantCaptureMouse = io.WantCaptureMouse;
-	bool imguiWantCaptureKeyboard = io.WantCaptureKeyboard;
-
 	while (SDL_PollEvent(&event))
 	{
-		// Imgui event
+		// Process ImGui events first
 		ImGui_ImplSDL3_ProcessEvent(&event);
+
+		// Get state after ImGui processing
+		ImGuiIO& io = ImGui::GetIO();
+		bool imguiWantCaptureMouse = io.WantCaptureMouse;
+		bool imguiWantCaptureKeyboard = io.WantCaptureKeyboard;
 
 		switch (event.type)
 		{
@@ -106,20 +106,34 @@ bool Input::PreUpdate()
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		{
+			// Update button state first before processing logic
+			mouseButtons[event.button.button - 1] = KEY_DOWN;
+
+			// Only process gameplay logic if not over ImGui
 			if (!imguiWantCaptureMouse)
 			{
-				mouseButtons[event.button.button - 1] = KEY_DOWN;
 				Camera* camera = Application::GetInstance().renderer->GetCamera();
+
+				// Get current mouse position
+				float mouseXf, mouseYf;
+				SDL_GetMouseState(&mouseXf, &mouseYf);
+				int scale = Application::GetInstance().window.get()->GetScale();
+				mouseXf /= scale;
+				mouseYf /= scale;
 
 				if (event.button.button == SDL_BUTTON_RIGHT)
 				{
+					// Right button: reset camera input and initialize look-around
 					camera->ResetMouseInput();
+					camera->HandleMouseInput(mouseXf, mouseYf);
 				}
 				else if (event.button.button == SDL_BUTTON_LEFT)
 				{
+					// Left button: reset orbit and initialize orbit input
 					camera->ResetOrbitInput();
+					camera->HandleOrbitInput(mouseXf, mouseYf);
 
-					// Object selection: only when ALT is not pressed (ALT+LMB is reserved for orbit)
+					// Object selection: only if ALT is not pressed
 					if (!keys[SDL_SCANCODE_LALT] && !keys[SDL_SCANCODE_RALT])
 					{
 						// Get window dimensions and mouse position
@@ -127,20 +141,16 @@ bool Input::PreUpdate()
 						SDL_GetWindowSize(Application::GetInstance().window.get()->GetWindow(),
 							&screenWidth, &screenHeight);
 
-						float mouseXf, mouseYf;
-						SDL_GetMouseState(&mouseXf, &mouseYf);
+						int mouseX = static_cast<int>(mouseXf);
+						int mouseY = static_cast<int>(mouseYf);
 
-						int scale = Application::GetInstance().window.get()->GetScale();
-						int mouseX = static_cast<int>(mouseXf / scale);
-						int mouseY = static_cast<int>(mouseYf / scale);
-
-						// Create ray from camera through mouse position
+						// Create a ray from camera through mouse position
 						glm::vec3 rayOrigin = camera->GetPosition();
 						glm::vec3 rayDir = camera->ScreenToWorldRay(mouseX, mouseY,
 							screenWidth / scale,
 							screenHeight / scale);
 
-						// Find closest object intersected by ray
+						// Find the closest object intersected by the ray
 						GameObject* root = Application::GetInstance().scene->GetRoot();
 						float minDist = std::numeric_limits<float>::max();
 						GameObject* clicked = FindClosestObjectToRay(root, rayOrigin, rayDir, minDist);
@@ -151,16 +161,18 @@ bool Input::PreUpdate()
 						{
 							if (shiftPressed)
 							{
+								// Shift + click: toggle selection
 								Application::GetInstance().selectionManager->ToggleSelection(clicked);
 							}
 							else
 							{
+								// Normal click: select single object
 								Application::GetInstance().selectionManager->SetSelectedObject(clicked);
 							}
 						}
 						else
 						{
-							// Clicked on empty space: clear selection unless Shift is held
+							// Clicked empty space: clear selection unless Shift is pressed
 							if (!shiftPressed)
 							{
 								Application::GetInstance().selectionManager->ClearSelection();
@@ -170,116 +182,101 @@ bool Input::PreUpdate()
 				}
 				else if (event.button.button == SDL_BUTTON_MIDDLE)
 				{
+					// Middle button: reset pan input
 					camera->ResetPanInput();
 				}
 			}
 			break;
 		}
 		case SDL_EVENT_MOUSE_BUTTON_UP:
-			if (!imguiWantCaptureMouse)
-			{
-				mouseButtons[event.button.button - 1] = KEY_UP;
-			}
+			// Always update button state
+			mouseButtons[event.button.button - 1] = KEY_UP;
 			break;
+
 		case SDL_EVENT_MOUSE_MOTION:
 		{
+			int scale = Application::GetInstance().window.get()->GetScale();
+			mouseMotionX = static_cast<int>(event.motion.xrel / scale);
+			mouseMotionY = static_cast<int>(event.motion.yrel / scale);
+			mouseX = static_cast<int>(event.motion.x / scale);
+			mouseY = static_cast<int>(event.motion.y / scale);
+
+			float mouseXf = static_cast<float>(event.motion.x) / static_cast<float>(scale);
+			float mouseYf = static_cast<float>(event.motion.y) / static_cast<float>(scale);
+
+			// Camera movement only if not over ImGui
 			if (!imguiWantCaptureMouse)
 			{
-				int scale = Application::GetInstance().window.get()->GetScale();
-				mouseMotionX = static_cast<int>(event.motion.xrel / scale);
-				mouseMotionY = static_cast<int>(event.motion.yrel / scale);
-
-				mouseX = static_cast<int>(event.motion.x / scale);
-				mouseY = static_cast<int>(event.motion.y / scale);
-
-				float mouseXf = static_cast<float>(event.motion.x) / static_cast<float>(scale);
-				float mouseYf = static_cast<float>(event.motion.y) / static_cast<float>(scale);
-
 				Camera* camera = Application::GetInstance().renderer->GetCamera();
 
-				// Alt + Click Izquierdo - orbit
+				// Alt + Left button: orbit
 				if ((keys[SDL_SCANCODE_LALT] || keys[SDL_SCANCODE_RALT]) &&
 					(mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_DOWN))
 				{
 					camera->HandleOrbitInput(mouseXf, mouseYf);
 				}
-				// Click Medio - Pan
+				// Middle button: pan
 				else if (mouseButtons[SDL_BUTTON_MIDDLE - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_MIDDLE - 1] == KEY_DOWN)
 				{
 					camera->HandlePanInput(static_cast<float>(mouseMotionX), static_cast<float>(mouseMotionY));
 				}
-				// Click Derecho - Look around 
+				// Right button: look around
 				else if (mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_DOWN)
 				{
 					camera->HandleMouseInput(mouseXf, mouseYf);
 				}
 			}
+			break;
 		}
-		break;
 
-		// Drag and Drop - FBX& textures
 		case SDL_EVENT_DROP_FILE:
 			if (event.drop.data != nullptr)
 			{
 				droppedFilePath = event.drop.data;
 				droppedFile = true;
-				std::cout << "File dropped: " << droppedFilePath << std::endl;
 
-				// Determine file type
+				// Determine dropped file type
 				if (droppedFilePath.size() >= 4)
 				{
 					std::string extension = droppedFilePath.substr(droppedFilePath.size() - 4);
 					for (char& c : extension) c = tolower(c);
 
 					if (extension == ".fbx")
-					{
 						droppedFileType = DROPPED_FBX;
-					}
 					else if (extension == ".png" || extension == ".dds")
-					{
 						droppedFileType = DROPPED_TEXTURE;
-					}
 					else
-					{
 						droppedFileType = DROPPED_NONE;
-					}
 				}
 			}
 			break;
 
 		case SDL_EVENT_MOUSE_WHEEL:
-		{
 			if (!imguiWantCaptureMouse)
 			{
 				Camera* camera = Application::GetInstance().renderer->GetCamera();
 				camera->HandleScrollInput(static_cast<float>(event.wheel.y));
 			}
-		}
-		break;
+			break;
 		}
 	}
 
-	// Tecla F - Focus en geometria (falta implementar logica seleccion)
-	//if (keyboard[SDL_SCANCODE_F] == KEY_DOWN)
-	//{
-	//	Camera* camera = Application::GetInstance().renderer->GetCamera();
-	//	glm::vec3 selectedObjectPosition(0.0f, 0.0f, 0.0f);
-	//	float selectedObjectRadius = 1.0f; // Radio aproximado del objeto
-	//	camera->FocusOnTarget(selectedObjectPosition, selectedObjectRadius);
-	//}
-
+	// Camera movement with WASD + right mouse button
+	ImGuiIO& io = ImGui::GetIO();
 	Camera* camera = Application::GetInstance().renderer->GetCamera();
 	const float cameraBaseSpeed = 2.5f;
 	float speedMultiplier = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT] ? 2.0f : 1.0f;
 	float cameraSpeed = cameraBaseSpeed * speedMultiplier * Application::GetInstance().time->GetDeltaTime();
-	// Only active when you press right-click (WASD movement)
-	if (!io.WantCaptureKeyboard && (mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_DOWN))
+
+	Uint32 mouseState = SDL_GetMouseState(NULL, NULL);
+	bool rightMousePressed = (mouseState & SDL_BUTTON_RMASK) != 0;
+
+	// WASD movement while right mouse button is pressed
+	if (rightMousePressed && (keys[SDL_SCANCODE_W] || keys[SDL_SCANCODE_S] || keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_D]))
 	{
 		glm::vec3 cameraFront = camera->GetFront();
 		glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, camera->GetUp()));
-		glm::vec3 cameraUp = camera->GetUp();
 
-		// WASD - Movimiento horizontal
 		if (keys[SDL_SCANCODE_W])
 			camera->SetPosition(camera->GetPosition() + cameraSpeed * cameraFront);
 		if (keys[SDL_SCANCODE_S])
@@ -289,14 +286,71 @@ bool Input::PreUpdate()
 		if (keys[SDL_SCANCODE_D])
 			camera->SetPosition(camera->GetPosition() + cameraRight * cameraSpeed);
 	}
+
 	glm::vec3 cameraUp = camera->GetUp();
-	// Up
 	if (keys[SDL_SCANCODE_SPACE])
 		camera->SetPosition(camera->GetPosition() + cameraUp * cameraSpeed);
-
-	// Down
 	if (keys[SDL_SCANCODE_LCTRL] || keys[SDL_SCANCODE_RCTRL])
 		camera->SetPosition(camera->GetPosition() - cameraUp * cameraSpeed);
+
+	// Focus on selected object with F key
+	if (!io.WantCaptureKeyboard && keyboard[SDL_SCANCODE_F] == KEY_DOWN)
+	{
+		if (Application::GetInstance().selectionManager->HasSelection())
+		{
+			GameObject* selected = Application::GetInstance().selectionManager->GetSelectedObject();
+			if (selected)
+			{
+				// Get the object's mesh to calculate its center and size
+				ComponentMesh* mesh = static_cast<ComponentMesh*>(selected->GetComponent(ComponentType::MESH));
+				Transform* transform = static_cast<Transform*>(selected->GetComponent(ComponentType::TRANSFORM));
+
+				if (mesh && mesh->HasMesh() && transform)
+				{
+					// Get AABB in local space
+					glm::vec3 localMin = mesh->GetAABBMin();
+					glm::vec3 localMax = mesh->GetAABBMax();
+					glm::vec3 localCenter = (localMin + localMax) * 0.5f;
+
+					// Transform to world space
+					glm::mat4 globalMatrix = transform->GetGlobalMatrix();
+					glm::vec3 worldCenter = glm::vec3(globalMatrix * glm::vec4(localCenter, 1.0f));
+
+					// Calculate radius (approximate sphere enclosing the AABB)
+					glm::vec3 localSize = localMax - localMin;
+					float radius = glm::length(localSize) * 0.5f;
+
+					// Apply scale from transform to radius
+					glm::vec3 scale = transform->GetScale();
+					float maxScale = glm::max(glm::max(scale.x, scale.y), scale.z);
+					radius *= maxScale;
+
+					// Ensure minimum radius to avoid getting too close
+					if (radius < 0.5f)
+						radius = 1.0f;
+
+					// Focus camera on the object with a safe distance multiplier
+					camera->FocusOnTarget(worldCenter, radius);
+
+					// Update orbit target to the object's center
+					camera->SetOrbitTarget(worldCenter);
+
+					LOG_DEBUG("Focused camera on '%s' at position (%.2f, %.2f, %.2f) with radius %.2f",
+						selected->GetName().c_str(), worldCenter.x, worldCenter.y, worldCenter.z, radius);
+				}
+				else if (transform)
+				{
+					// If no mesh, just focus on the transform position
+					glm::mat4 globalMatrix = transform->GetGlobalMatrix();
+					glm::vec3 position = glm::vec3(globalMatrix[3]);
+					camera->FocusOnTarget(position, 2.0f);
+					camera->SetOrbitTarget(position);
+					LOG_DEBUG("Focused camera on '%s' at position (%.2f, %.2f, %.2f)",
+						selected->GetName().c_str(), position.x, position.y, position.z);
+				}
+			}
+		}
+	}
 
 	return true;
 }
