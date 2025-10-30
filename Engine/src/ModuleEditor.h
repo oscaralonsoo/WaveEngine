@@ -5,6 +5,8 @@
 #include <imgui_impl_opengl3.h>
 #include <vector>
 
+class GameObject;
+
 class ModuleEditor : public Module
 {
 public:
@@ -27,6 +29,9 @@ private:
 
     // Jerarqía
     void DrawHierarchyWindow();
+    void DrawGameObjectNode(GameObject* gameObject);
+    void SelectGameObjectAndChildren(GameObject* gameObject);
+
 
     // Inspector
     void DrawInspectorWindow();
@@ -65,14 +70,6 @@ private:
     int lastWindowWidth = 0;
     int lastWindowHeight = 0;
 
-    struct WindowState {
-        ImVec2 pos;
-        ImVec2 size;
-        bool initialized = false;
-    };
-
-    WindowState configWindow;
-    WindowState consoleWindow;
-    WindowState hierarchyWindow;
-    WindowState inspectorWindow;
+    GameObject* renamingObject = nullptr;
+    char renameBuffer[256] = "";
 };

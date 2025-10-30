@@ -1,5 +1,9 @@
 #include "ModuleEditor.h"
 #include "Application.h"
+#include "Log.h"
+#include "GameObject.h"
+#include "SelectionManager.h"
+#include "ModuleScene.h"
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_opengl3.h>
@@ -8,9 +12,9 @@
 #include <IL/il.h>
 #include <windows.h>
 #include <psapi.h>
-#include "Log.h"
 #include <gl/GL.h>
 #include <SDL3/SDL_timer.h>
+
 
 ModuleEditor::ModuleEditor() : Module()
 {
@@ -333,6 +337,17 @@ void ModuleEditor::DrawHierarchyWindow()
 {
     ImGui::Begin("Hierarchy", &showHierarchy);
 
+    GameObject* root = Application::GetInstance().scene->GetRoot();
+
+    if (root != nullptr)
+    {
+        DrawGameObjectNode(root);
+    }
+    else
+    {
+        ImGui::TextDisabled("No scene loaded");
+    }
+
     ImGui::End();
 }
 
@@ -441,4 +456,116 @@ void ModuleEditor::DrawConsoleWindow()
     ImGui::EndChild();
 
     ImGui::End();
+}
+
+void ModuleEditor::DrawGameObjectNode(GameObject* gameObject)
+{
+    if (gameObject == nullptr)
+        return;
+
+    const std::vector<GameObject*>& children = gameObject->GetChildren();
+    bool hasChildren = !children.empty();
+
+    ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow; //  | ImGuiTreeNodeFlags_OpenOnDoubleClick
+
+	// Handle selected game object
+    SelectionManager* selectionManager = Application::GetInstance().selectionManager;
+    if (selectionManager->IsSelected(gameObject))
+    {
+        nodeFlags |= ImGuiTreeNodeFlags_Selected;
+    }
+
+    if (!hasChildren)
+    {
+        nodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+    }
+
+    // =================================================== Handle renaming =====================================================
+    bool isRenaming = (renamingObject == gameObject);
+
+    if (isRenaming)
+    {
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::InputText("##", renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))         // Show input text field for renaming
+        {
+            if (strlen(renameBuffer) > 0)
+            {
+                gameObject->SetName(renameBuffer);
+                LOG_DEBUG("GameObject renamed to: %s", renameBuffer);
+            }
+            renamingObject = nullptr;
+        }
+
+		if (!ImGui::IsItemActive() && (ImGui::IsMouseClicked(0) || ImGui::IsKeyPressed(ImGuiKey_Escape))) // Clicked outside or pressed Escape
+        {
+            renamingObject = nullptr;
+        }
+
+    }
+    else
+    {
+	// ============================================ Display GameObject Node ===================================================
+        // Display the node
+        bool nodeOpen = ImGui::TreeNodeEx(gameObject, nodeFlags, "%s", gameObject->GetName().c_str());
+        // Handle selection
+        if (ImGui::IsItemClicked())
+        {
+            const bool* keys = SDL_GetKeyboardState(NULL);
+            bool shiftPressed = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT];
+
+            if (shiftPressed)
+            {
+                // Shift+ click: Multi select
+                selectionManager->ToggleSelection(gameObject);
+            }
+            else
+            {
+                if (hasChildren)
+                {
+                    // Select all children
+                    selectionManager->ClearSelection();
+                    SelectGameObjectAndChildren(gameObject);
+                }
+                else
+                {
+                    // Click 
+                    selectionManager->SetSelectedObject(gameObject);
+                }
+            }
+        }
+
+        // Handle renaming on double click
+		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) // Mouse over and double clicked
+        {
+            renamingObject = gameObject;
+			strncpy(renameBuffer, gameObject->GetName().c_str(), sizeof(renameBuffer) - 1); // Copy current name to buffer
+        }
+
+        // Recursively draw children
+        if (nodeOpen && hasChildren)
+        {
+            for (GameObject* child : children)
+            {
+                DrawGameObjectNode(child);
+            }
+            ImGui::TreePop();
+        }
+    }
+}
+
+void ModuleEditor::SelectGameObjectAndChildren(GameObject* gameObject)
+{
+    if (gameObject == nullptr)
+        return;
+
+    // Add GameObject to selection
+    SelectionManager* selectionManager = Application::GetInstance().selectionManager;
+    selectionManager->AddToSelection(gameObject);
+
+    // Recursively add all children
+    const std::vector<GameObject*>& children = gameObject->GetChildren();
+    for (GameObject* child : children)
+    {
+        SelectGameObjectAndChildren(child);
+    }
 }
