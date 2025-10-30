@@ -26,6 +26,10 @@ bool Renderer::Start()
     LOG_DEBUG("=== Initializing Renderer Module ===");
     LOG_CONSOLE("Initializing renderer and shaders...");
 
+    // Configuración OpenGL para 3D
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
     // Create default shader
     defaultShader = make_unique<Shader>();
 
@@ -40,36 +44,17 @@ bool Renderer::Start()
         LOG_DEBUG("Shader created successfully - Program ID: %d", defaultShader->GetProgramID());
         LOG_CONSOLE("OpenGL shaders compiled successfully");
     }
-    // Create default texture
+
+    // Create default CHECKERBOARD texture (para objetos sin material)
     defaultTexture = make_unique<Texture>();
-
-    if (!defaultTexture->LoadFromFile("Assets\\Baker_house.png"))
-    {
-        LOG_DEBUG("WARNING: Could not load default texture from file");
-        LOG_DEBUG("Creating fallback checkerboard texture");
-        LOG_CONSOLE("WARNING: Using default checkerboard texture");
-        defaultTexture->CreateCheckerboard();
-    }
-    else
-    {
-        LOG_DEBUG("Texture loaded successfully from file");
-
-    }
+    defaultTexture->CreateCheckerboard();
+    LOG_DEBUG("Default checkerboard texture created");
 
     LOG_DEBUG("Renderer initialized successfully");
     LOG_CONSOLE("Renderer ready");
 
-    // for testing
-    sphere = Primitives::CreateSphere();
-    LoadMesh(sphere);
-    cylinder = Primitives::CreateCylinder();
-    LoadMesh(cylinder);
-    pyramid = Primitives::CreatePyramid();
-    LoadMesh(pyramid);
-
     return true;
 }
-
 void Renderer::LoadMesh(Mesh& mesh)
 {
     // Generate VAO

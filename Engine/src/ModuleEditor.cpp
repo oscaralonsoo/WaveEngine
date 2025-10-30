@@ -14,6 +14,10 @@
 #include <psapi.h>
 #include <gl/GL.h>
 #include <SDL3/SDL_timer.h>
+#include "Primitives.h"
+#include "GameObject.h"
+#include "ComponentMesh.h"
+#include "ComponentMaterial.h"
 
 
 ModuleEditor::ModuleEditor() : Module()
@@ -33,8 +37,7 @@ bool ModuleEditor::Start()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    //io.IniFilename = NULL;  // for testing
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; 
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
     ImGui_ImplSDL3_InitForOpenGL(Application::GetInstance().window->GetWindow(), Application::GetInstance().renderContext->GetContext());
     ImGui_ImplOpenGL3_Init();
@@ -42,7 +45,6 @@ bool ModuleEditor::Start()
     ImGui::StyleColorsDark();
 
     LOG_CONSOLE("Editor initialized");
-
 
     return true;
 }
@@ -58,6 +60,7 @@ bool ModuleEditor::PreUpdate()
 
 bool ModuleEditor::Update()
 {
+
     int windowWidth, windowHeight;
     Application::GetInstance().window->GetWindowSize(windowWidth, windowHeight);
 
@@ -74,40 +77,46 @@ bool ModuleEditor::Update()
     ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.30f, halfHeight + (halfHeight * 0.5f)), condition);
     DrawConfigurationWindow();
 
-	// Down left
+    // Down left
     ImGui::SetNextWindowPos(ImVec2(0, 20 + halfHeight + (halfHeight * 0.5f)), condition);
-    ImGui::SetNextWindowSize(ImVec2(windowWidth*0.75f, halfHeight * 0.5f), condition);
+    ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.75f, halfHeight * 0.5f), condition);
     DrawConsoleWindow();
 
-	// Down right
+    // Down right
     ImGui::SetNextWindowPos(ImVec2(windowWidth * 0.75f, 20 + halfHeight), condition);
     ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.25f, halfHeight), condition);
     DrawHierarchyWindow();
 
-	// Up right
+    // Up right
     ImGui::SetNextWindowPos(ImVec2(windowWidth * 0.75f, 20), condition);
     ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.25f, halfHeight), condition);
     DrawInspectorWindow();
 
-    //DrawConfigurationWindow();
+    if (showConfiguration)
+        DrawConfigurationWindow();
 
-    //DrawConsoleWindow();
+    if (showConsole)
+        DrawConsoleWindow();
 
-    //DrawHierarchyWindow();
+    if (showHierarchy)
+        DrawHierarchyWindow();
 
-    //DrawInspectorWindow();
+    if (showInspector)
+        DrawInspectorWindow();
+
+    if (showAbout)
+        DrawAboutWindow();
 
     return true;
 }
 
 bool ModuleEditor::PostUpdate()
 {
+    ShowMenuBar();
 
-	ShowMenuBar();
-
-	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-	return true;
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    return true;
 }
 
 bool ModuleEditor::CleanUp()
@@ -122,47 +131,66 @@ bool ModuleEditor::CleanUp()
 }
 
 bool ModuleEditor::ShowMenuBar() {
-	if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMainMenuBar()) {
 
-		if (ImGui::BeginMenu("File")) {
-			if (ImGui::MenuItem("Exit")) {
-				// Exit the application
-				Application::GetInstance().RequestExit();
-			}
-			ImGui::EndMenu();
-		}
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Exit")) {
+                Application::GetInstance().RequestExit();
+            }
+            ImGui::EndMenu();
+        }
 
-		if (ImGui::BeginMenu("View")) {
-			ImGui::MenuItem("Console", NULL, &showConsole);
-			ImGui::MenuItem("Hierarchy", NULL, &showHierarchy);
-			ImGui::MenuItem("Inspector", NULL, &showInspector);
-			ImGui::EndMenu();
-		}
+        if (ImGui::BeginMenu("View")) {
+            ImGui::MenuItem("Configuration", NULL, &showConfiguration);
+            ImGui::MenuItem("Console", NULL, &showConsole);
+            ImGui::MenuItem("Hierarchy", NULL, &showHierarchy);
+            ImGui::MenuItem("Inspector", NULL, &showInspector);
+            ImGui::EndMenu();
+        }
 
-		if (ImGui::BeginMenu("Help")) {
-			if (ImGui::MenuItem("Documentation")) {
-				// Open browser with documentation
-				SDL_OpenURL("https://github.com/Audra0000/Engine");
-			}
-			if (ImGui::MenuItem("Report a Bug")) {
-				// Open browser with issue tracker
-				SDL_OpenURL("https://github.com/Audra0000/Engine/issues");
-			}
-			if (ImGui::MenuItem("Download Latest")) {
-				// Open browser with latest releases
-				SDL_OpenURL("https://github.com/Audra0000/Engine/releases");
-			}
-			ImGui::Separator();
-			ImGui::MenuItem("About", NULL, &showAbout);
-			ImGui::EndMenu();
-		}
+        if (ImGui::BeginMenu("GameObject")) {
+            if (ImGui::BeginMenu("Create Primitive")) {
+                if (ImGui::MenuItem("Cube")) {
+                    CreatePrimitiveGameObject("Cube", Primitives::CreateCube());
+                }
+                if (ImGui::MenuItem("Pyramid")) {
+                    CreatePrimitiveGameObject("Pyramid", Primitives::CreatePyramid());
+                }
+                if (ImGui::MenuItem("Plane")) {
+                    CreatePrimitiveGameObject("Plane", Primitives::CreatePlane());
+                }
+                if (ImGui::MenuItem("Sphere")) {
+                    CreatePrimitiveGameObject("Sphere", Primitives::CreateSphere());
+                }
+                if (ImGui::MenuItem("Cylinder")) {
+                    CreatePrimitiveGameObject("Cylinder", Primitives::CreateCylinder());
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenu();
+        }
 
-		ImGui::EndMainMenuBar();
-	}
-	return true;
+        if (ImGui::BeginMenu("Help")) {
+            if (ImGui::MenuItem("Documentation")) {
+                SDL_OpenURL("https://github.com/Audra0000/Engine");
+            }
+            if (ImGui::MenuItem("Report a Bug")) {
+                SDL_OpenURL("https://github.com/Audra0000/Engine/issues");
+            }
+            if (ImGui::MenuItem("Download Latest")) {
+                SDL_OpenURL("https://github.com/Audra0000/Engine/releases");
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("About")) {
+                showAbout = true;
+            }
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
+    return true;
 }
-
-
 
 void ModuleEditor::DrawConfigurationWindow()
 {
@@ -193,12 +221,41 @@ void ModuleEditor::DrawConfigurationWindow()
     ImGui::End();
 }
 
+void ModuleEditor::CreatePrimitiveGameObject(const std::string& name, Mesh mesh)
+{
+    GameObject* Object = new GameObject(name);
+    ComponentMesh* meshComp = static_cast<ComponentMesh*>(Object->CreateComponent(ComponentType::MESH));
+
+    // Seleccionar primitiva seg�n el nombre
+    Mesh selectedMesh;
+
+    if (name == "Cube")
+        selectedMesh = Primitives::CreateCube();
+    else if (name == "Pyramid")
+        selectedMesh = Primitives::CreatePyramid();
+    else if (name == "Plane")
+        selectedMesh = Primitives::CreatePlane();
+    else if (name == "Sphere")
+        selectedMesh = Primitives::CreateSphere();
+    else if (name == "Cylinder")
+        selectedMesh = Primitives::CreateCylinder();
+    else
+        selectedMesh = mesh; // Usar el mesh pasado por par�metro si no coincide
+
+    meshComp->SetMesh(selectedMesh);
+
+    GameObject* root = Application::GetInstance().scene->GetRoot();
+    root->AddChild(Object);
+
+    LOG_CONSOLE("%s created", name.c_str());
+    LOG_DEBUG("Primitive created: %s", name.c_str());
+}
+
 void ModuleEditor::DrawFPSGraph()
 {
-    // Fps
     fpsTimer += ImGui::GetIO().DeltaTime;
 
-    if (fpsTimer >= 0.1f)  
+    if (fpsTimer >= 0.1f)
     {
         float fps = ImGui::GetIO().Framerate;
         fpsHistory.push_back(fps);
@@ -225,7 +282,6 @@ void ModuleEditor::DrawHardwareInfo()
 {
     // CPU
     ImGui::Text("CPU Cores: %d", SDL_GetNumLogicalCPUCores());
-
     // RAM
     ImGui::Text("System RAM: %d MB", SDL_GetSystemRAM());
 
@@ -255,7 +311,6 @@ void ModuleEditor::DrawHardwareInfo()
 
 	// OpenGL
     ImGui::BulletText("OpenGL: %s", glGetString(GL_VERSION));
-    
 	// ImGui
     ImGui::BulletText("ImGui: %s", IMGUI_VERSION);
 
@@ -265,7 +320,6 @@ void ModuleEditor::DrawHardwareInfo()
     int devilMinor = (devilVersion / 10) % 10;
     int devilPatch = devilVersion % 10;
     ImGui::BulletText("DevIL: %d.%d.%d", devilMajor, devilMinor, devilPatch);
-    
 }
 
 void ModuleEditor::DrawWindowSettings()
@@ -279,7 +333,7 @@ void ModuleEditor::DrawWindowSettings()
     int tempWidth = width;
     if (ImGui::InputInt("Width", &tempWidth, 10, 100))
     {
-        if (tempWidth > 0) 
+        if (tempWidth > 0)
         {
             SDL_SetWindowSize(Application::GetInstance().window->GetWindow(), tempWidth, height);
         }
@@ -289,7 +343,7 @@ void ModuleEditor::DrawWindowSettings()
     int tempHeight = height;
     if (ImGui::InputInt("Height", &tempHeight, 10, 100))
     {
-        if (tempHeight > 0) 
+        if (tempHeight > 0)
         {
             SDL_SetWindowSize(Application::GetInstance().window->GetWindow(), width, tempHeight);
         }
@@ -354,7 +408,6 @@ void ModuleEditor::DrawHierarchyWindow()
 void ModuleEditor::DrawInspectorWindow()
 {
     ImGui::Begin("Inspector", &showInspector);
-
     ImGui::End();
 }
 
@@ -382,13 +435,12 @@ void ModuleEditor::DrawConsoleWindow()
     ImGui::SameLine();
     ImGui::Checkbox("Auto-scroll", &autoScroll);
 
-	ImGui::Separator();
+    ImGui::Separator();
 
     ImVec2 availableSpace = ImGui::GetContentRegionAvail();
-
     ImGui::BeginChild("Scrolling", availableSpace, true, ImGuiWindowFlags_HorizontalScrollbar);
 
-	const std::vector<std::string>& logs = ConsoleLog::GetInstance().GetLogs();
+    const std::vector<std::string>& logs = ConsoleLog::GetInstance().GetLogs();
 
     for (const auto& log : logs)
     {
@@ -397,7 +449,7 @@ void ModuleEditor::DrawConsoleWindow()
         bool isWarning = false;
         bool isInfo = false;
         bool isSuccess = false;
-		bool isLoading = false;
+        bool isLoading = false;
         bool isLibraryInfo = false;
 
         if (log.find("DevIL") != std::string::npos || log.find("SDL3") != std::string::npos || log.find("OpenGL") != std::string::npos || log.find("ASSIMP") != std::string::npos || log.find("Mesh processed") != std::string::npos)
@@ -454,6 +506,75 @@ void ModuleEditor::DrawConsoleWindow()
     }
 
     ImGui::EndChild();
+    ImGui::End();
+}
+
+void ModuleEditor::DrawAboutWindow()
+{
+    ImGui::Begin("About", &showAbout);
+
+    ImGui::Text("Engine Name: Audra Engine");
+    ImGui::Text("Version: 0.1.0");
+
+    ImGui::Separator();
+
+    ImGui::Text("Team Members:");
+    ImGui::BulletText("Developer 1");
+    ImGui::BulletText("Developer 2");
+
+    ImGui::Separator();
+
+    ImGui::Text("Libraries Used:");
+
+    // SDL
+    int sdlVersion = SDL_GetVersion();
+    int major = SDL_VERSIONNUM_MAJOR(sdlVersion);
+    int minor = SDL_VERSIONNUM_MINOR(sdlVersion);
+    int patch = SDL_VERSIONNUM_MICRO(sdlVersion);
+    ImGui::BulletText("SDL3: %d.%d.%d", major, minor, patch);
+
+    // OpenGL
+    ImGui::BulletText("OpenGL: %s", glGetString(GL_VERSION));
+
+    // ImGui
+    ImGui::BulletText("ImGui: %s", IMGUI_VERSION);
+
+    // DevIL
+    ILint devilVersion = ilGetInteger(IL_VERSION_NUM);
+    int devilMajor = devilVersion / 100;
+    int devilMinor = (devilVersion / 10) % 10;
+    int devilPatch = devilVersion % 10;
+    ImGui::BulletText("DevIL: %d.%d.%d", devilMajor, devilMinor, devilPatch);
+
+    ImGui::Separator();
+
+    ImGui::TextWrapped("MIT License");
+    ImGui::Spacing();
+    ImGui::TextWrapped("Copyright (c) 2025 Audra Engine");
+    ImGui::Spacing();
+    ImGui::TextWrapped(
+        "Permission is hereby granted, free of charge, to any person obtaining a copy "
+        "of this software and associated documentation files (the \"Software\"), to deal "
+        "in the Software without restriction, including without limitation the rights "
+        "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell "
+        "copies of the Software, and to permit persons to whom the Software is "
+        "furnished to do so, subject to the following conditions:"
+    );
+    ImGui::Spacing();
+    ImGui::TextWrapped(
+        "The above copyright notice and this permission notice shall be included in all "
+        "copies or substantial portions of the Software."
+    );
+    ImGui::Spacing();
+    ImGui::TextWrapped(
+        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR "
+        "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, "
+        "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE "
+        "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER "
+        "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, "
+        "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE "
+        "SOFTWARE."
+    );
 
     ImGui::End();
 }

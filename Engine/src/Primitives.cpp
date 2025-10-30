@@ -8,15 +8,12 @@
 Mesh Primitives::CreateTriangle()
 {
     Mesh mesh;
-
     mesh.vertices = {
         {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
         {{ 0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
         {{ 0.0f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.5f, 1.0f}}
     };
-
     mesh.indices = { 0, 1, 2 };
-
     return mesh;
 }
 
@@ -24,56 +21,49 @@ Mesh Primitives::CreateCube()
 {
     Mesh mesh;
 
-    //mesh.vertices.push_back({
-    //{ -0.5f, -0.5f,  0.5f },  // posición
-    //{  0.0f,  0.0f,  1.0f },  // normal
-    //{  0.0f,  0.0f }          // coordenadas UV
-    //    });
-
-    // Front face
+    // Front
     mesh.vertices.push_back({ {-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 1.0f} });
     mesh.vertices.push_back({ {-0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 1.0f} });
 
-    // Back face
+    // Back
     mesh.vertices.push_back({ { 0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 0.0f} });
     mesh.vertices.push_back({ {-0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 0.0f} });
     mesh.vertices.push_back({ {-0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 1.0f} });
     mesh.vertices.push_back({ { 0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 1.0f} });
 
-    // Left face
+    // Left
     mesh.vertices.push_back({ {-0.5f, -0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}, {0.0f, 0.0f} });
     mesh.vertices.push_back({ {-0.5f, -0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}, {1.0f, 0.0f} });
     mesh.vertices.push_back({ {-0.5f,  0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}, {1.0f, 1.0f} });
     mesh.vertices.push_back({ {-0.5f,  0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}, {0.0f, 1.0f} });
 
-    // Right face
+    // Right
     mesh.vertices.push_back({ { 0.5f, -0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}, {0.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.5f, -0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}, {1.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.5f,  0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}, {1.0f, 1.0f} });
     mesh.vertices.push_back({ { 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}, {0.0f, 1.0f} });
 
-    // Top face
+    // Top
     mesh.vertices.push_back({ {-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {1.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {1.0f, 1.0f} });
     mesh.vertices.push_back({ {-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 1.0f} });
 
-    // Bottom face
+    // Bottom
     mesh.vertices.push_back({ {-0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}, {0.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}, {1.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}, {1.0f, 1.0f} });
     mesh.vertices.push_back({ {-0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}, {0.0f, 1.0f} });
 
-    // Indices (6 faces * 2 triangles * 3 vertices = 36 indices)
     mesh.indices = {
-        0, 1, 2,  2, 3, 0,      // Front
-        4, 5, 6,  6, 7, 4,      // Back
-        8, 9, 10, 10, 11, 8,    // Left
-        12, 13, 14, 14, 15, 12, // Right
-        16, 17, 18, 18, 19, 16, // Top
-        20, 21, 22, 22, 23, 20  // Bottom
+        0, 1, 2,  2, 3, 0,
+        4, 5, 6,  6, 7, 4,
+        8, 9, 10, 10, 11, 8,
+        12, 13, 14, 14, 15, 12,
+        16, 17, 18, 18, 19, 16,
+        20, 21, 22, 22, 23, 20
     };
 
     return mesh;
@@ -83,27 +73,27 @@ Mesh Primitives::CreatePyramid()
 {
     Mesh mesh;
 
-    // Front face
+    // Front
     mesh.vertices.push_back({ {-0.5f, -0.5f,  0.5f}, {0.0f, 0.447f, 0.894f}, {0.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.5f, -0.5f,  0.5f}, {0.0f, 0.447f, 0.894f}, {1.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.0f,  0.5f,  0.0f}, {0.0f, 0.447f, 0.894f}, {0.5f, 1.0f} });
 
-    // Right face
+    // Right
     mesh.vertices.push_back({ { 0.5f, -0.5f,  0.5f}, {0.894f, 0.447f, 0.0f}, {0.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.5f, -0.5f, -0.5f}, {0.894f, 0.447f, 0.0f}, {1.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.0f,  0.5f,  0.0f}, {0.894f, 0.447f, 0.0f}, {0.5f, 1.0f} });
 
-    // Back face
+    // Back
     mesh.vertices.push_back({ { 0.5f, -0.5f, -0.5f}, {0.0f, 0.447f, -0.894f}, {0.0f, 0.0f} });
     mesh.vertices.push_back({ {-0.5f, -0.5f, -0.5f}, {0.0f, 0.447f, -0.894f}, {1.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.0f,  0.5f,  0.0f}, {0.0f, 0.447f, -0.894f}, {0.5f, 1.0f} });
 
-    // Left face
+    // Left
     mesh.vertices.push_back({ {-0.5f, -0.5f, -0.5f}, {-0.894f, 0.447f, 0.0f}, {0.0f, 0.0f} });
     mesh.vertices.push_back({ {-0.5f, -0.5f,  0.5f}, {-0.894f, 0.447f, 0.0f}, {1.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.0f,  0.5f,  0.0f}, {-0.894f, 0.447f, 0.0f}, {0.5f, 1.0f} });
 
-    // Bottom face (2 triangles)
+    // Bottom
     mesh.vertices.push_back({ {-0.5f, -0.5f,  0.5f}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f} });
     mesh.vertices.push_back({ { 0.5f, -0.5f, -0.5f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f} });
     mesh.vertices.push_back({ { 0.5f, -0.5f,  0.5f}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f} });
@@ -112,7 +102,6 @@ Mesh Primitives::CreatePyramid()
     mesh.vertices.push_back({ {-0.5f, -0.5f, -0.5f}, {0.0f, -1.0f, 0.0f}, {0.0f, 1.0f} });
     mesh.vertices.push_back({ { 0.5f, -0.5f, -0.5f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f} });
 
-    // Indices
     for (unsigned int i = 0; i < 18; i++)
         mesh.indices.push_back(i);
 
@@ -126,14 +115,22 @@ Mesh Primitives::CreatePlane(float width, float height)
     float halfW = width * 0.5f;
     float halfH = height * 0.5f;
 
-    mesh.vertices = {
-        {{-halfW, 0.0f, -halfH}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-        {{ halfW, 0.0f, -halfH}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-        {{ halfW, 0.0f,  halfH}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-        {{-halfW, 0.0f,  halfH}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}
-    };
+    // Top face
+    mesh.vertices.push_back({ {-halfW, 0.0f, -halfH}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f} });
+    mesh.vertices.push_back({ { halfW, 0.0f, -halfH}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} });
+    mesh.vertices.push_back({ { halfW, 0.0f,  halfH}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f} });
+    mesh.vertices.push_back({ {-halfW, 0.0f,  halfH}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f} });
 
-    mesh.indices = { 0, 1, 2, 2, 3, 0 };
+    // Bottom face
+    mesh.vertices.push_back({ {-halfW, 0.0f, -halfH}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f} });
+    mesh.vertices.push_back({ { halfW, 0.0f, -halfH}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f} });
+    mesh.vertices.push_back({ { halfW, 0.0f,  halfH}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f} });
+    mesh.vertices.push_back({ {-halfW, 0.0f,  halfH}, {0.0f, -1.0f, 0.0f}, {0.0f, 1.0f} });
+
+    mesh.indices = {
+        0, 1, 2,  2, 3, 0,
+        4, 6, 5,  6, 4, 7
+    };
 
     return mesh;
 }
@@ -182,52 +179,37 @@ Mesh Primitives::CreateSphere(float radius, unsigned int rings, unsigned int sec
 Mesh Primitives::CreateCylinder(float radius, float height, unsigned int segments)
 {
     Mesh mesh;
-
     float halfHeight = height * 0.5f;
 
-    // Top center
-    mesh.vertices.push_back({ {0.0f, halfHeight, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.5f, 0.5f} });
-
-    // Bottom center
-    mesh.vertices.push_back({ {0.0f, -halfHeight, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.5f} });
-
-    // Top and bottom circle vertices
+    // Body vertices
     for (unsigned int i = 0; i <= segments; i++)
     {
         float angle = 2.0f * M_PI * i / segments;
-        float x = cosf(angle) * radius;
-        float z = sinf(angle) * radius;
+        float x = cosf(angle);
+        float z = sinf(angle);
 
-        // Top circle
-        mesh.vertices.push_back({ {x, halfHeight, z}, {0.0f, 1.0f, 0.0f}, {(float)i / segments, 0.0f} });
+        // Top vertex
+        mesh.vertices.push_back({
+            {x * radius, halfHeight, z * radius},
+            {x, 0.0f, z},
+            {(float)i / segments, 0.0f}
+            });
 
-        // Bottom circle
-        mesh.vertices.push_back({ {x, -halfHeight, z}, {0.0f, -1.0f, 0.0f}, {(float)i / segments, 1.0f} });
+        // Bottom vertex
+        mesh.vertices.push_back({
+            {x * radius, -halfHeight, z * radius},
+            {x, 0.0f, z},
+            {(float)i / segments, 1.0f}
+            });
     }
 
-    // Top cap indices
+    // Body indices
     for (unsigned int i = 0; i < segments; i++)
     {
-        mesh.indices.push_back(0);
-        mesh.indices.push_back(2 + i * 2);
-        mesh.indices.push_back(2 + (i + 1) * 2);
-    }
-
-    // Bottom cap indices
-    for (unsigned int i = 0; i < segments; i++)
-    {
-        mesh.indices.push_back(1);
-        mesh.indices.push_back(3 + (i + 1) * 2);
-        mesh.indices.push_back(3 + i * 2);
-    }
-
-    // Side faces indices
-    for (unsigned int i = 0; i < segments; i++)
-    {
-        unsigned int topCurrent = 2 + i * 2;
-        unsigned int bottomCurrent = 3 + i * 2;
-        unsigned int topNext = 2 + (i + 1) * 2;
-        unsigned int bottomNext = 3 + (i + 1) * 2;
+        unsigned int topCurrent = i * 2;
+        unsigned int bottomCurrent = i * 2 + 1;
+        unsigned int topNext = (i + 1) * 2;
+        unsigned int bottomNext = (i + 1) * 2 + 1;
 
         mesh.indices.push_back(topCurrent);
         mesh.indices.push_back(bottomCurrent);
@@ -236,6 +218,39 @@ Mesh Primitives::CreateCylinder(float radius, float height, unsigned int segment
         mesh.indices.push_back(topNext);
         mesh.indices.push_back(bottomCurrent);
         mesh.indices.push_back(bottomNext);
+    }
+
+    unsigned int baseIndex = mesh.vertices.size();
+
+    // Cap centers
+    mesh.vertices.push_back({ {0.0f, halfHeight, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.5f, 0.5f} });
+    mesh.vertices.push_back({ {0.0f, -halfHeight, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.5f} });
+
+    // Cap vertices
+    for (unsigned int i = 0; i <= segments; i++)
+    {
+        float angle = 2.0f * M_PI * i / segments;
+        float x = cosf(angle) * radius;
+        float z = sinf(angle) * radius;
+
+        mesh.vertices.push_back({ {x, halfHeight, z}, {0.0f, 1.0f, 0.0f}, {0.5f + cosf(angle) * 0.5f, 0.5f + sinf(angle) * 0.5f} });
+        mesh.vertices.push_back({ {x, -halfHeight, z}, {0.0f, -1.0f, 0.0f}, {0.5f + cosf(angle) * 0.5f, 0.5f + sinf(angle) * 0.5f} });
+    }
+
+    // Top cap indices
+    for (unsigned int i = 0; i < segments; i++)
+    {
+        mesh.indices.push_back(baseIndex);
+        mesh.indices.push_back(baseIndex + 2 + i * 2);
+        mesh.indices.push_back(baseIndex + 2 + (i + 1) * 2);
+    }
+
+    // Bottom cap indices
+    for (unsigned int i = 0; i < segments; i++)
+    {
+        mesh.indices.push_back(baseIndex + 1);
+        mesh.indices.push_back(baseIndex + 3 + (i + 1) * 2);
+        mesh.indices.push_back(baseIndex + 3 + i * 2);
     }
 
     return mesh;

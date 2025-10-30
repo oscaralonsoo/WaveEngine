@@ -14,7 +14,7 @@ Camera::Camera()
 	lastY(300.0f),
 	firstMouse(true),
 	fov(45.0f),
-	aspectRatio(16.0f / 9.0f), 
+	aspectRatio(16.0f / 9.0f),
 	orbitTarget(0.0f, 0.0f, 0.0f),
 	orbitDistance(3.0f),
 	lastOrbitX(400.0f),
@@ -45,7 +45,7 @@ void Camera::UpdateProjectionMatrix()
 {
 	projectionMatrix = glm::perspective(
 		glm::radians(fov),
-		aspectRatio,  
+		aspectRatio,
 		0.1f,
 		100.0f
 	);
@@ -96,14 +96,10 @@ void Camera::HandleMouseInput(float xpos, float ypos)
 
 void Camera::HandleScrollInput(float yoffset)
 {
-	fov -= yoffset;
+	float zoomSpeed = 0.5f;
+	cameraPos += cameraFront * yoffset * zoomSpeed;
 
-	if (fov < 1.0f)
-		fov = 1.0f;
-	if (fov > 45.0f)
-		fov = 45.0f;
-
-	UpdateProjectionMatrix();  
+	orbitDistance = glm::length(cameraPos - orbitTarget);
 }
 
 void Camera::HandleOrbitInput(float xpos, float ypos)
@@ -113,8 +109,10 @@ void Camera::HandleOrbitInput(float xpos, float ypos)
 		lastOrbitX = xpos;
 		lastOrbitY = ypos;
 		firstOrbit = false;
+		orbitTarget = cameraPos + cameraFront * orbitDistance;
 		// Calculate the current distance to the target
 		orbitDistance = glm::length(cameraPos - orbitTarget);
+		return;
 	}
 
 	float xoffset = xpos - lastOrbitX;
@@ -152,7 +150,7 @@ void Camera::UpdateOrbitPosition()
 
 void Camera::HandlePanInput(float xoffset, float yoffset)
 {
-	const float panSensitivity = 0.005f;
+	const float panSensitivity = 0.003f;
 
 	// Calculate the right and up vectors of the camera
 	glm::vec3 right = glm::normalize(glm::cross(cameraFront, cameraUp));
@@ -171,9 +169,14 @@ void Camera::FocusOnTarget(const glm::vec3& targetPosition, float targetRadius)
 	orbitTarget = targetPosition;
 
 	// Calculate an appropriate distance based on the object's radius
-	orbitDistance = targetRadius * 2.5f;
-	if (orbitDistance < 1.0f)
-		orbitDistance = 3.0f;
+	// Multiplicador balanceado para buena visualización
+	orbitDistance = targetRadius * 0.05;
+
+	if (orbitDistance < 2.0f)
+		orbitDistance = 2.0f;
+
+	if (orbitDistance > 30.0f)
+		orbitDistance = 30.0f;
 
 	// Position the camera facing the target from the current direction
 	UpdateCameraVectors();
