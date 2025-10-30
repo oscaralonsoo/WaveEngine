@@ -47,7 +47,7 @@ bool FileSystem::Start()
 
     GameObject* houseModel = LoadFBXAsGameObject(housePath);
 
-    /*if (houseModel != nullptr)
+    if (houseModel != nullptr)
     {
         GameObject* root = Application::GetInstance().scene->GetRoot();
         root->AddChild(houseModel);
@@ -70,7 +70,7 @@ bool FileSystem::Start()
 
         LOG_DEBUG("Failed to load default FBX, using fallback pyramid. Use drag & drop");
         LOG_CONSOLE("Using fallback geometry");
-    }*/
+    }
 
     return true;
 }

@@ -15,7 +15,6 @@
 #include <gl/GL.h>
 #include <SDL3/SDL_timer.h>
 #include "Primitives.h"
-#include "GameObject.h"
 #include "ComponentMesh.h"
 #include "ComponentMaterial.h"
 
@@ -37,6 +36,7 @@ bool ModuleEditor::Start()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+    //io.IniFilename = NULL;  // for testing
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
     ImGui_ImplSDL3_InitForOpenGL(Application::GetInstance().window->GetWindow(), Application::GetInstance().renderContext->GetContext());
@@ -73,39 +73,47 @@ bool ModuleEditor::Update()
     ImGuiCond condition = windowResized ? ImGuiCond_Always : ImGuiCond_FirstUseEver;
 
     // Up left
-    ImGui::SetNextWindowPos(ImVec2(0, 20), condition);
-    ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.30f, halfHeight + (halfHeight * 0.5f)), condition);
-    DrawConfigurationWindow();
+    if (showConfiguration) {
+        ImGui::SetNextWindowPos(ImVec2(0, 20), condition);
+        ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.30f, halfHeight + (halfHeight * 0.5f)), condition);
+        DrawConfigurationWindow();
+    }
 
     // Down left
-    ImGui::SetNextWindowPos(ImVec2(0, 20 + halfHeight + (halfHeight * 0.5f)), condition);
-    ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.75f, halfHeight * 0.5f), condition);
-    DrawConsoleWindow();
+    if (showConsole) {
+        ImGui::SetNextWindowPos(ImVec2(0, 20 + halfHeight + (halfHeight * 0.5f)), condition);
+        ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.75f, halfHeight * 0.5f), condition);
+        DrawConsoleWindow();
+    }
 
     // Down right
-    ImGui::SetNextWindowPos(ImVec2(windowWidth * 0.75f, 20 + halfHeight), condition);
-    ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.25f, halfHeight), condition);
-    DrawHierarchyWindow();
+    if (showHierarchy) {
+        ImGui::SetNextWindowPos(ImVec2(windowWidth * 0.75f, 20 + halfHeight), condition);
+        ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.25f, halfHeight), condition);
+        DrawHierarchyWindow();
+    }
 
     // Up right
-    ImGui::SetNextWindowPos(ImVec2(windowWidth * 0.75f, 20), condition);
-    ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.25f, halfHeight), condition);
-    DrawInspectorWindow();
-
-    if (showConfiguration)
-        DrawConfigurationWindow();
-
-    if (showConsole)
-        DrawConsoleWindow();
-
-    if (showHierarchy)
-        DrawHierarchyWindow();
-
-    if (showInspector)
+    if (showInspector) {
+        ImGui::SetNextWindowPos(ImVec2(windowWidth * 0.75f, 20), condition);
+        ImGui::SetNextWindowSize(ImVec2(windowWidth * 0.25f, halfHeight), condition);
         DrawInspectorWindow();
+    }
 
-    if (showAbout)
-        DrawAboutWindow();
+    //if (showConfiguration)
+    //    DrawConfigurationWindow();
+
+    //if (showConsole)
+    //    DrawConsoleWindow();
+
+    //if (showHierarchy)
+    //    DrawHierarchyWindow();
+
+    //if (showInspector)
+    //    DrawInspectorWindow();
+
+    //if (showAbout)
+    //    DrawAboutWindow();
 
     return true;
 }
