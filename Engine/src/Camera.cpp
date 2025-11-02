@@ -3,7 +3,7 @@
 #include <SDL3/SDL.h>
 
 Camera::Camera()
-	: cameraPos(0.0f, 5.0f, 10.0f),
+	: cameraPos(0.0f, 1.5f, 10.0f),
 	cameraFront(0.0f, 0.0f, -1.0f),
 	cameraUp(0.0f, 1.0f, 0.0f),
 	viewMatrix(1.0f),
