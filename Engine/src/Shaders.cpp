@@ -15,7 +15,7 @@ Shader::~Shader()
 
 bool Shader::Create()
 {
-    // Vertex Shader 
+    // Standard vertex shader with MVP transformation
     const char* vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
         "layout (location = 1) in vec3 aNormal;\n"
@@ -38,7 +38,6 @@ bool Shader::Create()
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
 
-    // Check vertex shader compilation
     int success;
     char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -49,7 +48,7 @@ bool Shader::Create()
         return false;
     }
 
-    // Fragment Shader
+    // Fragment shader with alpha discard for vegetation/cutout textures
     const char* fragmentShaderSource = "#version 330 core\n"
         "out vec4 FragColor;\n"
         "in vec2 TexCoord;\n"
@@ -59,7 +58,7 @@ bool Shader::Create()
         "{\n"
         "   vec4 texColor = texture(texture1, TexCoord);\n"
         "   \n"
-        "   // Discard  (hierba, hojas,.)\n"
+        "   // Discard fully transparent pixels (grass, leaves, etc.)\n"
         "   if(texColor.a < 0.1)\n"
         "       discard;\n"
         "   \n"
@@ -71,7 +70,6 @@ bool Shader::Create()
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
 
-    // Check fragment shader compilation
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
@@ -81,13 +79,12 @@ bool Shader::Create()
         return false;
     }
 
-    // Shader Program
+    // Link shaders into program
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
-    // Check linking
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success)
     {
@@ -98,7 +95,7 @@ bool Shader::Create()
         return false;
     }
 
-    // Delete shaders after linking
+    // Clean up shader objects (no longer needed after linking)
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
@@ -159,7 +156,6 @@ bool Shader::CreateSimpleColor()
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
 
-    // Check vertex shader compilation
     int success;
     char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -170,7 +166,7 @@ bool Shader::CreateSimpleColor()
         return false;
     }
 
-    // Fragment Shader - Para transparencias parciales (ventanas, vidrio)
+    // Fragment shader for semi-transparent surfaces (windows, glass, etc.)
     const char* fragmentShaderSource = "#version 330 core\n"
         "out vec4 FragColor;\n"
         "in vec2 TexCoords;\n"
@@ -190,7 +186,6 @@ bool Shader::CreateSimpleColor()
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
 
-    // Check fragment shader compilation
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
@@ -200,13 +195,11 @@ bool Shader::CreateSimpleColor()
         return false;
     }
 
-    // Shader Program
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
-    // Check linking
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success)
     {
@@ -216,7 +209,6 @@ bool Shader::CreateSimpleColor()
         return false;
     }
 
-    // Delete shaders after linking
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
@@ -306,6 +298,83 @@ bool Shader::CreateWithDiscard()
     glDeleteShader(fragmentShader);
 
     LOG_CONSOLE("Discard shader created successfully!");
+
+    return true;
+}
+
+bool Shader::CreateSingleColor()
+{
+    // Minimal vertex shader for outline rendering
+    const char* vertexShaderSource = "#version 330 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "\n"
+        "uniform mat4 model;\n"
+        "uniform mat4 view;\n"
+        "uniform mat4 projection;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+        "}\0";
+
+    unsigned int vertexShader;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cerr << "ERROR: Outline Vertex Shader Compilation Failed\n" << infoLog << std::endl;
+        return false;
+    }
+
+    // Solid color fragment shader for selection outlines
+    const char* fragmentShaderSource = "#version 330 core\n"
+        "out vec4 FragColor;\n"
+        "\n"
+        "uniform vec3 outlineColor;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "   FragColor = vec4(outlineColor, 1.0);\n"
+        "}\0";
+
+    unsigned int fragmentShader;
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cerr << "ERROR: Outline Fragment Shader Compilation Failed\n" << infoLog << std::endl;
+        glDeleteShader(vertexShader);
+        return false;
+    }
+
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+        return false;
+    }
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    LOG_CONSOLE("Outline shader created successfully!");
 
     return true;
 }
