@@ -5,7 +5,7 @@
 #include "Texture.h"
 #include <memory>
 #include "Primitives.h"
-#include "Camera.h"
+#include "ComponentCamera.h"
 
 class GameObject;
 
@@ -53,7 +53,8 @@ public:
     // Shader access
     Shader* GetDefaultShader() const { return defaultShader.get(); }
     Shader* GetOutlineShader() const { return outlineShader.get(); }
-    Camera* GetCamera() { return camera.get(); }
+
+    ComponentCamera* GetCamera();
 
     // Render configuration
     bool IsDepthTestEnabled() const { return depthTestEnabled; }
@@ -85,8 +86,7 @@ private:
     // Default assets
     std::unique_ptr<Texture> defaultTexture;
     Mesh sphere, cube, pyramid, cylinder, plane;
-    unique_ptr<Camera> camera;
-
+    
     // OpenGL state
     bool depthTestEnabled = true;
     bool faceCullingEnabled = true;

@@ -3,6 +3,7 @@
 #include "Transform.h"
 #include "ComponentMesh.h"
 #include "ComponentMaterial.h"
+#include "ComponentCamera.h"
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
     CreateComponent(ComponentType::TRANSFORM);
@@ -40,6 +41,12 @@ Component* GameObject::CreateComponent(ComponentType type) {
             return GetComponent(ComponentType::MATERIAL);
         }
         newComponent = new ComponentMaterial(this);
+        break;
+    case ComponentType::CAMERA:
+        if (GetComponent(ComponentType::CAMERA) != nullptr) {
+            return GetComponent(ComponentType::CAMERA);
+        }
+        newComponent = new ComponentCamera(this);
         break;
 
     default:

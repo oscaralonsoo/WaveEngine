@@ -156,6 +156,28 @@ bool ModuleEditor::ShowMenuBar() {
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Camera")){
+            if (ImGui::MenuItem("Create Camera")) {
+                Application& app = Application::GetInstance();
+                GameObject* cameraGO = app.scene->CreateGameObject("Camera");
+
+                Transform* transform = static_cast<Transform*>(cameraGO->GetComponent(ComponentType::TRANSFORM));
+                if (transform)
+                {
+                    transform->SetPosition(glm::vec3(0.0f, 1.5f, 10.0f));
+                }
+
+                ComponentCamera* sceneCamera = static_cast<ComponentCamera*>(cameraGO->CreateComponent(ComponentType::CAMERA));
+
+                if (sceneCamera)
+                {
+                    app.camera->SetSceneCamera(sceneCamera);
+                }
+            }
+
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("GameObject")) {
             if (ImGui::BeginMenu("Create Primitive")) {
                 if (ImGui::MenuItem("Cube")) {
@@ -563,6 +585,7 @@ void ModuleEditor::DrawInspectorWindow()
             }
         }
     }
+    // Material
     ComponentMaterial* materialComp = static_cast<ComponentMaterial*>(selectedObject->GetComponent(ComponentType::MATERIAL));
 
     if (materialComp != nullptr)
@@ -644,15 +667,51 @@ void ModuleEditor::DrawInspectorWindow()
 
 void ModuleEditor::DrawCameraSettings()
 {
+    Application& app = Application::GetInstance();
+
     ImGui::Text("Camera Controls");
     ImGui::Separator();
 
-    Camera* camera = Application::GetInstance().renderer->GetCamera();
+	// Camera mode selection
+    bool usingEditorCamera = app.camera->IsUsingEditorCamera();
+    ImGui::Text("Active Camera Mode:");
+    if (ImGui::RadioButton("Editor Camera", usingEditorCamera))
+    {
+        app.camera->SetUseEditorCamera(true);
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Scene Camera", !usingEditorCamera))
+    {
+        if (app.camera->GetSceneCamera() != nullptr)
+        {
+            app.camera->SetUseEditorCamera(false);
+        }
+        else
+        {
+            LOG_CONSOLE("WARNING: No Scene Camera found. Create one from Camera menu.");
+        }
+    }
+    ImGui::Separator();
+
+    ComponentCamera* camera = app.renderer->GetCamera();
+
     if (camera == nullptr)
     {
         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Error: Camera not available");
         return;
     }
+
+	// Show active camera 
+    if (usingEditorCamera)
+    {
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Active: Editor Camera");
+    }
+    else
+    {
+        ImGui::TextColored(ImVec4(0.0f, 0.5f, 1.0f, 1.0f), "Active: Scene Camera");
+    }
+
+    ImGui::Separator();
 
     // Update camera settings
     cameraMouseSensitivity = camera->GetMouseSensitivity();

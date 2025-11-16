@@ -2,7 +2,6 @@
 #include "Window.h"
 #include "Application.h"
 #include <iostream>
-#include "Camera.h"
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
 #include "GameObject.h"
@@ -112,7 +111,8 @@ bool Input::PreUpdate()
 			// Only process gameplay logic if not over ImGui
 			if (!imguiWantCaptureMouse)
 			{
-				Camera* camera = Application::GetInstance().renderer->GetCamera();
+				ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
+				if (!camera) break;
 
 				// Get current mouse position
 				float mouseXf, mouseYf;
@@ -207,7 +207,8 @@ bool Input::PreUpdate()
 			// Camera movement only if not over ImGui
 			if (!imguiWantCaptureMouse)
 			{
-				Camera* camera = Application::GetInstance().renderer->GetCamera();
+				ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
+				if (!camera) break;
 
 				// Alt + Left button: orbit
 				if ((keys[SDL_SCANCODE_LALT] || keys[SDL_SCANCODE_RALT]) &&
@@ -254,8 +255,11 @@ bool Input::PreUpdate()
 		case SDL_EVENT_MOUSE_WHEEL:
 			if (!imguiWantCaptureMouse)
 			{
-				Camera* camera = Application::GetInstance().renderer->GetCamera();
-				camera->HandleScrollInput(static_cast<float>(event.wheel.y));
+				ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
+				if (camera)
+				{
+					camera->HandleScrollInput(static_cast<float>(event.wheel.y));
+				}
 			}
 			break;
 		}
@@ -263,7 +267,12 @@ bool Input::PreUpdate()
 
 	// Camera movement with WASD + right mouse button
 	ImGuiIO& io = ImGui::GetIO();
-	Camera* camera = Application::GetInstance().renderer->GetCamera();
+	ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
+	if (!camera) return true;
+	GameObject* cameraGO = camera->owner;
+	Transform* cameraTransform = static_cast<Transform*>(cameraGO->GetComponent(ComponentType::TRANSFORM));
+	if (!cameraTransform) return true;
+
 	const float cameraBaseSpeed = camera->GetMovementSpeed();
 	float speedMultiplier = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT] ? 2.0f : 1.0f;
 	float cameraSpeed = cameraBaseSpeed * speedMultiplier * Application::GetInstance().time->GetDeltaTime();
@@ -274,27 +283,37 @@ bool Input::PreUpdate()
 	// WASD movement while right mouse button is pressed
 	if (rightMousePressed && (keys[SDL_SCANCODE_W] || keys[SDL_SCANCODE_S] || keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_D]))
 	{
+		glm::vec3 cameraPos = camera->GetPosition();
 		glm::vec3 cameraFront = camera->GetFront();
 		glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, camera->GetUp()));
 
 		if (keys[SDL_SCANCODE_W])
-			camera->SetPosition(camera->GetPosition() + cameraSpeed * cameraFront);
+			cameraPos -= cameraSpeed * cameraFront;
 		if (keys[SDL_SCANCODE_S])
-			camera->SetPosition(camera->GetPosition() - cameraSpeed * cameraFront);
+			cameraPos += cameraSpeed * cameraFront;
 		if (keys[SDL_SCANCODE_A])
-			camera->SetPosition(camera->GetPosition() - cameraRight * cameraSpeed);
+			cameraPos += cameraRight * cameraSpeed;
 		if (keys[SDL_SCANCODE_D])
-			camera->SetPosition(camera->GetPosition() + cameraRight * cameraSpeed);
+			cameraPos -= cameraRight * cameraSpeed;
+
+		cameraTransform->SetPosition(cameraPos);
 	}
 
 	glm::vec3 cameraUp = camera->GetUp();
-	if (keys[SDL_SCANCODE_SPACE])
-		camera->SetPosition(camera->GetPosition() + cameraUp * cameraSpeed);
-	if (keys[SDL_SCANCODE_LCTRL] || keys[SDL_SCANCODE_RCTRL])
-		camera->SetPosition(camera->GetPosition() - cameraUp * cameraSpeed);
+	if (keys[SDL_SCANCODE_SPACE] || keys[SDL_SCANCODE_LCTRL] || keys[SDL_SCANCODE_RCTRL])
+	{
+		glm::vec3 cameraPos = camera->GetPosition();
+
+		if (keys[SDL_SCANCODE_SPACE])
+			cameraPos += cameraUp * cameraSpeed;
+		if (keys[SDL_SCANCODE_LCTRL] || keys[SDL_SCANCODE_RCTRL])
+			cameraPos -= cameraUp * cameraSpeed;
+
+		cameraTransform->SetPosition(cameraPos);
+	}
 
 	// Focus on selected object with F key
-	if (!io.WantCaptureKeyboard && keyboard[SDL_SCANCODE_F] == KEY_DOWN)
+	if (keyboard[SDL_SCANCODE_F] == KEY_DOWN) // !io.WantCaptureKeyboard && 
 	{
 		if (Application::GetInstance().selectionManager->HasSelection())
 		{

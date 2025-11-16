@@ -3,7 +3,6 @@
 #include <vector>
 #include "Application.h"
 #include "Shaders.h"
-#include "Camera.h"
 #include <glm/gtc/type_ptr.hpp>
 
 Grid::Grid() : Module(), VAO(0), VBO(0), numVertices(0), gridSize(20.0f), gridDivisions(5), enabled(true)
@@ -97,7 +96,7 @@ void Grid::Draw()
     shader->Use();
 
     // Get camera matrices
-    Camera* camera = Application::GetInstance().renderer->GetCamera();
+    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
     if (camera == nullptr) return;
 
     GLuint shaderProgram = shader->GetProgramID();

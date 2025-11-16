@@ -11,20 +11,24 @@ Application::Application() : isRunning(true)
     renderContext = std::make_shared<RenderContext>();
     renderer = std::make_shared<Renderer>();
     scene = std::make_shared<ModuleScene>();
+    camera = std::make_shared<ModuleCamera>();
     editor = std::make_shared<ModuleEditor>();
     filesystem = std::make_shared<FileSystem>();
     time = std::make_shared<Time>();
     grid = std::make_shared<Grid>();
+
 
     AddModule(std::static_pointer_cast<Module>(window));
     AddModule(std::static_pointer_cast<Module>(input));
     AddModule(std::static_pointer_cast<Module>(renderContext));
     AddModule(std::static_pointer_cast<Module>(renderer));
     AddModule(std::static_pointer_cast<Module>(scene));
+    AddModule(std::static_pointer_cast<Module>(camera));
     AddModule(std::static_pointer_cast<Module>(editor));
     AddModule(std::static_pointer_cast<Module>(filesystem));
     AddModule(std::static_pointer_cast<Module>(time));
     AddModule(std::static_pointer_cast<Module>(grid));
+
 
     selectionManager = new SelectionManager();
 }
@@ -164,6 +168,7 @@ bool Application::CleanUp()
     moduleList.clear();
 
     editor.reset();
+	camera.reset();
     scene.reset();
     renderer.reset();
     renderContext.reset();

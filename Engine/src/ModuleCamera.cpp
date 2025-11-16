@@ -1,0 +1,123 @@
+#include "ModuleCamera.h"
+#include "GameObject.h"
+#include "Transform.h"
+#include "Application.h"
+#include "Input.h"
+#include "Window.h"
+
+ModuleCamera::ModuleCamera() : 
+    Module(),
+    editorCameraGO(nullptr),
+    editorCamera(nullptr),
+    sceneCamera(nullptr),
+    useEditorCamera(true)
+{
+}
+
+ModuleCamera::~ModuleCamera()
+{
+}
+
+bool ModuleCamera::Start()
+{
+    LOG_DEBUG("Initializing Camera Module");
+
+    editorCameraGO = new GameObject("Editor Camera");
+
+    // Set initial position for editorcamera
+    Transform* transform = static_cast<Transform*>(editorCameraGO->GetComponent(ComponentType::TRANSFORM));
+    if (transform)
+    {
+        transform->SetPosition(glm::vec3(0.0f, 1.5f, 10.0f));
+    }
+
+    editorCamera = static_cast<ComponentCamera*>(editorCameraGO->CreateComponent(ComponentType::CAMERA));
+
+    // Set aspect ratio from window
+    Application& app = Application::GetInstance();
+    int width, height;
+    app.window->GetWindowSize(width, height);
+
+    if (editorCamera && height > 0)
+    {
+        float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+        editorCamera->SetAspectRatio(aspectRatio);
+    }
+
+    LOG_DEBUG("Camera Module initialized");
+    return true;
+}
+
+bool ModuleCamera::Update()
+{
+    Application& app = Application::GetInstance();
+
+    int width, height;
+    app.window->GetWindowSize(width, height);
+
+    ComponentCamera* activeCamera = GetActiveCamera();
+    if (activeCamera && height > 0)
+    {
+        float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+        if (aspectRatio != activeCamera->GetAspectRatio())
+        {
+            activeCamera->SetAspectRatio(aspectRatio);
+        }
+    }
+
+    if (useEditorCamera)
+    {
+        HandleEditorControls();
+    }
+
+    // Update active camera
+    if (activeCamera)
+    {
+        activeCamera->Update();
+    }
+
+    return true;
+}
+
+bool ModuleCamera::CleanUp()
+{
+    LOG_DEBUG("Cleaning up Camera Module");
+
+    if (editorCameraGO)
+    {
+        delete editorCameraGO;
+        editorCameraGO = nullptr;
+        editorCamera = nullptr;
+    }
+
+    sceneCamera = nullptr;
+
+    return true;
+}
+
+ComponentCamera* ModuleCamera::GetActiveCamera() const
+{
+    if (useEditorCamera)
+    {
+        return editorCamera;
+    }
+    else
+    {
+        return sceneCamera;
+    }
+}
+
+void ModuleCamera::HandleEditorControls()
+{
+    if (!editorCamera)
+        return;
+
+    Application& app = Application::GetInstance();
+
+    // Mouse wheel for zoom (scroll)
+    // This is already handled in Input.cpp
+
+    // Right mouse button - Handled in Input.cpp
+    // Middle mouse button - Handled in Input.cpp
+    // F key - Focus - Handled in Input.cpp
+}

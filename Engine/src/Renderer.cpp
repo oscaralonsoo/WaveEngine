@@ -12,7 +12,6 @@
 Renderer::Renderer()
 {
     LOG_DEBUG("Renderer Constructor");
-    camera = make_unique<Camera>();
 }
 
 Renderer::~Renderer()
@@ -197,14 +196,12 @@ bool Renderer::Update()
 
     defaultShader->Use();
 
-    camera->Update();
+    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
+    if (!camera) return true;
 
     // Update projection matrix with current aspect ratio
     int width, height;
-    Application::GetInstance().window->GetWindowSize(width, height);
-
-    float aspectRatio = (float)width / (float)height;
-    camera->SetAspectRatio(aspectRatio);
+    Application::GetInstance().window->GetWindowSize(width, height);    
 
     GLuint shaderProgram = defaultShader->GetProgramID();
 
@@ -288,10 +285,14 @@ void Renderer::CollectTransparentObjects(GameObject* gameObject,
 
     if (transform != nullptr && HasTransparency(gameObject))
     {
-        glm::vec3 objectPos = glm::vec3(transform->GetGlobalMatrix()[3]);
-        float distance = glm::length(camera->GetPosition() - objectPos);
+        ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
+        if (camera)
+        {
+            glm::vec3 objectPos = glm::vec3(transform->GetGlobalMatrix()[3]);
+            float distance = glm::length(camera->GetPosition() - objectPos);
 
-        transparentObjects.emplace_back(gameObject, distance);
+            transparentObjects.emplace_back(gameObject, distance);
+        }
     }
 
     for (GameObject* child : gameObject->GetChildren())
@@ -315,6 +316,10 @@ void Renderer::DrawScene()
     DrawGameObjectRecursive(root, false);
 
     // Second pass: render selection outlines
+
+    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
+    if (!camera) return;
+
     outlineShader->Use();
     glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
     glUniformMatrix4fv(outlineUniforms.view, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
@@ -591,6 +596,9 @@ void Renderer::DrawVertexNormals(const Mesh& mesh, const glm::mat4& modelMatrix)
     }
 
     // Render normals
+    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
+    if (!camera) return;
+
     lineShader->Use();
     glUniformMatrix4fv(glGetUniformLocation(lineShader->GetProgramID(), "projection"),
         1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
@@ -653,6 +661,9 @@ void Renderer::DrawFaceNormals(const Mesh& mesh, const glm::mat4& modelMatrix)
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
+    if (!camera) return;
 
     lineShader->Use();
     GLuint shaderProgram = lineShader->GetProgramID();
@@ -735,4 +746,8 @@ void Renderer::ApplyRenderSettings()
     SetFaceCulling(faceCullingEnabled);
     SetWireframeMode(wireframeMode);
     SetCullFaceMode(cullFaceMode);
+}
+
+ComponentCamera* Renderer::GetCamera() {
+    return Application::GetInstance().camera->GetActiveCamera();
 }
