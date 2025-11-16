@@ -3,6 +3,7 @@
 #include "FileSystem.h"
 #include "Shaders.h"
 #include "Texture.h"
+#include "Frustum.h"
 #include <memory>
 #include "Primitives.h"
 #include "ComponentCamera.h"
@@ -39,12 +40,14 @@ public:
 
     // Scene rendering
     void DrawScene();
-    void DrawGameObject(GameObject* gameObject);
 
     // Transparency handling
     bool HasTransparency(GameObject* gameObject);
     void CollectTransparentObjects(GameObject* gameObject,
         std::vector<TransparentObject>& transparentObjects);
+
+    // Frustum culling
+    bool ShouldCullGameObject(GameObject* gameObject, const Frustum& frustum);
 
     // Debug visualization
     void DrawVertexNormals(const Mesh& mesh, const glm::mat4& modelMatrix);
@@ -55,6 +58,8 @@ public:
     Shader* GetOutlineShader() const { return outlineShader.get(); }
 
     ComponentCamera* GetCamera();
+
+    void DrawCameraFrustum(ComponentCamera* camera, const glm::vec3& color);
 
     // Render configuration
     bool IsDepthTestEnabled() const { return depthTestEnabled; }
@@ -74,7 +79,10 @@ public:
 
 private:
     // Internal rendering methods
-    void DrawGameObjectRecursive(GameObject* gameObject, bool renderTransparentOnly = false);
+    void DrawGameObjectRecursive(GameObject* gameObject,
+        bool renderTransparentOnly,
+        ComponentCamera* renderCamera,
+        ComponentCamera* cullingCamera);
     void DrawGameObjectWithStencil(GameObject* gameObject);
     void ApplyRenderSettings();
 
@@ -86,7 +94,7 @@ private:
     // Default assets
     std::unique_ptr<Texture> defaultTexture;
     Mesh sphere, cube, pyramid, cylinder, plane;
-    
+
     // OpenGL state
     bool depthTestEnabled = true;
     bool faceCullingEnabled = true;

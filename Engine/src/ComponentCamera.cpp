@@ -2,6 +2,10 @@
 #include "GameObject.h"
 #include "Transform.h"
 #include <glm/gtc/quaternion.hpp>
+#include <iostream>
+
+
+using namespace std;
 
 ComponentCamera::ComponentCamera(GameObject* owner)
     : Component(owner, ComponentType::CAMERA),
@@ -29,10 +33,13 @@ ComponentCamera::ComponentCamera(GameObject* owner)
     panSensitivity(0.003f),
     movementSpeed(2.5f),
     cameraFront(0.0f, 0.0f, -1.0f),
-    cameraUp(0.0f, 1.0f, 0.0f)
+    cameraUp(0.0f, 1.0f, 0.0f),
+    frustumCullingEnabled(false),
+    drawFrustum(false)
 {
     name = "Camera";
     UpdateProjectionMatrix();
+    UpdateFrustum();
 }
 
 ComponentCamera::~ComponentCamera()
@@ -42,6 +49,7 @@ ComponentCamera::~ComponentCamera()
 void ComponentCamera::Update()
 {
     UpdateViewMatrix();
+    UpdateFrustum();
 }
 
 void ComponentCamera::OnEditor()
@@ -52,6 +60,7 @@ void ComponentCamera::SetAspectRatio(float newAspectRatio)
 {
     aspectRatio = newAspectRatio;
     UpdateProjectionMatrix();
+    UpdateFrustum();
 }
 
 void ComponentCamera::UpdateViewMatrix()
@@ -61,16 +70,23 @@ void ComponentCamera::UpdateViewMatrix()
     {
         glm::mat4 globalMatrix = transform->GetGlobalMatrix();
         glm::vec3 position = glm::vec3(globalMatrix[3]);
-        glm::vec3 forward = glm::normalize(glm::vec3(globalMatrix[2]));
+        // En OpenGL, forward es -Z local
+        glm::vec3 forward = -glm::normalize(glm::vec3(globalMatrix[2]));
         glm::vec3 up = glm::normalize(glm::vec3(globalMatrix[1]));
 
-        viewMatrix = glm::lookAt(position, position - forward, up);
+        viewMatrix = glm::lookAt(position, position + forward, up);
     }
 }
 
 void ComponentCamera::UpdateProjectionMatrix()
 {
     projectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
+}
+
+void ComponentCamera::UpdateFrustum()
+{
+    glm::mat4 viewProj = projectionMatrix * viewMatrix;
+    frustum.ExtractFromMatrix(viewProj);
 }
 
 glm::vec3 ComponentCamera::GetPosition() const
@@ -90,7 +106,7 @@ glm::vec3 ComponentCamera::GetFront() const
     if (transform)
     {
         glm::mat4 globalMatrix = transform->GetGlobalMatrix();
-        return glm::normalize(glm::vec3(globalMatrix[2]));
+        return -glm::normalize(glm::vec3(globalMatrix[2]));
     }
     return glm::vec3(0.0f, 0.0f, -1.0f);
 }
@@ -190,7 +206,6 @@ void ComponentCamera::HandleOrbitInput(float xpos, float ypos)
         glm::vec3 position = GetPosition();
         glm::vec3 front = GetFront();
         orbitTarget = position + front * orbitDistance;
-        // Calculate the current distance to the target
         orbitDistance = glm::length(position - orbitTarget);
         return;
     }
@@ -206,7 +221,6 @@ void ComponentCamera::HandleOrbitInput(float xpos, float ypos)
     yaw += xoffset;
     pitch += yoffset;
 
-    // Limit pitch to avoid gimbal lock
     if (pitch > 89.0f)
         pitch = 89.0f;
     if (pitch < -89.0f)
@@ -217,7 +231,6 @@ void ComponentCamera::HandleOrbitInput(float xpos, float ypos)
 
 void ComponentCamera::UpdateOrbitPosition()
 {
-    // Calculate the new position of the camera in orbit around the target
     glm::vec3 direction;
     direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
     direction.y = sin(glm::radians(pitch));
@@ -231,7 +244,6 @@ void ComponentCamera::UpdateOrbitPosition()
         glm::vec3 newPosition = orbitTarget - cameraFront * orbitDistance;
         transform->SetPosition(newPosition);
 
-        // Update rotation
         glm::vec3 right = glm::normalize(glm::cross(cameraFront, glm::vec3(0.0f, 1.0f, 0.0f)));
         cameraUp = glm::normalize(glm::cross(right, cameraFront));
 
@@ -247,13 +259,11 @@ void ComponentCamera::UpdateOrbitPosition()
 
 void ComponentCamera::HandlePanInput(float xoffset, float yoffset)
 {
-    // Calculate the right and up vectors of the camera
     glm::vec3 front = GetFront();
     glm::vec3 up = GetUp();
     glm::vec3 right = glm::normalize(glm::cross(front, up));
     up = glm::normalize(glm::cross(right, front));
 
-    // Move the camera and the target
     glm::vec3 offset = right * (-xoffset * panSensitivity * orbitDistance) +
         up * (yoffset * panSensitivity * orbitDistance);
 
@@ -270,9 +280,6 @@ void ComponentCamera::HandlePanInput(float xoffset, float yoffset)
 void ComponentCamera::FocusOnTarget(const glm::vec3& targetPosition, float targetRadius)
 {
     orbitTarget = targetPosition;
-
-    // Calculate an appropriate distance based on the object's radius
-    // Multiplicador balanceado para buena visualización
     orbitDistance = targetRadius * 0.05f;
 
     if (orbitDistance < 2.0f)
@@ -281,7 +288,6 @@ void ComponentCamera::FocusOnTarget(const glm::vec3& targetPosition, float targe
     if (orbitDistance > 30.0f)
         orbitDistance = 30.0f;
 
-    // Position the camera facing the target from the current direction
     UpdateCameraVectors();
 
     Transform* transform = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
@@ -294,22 +300,46 @@ void ComponentCamera::FocusOnTarget(const glm::vec3& targetPosition, float targe
 
 glm::vec3 ComponentCamera::ScreenToWorldRay(int mouseX, int mouseY, int screenWidth, int screenHeight) const
 {
-    // Convert screen coordinates to Normalized Device Coordinates (NDC)
     float x = (2.0f * mouseX) / screenWidth - 1.0f;
     float y = 1.0f - (2.0f * mouseY) / screenHeight;
 
-    // Create a point in clip space (homogeneous coordinates)
     glm::vec4 rayClip = glm::vec4(x, y, -1.0f, 1.0f);
-
-    // Convert from clip space to eye (camera) space
     glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
-    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f); // Set forward direction in eye space
+    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
 
-    // Convert from eye space to world space
     glm::vec4 rayWorld = glm::inverse(viewMatrix) * rayEye;
-
-    // Normalize the direction vector
     glm::vec3 rayDir = glm::normalize(glm::vec3(rayWorld));
 
     return rayDir;
+}
+
+void ComponentCamera::GetFrustumCorners(glm::vec3 corners[8]) const
+{
+    // Get camera properties
+    glm::vec3 position = GetPosition();
+    glm::vec3 front = GetFront();
+    glm::vec3 up = GetUp();
+    glm::vec3 right = glm::normalize(glm::cross(front, up));
+
+    // Calculate near and far plane centers
+    glm::vec3 nearCenter = position + front * nearPlane;
+    glm::vec3 farCenter = position + front * farPlane;
+
+    // Calculate near and far plane dimensions
+    float nearHeight = 2.0f * tan(glm::radians(fov) / 2.0f) * nearPlane;
+    float nearWidth = nearHeight * aspectRatio;
+    float farHeight = 2.0f * tan(glm::radians(fov) / 2.0f) * farPlane;
+    float farWidth = farHeight * aspectRatio;
+
+    // Near plane corners (0-3)
+    corners[0] = nearCenter - right * (nearWidth / 2.0f) - up * (nearHeight / 2.0f); // Bottom-left
+    corners[1] = nearCenter + right * (nearWidth / 2.0f) - up * (nearHeight / 2.0f); // Bottom-right
+    corners[2] = nearCenter + right * (nearWidth / 2.0f) + up * (nearHeight / 2.0f); // Top-right
+    corners[3] = nearCenter - right * (nearWidth / 2.0f) + up * (nearHeight / 2.0f); // Top-left
+
+    // Far plane corners (4-7)
+    corners[4] = farCenter - right * (farWidth / 2.0f) - up * (farHeight / 2.0f); // Bottom-left
+    corners[5] = farCenter + right * (farWidth / 2.0f) - up * (farHeight / 2.0f); // Bottom-right
+    corners[6] = farCenter + right * (farWidth / 2.0f) + up * (farHeight / 2.0f); // Top-right
+    corners[7] = farCenter - right * (farWidth / 2.0f) + up * (farHeight / 2.0f); // Top-left
 }

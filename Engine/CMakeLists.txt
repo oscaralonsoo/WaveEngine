@@ -31,6 +31,8 @@ set(RENDERING_SRC
     src/Renderer.cpp 
     src/Shaders.h 
     src/Shaders.cpp 
+        src/Frustrum.h 
+    src/Frustrum.cpp 
 )
 
 set(UTILS_SRC 
@@ -63,6 +65,11 @@ set(COMPONENTS_SRC
     src/ComponentMesh.cpp 
     src/Transform.cpp 
     src/Transform.h 
+    src/ModuleCamera.cpp 
+    src/ModuleCamera.h 
+    src/ComponentCamera.cpp 
+    src/ComponentCamera.h 
+
 )
 
 set(LOADERS_SRC 

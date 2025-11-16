@@ -201,7 +201,7 @@ bool Renderer::Update()
 
     // Update projection matrix with current aspect ratio
     int width, height;
-    Application::GetInstance().window->GetWindowSize(width, height);    
+    Application::GetInstance().window->GetWindowSize(width, height);
 
     GLuint shaderProgram = defaultShader->GetProgramID();
 
@@ -300,7 +300,65 @@ void Renderer::CollectTransparentObjects(GameObject* gameObject,
         CollectTransparentObjects(child, transparentObjects);
     }
 }
+bool Renderer::ShouldCullGameObject(GameObject* gameObject, const Frustum& frustum)
+{
+    const std::vector<Component*>& meshComponents =
+        gameObject->GetComponentsOfType(ComponentType::MESH);
 
+    if (meshComponents.empty())
+        return false;
+
+    for (Component* comp : meshComponents)
+    {
+        ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
+
+        if (meshComp->IsActive() && meshComp->HasMesh())
+        {
+            glm::vec3 worldMin, worldMax;
+            meshComp->GetWorldAABB(worldMin, worldMax);
+
+            FrustumTestResult result = frustum.ContainsAABB(worldMin, worldMax);
+
+            if (gameObject->GetName() == "Chimney")
+            {
+                static int debugCounter = 0;
+                if (debugCounter++ % 60 == 0)
+                {
+                    // Mostrar los 6 planos del frustum
+                    LOG_DEBUG("Frustum planes:");
+                    for (int i = 0; i < 6; i++)
+                    {
+                        const auto& plane = frustum.GetPlane(i);
+                        const char* names[] = { "NEAR", "FAR", "LEFT", "RIGHT", "TOP", "BOTTOM" };
+                        LOG_DEBUG("  %s: n(%.3f, %.3f, %.3f) d=%.3f",
+                            names[i],
+                            plane.normal.x, plane.normal.y, plane.normal.z,
+                            plane.distance);
+                    }
+
+                    // Mostrar posición de la cámara
+                    ComponentCamera* cam = Application::GetInstance().camera->GetSceneCamera();
+                    if (cam)
+                    {
+                        glm::vec3 camPos = cam->GetPosition();
+                        glm::vec3 camFront = cam->GetFront();
+                        LOG_DEBUG("Camera: pos(%.2f, %.2f, %.2f) front(%.2f, %.2f, %.2f)",
+                            camPos.x, camPos.y, camPos.z,
+                            camFront.x, camFront.y, camFront.z);
+                        LOG_DEBUG("Camera: FOV=%.1f Near=%.2f Far=%.2f",
+                            cam->GetFov(), cam->GetNearPlane(), cam->GetFarPlane());
+                    }
+                    LOG_DEBUG("====================");
+                }
+            }
+
+            if (result != FrustumTestResult::FRUSTUM_OUT)
+                return false;
+        }
+    }
+
+    return true;
+}
 void Renderer::DrawScene()
 {
     GameObject* root = Application::GetInstance().scene->GetRoot();
@@ -310,30 +368,39 @@ void Renderer::DrawScene()
     SelectionManager* selectionMgr = Application::GetInstance().selectionManager;
     const std::vector<GameObject*>& selectedObjects = selectionMgr->GetSelectedObjects();
 
+    ComponentCamera* renderCamera = Application::GetInstance().camera->GetActiveCamera();
+
+    ComponentCamera* cullingCamera = Application::GetInstance().camera->GetSceneCamera();
+
+    if (cullingCamera == nullptr)
+    {
+        cullingCamera = renderCamera;
+    }
+
     // First pass: render all opaque objects
     glStencilFunc(GL_ALWAYS, 0, 0xFF);
     glStencilMask(0x00);
-    DrawGameObjectRecursive(root, false);
+    DrawGameObjectRecursive(root, false, renderCamera, cullingCamera);
 
     // Second pass: render selection outlines
-
-    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-    if (!camera) return;
+    if (!renderCamera) return;
 
     outlineShader->Use();
-    glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-    glUniformMatrix4fv(outlineUniforms.view, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+    glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE,
+        glm::value_ptr(renderCamera->GetProjectionMatrix()));
+    glUniformMatrix4fv(outlineUniforms.view, 1, GL_FALSE,
+        glm::value_ptr(renderCamera->GetViewMatrix()));
     outlineShader->SetVec3("outlineColor", glm::vec3(1.0f, 0.41f, 0.71f));
 
     float outlineScale = 1.02f;
 
-    // Disable depth test and depth writing so outlines render on top of everything
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
 
     for (GameObject* selectedObj : selectedObjects)
     {
-        Transform* transform = static_cast<Transform*>(selectedObj->GetComponent(ComponentType::TRANSFORM));
+        Transform* transform = static_cast<Transform*>(
+            selectedObj->GetComponent(ComponentType::TRANSFORM));
         if (transform == nullptr) continue;
 
         const std::vector<Component*>& meshComponents =
@@ -346,9 +413,8 @@ void Renderer::DrawScene()
             if (meshComp->IsActive() && meshComp->HasMesh())
             {
                 const Mesh& mesh = meshComp->GetMesh();
-
-                // Calculate mesh center in local space
                 glm::vec3 meshCenter(0.0f);
+
                 if (!mesh.vertices.empty())
                 {
                     for (const auto& vertex : mesh.vertices)
@@ -358,26 +424,20 @@ void Renderer::DrawScene()
                     meshCenter /= static_cast<float>(mesh.vertices.size());
                 }
 
-                // Get global transformation
                 glm::mat4 globalMatrix = transform->GetGlobalMatrix();
-
-                // Transform mesh center to world space
                 glm::vec4 worldCenter = globalMatrix * glm::vec4(meshCenter, 1.0f);
-
-                // Scale from mesh center in world space
                 glm::mat4 toCenter = glm::translate(glm::mat4(1.0f), -glm::vec3(worldCenter));
                 glm::mat4 fromCenter = glm::translate(glm::mat4(1.0f), glm::vec3(worldCenter));
                 glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(outlineScale));
-
                 glm::mat4 outlineModelMatrix = fromCenter * scale * toCenter * globalMatrix;
 
-                glUniformMatrix4fv(outlineUniforms.model, 1, GL_FALSE, glm::value_ptr(outlineModelMatrix));
+                glUniformMatrix4fv(outlineUniforms.model, 1, GL_FALSE,
+                    glm::value_ptr(outlineModelMatrix));
                 DrawMesh(mesh);
             }
         }
     }
 
-    // Restore state
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
     defaultShader->Use();
@@ -393,7 +453,7 @@ void Renderer::DrawScene()
 
     for (const auto& transparentObj : transparentObjects)
     {
-        DrawGameObjectRecursive(transparentObj.gameObject, true);
+        DrawGameObjectRecursive(transparentObj.gameObject, true, renderCamera, cullingCamera);
     }
 }
 
@@ -444,28 +504,44 @@ void Renderer::DrawGameObjectWithStencil(GameObject* gameObject)
         defaultTexture->Unbind();
 }
 
-void Renderer::DrawGameObjectRecursive(GameObject* gameObject, bool renderTransparentOnly)
+void Renderer::DrawGameObjectRecursive(GameObject* gameObject,
+    bool renderTransparentOnly,
+    ComponentCamera* renderCamera,
+    ComponentCamera* cullingCamera)
 {
     if (!gameObject->IsActive())
         return;
 
-    Transform* transform = static_cast<Transform*>(gameObject->GetComponent(ComponentType::TRANSFORM));
+    Transform* transform = static_cast<Transform*>(
+        gameObject->GetComponent(ComponentType::TRANSFORM));
     if (transform == nullptr) return;
+
+    if (cullingCamera &&
+        cullingCamera->IsActive() &&
+        cullingCamera->IsFrustumCullingEnabled())
+    {
+        if (ShouldCullGameObject(gameObject, cullingCamera->GetFrustum()))
+        {
+            // Skip this GameObject AND its children
+            return;
+        }
+    }
 
     bool isTransparent = HasTransparency(gameObject);
 
-    // Skip this object if transparency doesn't match the current pass
     if (renderTransparentOnly != isTransparent)
     {
         for (GameObject* child : gameObject->GetChildren())
         {
-            DrawGameObjectRecursive(child, renderTransparentOnly);
+            DrawGameObjectRecursive(child, renderTransparentOnly,
+                renderCamera, cullingCamera);
         }
         return;
     }
 
     const glm::mat4& modelMatrix = transform->GetGlobalMatrix();
-    glUniformMatrix4fv(defaultUniforms.model, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+    glUniformMatrix4fv(defaultUniforms.model, 1, GL_FALSE,
+        glm::value_ptr(modelMatrix));
 
     defaultShader->SetVec3("tintColor", glm::vec3(1.0f));
 
@@ -489,7 +565,6 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject, bool renderTransp
     ModuleEditor* editor = Application::GetInstance().editor.get();
     SelectionManager* selectionMgr = Application::GetInstance().selectionManager;
 
-    // Check if normals should be displayed for this object
     bool shouldDrawNormals = false;
     if (editor && selectionMgr->IsSelected(gameObject))
     {
@@ -497,7 +572,6 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject, bool renderTransp
     }
     else if (editor)
     {
-        // Check parent hierarchy for selection
         GameObject* parent = gameObject->GetParent();
         while (parent)
         {
@@ -530,15 +604,30 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject, bool renderTransp
         }
     }
 
+    if (!renderTransparentOnly)
+    {
+        ComponentCamera* cam = static_cast<ComponentCamera*>(
+            gameObject->GetComponent(ComponentType::CAMERA));
+
+        if (cam && cam->IsActive() && cam->ShouldDrawFrustum())
+        {
+            glm::vec3 color = (cam == cullingCamera) ?
+                glm::vec3(0.0f, 1.0f, 0.0f) :
+                glm::vec3(1.0f, 1.0f, 0.0f);
+
+            DrawCameraFrustum(cam, color);
+        }
+    }
+
     if (materialBound)
         material->Unbind();
     else
         defaultTexture->Unbind();
 
-    // Recursively render children
     for (GameObject* child : gameObject->GetChildren())
     {
-        DrawGameObjectRecursive(child, renderTransparentOnly);
+        DrawGameObjectRecursive(child, renderTransparentOnly,
+            renderCamera, cullingCamera);
     }
 }
 
@@ -750,4 +839,89 @@ void Renderer::ApplyRenderSettings()
 
 ComponentCamera* Renderer::GetCamera() {
     return Application::GetInstance().camera->GetActiveCamera();
+}
+
+void Renderer::DrawCameraFrustum(ComponentCamera* camera, const glm::vec3& color)
+{
+    if (!camera || !camera->ShouldDrawFrustum())
+        return;
+
+    // Get frustum corners
+    glm::vec3 corners[8];
+    camera->GetFrustumCorners(corners);
+
+    // Build line vertices for the frustum wireframe
+    std::vector<float> lineVertices;
+    lineVertices.reserve(24 * 3); // 12 edges * 2 points * 3 floats
+
+    // Near plane (4 edges)
+    for (int i = 0; i < 4; ++i)
+    {
+        int next = (i + 1) % 4;
+        lineVertices.insert(lineVertices.end(), {
+            corners[i].x, corners[i].y, corners[i].z,
+            corners[next].x, corners[next].y, corners[next].z
+            });
+    }
+
+    // Far plane (4 edges)
+    for (int i = 4; i < 8; ++i)
+    {
+        int next = 4 + ((i - 4 + 1) % 4);
+        lineVertices.insert(lineVertices.end(), {
+            corners[i].x, corners[i].y, corners[i].z,
+            corners[next].x, corners[next].y, corners[next].z
+            });
+    }
+
+    // Connecting edges (4 edges from near to far)
+    for (int i = 0; i < 4; ++i)
+    {
+        lineVertices.insert(lineVertices.end(), {
+            corners[i].x, corners[i].y, corners[i].z,
+            corners[i + 4].x, corners[i + 4].y, corners[i + 4].z
+            });
+    }
+
+    // Create temporary VAO and VBO for frustum lines
+    GLuint frustumVAO, frustumVBO;
+    glGenVertexArrays(1, &frustumVAO);
+    glGenBuffers(1, &frustumVBO);
+
+    glBindVertexArray(frustumVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, frustumVBO);
+    glBufferData(GL_ARRAY_BUFFER, lineVertices.size() * sizeof(float),
+        lineVertices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+
+    // Get active camera for rendering
+    ComponentCamera* activeCamera = GetCamera();
+    if (!activeCamera) return;
+
+    // Use line shader
+    lineShader->Use();
+    GLuint shaderProgram = lineShader->GetProgramID();
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
+        1, GL_FALSE, glm::value_ptr(activeCamera->GetProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
+        1, GL_FALSE, glm::value_ptr(activeCamera->GetViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),
+        1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+
+    lineShader->SetVec3("color", color);
+
+    // Draw the frustum
+    glLineWidth(2.0f);
+    glDrawArrays(GL_LINES, 0, lineVertices.size() / 3);
+    glLineWidth(1.0f);
+
+    // Cleanup
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &frustumVBO);
+    glDeleteVertexArrays(1, &frustumVAO);
+
+    defaultShader->Use();
 }

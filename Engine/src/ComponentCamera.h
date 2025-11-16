@@ -1,5 +1,6 @@
 #pragma once
 #include "Component.h"
+#include "Frustum.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -16,6 +17,7 @@ public:
     // View & Projection
     const glm::mat4& GetViewMatrix() const { return viewMatrix; }
     const glm::mat4& GetProjectionMatrix() const { return projectionMatrix; }
+    glm::mat4 GetViewProjectionMatrix() const { return projectionMatrix * viewMatrix; }
 
     // Getters
     glm::vec3 GetPosition() const;
@@ -28,17 +30,17 @@ public:
 
     // Setters
     void SetAspectRatio(float aspectRatio);
-    void SetFov(float newFov) { 
-        fov = newFov; 
-        UpdateProjectionMatrix(); 
+    void SetFov(float newFov) {
+        fov = newFov;
+        UpdateProjectionMatrix();
     }
     void SetNearPlane(float nearDist) {
         nearPlane = nearDist;
-        UpdateProjectionMatrix(); 
+        UpdateProjectionMatrix();
     }
     void SetFarPlane(float farDist) {
         farPlane = farDist;
-        UpdateProjectionMatrix(); 
+        UpdateProjectionMatrix();
     }
 
     // Editor Controls
@@ -56,6 +58,11 @@ public:
     glm::vec3 GetOrbitTarget() const { return orbitTarget; }
     glm::vec3 ScreenToWorldRay(int mouseX, int mouseY, int screenWidth, int screenHeight) const;
 
+    // Frustum culling
+    const Frustum& GetFrustum() const { return frustum; }
+    bool IsFrustumCullingEnabled() const { return frustumCullingEnabled; }
+    void SetFrustumCulling(bool enabled) { frustumCullingEnabled = enabled; }
+
     // Configuration
     float GetMouseSensitivity() const { return mouseSensitivity; }
     void SetMouseSensitivity(float sensitivity) { mouseSensitivity = sensitivity; }
@@ -66,10 +73,20 @@ public:
     float GetMovementSpeed() const { return movementSpeed; }
     void SetMovementSpeed(float speed) { movementSpeed = speed; }
 
+    void GetFrustumCorners(glm::vec3 corners[8]) const;
+    bool ShouldDrawFrustum() const { return drawFrustum; }
+    void SetDrawFrustum(bool draw) { drawFrustum = draw; }
+
 private:
+    bool drawFrustum = false;
+
     // Matrices
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
+
+    // Frustum for culling
+    Frustum frustum;
+    bool frustumCullingEnabled;
 
     // Camera parameters
     float fov;
@@ -110,6 +127,7 @@ private:
     void UpdateCameraVectors();
     void ProcessMouseMovement(float xoffset, float yoffset);
     void UpdateOrbitPosition();
+    void UpdateFrustum();
 
     glm::vec3 cameraFront;
     glm::vec3 cameraUp;

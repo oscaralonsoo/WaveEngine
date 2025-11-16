@@ -30,9 +30,12 @@ public:
     unsigned int GetNumTriangles() const { return GetNumIndices() / 3; }
     unsigned int GetNumTextures() const { return static_cast<unsigned int>(mesh.textures.size()); }
 
-    // Axis-Aligned Bounding Box (AABB) accessors
+    // Local space Axis-Aligned Bounding Box (AABB) accessors
     glm::vec3 GetAABBMin() const { return aabbMin; }
     glm::vec3 GetAABBMax() const { return aabbMax; }
+
+    // World space AABB (transformed by GameObject's global matrix)
+    void GetWorldAABB(glm::vec3& outMin, glm::vec3& outMax) const;
 
 private:
     Mesh mesh;                 // Mesh data
