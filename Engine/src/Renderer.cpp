@@ -435,6 +435,12 @@ void Renderer::DrawScene()
 
     for (GameObject* selectedObj : selectedObjects)
     {
+        if (!selectedObj->IsActive())
+            continue;
+
+        if (!IsGameObjectAndParentsActive(selectedObj))
+            continue;
+
         Transform* transform = static_cast<Transform*>(selectedObj->GetComponent(ComponentType::TRANSFORM));
         if (transform == nullptr) continue;
 
@@ -842,4 +848,23 @@ void Renderer::ApplyRenderSettings()
     SetFaceCulling(faceCullingEnabled);
     SetWireframeMode(wireframeMode);
     SetCullFaceMode(cullFaceMode);
+}
+
+bool Renderer::IsGameObjectAndParentsActive(GameObject* gameObject) const
+{
+    if (gameObject == nullptr)
+        return false;
+
+    if (!gameObject->IsActive())
+        return false;
+
+    GameObject* parent = gameObject->GetParent();
+    while (parent != nullptr)
+    {
+        if (!parent->IsActive())
+            return false;
+        parent = parent->GetParent();
+    }
+
+    return true;
 }

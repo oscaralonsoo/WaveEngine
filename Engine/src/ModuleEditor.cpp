@@ -1111,6 +1111,18 @@ void ModuleEditor::DrawGameObjectNode(GameObject* gameObject)
     else
     {
 	// ============================================ Display GameObject Node ===================================================
+        
+        // Checkbox 
+        bool isActive = gameObject->IsActive();
+        ImGui::PushID(gameObject);
+        if (ImGui::Checkbox("##active", &isActive))
+        {
+            gameObject->SetActive(isActive);
+        }
+        ImGui::PopID();
+
+        ImGui::SameLine();
+
         // Display the node
         bool nodeOpen = ImGui::TreeNodeEx(gameObject, nodeFlags, "%s", gameObject->GetName().c_str());
         // Handle selection

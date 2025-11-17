@@ -84,6 +84,9 @@ private:
     void DrawGameObjectWithStencil(GameObject* gameObject);
     void ApplyRenderSettings();
 
+    //Checkers
+    bool IsGameObjectAndParentsActive(GameObject* gameObject) const;
+
     // Shaders
     std::unique_ptr<Shader> defaultShader;
     std::unique_ptr<Shader> lineShader;
