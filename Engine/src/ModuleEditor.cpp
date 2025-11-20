@@ -1129,6 +1129,28 @@ void ModuleEditor::DrawRendererSettings()
     }
 
     ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Text("Debug Visualization");
+
+    if (ImGui::Checkbox("Show AABB", &showAABB))
+    {
+        LOG_DEBUG("AABB visualization: %s", showAABB ? "ON" : "OFF");
+    }
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show axis-aligned bounding boxes for all meshes");
+
+    if (ImGui::Checkbox("Show Octree", &showOctree))
+    {
+        LOG_DEBUG("Octree visualization: %s", showOctree ? "ON" : "OFF");
+    }
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show octree spatial partitioning structure");
+
+    if (ImGui::Checkbox("Show Raycast", &showRaycast))
+    {
+        LOG_DEBUG("Raycast visualization: %s", showRaycast ? "ON" : "OFF");
+    }
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show ray used for mouse picking");
+
+    ImGui::Spacing();
 }
 
 void ModuleEditor::DrawConsoleWindow()

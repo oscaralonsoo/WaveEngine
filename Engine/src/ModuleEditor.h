@@ -59,6 +59,10 @@ private:
 
     void HandleDeleteKey();
 
+    bool ShouldShowAABB() const { return showAABB; }
+    bool ShouldShowOctree() const { return showOctree; } 
+    bool ShouldShowRaycast() const { return showRaycast; } 
+
 private:
 
     // FPS
@@ -89,7 +93,6 @@ private:
     bool showLibraryInfo = true;
     bool autoScroll = true;
     bool scrollToBottom = false;
-  
     
 	// Hierarchy
     GameObject* renamingObject = nullptr;
@@ -105,4 +108,9 @@ private:
     float cameraScrollSpeed = 0.5f;
     float cameraFOV = 45.0f;
     float cameraPanSensitivity = 0.003f;
+
+    // Debug Visualization
+    bool showAABB = false;
+    bool showOctree = false;
+    bool showRaycast = false;
 };
