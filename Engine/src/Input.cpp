@@ -139,7 +139,6 @@ bool Input::PreUpdate()
 				camera->ResetOrbitInput();
 				camera->HandleOrbitInput(mouseXf, mouseYf);
 
-				// Object selection: only if ALT is not pressed
 				if (!keys[SDL_SCANCODE_LALT] && !keys[SDL_SCANCODE_RALT])
 				{
 					// Convert mouse position to Scene viewport coordinates
@@ -159,10 +158,10 @@ bool Input::PreUpdate()
 						static_cast<int>(sceneSize.y)
 					);
 
-					// Find the closest object intersected by the ray
+					// Find the closest object using optimized method (with Octree if available)
 					GameObject* root = Application::GetInstance().scene->GetRoot();
 					float minDist = std::numeric_limits<float>::max();
-					GameObject* clicked = FindClosestObjectToRay(root, rayOrigin, rayDir, minDist);
+					GameObject* clicked = FindClosestObjectToRayOptimized(root, rayOrigin, rayDir, minDist);
 
 					bool shiftPressed = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT];
 
@@ -178,6 +177,8 @@ bool Input::PreUpdate()
 							// Normal click: select single object
 							Application::GetInstance().selectionManager->SetSelectedObject(clicked);
 						}
+
+						LOG_CONSOLE("Selected: %s", clicked->GetName().c_str());
 					}
 					else
 					{
@@ -408,37 +409,52 @@ bool Input::GetWindowEvent(EventWindow ev)
 {
 	return windowEvents[ev];
 }
-// Ray-AABB intersection using slab method
-bool RayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir,
-	const glm::vec3& aabbMin, const glm::vec3& aabbMax,
-	float& distance)
+
+GameObject* FindClosestObjectToRayOptimized(GameObject* root, const glm::vec3& rayOrigin,
+	const glm::vec3& rayDir, float& minDist)
 {
-	// Compute inverse direction to avoid division in loop
-	glm::vec3 invDir;
-	invDir.x = (std::abs(rayDir.x) > 0.0001f) ? 1.0f / rayDir.x : std::numeric_limits<float>::max();
-	invDir.y = (std::abs(rayDir.y) > 0.0001f) ? 1.0f / rayDir.y : std::numeric_limits<float>::max();
-	invDir.z = (std::abs(rayDir.z) > 0.0001f) ? 1.0f / rayDir.z : std::numeric_limits<float>::max();
+	ModuleScene* scene = Application::GetInstance().scene.get();
+	if (!scene) return nullptr;
 
-	glm::vec3 t0 = (aabbMin - rayOrigin) * invDir;
-	glm::vec3 t1 = (aabbMax - rayOrigin) * invDir;
+	Octree* octree = scene->GetOctree();
 
-	glm::vec3 tmin = glm::min(t0, t1);
-	glm::vec3 tmax = glm::max(t0, t1);
-
-	float tNear = glm::max(glm::max(tmin.x, tmin.y), tmin.z);
-	float tFar = glm::min(glm::min(tmax.x, tmax.y), tmax.z);
-
-	if (tNear > tFar || tFar < 0.0f)
+	// If the octree is available, use it for optimized picking
+	if (octree)
 	{
-		return false;
+		Ray ray(rayOrigin, rayDir);
+		float distance;
+		GameObject* picked = octree->RayPick(ray, distance);
+
+		if (picked)
+		{
+			minDist = distance;
+
+			// save ray for the visualization
+			scene->lastRayOrigin = rayOrigin;
+			scene->lastRayDirection = rayDir;
+			scene->lastRayLength = distance;
+
+			LOG_DEBUG("Octree pick: '%s' at distance %.2f",
+				picked->GetName().c_str(), distance);
+		}
+		else
+		{
+			// save ray anyways
+			scene->lastRayOrigin = rayOrigin;
+			scene->lastRayDirection = rayDir;
+			scene->lastRayLength = 100.0f;
+		}
+
+		return picked;
 	}
 
-	distance = (tNear > 0.0f) ? tNear : tFar;
-	return true;
+	// Fallback: use the normal recurisve method if the octree inst aviable
+	return FindClosestObjectToRay(root, rayOrigin, rayDir, minDist);
 }
 
-// Recursively find closest object intersected by ray
-GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& minDist)
+// fallback
+GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin,
+	const glm::vec3& rayDir, float& minDist)
 {
 	if (!obj || !obj->IsActive()) return nullptr;
 
@@ -452,10 +468,9 @@ GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin, 
 		{
 			glm::vec3 localMin = mesh->GetAABBMin();
 			glm::vec3 localMax = mesh->GetAABBMax();
-
 			glm::mat4 globalMatrix = t->GetGlobalMatrix();
 
-			// Transform AABB to world space by transforming all 8 corners
+			// Transform AABB to world space
 			glm::vec3 corners[8] = {
 				glm::vec3(globalMatrix * glm::vec4(localMin.x, localMin.y, localMin.z, 1.0f)),
 				glm::vec3(globalMatrix * glm::vec4(localMax.x, localMin.y, localMin.z, 1.0f)),
@@ -467,10 +482,8 @@ GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin, 
 				glm::vec3(globalMatrix * glm::vec4(localMax.x, localMax.y, localMax.z, 1.0f))
 			};
 
-			// Recompute axis-aligned bounding box in world space
 			glm::vec3 worldMin = corners[0];
 			glm::vec3 worldMax = corners[0];
-
 			for (int i = 1; i < 8; ++i)
 			{
 				worldMin = glm::min(worldMin, corners[i]);
@@ -484,7 +497,6 @@ GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin, 
 				{
 					minDist = dist;
 					closest = obj;
-					LOG_DEBUG("Ray hit '%s' at distance %.2f", obj->GetName().c_str(), dist);
 				}
 			}
 		}

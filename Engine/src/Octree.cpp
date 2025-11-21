@@ -7,10 +7,10 @@
 #include <limits>
 #include <functional>
 #include <glad/glad.h>
-
-bool RayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir,
-    const glm::vec3& aabbMin, const glm::vec3& aabbMax,
-    float& distance);
+#include "ComponentCamera.h"
+#include "Shaders.h"
+#include "Application.h"
+#include <glm/gtc/type_ptr.hpp>
 
 // OctreeNode Implementation
 
@@ -259,23 +259,6 @@ void OctreeNode::RedistributeObjects()
     }
 }
 
-void OctreeNode::DebugDraw() const
-{
-    // TODO: Draw AABB for this node
-
-    // Recursively draw children
-    if (!IsLeaf())
-    {
-        for (int i = 0; i < 8; ++i)
-        {
-            if (children[i] != nullptr)
-            {
-                children[i]->DebugDraw();
-            }
-        }
-    }
-}
-
 // Octree Implementation
 
 Octree::Octree()
@@ -446,4 +429,115 @@ GameObject* OctreeNode::RayPick(const Ray& ray, float& outDistance) const
 int OctreeNode::GetObjectCount() const
 {
     return static_cast<int>(objects.size());
+}
+
+void OctreeNode::DebugDraw() const
+{
+    // Crear las 8 esquinas del AABB
+    glm::vec3 corners[8] = {
+        // Bottom face
+        glm::vec3(box_min.x, box_min.y, box_min.z), // 0
+        glm::vec3(box_max.x, box_min.y, box_min.z), // 1
+        glm::vec3(box_max.x, box_min.y, box_max.z), // 2
+        glm::vec3(box_min.x, box_min.y, box_max.z), // 3
+        // Top face
+        glm::vec3(box_min.x, box_max.y, box_min.z), // 4
+        glm::vec3(box_max.x, box_max.y, box_min.z), // 5
+        glm::vec3(box_max.x, box_max.y, box_max.z), // 6
+        glm::vec3(box_min.x, box_max.y, box_max.z)  // 7
+    };
+
+    std::vector<float> lineVertices;
+    lineVertices.reserve(24 * 3); // 12 edges * 2 points * 3 coords
+
+    // Bottom face edges (4 lines)
+    for (int i = 0; i < 4; ++i)
+    {
+        int next = (i + 1) % 4;
+        lineVertices.insert(lineVertices.end(), {
+            corners[i].x, corners[i].y, corners[i].z,
+            corners[next].x, corners[next].y, corners[next].z
+            });
+    }
+
+    // Top face edges (4 lines)
+    for (int i = 4; i < 8; ++i)
+    {
+        int next = 4 + ((i - 4 + 1) % 4);
+        lineVertices.insert(lineVertices.end(), {
+            corners[i].x, corners[i].y, corners[i].z,
+            corners[next].x, corners[next].y, corners[next].z
+            });
+    }
+
+    // Vertical edges (4 lines)
+    for (int i = 0; i < 4; ++i)
+    {
+        lineVertices.insert(lineVertices.end(), {
+            corners[i].x, corners[i].y, corners[i].z,
+            corners[i + 4].x, corners[i + 4].y, corners[i + 4].z
+            });
+    }
+
+    // Crear VAO/VBO temporal para las líneas
+    GLuint vao, vbo;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, lineVertices.size() * sizeof(float),
+        lineVertices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+
+    // Obtener cámara y shader
+    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
+    Shader* lineShader = Application::GetInstance().renderer->GetOutlineShader();
+
+    if (camera && lineShader)
+    {
+        lineShader->Use();
+        GLuint shaderProgram = lineShader->GetProgramID();
+
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
+            1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
+            1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),
+            1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+
+        // Color basado en la profundidad del nodo
+        float colorFactor = 1.0f - (current_depth / (float)max_depth);
+        glm::vec3 color = glm::vec3(0.0f, colorFactor, 1.0f - colorFactor);
+
+        GLint colorLoc = glGetUniformLocation(shaderProgram, "color");
+        if (colorLoc == -1)
+            colorLoc = glGetUniformLocation(shaderProgram, "outlineColor");
+
+        if (colorLoc != -1)
+            glUniform3fv(colorLoc, 1, glm::value_ptr(color));
+
+        glLineWidth(1.5f);
+        glDrawArrays(GL_LINES, 0, lineVertices.size() / 3);
+        glLineWidth(1.0f);
+    }
+
+    // Cleanup
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &vbo);
+    glDeleteVertexArrays(1, &vao);
+
+    // Dibujar recursivamente los hijos
+    if (!IsLeaf())
+    {
+        for (int i = 0; i < 8; ++i)
+        {
+            if (children[i] != nullptr)
+            {
+                children[i]->DebugDraw();
+            }
+        }
+    }
 }

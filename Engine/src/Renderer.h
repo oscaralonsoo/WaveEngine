@@ -133,4 +133,10 @@ private:
     GLuint rbo = 0;
     int framebufferWidth = 1280;
     int framebufferHeight = 720;
+
+    void DrawRay(const glm::vec3& origin, const glm::vec3& direction,
+        float length, const glm::vec3& color);
+    void DrawAABB(const glm::vec3& min, const glm::vec3& max,
+        const glm::vec3& color);
+    void DrawAllAABBs(GameObject* gameObject);
 };

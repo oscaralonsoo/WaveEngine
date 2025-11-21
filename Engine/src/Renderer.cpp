@@ -573,6 +573,49 @@ void Renderer::DrawScene()
     {
         DrawGameObjectRecursive(transparentObj.gameObject, true, renderCamera, cullingCamera);
     }
+
+    ModuleEditor* editor = Application::GetInstance().editor.get();
+
+    if (editor)
+    {
+        // draw aabbs it necessary
+        if (editor->ShouldShowAABB())
+        {
+            DrawAllAABBs(root);
+        }
+
+        // draw octree it necessary
+        if (editor->ShouldShowOctree())
+        {
+            Octree* octree = Application::GetInstance().scene->GetOctree();
+            if (octree)
+            {
+                octree->DebugDraw();
+            }
+        }
+    }
+
+}
+
+void Renderer::DrawAllAABBs(GameObject* gameObject)
+{
+    if (!gameObject || !gameObject->IsActive())
+        return;
+
+    ComponentMesh* meshComp = static_cast<ComponentMesh*>(
+        gameObject->GetComponent(ComponentType::MESH));
+
+    if (meshComp && meshComp->IsActive() && meshComp->HasMesh())
+    {
+        glm::vec3 worldMin, worldMax;
+        meshComp->GetWorldAABB(worldMin, worldMax);
+        DrawAABB(worldMin, worldMax, glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+
+    for (GameObject* child : gameObject->GetChildren())
+    {
+        DrawAllAABBs(child);
+    }
 }
 
 void Renderer::DrawGameObjectWithStencil(GameObject* gameObject)
@@ -1060,4 +1103,146 @@ bool Renderer::IsGameObjectAndParentsActive(GameObject* gameObject) const
     }
 
     return true;
+}
+
+void Renderer::DrawRay(const glm::vec3& origin, const glm::vec3& direction,
+    float length, const glm::vec3& color)
+{
+    glm::vec3 endPoint = origin + direction * length;
+
+    std::vector<float> lineVertices = {
+        origin.x, origin.y, origin.z,
+        endPoint.x, endPoint.y, endPoint.z
+    };
+
+    GLuint rayVAO, rayVBO;
+    glGenVertexArrays(1, &rayVAO);
+    glGenBuffers(1, &rayVBO);
+
+    glBindVertexArray(rayVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, rayVBO);
+    glBufferData(GL_ARRAY_BUFFER, lineVertices.size() * sizeof(float),
+        lineVertices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+
+    ComponentCamera* camera = GetCamera();
+    if (!camera) return;
+
+    lineShader->Use();
+    GLuint shaderProgram = lineShader->GetProgramID();
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
+        1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
+        1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),
+        1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+
+    GLint colorLoc = glGetUniformLocation(shaderProgram, "color");
+    if (colorLoc == -1)
+        colorLoc = glGetUniformLocation(shaderProgram, "tintColor");
+
+    if (colorLoc != -1)
+        glUniform3fv(colorLoc, 1, glm::value_ptr(color));
+
+    glLineWidth(3.0f);
+    glDrawArrays(GL_LINES, 0, 2);
+    glLineWidth(1.0f);
+
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &rayVBO);
+    glDeleteVertexArrays(1, &rayVAO);
+
+    defaultShader->Use();
+}
+
+// Método para dibujar AABB de un GameObject
+void Renderer::DrawAABB(const glm::vec3& min, const glm::vec3& max, const glm::vec3& color)
+{
+    glm::vec3 corners[8] = {
+        glm::vec3(min.x, min.y, min.z), // 0
+        glm::vec3(max.x, min.y, min.z), // 1
+        glm::vec3(max.x, min.y, max.z), // 2
+        glm::vec3(min.x, min.y, max.z), // 3
+        glm::vec3(min.x, max.y, min.z), // 4
+        glm::vec3(max.x, max.y, min.z), // 5
+        glm::vec3(max.x, max.y, max.z), // 6
+        glm::vec3(min.x, max.y, max.z)  // 7
+    };
+
+    std::vector<float> lineVertices;
+    lineVertices.reserve(24 * 3);
+
+    // Bottom face
+    for (int i = 0; i < 4; ++i)
+    {
+        int next = (i + 1) % 4;
+        lineVertices.insert(lineVertices.end(), {
+            corners[i].x, corners[i].y, corners[i].z,
+            corners[next].x, corners[next].y, corners[next].z
+            });
+    }
+
+    // Top face
+    for (int i = 4; i < 8; ++i)
+    {
+        int next = 4 + ((i - 4 + 1) % 4);
+        lineVertices.insert(lineVertices.end(), {
+            corners[i].x, corners[i].y, corners[i].z,
+            corners[next].x, corners[next].y, corners[next].z
+            });
+    }
+
+    // Vertical edges
+    for (int i = 0; i < 4; ++i)
+    {
+        lineVertices.insert(lineVertices.end(), {
+            corners[i].x, corners[i].y, corners[i].z,
+            corners[i + 4].x, corners[i + 4].y, corners[i + 4].z
+            });
+    }
+
+    GLuint aabbVAO, aabbVBO;
+    glGenVertexArrays(1, &aabbVAO);
+    glGenBuffers(1, &aabbVBO);
+
+    glBindVertexArray(aabbVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, aabbVBO);
+    glBufferData(GL_ARRAY_BUFFER, lineVertices.size() * sizeof(float),
+        lineVertices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+
+    ComponentCamera* camera = GetCamera();
+    if (!camera) return;
+
+    lineShader->Use();
+    GLuint shaderProgram = lineShader->GetProgramID();
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
+        1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
+        1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),
+        1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+
+    GLint colorLoc = glGetUniformLocation(shaderProgram, "color");
+    if (colorLoc == -1)
+        colorLoc = glGetUniformLocation(shaderProgram, "tintColor");
+
+    if (colorLoc != -1)
+        glUniform3fv(colorLoc, 1, glm::value_ptr(color));
+
+    glLineWidth(2.0f);
+    glDrawArrays(GL_LINES, 0, lineVertices.size() / 3);
+    glLineWidth(1.0f);
+
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &aabbVBO);
+    glDeleteVertexArrays(1, &aabbVAO);
+
+    defaultShader->Use();
 }

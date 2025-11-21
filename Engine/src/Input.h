@@ -2,6 +2,7 @@
 #include "Module.h"
 #include <string>
 #include <glm/glm.hpp>
+#include "Globals.h"
 
 class GameObject;
 
@@ -30,11 +31,8 @@ enum DroppedFileType
 	DROPPED_TEXTURE
 };
 
-// Helper functions for object picking 
-bool RayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir,
-	const glm::vec3& aabbMin, const glm::vec3& aabbMax,
-	float& distance);
 GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& minDist);
+GameObject* FindClosestObjectToRayOptimized(GameObject* obj, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& minDist);
 
 class Input : public Module
 {

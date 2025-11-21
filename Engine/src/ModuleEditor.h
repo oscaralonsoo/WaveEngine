@@ -27,6 +27,10 @@ public:
     ImVec2 sceneViewportPos;
     ImVec2 sceneViewportSize;
 
+    bool ShouldShowAABB() const { return showAABB; }
+    bool ShouldShowOctree() const { return showOctree; }
+    bool ShouldShowRaycast() const { return showRaycast; }
+
 private:
 
     bool ShowMenuBar();
@@ -58,10 +62,6 @@ private:
     void CreatePrimitiveGameObject(const std::string& name, Mesh mesh);
 
     void HandleDeleteKey();
-
-    bool ShouldShowAABB() const { return showAABB; }
-    bool ShouldShowOctree() const { return showOctree; } 
-    bool ShouldShowRaycast() const { return showRaycast; } 
 
 private:
 
