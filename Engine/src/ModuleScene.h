@@ -28,7 +28,7 @@ public:
     void RebuildOctree();
     void UpdateObjectInOctree(GameObject* obj);
 
-    // Para visualización de raycast
+    // for raycast visualization
     glm::vec3 lastRayOrigin;
     glm::vec3 lastRayDirection;
     float lastRayLength = 0.0f;
