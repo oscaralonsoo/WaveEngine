@@ -17,6 +17,7 @@
         "docking-experimental"
       ]
     },
+    "imguizmo",
     "sdl3"
   ]
 }
