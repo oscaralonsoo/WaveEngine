@@ -541,7 +541,6 @@ void Renderer::DrawScene()
     glStencilMask(0x00);
     DrawGameObjectRecursive(root, false, renderCamera, cullingCamera);
 
-    // Second pass: render selection outlines
     if (!renderCamera) return;
 
     outlineShader->Use();
@@ -551,8 +550,11 @@ void Renderer::DrawScene()
         glm::value_ptr(renderCamera->GetViewMatrix()));
     outlineShader->SetVec3("outlineColor", glm::vec3(1.0f, 0.41f, 0.71f));
 
-    float outlineScale = 1.02f;
+    float outlineThickness = 0.04f;
+    outlineShader->SetFloat("outlineThickness", outlineThickness);
 
+    // SOLUCIÓN 1: Limpiar solo el depth buffer
+    glClear(GL_DEPTH_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
 
@@ -577,26 +579,11 @@ void Renderer::DrawScene()
             if (meshComp->IsActive() && meshComp->HasMesh())
             {
                 const Mesh& mesh = meshComp->GetMesh();
-                glm::vec3 meshCenter(0.0f);
-
-                if (!mesh.vertices.empty())
-                {
-                    for (const auto& vertex : mesh.vertices)
-                    {
-                        meshCenter += vertex.position;
-                    }
-                    meshCenter /= static_cast<float>(mesh.vertices.size());
-                }
 
                 glm::mat4 globalMatrix = transform->GetGlobalMatrix();
-                glm::vec4 worldCenter = globalMatrix * glm::vec4(meshCenter, 1.0f);
-                glm::mat4 toCenter = glm::translate(glm::mat4(1.0f), -glm::vec3(worldCenter));
-                glm::mat4 fromCenter = glm::translate(glm::mat4(1.0f), glm::vec3(worldCenter));
-                glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(outlineScale));
-                glm::mat4 outlineModelMatrix = fromCenter * scale * toCenter * globalMatrix;
-
                 glUniformMatrix4fv(outlineUniforms.model, 1, GL_FALSE,
-                    glm::value_ptr(outlineModelMatrix));
+                    glm::value_ptr(globalMatrix));
+
                 DrawMesh(mesh);
             }
         }
@@ -620,7 +607,6 @@ void Renderer::DrawScene()
         DrawGameObjectRecursive(transparentObj.gameObject, true, renderCamera, cullingCamera);
     }
 }
-
 void Renderer::DrawAllAABBs(GameObject* gameObject)
 {
     if (!gameObject || !gameObject->IsActive())

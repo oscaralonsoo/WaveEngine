@@ -304,17 +304,39 @@ bool Shader::CreateWithDiscard()
 
 bool Shader::CreateSingleColor()
 {
-    // Minimal vertex shader for outline rendering
+
     const char* vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
+        "layout (location = 1) in vec3 aNormal;\n"  
         "\n"
         "uniform mat4 model;\n"
         "uniform mat4 view;\n"
         "uniform mat4 projection;\n"
+        "uniform float outlineThickness;\n"  
         "\n"
         "void main()\n"
         "{\n"
-        "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+        "   vec3 scale = vec3(\n"
+        "       length(model[0].xyz),\n"
+        "       length(model[1].xyz),\n"
+        "       length(model[2].xyz)\n"
+        "   );\n"
+        "   mat4 modelNoScale = model;\n"
+        "   modelNoScale[0].xyz /= scale.x;\n"
+        "   modelNoScale[1].xyz /= scale.y;\n"
+        "   modelNoScale[2].xyz /= scale.z;\n"
+        "   \n"
+        "   vec3 worldNormal = normalize(mat3(modelNoScale) * aNormal);\n"
+        "   \n"
+        "   vec4 worldPos = model * vec4(aPos, 1.0);\n"
+        "   \n"
+        "   vec4 viewPos = view * worldPos;\n"
+        "   float distance = length(viewPos.xyz);\n"
+        "   float dynamicThickness = outlineThickness * (distance * 0.1);\n"
+        "   \n"
+        "   worldPos.xyz += worldNormal * dynamicThickness;\n"
+        "   \n"
+        "   gl_Position = projection * view * worldPos;\n"
         "}\0";
 
     unsigned int vertexShader;
