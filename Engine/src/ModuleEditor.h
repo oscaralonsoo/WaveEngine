@@ -1,8 +1,10 @@
 #pragma once
+
 #include "Module.h"
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_opengl3.h>
+#include <ImGuizmo.h>
 #include <vector>
 #include <string>
 #include "ComponentMesh.h"
@@ -59,6 +61,9 @@ private:
 
     void HandleDeleteKey();
 
+    // Gizmo
+    void DrawGizmo();
+	void HandleGizmoInput();
 private:
 
     // FPS
@@ -105,4 +110,8 @@ private:
     float cameraScrollSpeed = 0.5f;
     float cameraFOV = 45.0f;
     float cameraPanSensitivity = 0.003f;
+
+    // ImGuizmo
+	ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE; // Translate, Rotate, Scale
+	ImGuizmo::MODE currentGizmoMode = ImGuizmo::WORLD;              // Local or World
 };

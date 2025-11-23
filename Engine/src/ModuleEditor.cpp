@@ -1,3 +1,5 @@
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_opengl3.h>
@@ -8,6 +10,8 @@
 #include <psapi.h>
 #include <gl/GL.h>
 #include <SDL3/SDL_timer.h>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 #include "ModuleEditor.h"
 #include "Application.h"
@@ -122,6 +126,12 @@ bool ModuleEditor::Update()
         ImGui::InvisibleButton("SceneView", sceneViewportSize);
     }
 
+	ImGuizmo::BeginFrame(); // Note: Not need to call end frame for ImGuizmo
+
+    HandleGizmoInput();
+
+    DrawGizmo();
+
     ImGui::End();
     ImGui::PopStyleVar();
 
@@ -171,6 +181,101 @@ bool ModuleEditor::CleanUp()
     ImGui::DestroyContext();
 
     return true;
+}
+
+void ModuleEditor::HandleGizmoInput()
+{
+    Input* input = Application::GetInstance().input.get();
+
+    if (ImGui::GetIO().WantTextInput) return;
+
+    // W = Translate
+    if (input->GetKey(SDL_SCANCODE_W) == KEY_DOWN) {
+        currentGizmoOperation = ImGuizmo::TRANSLATE;
+    }
+    // E = Rotate
+    if (input->GetKey(SDL_SCANCODE_E) == KEY_DOWN) {
+        currentGizmoOperation = ImGuizmo::ROTATE;
+    }
+    // R = Scale
+    if (input->GetKey(SDL_SCANCODE_R) == KEY_DOWN) {
+        currentGizmoOperation = ImGuizmo::SCALE;
+    }
+
+	// T = Toggle between Local and World mode
+    if (input->GetKey(SDL_SCANCODE_T) == KEY_DOWN) {
+        currentGizmoMode = (currentGizmoMode == ImGuizmo::WORLD) ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
+    }
+
+	// Q = Disable gizmo 
+    if (input->GetKey(SDL_SCANCODE_Q) == KEY_DOWN) {
+        currentGizmoOperation = ImGuizmo::BOUNDS;
+    }
+
+}
+
+void ModuleEditor::DrawGizmo()
+{
+    GameObject* selectedObject = Application::GetInstance().selectionManager->GetSelectedObject();
+    if (!selectedObject) return;
+
+    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
+    if (!camera) return;
+
+    Transform* transform = static_cast<Transform*>(selectedObject->GetComponent(ComponentType::TRANSFORM));
+    if (!transform) return;
+
+    if (sceneViewportSize.y <= 0.0f) return;
+
+    // Setup ImGuizmo
+    ImGuizmo::SetOrthographic(false);
+    ImGuizmo::SetDrawlist();
+    ImGuizmo::SetRect(sceneViewportPos.x, sceneViewportPos.y, sceneViewportSize.x, sceneViewportSize.y);
+
+    float sceneAspect = sceneViewportSize.x / sceneViewportSize.y;
+    float currentAspect = camera->GetAspectRatio();
+
+    const float TOLERANCE = 0.001f;
+    if (std::abs(currentAspect - sceneAspect) > TOLERANCE)
+    {
+        camera->SetAspectRatio(sceneAspect);
+    }
+
+    // Get camera matrices
+    glm::mat4 viewMatrix = camera->GetViewMatrix();
+    glm::mat4 projectionMatrix = camera->GetProjectionMatrix();
+    glm::mat4 transformMatrix = transform->GetGlobalMatrix();
+
+	// Manipulate is used to draw and handle the gizmo
+    ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), currentGizmoOperation, currentGizmoMode, glm::value_ptr(transformMatrix)
+    );
+
+    if (ImGuizmo::IsUsing())
+    {
+		// Handle parent-child relationship
+        GameObject* parent = selectedObject->GetParent();
+
+        if (parent) // Local
+        {
+            Transform* parentTransform = static_cast<Transform*>(parent->GetComponent(ComponentType::TRANSFORM));
+            if (parentTransform)
+            {
+                const glm::mat4& parentGlobal = parentTransform->GetGlobalMatrix();
+                transformMatrix = glm::inverse(parentGlobal) * transformMatrix; // Local matrix
+            }
+        }
+
+        // We use decompose() to decompose the matrix into position, rotation, and scale
+        glm::vec3 position, scale, skew;
+        glm::vec4 perspective;
+        glm::quat rotation;
+
+        glm::decompose(transformMatrix, scale, rotation, position, skew, perspective);
+
+        transform->SetPosition(position);
+        transform->SetRotationQuat(rotation);
+        transform->SetScale(scale);
+    }
 }
 
 bool ModuleEditor::ShowMenuBar() {
@@ -510,6 +615,88 @@ void ModuleEditor::DrawInspectorWindow()
     }
 
     ImGui::Text("GameObject: %s", selectedObject->GetName().c_str());
+    ImGui::Separator();
+
+    // Gizmo Settings
+    ImGui::Spacing();
+    if (ImGui::CollapsingHeader("Gizmo Settings", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+
+        // Gizmo Mode
+        ImGui::Text("Gizmo Mode:");
+        ImGui::SameLine();
+		ImGui::Text("Turn off (Q)");
+
+        bool isTranslate = (currentGizmoOperation == ImGuizmo::TRANSLATE);
+        bool isRotate = (currentGizmoOperation == ImGuizmo::ROTATE);
+        bool isScale = (currentGizmoOperation == ImGuizmo::SCALE);
+
+        if (ImGui::RadioButton("Translate (W)", isTranslate))
+        {
+            currentGizmoOperation = ImGuizmo::TRANSLATE;
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Move the object in 3D space\nShortcut: W key");
+
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Rotate (E)", isRotate))
+        {
+            currentGizmoOperation = ImGuizmo::ROTATE;
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Rotate the object\nShortcut: E key");
+
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Scale (R)", isScale))
+        {
+            currentGizmoOperation = ImGuizmo::SCALE;
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Scale the object\nShortcut: R key");
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // Transform Space
+        ImGui::Text("Transform Space (T):");
+        ImGui::Spacing();
+
+        bool isWorld = (currentGizmoMode == ImGuizmo::WORLD);
+        bool isLocal = (currentGizmoMode == ImGuizmo::LOCAL);
+
+        if (ImGui::RadioButton("World Space", isWorld))
+        {
+            currentGizmoMode = ImGuizmo::WORLD;
+        }
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "World Space");
+            ImGui::Separator();
+            ImGui::Text("Transformations are relative to world axes");
+            ImGui::BulletText("X: Always points right");
+            ImGui::BulletText("Y: Always points up");
+            ImGui::BulletText("Z: Always points forward");
+            ImGui::EndTooltip();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Local Space", isLocal))
+        {
+            currentGizmoMode = ImGuizmo::LOCAL;
+        }
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Local Space");
+            ImGui::Separator();
+            ImGui::Text("Transformations are relative to objects rotation");
+            ImGui::BulletText("Axes follow objects orientation");
+            ImGui::BulletText("Useful for moving along objects direction");
+            ImGui::EndTooltip();
+        }
+    }
     ImGui::Separator();
 
     // Transforms

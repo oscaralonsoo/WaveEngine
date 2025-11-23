@@ -4,6 +4,7 @@
 #include <iostream>
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
+#include <ImGuizmo.h>
 #include "GameObject.h"
 #include "Transform.h"
 #include "ComponentMesh.h"
@@ -140,7 +141,7 @@ bool Input::PreUpdate()
 				camera->HandleOrbitInput(mouseXf, mouseYf);
 
 				// Object selection: only if ALT is not pressed
-				if (!keys[SDL_SCANCODE_LALT] && !keys[SDL_SCANCODE_RALT])
+				if (!keys[SDL_SCANCODE_LALT] && !keys[SDL_SCANCODE_RALT] && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
 				{
 					// Convert mouse position to Scene viewport coordinates
 					ImVec2 scenePos = Application::GetInstance().editor->sceneViewportPos;
