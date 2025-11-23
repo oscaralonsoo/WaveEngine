@@ -5,6 +5,7 @@
 #include "Application.h"
 #include <float.h>
 #include <functional>
+#include "ComponentMesh.h"
 
 ModuleScene::ModuleScene() : Module()
 {

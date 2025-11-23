@@ -4,6 +4,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include "Application.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 Transform::Transform(GameObject* owner)
     : Component(owner, ComponentType::TRANSFORM),

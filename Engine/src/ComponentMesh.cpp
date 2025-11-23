@@ -5,6 +5,7 @@
 #include "Frustum.h"
 #include <limits>
 #include <algorithm>  
+#include <glm/glm.hpp>
 
 ComponentMesh::ComponentMesh(GameObject* owner)
     : Component(owner, ComponentType::MESH),

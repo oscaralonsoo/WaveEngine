@@ -46,8 +46,6 @@ set(UTILS_SRC
     src/Grid.h
     src/ModuleCamera.cpp 
     src/ModuleCamera.h 
-    src/ModuleEditor.cpp
-    src/ModuleEditor.h
     src/SelectionManager.h
     src/SelectionManager.cpp
     src/Octree.h
@@ -82,14 +80,31 @@ set(LOADERS_SRC
     src/FileSystem.cpp 
 )
 
+set(EDITOR_SRC 
+    src/ModuleEditor.h
+    src/ModuleEditor.cpp 
+    src/SceneWindow.h
+    src/SceneWindow.cpp 
+    src/EditorWindow.h 
+    src/ConfigurationWindow.h
+    src/ConfigurationWindow.cpp 
+    src/ConsoleWindow.h
+    src/ConsoleWindow.cpp 
+    src/HierarchyWindow.h
+    src/HierarchyWindow.cpp 
+    src/InspectorWindow.h
+    src/InspectorWindow.cpp 
+)
+
 source_group("Source\\Core" FILES ${CORE_SRC})
 source_group("Source\\Rendering" FILES ${RENDERING_SRC})
 source_group("Source\\Utils" FILES ${UTILS_SRC})
+source_group("Source\\Utils\\Editor" FILES ${EDITOR_SRC})
 source_group("Source\\Game Objects" FILES ${GAMEOBJECTS_SRC})
 source_group("Source\\Game Objects\\Components" FILES ${COMPONENTS_SRC})
 source_group("Source\\Loaders" FILES ${LOADERS_SRC})
 
-set(SRCS ${CORE_SRC} ${RENDERING_SRC} ${UTILS_SRC} ${GAMEOBJECTS_SRC} ${COMPONENTS_SRC} ${LOADERS_SRC})
+set(SRCS ${CORE_SRC} ${RENDERING_SRC} ${UTILS_SRC} ${EDITOR_SRC} ${GAMEOBJECTS_SRC} ${COMPONENTS_SRC} ${LOADERS_SRC})
 
 add_executable(Engine ${SRCS})
 

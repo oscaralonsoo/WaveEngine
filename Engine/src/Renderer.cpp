@@ -769,8 +769,8 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject,
         }
     }
 
-    const bool showVertex = editor && editor->ShouldShowVertexNormals();
-    const bool showFace = editor && editor->ShouldShowFaceNormals();
+    bool showVertex = editor && editor->ShouldShowVertexNormals();
+    bool showFace = editor && editor->ShouldShowFaceNormals();
 
     for (Component* comp : meshComponents)
     {

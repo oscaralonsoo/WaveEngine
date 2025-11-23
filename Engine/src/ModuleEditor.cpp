@@ -1,19 +1,10 @@
-#define GLM_ENABLE_EXPERIMENTAL
-
+#include "ModuleEditor.h"
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_opengl3.h>
 #include <SDL3/SDL.h>
-#include <glad/glad.h>
 #include <IL/il.h>
-#include <windows.h>
-#include <psapi.h>
-#include <gl/GL.h>
-#include <SDL3/SDL_timer.h>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
 
-#include "ModuleEditor.h"
 #include "Application.h"
 #include "Log.h"
 #include "GameObject.h"
@@ -21,14 +12,18 @@
 #include "ModuleScene.h"
 #include "Primitives.h"
 #include "ComponentMesh.h"
-#include "ComponentMaterial.h"
-#include "Transform.h"
+#include "Transform.h"           
+#include "ComponentCamera.h"     
 
+#include "ConfigurationWindow.h"
+#include "HierarchyWindow.h"
+#include "InspectorWindow.h"
+#include "ConsoleWindow.h"
+#include "SceneWindow.h"
 
 ModuleEditor::ModuleEditor() : Module()
 {
     name = "ModuleEditor";
-    fpsHistory.reserve(maxFPSHistory);
 }
 
 ModuleEditor::~ModuleEditor()
@@ -42,22 +37,31 @@ bool ModuleEditor::Start()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    //io.IniFilename = NULL;  // for testing
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-    ImGui_ImplSDL3_InitForOpenGL(Application::GetInstance().window->GetWindow(), Application::GetInstance().renderContext->GetContext());
+    ImGui_ImplSDL3_InitForOpenGL(
+        Application::GetInstance().window->GetWindow(),
+        Application::GetInstance().renderContext->GetContext()
+    );
     ImGui_ImplOpenGL3_Init();
 
     ImGui::StyleColorsDark();
 
     ImGuiStyle& style = ImGui::GetStyle();
-    style.Colors[ImGuiCol_TitleBg] = ImVec4(0.7f, 0.5f, 0.6f, 1.0f);           // Inactive titile (rosa pastel fosc)
-    style.Colors[ImGuiCol_TitleBgActive] = ImVec4(1.0f, 0.7f, 0.9f, 1.0f);     // Active title (rosa pastel)
-    style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.6f, 0.4f, 0.5f, 1.0f); 
-    style.Colors[ImGuiCol_Tab] = ImVec4(0.7f, 0.5f, 0.6f, 1.0f);               // Inactive tab
-    style.Colors[ImGuiCol_TabActive] = ImVec4(1.0f, 0.7f, 0.9f, 1.0f);         // Active tab
+    style.Colors[ImGuiCol_TitleBg] = ImVec4(0.7f, 0.5f, 0.6f, 1.0f);
+    style.Colors[ImGuiCol_TitleBgActive] = ImVec4(1.0f, 0.7f, 0.9f, 1.0f);
+    style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.6f, 0.4f, 0.5f, 1.0f);
+    style.Colors[ImGuiCol_Tab] = ImVec4(0.7f, 0.5f, 0.6f, 1.0f);
+    style.Colors[ImGuiCol_TabActive] = ImVec4(1.0f, 0.7f, 0.9f, 1.0f);
     style.Colors[ImGuiCol_TabHovered] = ImVec4(1.0f, 0.8f, 0.95f, 1.0f);
+
+    // Create all windows
+    configWindow = std::make_unique<ConfigurationWindow>();
+    hierarchyWindow = std::make_unique<HierarchyWindow>();
+    inspectorWindow = std::make_unique<InspectorWindow>();
+    consoleWindow = std::make_unique<ConsoleWindow>();
+    sceneWindow = std::make_unique<SceneWindow>(inspectorWindow.get());
 
     LOG_CONSOLE("Editor initialized");
 
@@ -75,7 +79,6 @@ bool ModuleEditor::PreUpdate()
 
 bool ModuleEditor::Update()
 {
-
     // Create fullscreen dockspace window
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
@@ -95,78 +98,35 @@ bool ModuleEditor::Update()
     ImGui::Begin("DockSpaceWindow", nullptr, window_flags);
     ImGui::PopStyleVar(3);
 
-    // Menu Bar
-
     ShowMenuBar();
 
-
-    // Create DockSpace
     ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 
     ImGui::End();
 
-    // Scene Window
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::Begin("Scene");
-
-    sceneViewportPos = ImGui::GetCursorScreenPos();
-    sceneViewportSize = ImGui::GetContentRegionAvail();
-
-    GLuint sceneTexture = Application::GetInstance().renderer->GetSceneTexture();
-    if (sceneTexture != 0 && sceneViewportSize.x > 0 && sceneViewportSize.y > 0)
-    {
-        // Display the scene texture
-        ImTextureID texID = (ImTextureID)(uintptr_t)sceneTexture;
-        ImGui::Image(texID, sceneViewportSize, ImVec2(0, 1), ImVec2(1, 0));
-    }
-    else
-    {
-        // Fallback: reserve space if texture is not ready
-        ImGui::InvisibleButton("SceneView", sceneViewportSize);
-    }
-
-	ImGuizmo::BeginFrame(); // Note: Not need to call end frame for ImGuizmo
-
-    HandleGizmoInput();
-
-    DrawGizmo();
-
-    ImGui::End();
-    ImGui::PopStyleVar();
-
-    // Configuration Window
-    if (showConfiguration) {
-        DrawConfigurationWindow();
-    }
-
-    // Console Window
-    if (showConsole) {
-        DrawConsoleWindow();
-    }
-
-    // Hierarchy Window
-    if (showHierarchy) {
-        DrawHierarchyWindow();
-    }
-
-    // Inspector Window
-    if (showInspector) {
-        DrawInspectorWindow();
-    }
+    sceneWindow->Draw();
+    configWindow->Draw();
+    consoleWindow->Draw();
+    hierarchyWindow->Draw();
+    inspectorWindow->Draw();
 
     if (showAbout)
         DrawAboutWindow();
 
     HandleDeleteKey();
 
+    if (sceneWindow)
+    {
+        sceneViewportPos = sceneWindow->GetViewportPos();
+        sceneViewportSize = sceneWindow->GetViewportSize();
+    }
+
     return true;
 }
 
 bool ModuleEditor::PostUpdate()
 {
-    //ShowMenuBar();
-
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     return true;
@@ -176,6 +136,8 @@ bool ModuleEditor::CleanUp()
 {
     LOG_DEBUG("Cleaning up Editor");
 
+    // Windows will be automatically destroyed by unique_ptr
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
@@ -183,131 +145,66 @@ bool ModuleEditor::CleanUp()
     return true;
 }
 
-void ModuleEditor::HandleGizmoInput()
+void ModuleEditor::ShowMenuBar()
 {
-    Input* input = Application::GetInstance().input.get();
-
-    if (ImGui::GetIO().WantTextInput) return;
-
-    // W = Translate
-    if (input->GetKey(SDL_SCANCODE_W) == KEY_DOWN) {
-        currentGizmoOperation = ImGuizmo::TRANSLATE;
-    }
-    // E = Rotate
-    if (input->GetKey(SDL_SCANCODE_E) == KEY_DOWN) {
-        currentGizmoOperation = ImGuizmo::ROTATE;
-    }
-    // R = Scale
-    if (input->GetKey(SDL_SCANCODE_R) == KEY_DOWN) {
-        currentGizmoOperation = ImGuizmo::SCALE;
-    }
-
-	// T = Toggle between Local and World mode
-    if (input->GetKey(SDL_SCANCODE_T) == KEY_DOWN) {
-        currentGizmoMode = (currentGizmoMode == ImGuizmo::WORLD) ? ImGuizmo::LOCAL : ImGuizmo::WORLD;
-    }
-
-	// Q = Disable gizmo 
-    if (input->GetKey(SDL_SCANCODE_Q) == KEY_DOWN) {
-        currentGizmoOperation = ImGuizmo::BOUNDS;
-    }
-
-}
-
-void ModuleEditor::DrawGizmo()
-{
-    GameObject* selectedObject = Application::GetInstance().selectionManager->GetSelectedObject();
-    if (!selectedObject) return;
-
-    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-    if (!camera) return;
-
-    Transform* transform = static_cast<Transform*>(selectedObject->GetComponent(ComponentType::TRANSFORM));
-    if (!transform) return;
-
-    if (sceneViewportSize.y <= 0.0f) return;
-
-    // Setup ImGuizmo
-    ImGuizmo::SetOrthographic(false);
-    ImGuizmo::SetDrawlist();
-    ImGuizmo::SetRect(sceneViewportPos.x, sceneViewportPos.y, sceneViewportSize.x, sceneViewportSize.y);
-
-    float sceneAspect = sceneViewportSize.x / sceneViewportSize.y;
-    float currentAspect = camera->GetAspectRatio();
-
-    const float TOLERANCE = 0.001f;
-    if (std::abs(currentAspect - sceneAspect) > TOLERANCE)
+    if (ImGui::BeginMenuBar())
     {
-        camera->SetAspectRatio(sceneAspect);
-    }
-
-    // Get camera matrices
-    glm::mat4 viewMatrix = camera->GetViewMatrix();
-    glm::mat4 projectionMatrix = camera->GetProjectionMatrix();
-    glm::mat4 transformMatrix = transform->GetGlobalMatrix();
-
-	// Manipulate is used to draw and handle the gizmo
-    ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix), currentGizmoOperation, currentGizmoMode, glm::value_ptr(transformMatrix)
-    );
-
-    if (ImGuizmo::IsUsing())
-    {
-		// Handle parent-child relationship
-        GameObject* parent = selectedObject->GetParent();
-
-        if (parent) // Local
+        if (ImGui::BeginMenu("File"))
         {
-            Transform* parentTransform = static_cast<Transform*>(parent->GetComponent(ComponentType::TRANSFORM));
-            if (parentTransform)
+            if (ImGui::MenuItem("Exit"))
             {
-                const glm::mat4& parentGlobal = parentTransform->GetGlobalMatrix();
-                transformMatrix = glm::inverse(parentGlobal) * transformMatrix; // Local matrix
-            }
-        }
-
-        // We use decompose() to decompose the matrix into position, rotation, and scale
-        glm::vec3 position, scale, skew;
-        glm::vec4 perspective;
-        glm::quat rotation;
-
-        glm::decompose(transformMatrix, scale, rotation, position, skew, perspective);
-
-        transform->SetPosition(position);
-        transform->SetRotationQuat(rotation);
-        transform->SetScale(scale);
-    }
-}
-
-bool ModuleEditor::ShowMenuBar() {
-    if (ImGui::BeginMenuBar()) {
-
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Exit")) {
                 Application::GetInstance().RequestExit();
             }
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Configuration", NULL, &showConfiguration);
-            ImGui::MenuItem("Console", NULL, &showConsole);
-            ImGui::MenuItem("Hierarchy", NULL, &showHierarchy);
-            ImGui::MenuItem("Inspector", NULL, &showInspector);
+        if (ImGui::BeginMenu("View"))
+        {
+            bool configOpen = configWindow->IsOpen();
+            if (ImGui::MenuItem("Configuration", NULL, &configOpen))
+            {
+                configWindow->SetOpen(configOpen);
+            }
+
+            bool consoleOpen = consoleWindow->IsOpen();
+            if (ImGui::MenuItem("Console", NULL, &consoleOpen))
+            {
+                consoleWindow->SetOpen(consoleOpen);
+            }
+
+            bool hierarchyOpen = hierarchyWindow->IsOpen();
+            if (ImGui::MenuItem("Hierarchy", NULL, &hierarchyOpen))
+            {
+                hierarchyWindow->SetOpen(hierarchyOpen);
+            }
+
+            bool inspectorOpen = inspectorWindow->IsOpen();
+            if (ImGui::MenuItem("Inspector", NULL, &inspectorOpen))
+            {
+                inspectorWindow->SetOpen(inspectorOpen);
+            }
+
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Camera")){
-            if (ImGui::MenuItem("Create Camera")) {
+        if (ImGui::BeginMenu("Camera"))
+        {
+            if (ImGui::MenuItem("Create Camera"))
+            {
                 Application& app = Application::GetInstance();
                 GameObject* cameraGO = app.scene->CreateGameObject("Camera");
 
-                Transform* transform = static_cast<Transform*>(cameraGO->GetComponent(ComponentType::TRANSFORM));
+                Transform* transform = static_cast<Transform*>(
+                    cameraGO->GetComponent(ComponentType::TRANSFORM)
+                    );
                 if (transform)
                 {
                     transform->SetPosition(glm::vec3(0.0f, 1.5f, 10.0f));
                 }
 
-                ComponentCamera* sceneCamera = static_cast<ComponentCamera*>(cameraGO->CreateComponent(ComponentType::CAMERA));
+                ComponentCamera* sceneCamera = static_cast<ComponentCamera*>(
+                    cameraGO->CreateComponent(ComponentType::CAMERA)
+                    );
 
                 if (sceneCamera)
                 {
@@ -318,21 +215,28 @@ bool ModuleEditor::ShowMenuBar() {
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("GameObject")) {
-            if (ImGui::BeginMenu("Create Primitive")) {
-                if (ImGui::MenuItem("Cube")) {
+        if (ImGui::BeginMenu("GameObject"))
+        {
+            if (ImGui::BeginMenu("Create Primitive"))
+            {
+                if (ImGui::MenuItem("Cube"))
+                {
                     CreatePrimitiveGameObject("Cube", Primitives::CreateCube());
                 }
-                if (ImGui::MenuItem("Pyramid")) {
+                if (ImGui::MenuItem("Pyramid"))
+                {
                     CreatePrimitiveGameObject("Pyramid", Primitives::CreatePyramid());
                 }
-                if (ImGui::MenuItem("Plane")) {
+                if (ImGui::MenuItem("Plane"))
+                {
                     CreatePrimitiveGameObject("Plane", Primitives::CreatePlane());
                 }
-                if (ImGui::MenuItem("Sphere")) {
+                if (ImGui::MenuItem("Sphere"))
+                {
                     CreatePrimitiveGameObject("Sphere", Primitives::CreateSphere());
                 }
-                if (ImGui::MenuItem("Cylinder")) {
+                if (ImGui::MenuItem("Cylinder"))
+                {
                     CreatePrimitiveGameObject("Cylinder", Primitives::CreateCylinder());
                 }
                 ImGui::EndMenu();
@@ -340,18 +244,23 @@ bool ModuleEditor::ShowMenuBar() {
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Help")) {
-            if (ImGui::MenuItem("Documentation")) {
-                SDL_OpenURL("https://github.com/Audra0000/Engine/blob/main/README.md"); 
+        if (ImGui::BeginMenu("Help"))
+        {
+            if (ImGui::MenuItem("Documentation"))
+            {
+                SDL_OpenURL("https://github.com/Audra0000/Engine/blob/main/README.md");
             }
-            if (ImGui::MenuItem("Report a Bug")) {
+            if (ImGui::MenuItem("Report a Bug"))
+            {
                 SDL_OpenURL("https://github.com/Audra0000/Engine/issues");
             }
-            if (ImGui::MenuItem("Download Latest")) {
+            if (ImGui::MenuItem("Download Latest"))
+            {
                 SDL_OpenURL("https://github.com/Audra0000/Engine/releases");
             }
             ImGui::Separator();
-            if (ImGui::MenuItem("About")) {
+            if (ImGui::MenuItem("About"))
+            {
                 showAbout = true;
             }
             ImGui::EndMenu();
@@ -359,1086 +268,6 @@ bool ModuleEditor::ShowMenuBar() {
 
         ImGui::EndMenuBar();
     }
-    return true;
-}
-
-void ModuleEditor::DrawConfigurationWindow()
-{
-    ImGui::Begin("Configuration", &showConfiguration);
-
-    // FPS Graph
-    if (ImGui::CollapsingHeader("FPS")) 
-    {
-        DrawFPSGraph();
-    }
-
-    ImGui::Separator();
-
-    // Window
-    if (ImGui::CollapsingHeader("Window"))
-    {
-        DrawWindowSettings();
-    }
-
-    ImGui::Separator();
-
-	// Camera
-    if (ImGui::CollapsingHeader("Camera"))
-    {
-        DrawCameraSettings();
-    }
-
-	ImGui::Separator();
-
-	// Renderer
-    if (ImGui::CollapsingHeader("Renderer"))
-    {
-        DrawRendererSettings();
-	}
-
-	ImGui::Separator();
-
-    // Hardware
-    if (ImGui::CollapsingHeader("Hardware"))
-    {
-        DrawHardwareInfo();
-    }
-
-    ImGui::End();
-}
-
-void ModuleEditor::CreatePrimitiveGameObject(const std::string& name, Mesh mesh)
-{
-    GameObject* Object = new GameObject(name);
-    ComponentMesh* meshComp = static_cast<ComponentMesh*>(Object->CreateComponent(ComponentType::MESH));
-
-    // Select primitive based on name
-    Mesh selectedMesh;
-
-    if (name == "Cube")
-        selectedMesh = Primitives::CreateCube();
-    else if (name == "Pyramid")
-        selectedMesh = Primitives::CreatePyramid();
-    else if (name == "Plane")
-        selectedMesh = Primitives::CreatePlane();
-    else if (name == "Sphere")
-        selectedMesh = Primitives::CreateSphere();
-    else if (name == "Cylinder")
-        selectedMesh = Primitives::CreateCylinder();
-    else
-        selectedMesh = mesh;
-
-    meshComp->SetMesh(selectedMesh);
-
-    GameObject* root = Application::GetInstance().scene->GetRoot();
-    root->AddChild(Object);
-
-    // Trigger octree rebuild
-    Application::GetInstance().scene->RebuildOctree();
-
-    LOG_CONSOLE("%s created", name.c_str());
-    LOG_DEBUG("Primitive created: %s", name.c_str());
-}
-
-void ModuleEditor::DrawFPSGraph()
-{
-    fpsTimer += ImGui::GetIO().DeltaTime;
-
-    if (fpsTimer >= 0.1f)
-    {
-        float fps = ImGui::GetIO().Framerate;
-        fpsHistory.push_back(fps);
-
-        if (fpsHistory.size() > maxFPSHistory)
-        {
-            fpsHistory.erase(fpsHistory.begin());
-        }
-
-        fpsTimer = 0.0f;
-    }
-
-    ImGui::Text("FPS: %.0f", ImGui::GetIO().Framerate);
-    ImGui::Text("Frame Time: %.3f ms", 1000.0f / ImGui::GetIO().Framerate);
-
-    if (!fpsHistory.empty())
-    {
-		// FPS graph
-        ImGui::PlotLines("##FPS", fpsHistory.data(), (int)fpsHistory.size(), 0, nullptr, 0.0f, 200.0f, ImVec2(0, 80));
-    }
-}
-
-void ModuleEditor::DrawHardwareInfo()
-{
-    // CPU
-    ImGui::Text("CPU Cores: %d", SDL_GetNumLogicalCPUCores());
-    // RAM
-    ImGui::Text("System RAM: %d MB", SDL_GetSystemRAM());
-
-#ifdef _WIN32
-    PROCESS_MEMORY_COUNTERS_EX pmc; // This is used to store memory
-    if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc)))
-    {
-        // workingSetSize gives used ram in bytes, but we want in mb so we divide it with (1024 * 1024) which is 1,048,576 bytes.
-        SIZE_T memoryUsedMB = pmc.WorkingSetSize / (1024 * 1024);
-        ImGui::Text("Memory Usage: %llu MB", memoryUsedMB);
-    }
-#endif
-
-    // GPU
-    ImGui::Text("GPU: %s", glGetString(GL_RENDERER));
-
-    // Libraries versions
-    ImGui::Separator();
-    ImGui::Text("Software Versions:");
-
-    // SDL
-    int sdlVersion = SDL_GetVersion();
-    int major = SDL_VERSIONNUM_MAJOR(sdlVersion);
-    int minor = SDL_VERSIONNUM_MINOR(sdlVersion);
-    int patch = SDL_VERSIONNUM_MICRO(sdlVersion);
-    ImGui::BulletText("SDL3: %d.%d.%d", major, minor, patch);
-
-	// OpenGL
-    ImGui::BulletText("OpenGL: %s", glGetString(GL_VERSION));
-	// ImGui
-    ImGui::BulletText("ImGui: %s", IMGUI_VERSION);
-
-	// DevIL
-    ILint devilVersion = ilGetInteger(IL_VERSION_NUM);
-    int devilMajor = devilVersion / 100;
-    int devilMinor = (devilVersion / 10) % 10;
-    int devilPatch = devilVersion % 10;
-    ImGui::BulletText("DevIL: %d.%d.%d", devilMajor, devilMinor, devilPatch);
-}
-
-void ModuleEditor::DrawWindowSettings()
-{
-    int width, height;
-    Application::GetInstance().window->GetWindowSize(width, height);
-
-    ImGui::Text("Window Size: %dx%d", width, height);
-
-    // Width slider
-    int tempWidth = width;
-    if (ImGui::InputInt("Width", &tempWidth, 10, 100))
-    {
-        if (tempWidth > 0)
-        {
-            SDL_SetWindowSize(Application::GetInstance().window->GetWindow(), tempWidth, height);
-        }
-    }
-
-    // Height slider
-    int tempHeight = height;
-    if (ImGui::InputInt("Height", &tempHeight, 10, 100))
-    {
-        if (tempHeight > 0)
-        {
-            SDL_SetWindowSize(Application::GetInstance().window->GetWindow(), width, tempHeight);
-        }
-    }
-
-    ImGui::Separator();
-
-    // Fullscreen
-    if (ImGui::Checkbox("Fullscreen", &fullscreen))
-    {
-        SDL_SetWindowFullscreen(Application::GetInstance().window->GetWindow(), fullscreen);
-    }
-
-    // Borderless
-    static bool borderlessFullscreen = false;
-    if (ImGui::Checkbox("Borderless Window", &borderlessFullscreen))
-    {
-        SDL_SetWindowBordered(Application::GetInstance().window->GetWindow(), !borderlessFullscreen);
-    }
-
-    ImGui::Separator();
-
-    static bool resizable = true;
-    if (ImGui::Checkbox("Resizable", &resizable))
-    {
-        SDL_SetWindowResizable(Application::GetInstance().window->GetWindow(), resizable);
-    }
-
-    ImGui::Separator();
-
-    ImGui::Text("Resolutions:");
-
-    if (ImGui::Button("Set 1920x1080"))
-    {
-        SDL_SetWindowSize(Application::GetInstance().window->GetWindow(), 1920, 1080);
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Set 1280x720"))
-    {
-        SDL_SetWindowSize(Application::GetInstance().window->GetWindow(), 1280, 720);
-    }
-}
-
-void ModuleEditor::DrawHierarchyWindow()
-{
-    ImGui::Begin("Hierarchy", &showHierarchy);
-
-    GameObject* root = Application::GetInstance().scene->GetRoot();
-
-    if (root != nullptr)
-    {
-        DrawGameObjectNode(root);
-    }
-    else
-    {
-        ImGui::TextDisabled("No scene loaded");
-    }
-
-
-    ImGui::End();
-}
-
-void ModuleEditor::DrawInspectorWindow()
-{
-    ImGui::Begin("Inspector", &showInspector);
-
-    SelectionManager* selectionManager = Application::GetInstance().selectionManager;
-
-    if (!selectionManager->HasSelection())
-    {
-        ImGui::TextDisabled("No GameObject selected");
-        ImGui::End();
-        return;
-    }
-
-    GameObject* selectedObject = selectionManager->GetSelectedObject();
-
-    if (selectedObject == nullptr)
-    {
-        ImGui::TextDisabled("Invalid selection");
-        ImGui::End();
-        return;
-    }
-
-    ImGui::Text("GameObject: %s", selectedObject->GetName().c_str());
-    ImGui::Separator();
-
-    // Gizmo Settings
-    ImGui::Spacing();
-    if (ImGui::CollapsingHeader("Gizmo Settings", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-
-        // Gizmo Mode
-        ImGui::Text("Gizmo Mode:");
-        ImGui::SameLine();
-		ImGui::Text("Turn off (Q)");
-
-        bool isTranslate = (currentGizmoOperation == ImGuizmo::TRANSLATE);
-        bool isRotate = (currentGizmoOperation == ImGuizmo::ROTATE);
-        bool isScale = (currentGizmoOperation == ImGuizmo::SCALE);
-
-        if (ImGui::RadioButton("Translate (W)", isTranslate))
-        {
-            currentGizmoOperation = ImGuizmo::TRANSLATE;
-        }
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Move the object in 3D space\nShortcut: W key");
-
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Rotate (E)", isRotate))
-        {
-            currentGizmoOperation = ImGuizmo::ROTATE;
-        }
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Rotate the object\nShortcut: E key");
-
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Scale (R)", isScale))
-        {
-            currentGizmoOperation = ImGuizmo::SCALE;
-        }
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Scale the object\nShortcut: R key");
-
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        // Transform Space
-        ImGui::Text("Transform Space (T):");
-        ImGui::Spacing();
-
-        bool isWorld = (currentGizmoMode == ImGuizmo::WORLD);
-        bool isLocal = (currentGizmoMode == ImGuizmo::LOCAL);
-
-        if (ImGui::RadioButton("World Space", isWorld))
-        {
-            currentGizmoMode = ImGuizmo::WORLD;
-        }
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::BeginTooltip();
-            ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "World Space");
-            ImGui::Separator();
-            ImGui::Text("Transformations are relative to world axes");
-            ImGui::BulletText("X: Always points right");
-            ImGui::BulletText("Y: Always points up");
-            ImGui::BulletText("Z: Always points forward");
-            ImGui::EndTooltip();
-        }
-
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Local Space", isLocal))
-        {
-            currentGizmoMode = ImGuizmo::LOCAL;
-        }
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::BeginTooltip();
-            ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Local Space");
-            ImGui::Separator();
-            ImGui::Text("Transformations are relative to objects rotation");
-            ImGui::BulletText("Axes follow objects orientation");
-            ImGui::BulletText("Useful for moving along objects direction");
-            ImGui::EndTooltip();
-        }
-    }
-    ImGui::Separator();
-
-    // Transforms
-    Transform* transform = static_cast<Transform*>(selectedObject->GetComponent(ComponentType::TRANSFORM));
-
-    if (transform != nullptr)
-    {
-        if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
-        {
-            glm::vec3 position = transform->GetPosition();
-            glm::vec3 rotation = transform->GetRotation();
-            glm::vec3 scale = transform->GetScale();
-
-            bool transformChanged = false;
-
-            // Position
-            ImGui::Text("Position");
-            ImGui::PushItemWidth(80);
-            ImGui::Text("X"); ImGui::SameLine(20);
-            if (ImGui::DragFloat("##PosX", &position.x, 0.1f)) transformChanged = true;
-            ImGui::SameLine(120);
-            ImGui::Text("Y"); ImGui::SameLine(130);
-            if (ImGui::DragFloat("##PosY", &position.y, 0.1f)) transformChanged = true;
-            ImGui::SameLine(230);
-            ImGui::Text("Z"); ImGui::SameLine(240);
-            if (ImGui::DragFloat("##PosZ", &position.z, 0.1f)) transformChanged = true;
-
-            ImGui::Spacing();
-
-            // Rotation
-            ImGui::Text("Rotation");
-            ImGui::Text("X"); ImGui::SameLine(20);
-            if (ImGui::DragFloat("##RotX", &rotation.x, 0.1f)) transformChanged = true;
-            ImGui::SameLine(120);
-            ImGui::Text("Y"); ImGui::SameLine(130);
-            if (ImGui::DragFloat("##RotY", &rotation.y, 0.1f)) transformChanged = true;
-            ImGui::SameLine(230);
-            ImGui::Text("Z"); ImGui::SameLine(240);
-            if (ImGui::DragFloat("##RotZ", &rotation.z, 0.1f)) transformChanged = true;
-
-            ImGui::Spacing();
-
-            // Scale
-            ImGui::Text("Scale");
-            ImGui::Text("X"); ImGui::SameLine(20);
-            if (ImGui::DragFloat("##ScaleX", &scale.x, 0.1f)) transformChanged = true;
-            ImGui::SameLine(120);
-            ImGui::Text("Y"); ImGui::SameLine(130);
-            if (ImGui::DragFloat("##ScaleY", &scale.y, 0.1f)) transformChanged = true;
-            ImGui::SameLine(230);
-            ImGui::Text("Z"); ImGui::SameLine(240);
-            if (ImGui::DragFloat("##ScaleZ", &scale.z, 0.1f)) transformChanged = true;
-
-            ImGui::PopItemWidth();
-
-            if (transformChanged)
-            {
-                transform->SetPosition(position);
-                transform->SetRotation(rotation);
-                transform->SetScale(scale);
-            }
-
-            ImGui::Spacing();
-
-            if (ImGui::Button("Reset Transform"))
-            {
-                transform->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-                transform->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-                transform->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
-
-                LOG_DEBUG("Transform reset for: %s", selectedObject->GetName().c_str());
-                LOG_CONSOLE("Transform reset for: %s", selectedObject->GetName().c_str());
-            }
-
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::SetTooltip("Reset position to (0,0,0), rotation to (0,0,0), and scale to (1,1,1)");
-            }
-        }
-    }
-
-    // Camara
-    ComponentCamera* cameraComp = static_cast<ComponentCamera*>(selectedObject->GetComponent(ComponentType::CAMERA));
-
-    if (cameraComp != nullptr)
-    {
-        if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
-        {
-            ImGui::Text("Camera Settings");
-            ImGui::Separator();
-
-            // FOV
-            float fov = cameraComp->GetFov();
-            if (ImGui::SliderFloat("Field of View", &fov, 20.0f, 120.0f, "%.1f°"))
-            {
-                cameraComp->SetFov(fov);
-                LOG_DEBUG("Camera FOV set to: %.1f", fov);
-            }
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Camera field of view in degrees");
-
-            ImGui::Spacing();
-
-            // Near/Far planes
-            float nearPlane = cameraComp->GetNearPlane();
-            float farPlane = cameraComp->GetFarPlane();
-
-            if (ImGui::DragFloat("Near Plane", &nearPlane, 0.01f, 0.01f, 10.0f, "%.2f"))
-            {
-                cameraComp->SetNearPlane(nearPlane);
-                LOG_DEBUG("Camera near plane set to: %.2f", nearPlane);
-            }
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Near clipping plane distance");
-
-            if (ImGui::DragFloat("Far Plane", &farPlane, 1.0f, 10.0f, 1000.0f, "%.1f"))
-            {
-                cameraComp->SetFarPlane(farPlane);
-                LOG_DEBUG("Camera far plane set to: %.1f", farPlane);
-            }
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Far clipping plane distance");
-
-            ImGui::Spacing();
-            ImGui::Separator();
-
-            ImGui::Spacing();
-            ImGui::Separator();
-
-            // frustrum culling
-            ImGui::Text("Optimization Settings");
-
-            bool frustumEnabled = cameraComp->IsFrustumCullingEnabled();
-            if (ImGui::Checkbox("Enable Frustum Culling", &frustumEnabled))
-            {
-                cameraComp->SetFrustumCulling(frustumEnabled);
-                LOG_DEBUG("Frustum culling %s for camera: %s",
-                    frustumEnabled ? "enabled" : "disabled",
-                    selectedObject->GetName().c_str());
-                LOG_CONSOLE("Frustum culling %s for %s",
-                    frustumEnabled ? "enabled" : "disabled",
-                    selectedObject->GetName().c_str());
-            }
-
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::SetTooltip("Shows the camera's view frustum as wireframe\nGreen = Active camera | Yellow = Inactive cameras");
-            }
-
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::BeginTooltip();
-                ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Frustum Culling");
-                ImGui::Separator();
-                ImGui::Text("When enabled, objects outside the camera's");
-                ImGui::Text("view frustum will not be rendered.");
-                ImGui::Spacing();
-                ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Benefits:");
-                ImGui::BulletText("Better performance in large scenes");
-                ImGui::BulletText("Reduces GPU workload");
-                ImGui::Spacing();
-                ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Status:");
-                ImGui::BulletText(frustumEnabled ? "Objects outside view are HIDDEN" : "All objects are RENDERED");
-                ImGui::EndTooltip();
-            }
-
-            ImGui::Spacing();
-
-            bool drawFrustum = cameraComp->ShouldDrawFrustum();
-            if (ImGui::Checkbox("Draw Frustum Gizmo", &drawFrustum))
-            {
-                cameraComp->SetDrawFrustum(drawFrustum);
-                LOG_DEBUG("Frustum visualization %s for camera: %s",
-                    drawFrustum ? "enabled" : "disabled",
-                    selectedObject->GetName().c_str());
-                LOG_CONSOLE("Frustum gizmo %s for %s",
-                    drawFrustum ? "enabled" : "disabled",
-                    selectedObject->GetName().c_str());
-            }
-
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::BeginTooltip();
-                ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Frustum Visualization");
-                ImGui::Separator();
-                ImGui::Text("Shows the camera's view frustum as a wireframe");
-                ImGui::Text("in the 3D viewport.");
-                ImGui::Spacing();
-                ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Color Coding:");
-                ImGui::BulletText("Green: Active camera");
-                ImGui::BulletText("Yellow: Inactive cameras");
-                ImGui::Spacing();
-                ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "Tip:");
-                ImGui::Text("Use this to debug what each camera sees");
-                ImGui::EndTooltip();
-            }
-
-            ImGui::Spacing();
-
-            if (frustumEnabled)
-            {
-                ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "✓ Culling Active");
-                if (drawFrustum)
-                {
-                    ImGui::SameLine();
-                    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "| 👁 Frustum Visible");
-                }
-            }
-            else
-            {
-                ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f), "○ Culling Disabled");
-                if (drawFrustum)
-                {
-                    ImGui::SameLine();
-                    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "| 👁 Frustum Visible");
-                }
-            }
-
-            ImGui::Spacing();
-            ImGui::Separator();
-        }
-    }
-
-    // Mesh
-    ComponentMesh* meshComp = static_cast<ComponentMesh*>(selectedObject->GetComponent(ComponentType::MESH));
-
-    if (meshComp != nullptr && meshComp->HasMesh())
-    {
-        if (ImGui::CollapsingHeader("Mesh", ImGuiTreeNodeFlags_DefaultOpen))
-        {
-            const Mesh& mesh = meshComp->GetMesh();
-
-            // Mesh information
-            ImGui::Text("Vertices: %d", (int)mesh.vertices.size());
-            ImGui::Text("Indices: %d", (int)mesh.indices.size());
-            ImGui::Text("Triangles: %d", (int)mesh.indices.size() / 3);
-
-            ImGui::Separator();
-
-            // Normals visualization
-            ImGui::Text("Normals Visualization:");
-
-            if (ImGui::Checkbox("Show Vertex Normals", &showVertexNormals))
-            {
-                LOG_DEBUG("Vertex normals visualization: %s", showVertexNormals ? "ON" : "OFF");
-            }
-
-            if (ImGui::Checkbox("Show Face Normals", &showFaceNormals))
-            {
-                LOG_DEBUG("Face normals visualization: %s", showFaceNormals ? "ON" : "OFF");
-            }
-        }
-    }
-
-    // Material
-    ComponentMaterial* materialComp = static_cast<ComponentMaterial*>(selectedObject->GetComponent(ComponentType::MATERIAL));
-
-    if (materialComp != nullptr)
-    {
-        if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
-        {
-            // Texture information
-            ImGui::Text("Texture Information:");
-
-            std::string texturePath = materialComp->GetTexturePath();
-            if (texturePath.empty() || texturePath == "[Checkerboard Pattern]")
-            {
-                ImGui::Text("Path: Checkerboard");
-            }
-            else
-            {
-                ImGui::Text("Path: %s", texturePath.c_str());
-            }
-
-            ImGui::Text("Size: %d x %d pixels", materialComp->GetTextureWidth(), materialComp->GetTextureHeight());
-
-            ImGui::Separator();
-
-            if (materialComp->HasOriginalTexture())
-            {
-                ImGui::Separator();
-                ImGui::Text("Original Texture:");
-                ImGui::Text("Path: %s", materialComp->GetOriginalTexturePath().c_str());
-            }
-
-            ImGui::Separator();
-
-            ImGui::BeginGroup();
-
-            if (ImGui::Button("Apply Checkerboard"))
-            {
-                materialComp->CreateCheckerboardTexture();
-                LOG_DEBUG("Applied checkerboard texture to: %s", selectedObject->GetName().c_str());
-                LOG_CONSOLE("Checkerboard texture applied to %s", selectedObject->GetName().c_str());
-            }
-
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::SetTooltip("Applies the default black and white checkerboard pattern to this GameObject");
-            }
-
-            if (materialComp->HasOriginalTexture())
-            {
-                ImGui::SameLine();
-
-                if (ImGui::Button("Restore Original"))
-                {
-                    materialComp->RestoreOriginalTexture();
-                    LOG_DEBUG("Restored original texture to: %s", selectedObject->GetName().c_str());
-                    LOG_CONSOLE("Original texture restored to %s", selectedObject->GetName().c_str());
-                }
-
-                if (ImGui::IsItemHovered())
-                {
-                    ImGui::SetTooltip("Restores the original texture that was previously loaded");
-                }
-            }
-
-            ImGui::EndGroup();
-        }
-    }
-    else
-    {
-        if (meshComp != nullptr && meshComp->HasMesh())
-        {
-            if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
-            {
-                ImGui::Text("No material component");
-            }
-        }
-    }
-
-    ImGui::End();
-}
-void ModuleEditor::DrawCameraSettings()
-{
-    Application& app = Application::GetInstance();
-
-    ImGui::Text("Camera Controls");
-    ImGui::Separator();
-
-	// Camera mode selection
-    bool usingEditorCamera = app.camera->IsUsingEditorCamera();
-    ImGui::Text("Active Camera Mode:");
-    if (ImGui::RadioButton("Editor Camera", usingEditorCamera))
-    {
-        app.camera->SetUseEditorCamera(true);
-    }
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Scene Camera", !usingEditorCamera))
-    {
-        if (app.camera->GetSceneCamera() != nullptr)
-        {
-            app.camera->SetUseEditorCamera(false);
-        }
-        else
-        {
-            LOG_CONSOLE("WARNING: No Scene Camera found. Create one from Camera menu.");
-        }
-    }
-    ImGui::Separator();
-
-    ComponentCamera* camera = app.renderer->GetCamera();
-
-    if (camera == nullptr)
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Error: Camera not available");
-        return;
-    }
-
-	// Show active camera 
-    if (usingEditorCamera)
-    {
-        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Active: Editor Camera");
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(0.0f, 0.5f, 1.0f, 1.0f), "Active: Scene Camera");
-    }
-
-    ImGui::Separator();
-
-    // Update camera settings
-    cameraMouseSensitivity = camera->GetMouseSensitivity();
-    cameraScrollSpeed = camera->GetScrollSpeed();
-    cameraPanSensitivity = camera->GetPanSensitivity();
-    cameraMovementSpeed = camera->GetMovementSpeed();
-    cameraFOV = camera->GetFov();
-
-    ImGui::PushItemWidth(80);
-
-    // Movement Speed
-    if (ImGui::SliderFloat("Movement Speed", &cameraMovementSpeed, 0.1f, 10.0f, "%.2f"))
-    {
-        camera->SetMovementSpeed(cameraMovementSpeed);
-    }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Controls how fast the camera moves (WASD keys)");
-
-    // Mouse Sensitivity
-    if (ImGui::SliderFloat("Mouse Sensitivity", &cameraMouseSensitivity, 0.01f, 1.0f, "%.3f"))
-    {
-        camera->SetMouseSensitivity(cameraMouseSensitivity);
-    }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Controls camera rotation sensitivity when right-clicking");
-
-    // Scroll Speed
-    if (ImGui::SliderFloat("Scroll Speed", &cameraScrollSpeed, 0.1f, 2.0f, "%.2f"))
-    {
-        camera->SetScrollSpeed(cameraScrollSpeed);
-    }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Controls zoom speed with mouse wheel");
-
-    // Pan Sensitivity
-    if (ImGui::SliderFloat("Pan Sensitivity", &cameraPanSensitivity, 0.001f, 0.01f, "%.4f"))
-    {
-        camera->SetPanSensitivity(cameraPanSensitivity);
-    }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Controls camera panning sensitivity (middle mouse button)");
-
-    ImGui::Spacing();
-
-    // FOV
-    if (ImGui::SliderFloat("Field of View", &cameraFOV, 20.0f, 120.0f, "%.1f°"))
-    {
-        camera->SetFov(cameraFOV);
-    }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Camera field of view in degrees");
-
-	ImGui::PopItemWidth();
-
-    ImGui::Spacing();
-    ImGui::Separator();
-
-    // Reset button
-    if (ImGui::Button("Reset to Defaults"))
-    {
-        cameraMovementSpeed = 2.5f;
-        cameraMouseSensitivity = 0.2f;
-        cameraScrollSpeed = 0.5f;
-        cameraFOV = 45.0f;
-        cameraPanSensitivity = 0.003f;
-
-        camera->SetMovementSpeed(cameraMovementSpeed);
-        camera->SetMouseSensitivity(cameraMouseSensitivity);
-        camera->SetScrollSpeed(cameraScrollSpeed);
-        camera->SetFov(cameraFOV);
-        camera->SetPanSensitivity(cameraPanSensitivity);
-
-        LOG_CONSOLE("Camera settings reset to defaults");
-        LOG_DEBUG("Camera settings reset to defaults");
-    }
-
-    ImGui::Spacing();
-
-    // Camera Position Info
-    glm::vec3 camPos = camera->GetPosition();
-    ImGui::Text("Camera Position:");
-    ImGui::BulletText("X: %.2f  Y: %.2f  Z: %.2f", camPos.x, camPos.y, camPos.z);
-
-    ImGui::Spacing();
-    if (ImGui::CollapsingHeader("Camera Controls")) {
-        ImGui::Text("Camera Controls:");
-        ImGui::BulletText("Right Click + Drag: Rotate camera");
-        ImGui::BulletText("Middle Click + Drag: Pan camera");
-        ImGui::BulletText("Mouse Wheel: Zoom in/out");
-        ImGui::BulletText("Alt + Right Click: Orbit around target");
-        ImGui::BulletText("F: Focus on selected object");
-    }
-    ImGui::Separator();
-
-    ComponentCamera* renderCam = app.renderer->GetCamera();
-    ComponentCamera* sceneCam = app.camera->GetSceneCamera();
-
-    ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Render Camera:");
-    ImGui::SameLine();
-    ImGui::Text("%s", app.camera->IsUsingEditorCamera() ? "Editor Camera" : "Scene Camera");
-
-    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Culling Camera:");
-    ImGui::SameLine();
-    if (sceneCam)
-    {
-        ImGui::Text("Scene Camera");
-        if (sceneCam->IsFrustumCullingEnabled())
-        {
-            ImGui::SameLine();
-            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "✓ ACTIVE");
-        }
-        else
-        {
-            ImGui::SameLine();
-            ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.0f, 1.0f), "⚠ DISABLED");
-        }
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "None (create one)");
-    }
-
-    ImGui::Separator();
-
-}
-
-void ModuleEditor::DrawRendererSettings()
-{
-    ImGui::Text("OpenGL Renderer Settings");
-    ImGui::Separator();
-
-    Renderer* renderer = Application::GetInstance().renderer.get();
-    if (renderer == nullptr)
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Error: Renderer not available");
-        return;
-    }
-
-    // Face Culling
-    bool faceCulling = renderer->IsFaceCullingEnabled();
-    if (ImGui::Checkbox("Face Culling", &faceCulling))
-    {
-        renderer->SetFaceCulling(faceCulling);
-    }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Enable/disable back-face culling");
-
-    // Cull Face Mode
-    if (faceCulling)
-    {
-        ImGui::Indent();
-        int cullMode = renderer->GetCullFaceMode();
-        const char* cullModes[] = { "Back", "Front", "Front and Back" };
-        if (ImGui::Combo("Cull Face Mode", &cullMode, cullModes, 3))
-        {
-            renderer->SetCullFaceMode(cullMode);
-        }
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Which faces to cull:\n- Back: Normal (hides back faces)\n- Front: Rare (hides front faces)\n- Both faces");
-        ImGui::Unindent();
-    }
-
-    ImGui::Spacing();
-
-    // Wireframe Mode
-    bool wireframe = renderer->IsWireframeMode();
-    if (ImGui::Checkbox("Wireframe Mode", &wireframe))
-    {
-        renderer->SetWireframeMode(wireframe);
-    }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Render meshes as wireframes");
-
-    ImGui::Spacing();
-    ImGui::Separator();
-
-    // Background Color
-    ImGui::Text("Background Color");
-
-    float currentR, currentG, currentB;
-    renderer->GetClearColor(currentR, currentG, currentB);
-
-    static float editColor[3] = { currentR, currentG, currentB };
-
-    // Color picker
-    ImGui::ColorEdit3("##ClearColor", editColor, ImGuiColorEditFlags_NoAlpha);
-
-	// Color changed?
-    bool colorChanged = (editColor[0] != currentR || editColor[1] != currentG || editColor[2] != currentB);
-
-    ImGui::SameLine();
-
-    // Apply button
-    if (!colorChanged)
-    {
-        ImGui::BeginDisabled();
-    }
-
-    if (ImGui::Button("Apply"))
-    {
-        renderer->SetClearColor(editColor[0], editColor[1], editColor[2]);
-        LOG_CONSOLE("Background color updated");
-        LOG_DEBUG("Background color set to (%.2f, %.2f, %.2f)", editColor[0], editColor[1], editColor[2]);
-    }
-
-    if (!colorChanged)
-    {
-        ImGui::EndDisabled();
-    }
-
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Apply the new background color");
-
-    ImGui::SameLine();
-
-    // Reset Color button
-    if (ImGui::Button("Reset Color"))
-    {
-        editColor[0] = 0.2f;
-        editColor[1] = 0.25f;
-        editColor[2] = 0.3f;
-        renderer->SetClearColor(editColor[0], editColor[1], editColor[2]);
-        LOG_CONSOLE("Background color reset to default");
-        LOG_DEBUG("Background color reset to default");
-    }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Reset background color to default");
-
-    ImGui::Spacing();
-    ImGui::Separator();
-
-    // Reset All button
-    if (ImGui::Button("Reset All Settings"))
-    {
-        renderer->SetFaceCulling(true);
-        renderer->SetWireframeMode(false);
-        renderer->SetCullFaceMode(0);
-        renderer->SetClearColor(0.2f, 0.25f, 0.3f);
-
-        editColor[0] = 0.2f;
-        editColor[1] = 0.25f;
-        editColor[2] = 0.3f;
-
-        LOG_CONSOLE("All renderer settings reset to defaults");
-        LOG_DEBUG("All renderer settings reset to defaults");
-    }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Text("Debug Visualization");
-
-    if (ImGui::Checkbox("Show AABB", &showAABB))
-    {
-        LOG_DEBUG("AABB visualization: %s", showAABB ? "ON" : "OFF");
-    }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show axis-aligned bounding boxes for all meshes");
-
-    if (ImGui::Checkbox("Show Octree", &showOctree))
-    {
-        LOG_DEBUG("Octree visualization: %s", showOctree ? "ON" : "OFF");
-    }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show octree spatial partitioning structure");
-
-    if (ImGui::Checkbox("Show Raycast", &showRaycast))
-    {
-        LOG_DEBUG("Raycast visualization: %s", showRaycast ? "ON" : "OFF");
-    }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show ray used for mouse picking");
-
-    ImGui::Spacing();
-}
-
-void ModuleEditor::DrawConsoleWindow()
-{
-    ImGui::Begin("Console", &showConsole);
-
-    if (ImGui::Button("Clear"))
-    {
-        ConsoleLog::GetInstance().Clear();
-    }
-
-    ImGui::SameLine();
-    ImGui::Checkbox("Library Info", &showLibraryInfo);
-    ImGui::SameLine();
-    ImGui::Checkbox("Errors", &showErrors);
-    ImGui::SameLine();
-    ImGui::Checkbox("Warnings", &showWarnings);
-    ImGui::SameLine();
-    ImGui::Checkbox("Loading", &showLoading);
-    ImGui::SameLine();
-    ImGui::Checkbox("Success", &showSuccess);
-    ImGui::SameLine();
-    ImGui::Checkbox("Info", &showInfo);
-    ImGui::SameLine();
-    ImGui::Checkbox("Auto-scroll", &autoScroll);
-
-    ImGui::Separator();
-
-    ImVec2 availableSpace = ImGui::GetContentRegionAvail();
-    ImGui::BeginChild("Scrolling", availableSpace, true, ImGuiWindowFlags_HorizontalScrollbar);
-
-    const std::vector<std::string>& logs = ConsoleLog::GetInstance().GetLogs();
-
-    for (const auto& log : logs)
-    {
-        ImVec4 color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // White
-        bool isError = false;
-        bool isWarning = false;
-        bool isInfo = false;
-        bool isSuccess = false;
-        bool isLoading = false;
-        bool isLibraryInfo = false;
-
-        if (log.find("DevIL") != std::string::npos || log.find("SDL3") != std::string::npos || log.find("OpenGL") != std::string::npos || log.find("ASSIMP") != std::string::npos || log.find("Mesh processed") != std::string::npos)
-        {
-            color = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-            isLibraryInfo = true;
-        }
-        else if (log.find("ERROR") != std::string::npos || log.find("Failed") != std::string::npos)
-        {
-            color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f); // Red
-            isError = true;
-        }
-        else if (log.find("WARNING") != std::string::npos || log.find("Corrupt") != std::string::npos)
-        {
-            color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f); // Yellow
-            isWarning = true;
-        }
-        else if (log.find("Loading") != std::string::npos || log.find("Initializing") != std::string::npos)
-        {
-            color = ImVec4(1.0f, 0.7f, 0.3f, 1.0f); // Orange
-            isLoading = true;
-        }
-        else if (log.find("ready") != std::string::npos || log.find("loaded") != std::string::npos || log.find("initialized") != std::string::npos)
-        {
-            color = ImVec4(0.4f, 1.0f, 0.4f, 1.0f); // Green
-            isSuccess = true;
-        }
-        else isInfo = true;
-
-        if (isLibraryInfo)
-        {
-            if (!showLibraryInfo)
-                continue;
-        }
-        else if ((isError && !showErrors) || (isWarning && !showWarnings) || (isSuccess && !showSuccess) || (isInfo && !showInfo) || (isLoading && !showLoading))
-        {
-            continue; 
-        }
-
-        ImGui::PushStyleColor(ImGuiCol_Text, color);
-        ImGui::TextWrapped("%s", log.c_str());
-        ImGui::PopStyleColor();
-    }
-
-    if (autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-    {
-        ImGui::SetScrollHereY(1.0f);
-    }
-
-    if (scrollToBottom)
-    {
-        ImGui::SetScrollHereY(1.0f);
-        scrollToBottom = false;
-    }
-
-    ImGui::EndChild();
-    ImGui::End();
 }
 
 void ModuleEditor::DrawAboutWindow()
@@ -1458,20 +287,15 @@ void ModuleEditor::DrawAboutWindow()
 
     ImGui::Text("Libraries Used:");
 
-    // SDL
     int sdlVersion = SDL_GetVersion();
     int major = SDL_VERSIONNUM_MAJOR(sdlVersion);
     int minor = SDL_VERSIONNUM_MINOR(sdlVersion);
     int patch = SDL_VERSIONNUM_MICRO(sdlVersion);
     ImGui::BulletText("SDL3: %d.%d.%d", major, minor, patch);
 
-    // OpenGL
     ImGui::BulletText("OpenGL: %s", glGetString(GL_VERSION));
-
-    // ImGui
     ImGui::BulletText("ImGui: %s", IMGUI_VERSION);
 
-    // DevIL
     ILint devilVersion = ilGetInteger(IL_VERSION_NUM);
     int devilMajor = devilVersion / 100;
     int devilMinor = (devilVersion / 10) % 10;
@@ -1479,9 +303,7 @@ void ModuleEditor::DrawAboutWindow()
     ImGui::BulletText("DevIL: %d.%d.%d", devilMajor, devilMinor, devilPatch);
 
     ImGui::BulletText("Glad");
-
     ImGui::BulletText("Glm");
-
     ImGui::BulletText("Assimp");
 
     ImGui::Separator();
@@ -1517,128 +339,37 @@ void ModuleEditor::DrawAboutWindow()
     ImGui::End();
 }
 
-void ModuleEditor::DrawGameObjectNode(GameObject* gameObject)
+void ModuleEditor::CreatePrimitiveGameObject(const std::string& name, Mesh mesh)
 {
-    if (gameObject == nullptr)
-        return;
+    GameObject* Object = new GameObject(name);
+    ComponentMesh* meshComp = static_cast<ComponentMesh*>(
+        Object->CreateComponent(ComponentType::MESH)
+        );
 
-    const std::vector<GameObject*>& children = gameObject->GetChildren();
-    bool hasChildren = !children.empty();
+    Mesh selectedMesh;
 
-    ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow; //  | ImGuiTreeNodeFlags_OpenOnDoubleClick
-
-	// Handle selected game object
-    SelectionManager* selectionManager = Application::GetInstance().selectionManager;
-    if (selectionManager->IsSelected(gameObject))
-    {
-        nodeFlags |= ImGuiTreeNodeFlags_Selected;
-    }
-
-    if (!hasChildren)
-    {
-        nodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-    }
-
-    // =================================================== Handle renaming =====================================================
-    bool isRenaming = (renamingObject == gameObject);
-
-    if (isRenaming)
-    {
-        ImGui::SetNextItemWidth(-1);
-        if (ImGui::InputText("##", renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))         // Show input text field for renaming
-        {
-            if (strlen(renameBuffer) > 0)
-            {
-                gameObject->SetName(renameBuffer);
-                LOG_DEBUG("GameObject renamed to: %s", renameBuffer);
-            }
-            renamingObject = nullptr;
-        }
-
-		if (!ImGui::IsItemActive() && (ImGui::IsMouseClicked(0) || ImGui::IsKeyPressed(ImGuiKey_Escape))) // Clicked outside or pressed Escape
-        {
-            renamingObject = nullptr;
-        }
-
-    }
+    if (name == "Cube")
+        selectedMesh = Primitives::CreateCube();
+    else if (name == "Pyramid")
+        selectedMesh = Primitives::CreatePyramid();
+    else if (name == "Plane")
+        selectedMesh = Primitives::CreatePlane();
+    else if (name == "Sphere")
+        selectedMesh = Primitives::CreateSphere();
+    else if (name == "Cylinder")
+        selectedMesh = Primitives::CreateCylinder();
     else
-    {
-	// ============================================ Display GameObject Node ===================================================
-        
-        // Checkbox 
-        bool isActive = gameObject->IsActive();
-        ImGui::PushID(gameObject);
-        if (ImGui::Checkbox("##active", &isActive))
-        {
-            gameObject->SetActive(isActive);
-        }
-        ImGui::PopID();
+        selectedMesh = mesh;
 
-        ImGui::SameLine();
+    meshComp->SetMesh(selectedMesh);
 
-        // Display the node
-        bool nodeOpen = ImGui::TreeNodeEx(gameObject, nodeFlags, "%s", gameObject->GetName().c_str());
-        // Handle selection
-        if (ImGui::IsItemClicked())
-        {
-            const bool* keys = SDL_GetKeyboardState(NULL);
-            bool shiftPressed = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT];
+    GameObject* root = Application::GetInstance().scene->GetRoot();
+    root->AddChild(Object);
 
-            if (shiftPressed)
-            {
-                // Shift+ click: Multi select
-                selectionManager->ToggleSelection(gameObject);
-            }
-            else
-            {
-                if (hasChildren)
-                {
-                    // Select all children
-                    selectionManager->ClearSelection();
-                    SelectGameObjectAndChildren(gameObject);
-                }
-                else
-                {
-                    // Click 
-                    selectionManager->SetSelectedObject(gameObject);
-                }
-            }
-        }
+    Application::GetInstance().scene->RebuildOctree();
 
-        // Handle renaming on double click
-		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) // Mouse over and double clicked
-        {
-            renamingObject = gameObject;
-			strncpy(renameBuffer, gameObject->GetName().c_str(), sizeof(renameBuffer) - 1); // Copy current name to buffer
-        }
-
-        // Recursively draw children
-        if (nodeOpen && hasChildren)
-        {
-            for (GameObject* child : children)
-            {
-                DrawGameObjectNode(child);
-            }
-            ImGui::TreePop();
-        }
-    }
-}
-
-void ModuleEditor::SelectGameObjectAndChildren(GameObject* gameObject)
-{
-    if (gameObject == nullptr)
-        return;
-
-    // Add GameObject to selection
-    SelectionManager* selectionManager = Application::GetInstance().selectionManager;
-    selectionManager->AddToSelection(gameObject);
-
-    // Recursively add all children
-    const std::vector<GameObject*>& children = gameObject->GetChildren();
-    for (GameObject* child : children)
-    {
-        SelectGameObjectAndChildren(child);
-    }
+    LOG_CONSOLE("%s created", name.c_str());
+    LOG_DEBUG("Primitive created: %s", name.c_str());
 }
 
 void ModuleEditor::HandleDeleteKey()
@@ -1647,7 +378,8 @@ void ModuleEditor::HandleDeleteKey()
     {
         if (ImGui::GetIO().WantTextInput) return;
 
-        std::vector<GameObject*> selectedObjects = Application::GetInstance().selectionManager->GetSelectedObjects();
+        std::vector<GameObject*> selectedObjects =
+            Application::GetInstance().selectionManager->GetSelectedObjects();
 
         if (!selectedObjects.empty())
         {
@@ -1670,4 +402,39 @@ void ModuleEditor::HandleDeleteKey()
             }
         }
     }
+}
+
+bool ModuleEditor::ShouldShowVertexNormals() const
+{
+    if (inspectorWindow)
+        return inspectorWindow->ShouldShowVertexNormals();
+    return false;
+}
+
+bool ModuleEditor::ShouldShowFaceNormals() const
+{
+    if (inspectorWindow)
+        return inspectorWindow->ShouldShowFaceNormals();
+    return false;
+}
+
+bool ModuleEditor::ShouldShowAABB() const
+{
+    if (configWindow)
+        return configWindow->ShouldShowAABB();
+    return false;
+}
+
+bool ModuleEditor::ShouldShowOctree() const
+{
+    if (configWindow)
+        return configWindow->ShouldShowOctree();
+    return false;
+}
+
+bool ModuleEditor::ShouldShowRaycast() const
+{
+    if (configWindow)
+        return configWindow->ShouldShowRaycast();
+    return false;
 }
