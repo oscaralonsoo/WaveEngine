@@ -220,7 +220,7 @@ void InspectorWindow::DrawCameraComponent(GameObject* selectedObject)
         ImGui::Separator();
 
         float fov = cameraComp->GetFov();
-        if (ImGui::SliderFloat("Field of View", &fov, 20.0f, 120.0f, "%.1f°"))
+        if (ImGui::SliderFloat("Field of View", &fov, 20.0f, 120.0f, "%.1f"))
         {
             cameraComp->SetFov(fov);
             LOG_DEBUG("Camera FOV set to: %.1f", fov);

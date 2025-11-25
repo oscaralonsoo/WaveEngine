@@ -258,7 +258,7 @@ void ConfigurationWindow::DrawCameraSettings()
 
     ImGui::Spacing();
 
-    if (ImGui::SliderFloat("Field of View", &cameraFOV, 20.0f, 120.0f, "%.1f°"))
+    if (ImGui::SliderFloat("Field of View", &cameraFOV, 20.0f, 120.0f, "%.1f"))
     {
         camera->SetFov(cameraFOV);
     }
