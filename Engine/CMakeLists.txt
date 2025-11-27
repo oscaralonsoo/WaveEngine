@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 
 project(Engine)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 find_package(SDL3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -97,6 +101,13 @@ set(EDITOR_SRC
     src/InspectorWindow.cpp 
 )
 
+set(IMPORTERS_SRC 
+    src/MeshImporter.cpp 
+    src/MeshImporter.h 
+    src/LibraryManager.cpp 
+    src/LibraryManager.h 
+)
+
 source_group("Source\\Core" FILES ${CORE_SRC})
 source_group("Source\\Rendering" FILES ${RENDERING_SRC})
 source_group("Source\\Utils" FILES ${UTILS_SRC})
@@ -104,8 +115,9 @@ source_group("Source\\Utils\\Editor" FILES ${EDITOR_SRC})
 source_group("Source\\Game Objects" FILES ${GAMEOBJECTS_SRC})
 source_group("Source\\Game Objects\\Components" FILES ${COMPONENTS_SRC})
 source_group("Source\\Loaders" FILES ${LOADERS_SRC})
+source_group("Source\\Loaders\\Importers" FILES ${IMPORTERS_SRC})
 
-set(SRCS ${CORE_SRC} ${RENDERING_SRC} ${UTILS_SRC} ${EDITOR_SRC} ${GAMEOBJECTS_SRC} ${COMPONENTS_SRC} ${LOADERS_SRC})
+set(SRCS ${CORE_SRC} ${RENDERING_SRC} ${UTILS_SRC} ${EDITOR_SRC} ${GAMEOBJECTS_SRC} ${COMPONENTS_SRC} ${LOADERS_SRC} ${IMPORTERS_SRC})
 
 add_executable(Engine ${SRCS})
 

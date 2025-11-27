@@ -10,6 +10,8 @@
 #include "GameObject.h"
 #include "Transform.h"
 #include "ComponentMesh.h"
+#include "MeshImporter.h"
+#include "LibraryManager.h"  
 #include "ComponentMaterial.h"
 
 FileSystem::FileSystem() : Module() {}
@@ -22,6 +24,11 @@ bool FileSystem::Awake()
 
 bool FileSystem::Start()
 {
+
+    LibraryManager::Initialize();
+    LOG_DEBUG("Library structure initialized");
+    LOG_CONSOLE("Library folders initialized");
+
     LOG_DEBUG("Initializing FileSystem module");
     LOG_CONSOLE("FileSystem initialized");
 
@@ -251,7 +258,6 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
     LOG_DEBUG("GameObject hierarchy created successfully");
     LOG_CONSOLE("Model loaded successfully");
 
-
     return rootObj;
 }
 
@@ -359,63 +365,55 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
 
 Mesh FileSystem::ProcessMesh(aiMesh* aiMesh, const aiScene* scene)
 {
-    Mesh mesh;
+    LOG_DEBUG("=== Processing Mesh with Custom Format ===");
+    LOG_DEBUG("Mesh name: %s", aiMesh->mName.C_Str());
 
-    mesh.vertices.reserve(aiMesh->mNumVertices);
-    mesh.indices.reserve(aiMesh->mNumFaces * 3);
 
-    // Vertices
-    for (unsigned int i = 0; i < aiMesh->mNumVertices; i++)
-    {
-        Vertex vertex;
+    // 1: IMPORT - Assimp -> Our Mesh Structure
+    Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
+    LOG_DEBUG("  [IMPORT] Complete");
 
-        vertex.position = glm::vec3(
-            aiMesh->mVertices[i].x,
-            aiMesh->mVertices[i].y,
-            aiMesh->mVertices[i].z
-        );
+    //  2: SAVE - Our Mesh -> Custom Binary Format
+    std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
 
-        if (aiMesh->HasNormals())
-        {
-            vertex.normal = glm::vec3(
-                aiMesh->mNormals[i].x,
-                aiMesh->mNormals[i].y,
-                aiMesh->mNormals[i].z
-            );
-        }
-        else
-        {
-            vertex.normal = glm::vec3(0.0f, 1.0f, 0.0f);
-        }
+    bool saveSuccess = MeshImporter::SaveToCustomFormat(mesh, meshFilename);
 
-        if (aiMesh->HasTextureCoords(0))
-        {
-            vertex.texCoords = glm::vec2(
-                aiMesh->mTextureCoords[0][i].x,
-                aiMesh->mTextureCoords[0][i].y
-            );
-        }
-        else
-        {
-            vertex.texCoords = glm::vec2(0.0f, 0.0f);
-        }
-
-        mesh.vertices.push_back(vertex);
+    if (saveSuccess) {
+        LOG_DEBUG("  [SAVE] Complete - File: %s", meshFilename.c_str());
+        LOG_CONSOLE("Mesh saved to: Library/Meshes/%s", meshFilename.c_str());
+    }
+    else {
+        LOG_DEBUG("  [SAVE] ERROR: Failed to save mesh!");
     }
 
-    // Indices
-    for (unsigned int i = 0; i < aiMesh->mNumFaces; i++)
+    //  3: LOAD - Custom Binary Format -> Our Mesh
+    Mesh loadedMesh = MeshImporter::LoadFromCustomFormat(meshFilename);
+    LOG_DEBUG("  [LOAD] Complete");
+
+    // verification
+    if (loadedMesh.vertices.size() != mesh.vertices.size() ||
+        loadedMesh.indices.size() != mesh.indices.size())
     {
-        aiFace face = aiMesh->mFaces[i];
-        for (unsigned int j = 0; j < face.mNumIndices; j++)
-        {
-            mesh.indices.push_back(face.mIndices[j]);
-        }
+        LOG_DEBUG("  [WARNING] Loaded mesh differs from original!");
+        LOG_DEBUG("    Original: %d vertices, %d indices",
+            mesh.vertices.size(), mesh.indices.size());
+        LOG_DEBUG("    Loaded:   %d vertices, %d indices",
+            loadedMesh.vertices.size(), loadedMesh.indices.size());
+    }
+    else {
+        LOG_DEBUG("  [SUCCESS] Mesh loaded correctly!");
     }
 
-    LOG_DEBUG("      Mesh processed: Vertices: %d, Indices: %d, Triangles: %d", mesh.vertices.size(), mesh.indices.size(), mesh.indices.size() / 3);
-    LOG_CONSOLE("  Mesh processed: %d vertices, %d triangles", mesh.vertices.size(), mesh.indices.size() / 3);
-    return mesh;
+    LOG_DEBUG("      Mesh processed: Vertices: %d, Indices: %d, Triangles: %d",
+        loadedMesh.vertices.size(),
+        loadedMesh.indices.size(),
+        loadedMesh.indices.size() / 3);
+
+    LOG_CONSOLE("  Mesh processed: %d vertices, %d triangles",
+        loadedMesh.vertices.size(),
+        loadedMesh.indices.size() / 3);
+
+    return loadedMesh;
 }
 
 void FileSystem::NormalizeModelScale(GameObject* rootObject, float targetSize)

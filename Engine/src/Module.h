@@ -1,5 +1,7 @@
 #pragma once
 
+#define _HAS_STD_BYTE 0
+
 #include <string>
 #include "Globals.h"
 #include "Log.h"
