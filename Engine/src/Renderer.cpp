@@ -560,7 +560,6 @@ void Renderer::DrawScene()
     float outlineThickness = 0.04f;
     outlineShader->SetFloat("outlineThickness", outlineThickness);
 
-    // SOLUCIÓN 1: Limpiar solo el depth buffer
     glClear(GL_DEPTH_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
