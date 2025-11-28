@@ -1,7 +1,9 @@
 #include "LibraryManager.h"
 #include <iostream>
+#include <windows.h>
 
 bool LibraryManager::s_initialized = false;
+std::string LibraryManager::s_projectRoot = "";
 
 void LibraryManager::Initialize() {
     if (s_initialized) {
@@ -10,18 +12,53 @@ void LibraryManager::Initialize() {
 
     std::cout << "[LibraryManager] Initializing library structure..." << std::endl;
 
-    // Create Assets directory
-    EnsureDirectoryExists(ASSETS_ROOT);
+    // Get executable directory
+    char buffer[MAX_PATH];
+    GetModuleFileNameA(NULL, buffer, MAX_PATH);
+    std::string execPath(buffer);
 
-    // Create Library root
-    EnsureDirectoryExists(LIBRARY_ROOT);
+    size_t pos = execPath.find_last_of("\\/");
+    std::string currentDir = execPath.substr(0, pos);
+
+    // Go up 2 levels from executable (build/Debug/ -> build/ -> ProjectRoot/)
+    // First level up (Debug/ -> build/)
+    pos = currentDir.find_last_of("\\/");
+    if (pos != std::string::npos) {
+        currentDir = currentDir.substr(0, pos);
+
+        // Second level up (build/ -> ProjectRoot/)
+        pos = currentDir.find_last_of("\\/");
+        if (pos != std::string::npos) {
+            currentDir = currentDir.substr(0, pos);
+        }
+    }
+
+    // Verify Assets folder exists at this level
+    std::string testPath = currentDir + "\\Assets";
+    DWORD attribs = GetFileAttributesA(testPath.c_str());
+    bool assetsFound = (attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY));
+
+    if (assetsFound) {
+        s_projectRoot = currentDir;
+        std::cout << "[LibraryManager] Project root found at: " << s_projectRoot << std::endl;
+    }
+
+    if (!assetsFound)
+    {
+        std::cerr << "[LibraryManager] ERROR: Could not find project root (Assets folder not found)" << std::endl;
+        return;
+    }
+
+    // Create Library root at project level
+    std::string libraryRoot = s_projectRoot + "\\Library";
+    EnsureDirectoryExists(libraryRoot);
 
     // Create all Library subdirectories
-    EnsureDirectoryExists(MESHES_DIR);
-    EnsureDirectoryExists(MATERIALS_DIR);
-    EnsureDirectoryExists(TEXTURES_DIR);
-    EnsureDirectoryExists(MODELS_DIR);
-    EnsureDirectoryExists(ANIMATIONS_DIR);
+    EnsureDirectoryExists(libraryRoot + "\\Meshes");
+    EnsureDirectoryExists(libraryRoot + "\\Materials");
+    EnsureDirectoryExists(libraryRoot + "\\Textures");
+    EnsureDirectoryExists(libraryRoot + "\\Models");
+    EnsureDirectoryExists(libraryRoot + "\\Animations");
 
     s_initialized = true;
     std::cout << "[LibraryManager] Library structure initialized successfully!" << std::endl;
@@ -43,24 +80,32 @@ bool LibraryManager::IsInitialized() {
     return s_initialized;
 }
 
+std::string LibraryManager::GetLibraryRoot() {
+    return s_projectRoot + "\\Library\\";
+}
+
+std::string LibraryManager::GetAssetsRoot() {
+    return s_projectRoot + "\\Assets\\";
+}
+
 std::string LibraryManager::GetMeshPath(const std::string& filename) {
-    return std::string(MESHES_DIR) + filename;
+    return GetLibraryRoot() + "Meshes\\" + filename;
 }
 
 std::string LibraryManager::GetMaterialPath(const std::string& filename) {
-    return std::string(MATERIALS_DIR) + filename;
+    return GetLibraryRoot() + "Materials\\" + filename;
 }
 
 std::string LibraryManager::GetTexturePath(const std::string& filename) {
-    return std::string(TEXTURES_DIR) + filename;
+    return GetLibraryRoot() + "Textures\\" + filename;
 }
 
 std::string LibraryManager::GetModelPath(const std::string& filename) {
-    return std::string(MODELS_DIR) + filename;
+    return GetLibraryRoot() + "Models\\" + filename;
 }
 
 std::string LibraryManager::GetAnimationPath(const std::string& filename) {
-    return std::string(ANIMATIONS_DIR) + filename;
+    return GetLibraryRoot() + "Animations\\" + filename;
 }
 
 bool LibraryManager::FileExists(const std::string& path) {

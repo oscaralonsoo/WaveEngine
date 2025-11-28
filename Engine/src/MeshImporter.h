@@ -38,9 +38,6 @@ public:
     // Utility: Generate unique filename for mesh
     static std::string GenerateMeshFilename(const std::string& originalName);
 
-    // Create Library/Meshes directory if it doesn't exist
-    static void EnsureLibraryDirectoryExists();
-
 private:
     // Calculate bounding box from mesh vertices
     static void CalculateBoundingBox(const Mesh& mesh, glm::vec3& minBounds, glm::vec3& maxBounds);

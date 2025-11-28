@@ -1,6 +1,7 @@
 #define _HAS_STD_BYTE 0 
 
 #include "MeshImporter.h"
+#include "LibraryManager.h"
 #include <filesystem>
 #include "FileSystem.h" 
 #include <assimp/mesh.h>
@@ -80,11 +81,10 @@ Mesh MeshImporter::ImportFromAssimp(const aiMesh* assimpMesh) {
 
 // SAVE: Our Mesh -> Custom Binary Format
 bool MeshImporter::SaveToCustomFormat(const Mesh& mesh, const std::string& filename) {
-    EnsureLibraryDirectoryExists();
-
-    std::string fullPath = "Library/Meshes/" + filename;
+    std::string fullPath = LibraryManager::GetMeshPath(filename);
 
     LOG_DEBUG("Saving mesh to: %s", fullPath.c_str());
+
 
     std::ofstream file(fullPath, std::ios::binary);
     if (!file.is_open()) {
@@ -134,7 +134,7 @@ bool MeshImporter::SaveToCustomFormat(const Mesh& mesh, const std::string& filen
 
 // LOAD: Custom Binary Format -> Our Mesh
 Mesh MeshImporter::LoadFromCustomFormat(const std::string& filename) {
-    std::string fullPath = "Library/Meshes/" + filename;
+    std::string fullPath = LibraryManager::GetMeshPath(filename);
 
     LOG_DEBUG("Loading mesh from: %s", fullPath.c_str());
 
@@ -182,31 +182,34 @@ Mesh MeshImporter::LoadFromCustomFormat(const std::string& filename) {
     return mesh;
 }
 
-// UTILITIES
 std::string MeshImporter::GenerateMeshFilename(const std::string& originalName) {
-    // Sanitize name: remove spaces and special characters
+    // Sanitizar nombre: remover espacios y caracteres especiales
     std::string sanitized = originalName;
+    if (sanitized.empty()) {
+        sanitized = "unnamed_mesh";
+    }
+
     std::replace(sanitized.begin(), sanitized.end(), ' ', '_');
 
-    // Remove special characters
+    // Remover caracteres especiales
     sanitized.erase(
         std::remove_if(sanitized.begin(), sanitized.end(),
             [](char c) { return !std::isalnum(c) && c != '_'; }),
         sanitized.end()
     );
 
-    // Add timestamp for uniqueness
-    auto now = std::chrono::system_clock::now();
-    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-        now.time_since_epoch()
-    ).count();
+    // Convertir a minusculas para consistencia
+    std::transform(sanitized.begin(), sanitized.end(), sanitized.begin(), ::tolower);
+
+    // Generar hash simple del nombre
+    std::hash<std::string> hasher;
+    size_t hashValue = hasher(originalName);
 
     std::stringstream ss;
-    ss << sanitized << "_" << timestamp << ".mesh";
+    ss << sanitized << "_" << std::hex << hashValue << ".mesh";
 
     return ss.str();
 }
-
 void MeshImporter::CalculateBoundingBox(const Mesh& mesh, glm::vec3& minBounds, glm::vec3& maxBounds) {
     if (mesh.vertices.empty()) {
         minBounds = glm::vec3(0.0f);
@@ -226,8 +229,4 @@ void MeshImporter::CalculateBoundingBox(const Mesh& mesh, glm::vec3& minBounds, 
         maxBounds.y = std::max(maxBounds.y, vertex.position.y);
         maxBounds.z = std::max(maxBounds.z, vertex.position.z);
     }
-}
-
-void MeshImporter::EnsureLibraryDirectoryExists() {
-    std::filesystem::create_directories("Library/Meshes");
 }

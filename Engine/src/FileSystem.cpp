@@ -40,36 +40,27 @@ bool FileSystem::Start()
     size_t pos = execPath.find_last_of("\\/");
     std::string currentDir = execPath.substr(0, pos);
 
-    // Search for the Assets folder by uploading directories
-    std::string assetsPath;
-    std::string searchDir = currentDir;
-    bool assetsFound = false;
+    // Go up 2 levels from executable (build/Debug/ -> build/ -> ProjectRoot/)
+    // First level up (Debug/ -> build/)
+    pos = currentDir.find_last_of("\\/");
+    if (pos != std::string::npos) {
+        currentDir = currentDir.substr(0, pos);
 
-    // Try up to 5 levels up
-    for (int i = 0; i < 5 && !assetsFound; i++)
-    {
-        std::string testPath = searchDir + "\\Assets";
-
-        // Verificar si existe el directorio Assets
-        DWORD attribs = GetFileAttributesA(testPath.c_str());
-        if (attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY))
-        {
-            assetsPath = testPath;
-            assetsFound = true;
-            LOG_DEBUG("Assets folder found at: %s", assetsPath.c_str());
-            break;
+        // Second level up (build/ -> ProjectRoot/)
+        pos = currentDir.find_last_of("\\/");
+        if (pos != std::string::npos) {
+            currentDir = currentDir.substr(0, pos);
         }
-
-        // Move up a level
-        pos = searchDir.find_last_of("\\/");
-        if (pos == std::string::npos)
-            break;
-        searchDir = searchDir.substr(0, pos);
     }
+
+    // Verify Assets folder exists at project root
+    std::string assetsPath = currentDir + "\\Assets";
+    DWORD attribs = GetFileAttributesA(assetsPath.c_str());
+    bool assetsFound = (attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY));
 
     if (!assetsFound)
     {
-        LOG_DEBUG("ERROR: Assets folder not found");
+        LOG_DEBUG("ERROR: Assets folder not found at: %s", assetsPath.c_str());
         LOG_CONSOLE("ERROR: Could not locate Assets folder");
 
         // Create fallback geometry
@@ -368,52 +359,38 @@ Mesh FileSystem::ProcessMesh(aiMesh* aiMesh, const aiScene* scene)
     LOG_DEBUG("=== Processing Mesh with Custom Format ===");
     LOG_DEBUG("Mesh name: %s", aiMesh->mName.C_Str());
 
-
-    // 1: IMPORT - Assimp -> Our Mesh Structure
-    Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
-    LOG_DEBUG("  [IMPORT] Complete");
-
-    //  2: SAVE - Our Mesh -> Custom Binary Format
+    // generate file name based in mesh
     std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
+    std::string fullPath = LibraryManager::GetMeshPath(meshFilename);
 
-    bool saveSuccess = MeshImporter::SaveToCustomFormat(mesh, meshFilename);
-
-    if (saveSuccess) {
-        LOG_DEBUG("  [SAVE] Complete - File: %s", meshFilename.c_str());
-        LOG_CONSOLE("Mesh saved to: Library/Meshes/%s", meshFilename.c_str());
-    }
-    else {
-        LOG_DEBUG("  [SAVE] ERROR: Failed to save mesh!");
-    }
-
-    //  3: LOAD - Custom Binary Format -> Our Mesh
-    Mesh loadedMesh = MeshImporter::LoadFromCustomFormat(meshFilename);
-    LOG_DEBUG("  [LOAD] Complete");
-
-    // verification
-    if (loadedMesh.vertices.size() != mesh.vertices.size() ||
-        loadedMesh.indices.size() != mesh.indices.size())
+    if (LibraryManager::FileExists(fullPath))
     {
-        LOG_DEBUG("  [WARNING] Loaded mesh differs from original!");
-        LOG_DEBUG("    Original: %d vertices, %d indices",
-            mesh.vertices.size(), mesh.indices.size());
-        LOG_DEBUG("    Loaded:   %d vertices, %d indices",
-            loadedMesh.vertices.size(), loadedMesh.indices.size());
+        LOG_DEBUG(" Usando Library para cargar modelo: %s", meshFilename.c_str());
+        LOG_CONSOLE(" Usando Library para cargar modelo: %s", meshFilename.c_str());
+
+        //load from the saved file
+        Mesh loadedMesh = MeshImporter::LoadFromCustomFormat(meshFilename);
+
+        if (loadedMesh.vertices.size() > 0 && loadedMesh.indices.size() > 0)
+        {
+            LOG_DEBUG(" Mesh cargado desde Library - %d vertices, %d triangles",
+                loadedMesh.vertices.size(), loadedMesh.indices.size() / 3);
+            LOG_CONSOLE(" Mesh cargado desde Library: %d vertices, %d triangles",
+                loadedMesh.vertices.size(),
+                loadedMesh.indices.size() / 3);
+
+            return loadedMesh;
+        }
+        else
+        {
+            LOG_DEBUG(" Mesh en Library corrupto, regenerando desde FBX...");
+            LOG_CONSOLE("Regenerando mesh corrupto...");
+        }
     }
-    else {
-        LOG_DEBUG("  [SUCCESS] Mesh loaded correctly!");
-    }
 
-    LOG_DEBUG("      Mesh processed: Vertices: %d, Indices: %d, Triangles: %d",
-        loadedMesh.vertices.size(),
-        loadedMesh.indices.size(),
-        loadedMesh.indices.size() / 3);
+    Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
 
-    LOG_CONSOLE("  Mesh processed: %d vertices, %d triangles",
-        loadedMesh.vertices.size(),
-        loadedMesh.indices.size() / 3);
-
-    return loadedMesh;
+    return mesh;
 }
 
 void FileSystem::NormalizeModelScale(GameObject* rootObject, float targetSize)

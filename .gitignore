@@ -16,6 +16,7 @@
 
 vcpkg/
 build/
+Library/
 CMakeUserPresets.json
 
 # Debugger Files

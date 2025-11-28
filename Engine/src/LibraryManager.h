@@ -6,18 +6,7 @@
 // Centralized manager for Library folder structure
 class LibraryManager {
 public:
-    // Root directories
-    static constexpr const char* LIBRARY_ROOT = "Library/";
-    static constexpr const char* ASSETS_ROOT = "Assets/";
-
-    // Library subdirectories
-    static constexpr const char* MESHES_DIR = "Library/Meshes/";
-    static constexpr const char* MATERIALS_DIR = "Library/Materials/";
-    static constexpr const char* TEXTURES_DIR = "Library/Textures/";
-    static constexpr const char* MODELS_DIR = "Library/Models/";
-    static constexpr const char* ANIMATIONS_DIR = "Library/Animations/";
-
-    // Initialize all library directories
+    // Initialize all library directories (finds project root automatically)
     static void Initialize();
 
     // Ensure specific directory exists
@@ -36,6 +25,11 @@ public:
     // Check if a file exists in library
     static bool FileExists(const std::string& path);
 
+    // Get base paths
+    static std::string GetLibraryRoot();
+    static std::string GetAssetsRoot();
+
 private:
     static bool s_initialized;
+    static std::string s_projectRoot;  // Root directory of the project (parent of build/)
 };
