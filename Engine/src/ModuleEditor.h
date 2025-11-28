@@ -14,6 +14,17 @@ class SceneWindow;
 class GameObject;
 struct Mesh;
 
+enum class EditorWindowType
+{
+    NONE = 0,
+    SCENE,
+    CONFIGURATION,
+    HIERARCHY,
+    INSPECTOR,
+    CONSOLE,
+    ABOUT
+};
+
 class ModuleEditor : public Module
 {
 public:
@@ -41,11 +52,18 @@ public:
     bool ShouldShowOctree() const;
     bool ShouldShowRaycast() const;
 
+    // Window State
+    EditorWindowType GetCurrentWindow() const { return currentWindow; }
+    bool IsSceneWindowActive() const { return currentWindow == EditorWindowType::SCENE;  }
+    bool IsMouseOverScene() const;
+
 private:
     void ShowMenuBar();
     void DrawAboutWindow();
     void CreatePrimitiveGameObject(const std::string& name, Mesh mesh);
     void HandleDeleteKey();
+    void UpdateCurrentWindow();
+    const char* EditorWindowTypeToString(EditorWindowType type); // For debug // Delete before release
 
     // Editor windows (owned by ModuleEditor)
     std::unique_ptr<ConfigurationWindow> configWindow;
@@ -56,4 +74,10 @@ private:
 
     // About window state
     bool showAbout = false;
+
+    // Window states
+    EditorWindowType currentWindow = EditorWindowType::NONE;
+    bool isMouseOverSceneViewport = false;
+    EditorWindowType lastHoveredWindow = EditorWindowType::NONE;
+
 };

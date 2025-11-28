@@ -104,15 +104,17 @@ bool ModuleEditor::Update()
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
 
     ImGui::End();
-
-    sceneWindow->Draw();
+    
+    sceneWindow->Draw(); 
     configWindow->Draw();
     consoleWindow->Draw();
     hierarchyWindow->Draw();
     inspectorWindow->Draw();
 
-    if (showAbout)
+    if (showAbout) {
         DrawAboutWindow();
+    }
+
 
     HandleDeleteKey();
 
@@ -121,6 +123,12 @@ bool ModuleEditor::Update()
         sceneViewportPos = sceneWindow->GetViewportPos();
         sceneViewportSize = sceneWindow->GetViewportSize();
     }
+
+    UpdateCurrentWindow();
+
+    // For debug // Delete before release
+    //LOG_CONSOLE("%d", isMouseOverSceneViewport);
+    //LOG_CONSOLE("%s",EditorWindowTypeToString(lastHoveredWindow));
 
     return true;
 }
@@ -437,4 +445,70 @@ bool ModuleEditor::ShouldShowRaycast() const
     if (configWindow)
         return configWindow->ShouldShowRaycast();
     return false;
+}
+
+void ModuleEditor::UpdateCurrentWindow()
+{
+    ImVec2 mousePos = ImGui::GetMousePos();
+
+    isMouseOverSceneViewport = false;
+
+    currentWindow = lastHoveredWindow;
+    lastHoveredWindow = EditorWindowType::NONE;
+
+    if (sceneWindow && sceneWindow->IsHovered()) {
+        lastHoveredWindow = EditorWindowType::SCENE;
+    }
+
+    if (configWindow && configWindow->IsHovered()) {
+        lastHoveredWindow = EditorWindowType::CONFIGURATION;
+    }
+
+    if (inspectorWindow && inspectorWindow->IsHovered()) {
+        lastHoveredWindow = EditorWindowType::INSPECTOR;
+    }
+
+    if (consoleWindow && consoleWindow->IsHovered()) {
+        lastHoveredWindow = EditorWindowType::CONSOLE;
+    }
+
+    if (hierarchyWindow && hierarchyWindow->IsHovered()) {
+        lastHoveredWindow = EditorWindowType::HIERARCHY;
+    }
+
+    if (lastHoveredWindow != EditorWindowType::NONE) {
+        currentWindow = lastHoveredWindow;
+    }
+
+    if (currentWindow == EditorWindowType::SCENE || currentWindow == EditorWindowType::NONE)
+    {
+        if (mousePos.x >= sceneViewportPos.x &&
+            mousePos.x <= sceneViewportPos.x + sceneViewportSize.x &&
+            mousePos.y >= sceneViewportPos.y &&
+            mousePos.y <= sceneViewportPos.y + sceneViewportSize.y)
+        {
+            currentWindow = EditorWindowType::SCENE;
+            isMouseOverSceneViewport = true;
+        }
+    }
+}
+
+bool ModuleEditor::IsMouseOverScene() const
+{
+    return isMouseOverSceneViewport;
+}
+
+const char* ModuleEditor::EditorWindowTypeToString(EditorWindowType type)
+{
+    switch (type)
+    {
+    case EditorWindowType::NONE:           return "NONE";
+    case EditorWindowType::SCENE:          return "SCENE";
+    case EditorWindowType::CONFIGURATION:  return "CONFIGURATION";
+    case EditorWindowType::HIERARCHY:      return "HIERARCHY";
+    case EditorWindowType::INSPECTOR:      return "INSPECTOR";
+    case EditorWindowType::CONSOLE:        return "CONSOLE";
+    case EditorWindowType::ABOUT:          return "ABOUT";
+    default:                               return "UNKNOWN";
+    }
 }

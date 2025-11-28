@@ -18,6 +18,8 @@ void HierarchyWindow::Draw()
 
     ImGui::Begin(name.c_str(), &isOpen);
 
+    isHovered = (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows));
+
     GameObject* root = Application::GetInstance().scene->GetRoot();
 
     if (root != nullptr)

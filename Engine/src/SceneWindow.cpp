@@ -26,6 +26,8 @@ void SceneWindow::Draw()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin(name.c_str(), &isOpen);
 
+    isHovered = (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows));
+
     sceneViewportPos = ImGui::GetCursorScreenPos();
     sceneViewportSize = ImGui::GetContentRegionAvail();
 

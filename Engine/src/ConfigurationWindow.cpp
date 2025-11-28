@@ -20,6 +20,8 @@ void ConfigurationWindow::Draw()
 
     ImGui::Begin(name.c_str(), &isOpen);
 
+    isHovered = (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows));
+
     if (ImGui::CollapsingHeader("FPS"))
     {
         DrawFPSGraph();

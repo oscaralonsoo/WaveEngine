@@ -13,6 +13,8 @@ void ConsoleWindow::Draw()
 
     ImGui::Begin(name.c_str(), &isOpen);
 
+    isHovered = (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows));
+
     if (ImGui::Button("Clear"))
     {
         ConsoleLog::GetInstance().Clear();

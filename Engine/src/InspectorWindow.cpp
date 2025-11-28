@@ -19,6 +19,8 @@ void InspectorWindow::Draw()
 
     ImGui::Begin(name.c_str(), &isOpen);
 
+    isHovered = (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows));
+
     SelectionManager* selectionManager = Application::GetInstance().selectionManager;
 
     if (!selectionManager->HasSelection())

@@ -42,13 +42,12 @@ bool Input::Start()
 	return true;
 }
 
-bool IsMouseOverSceneWindow(float mouseX, float mouseY)
+bool IsMouseOverSceneWindow()
 {
-	ImVec2 scenePos = Application::GetInstance().editor->sceneViewportPos;
-	ImVec2 sceneSize = Application::GetInstance().editor->sceneViewportSize;
+	ModuleEditor* editor = Application::GetInstance().editor.get();
+	if (!editor) return false;
 
-	return (mouseX >= scenePos.x && mouseX <= scenePos.x + sceneSize.x &&
-		mouseY >= scenePos.y && mouseY <= scenePos.y + sceneSize.y);
+	return editor->IsMouseOverScene();
 }
 
 bool Input::PreUpdate()
@@ -111,13 +110,17 @@ bool Input::PreUpdate()
 			ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
 			if (!camera) break;
 
+			bool overSceneWindow = IsMouseOverSceneWindow();
+			if (!overSceneWindow)
+			{
+				break;
+			}
+
 			float mouseXf, mouseYf;
 			SDL_GetMouseState(&mouseXf, &mouseYf);
 			int scale = Application::GetInstance().window.get()->GetScale();
 			mouseXf /= scale;
 			mouseYf /= scale;
-
-			bool overSceneWindow = IsMouseOverSceneWindow(mouseXf, mouseYf);
 
 			ImGuiIO& io = ImGui::GetIO();
 			if (io.WantCaptureMouse && !overSceneWindow)
@@ -232,7 +235,7 @@ bool Input::PreUpdate()
 			float mouseXf = static_cast<float>(event.motion.x) / static_cast<float>(scale);
 			float mouseYf = static_cast<float>(event.motion.y) / static_cast<float>(scale);
 
-			bool overSceneWindow = IsMouseOverSceneWindow(mouseXf, mouseYf);
+			bool overSceneWindow = IsMouseOverSceneWindow();
 			bool isDragging = (mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_REPEAT ||
 				mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_DOWN ||
 				mouseButtons[SDL_BUTTON_MIDDLE - 1] == KEY_REPEAT ||
@@ -291,7 +294,7 @@ bool Input::PreUpdate()
 			mouseXf /= scale;
 			mouseYf /= scale;
 
-			if (IsMouseOverSceneWindow(mouseXf, mouseYf))
+			if (IsMouseOverSceneWindow())
 			{
 				ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
 				if (camera)
