@@ -2,6 +2,7 @@
 #include <iostream>
 #include <windows.h>
 #include "MetaFile.h"
+#include "TextureImporter.h"
 
 namespace fs = std::filesystem;
 
@@ -166,8 +167,28 @@ void LibraryManager::RegenerateFromAssets() {
         if (MetaFileManager::NeedsReimport(assetPath.string())) {
             std::cout << "[LibraryManager] Processing: " << assetPath.filename().string() << std::endl;
 
-            // TODO: Aquí llamarías a la función específica de importación
-            // Por ejemplo: ImportFBX(assetPath), ImportTexture(assetPath), etc.
+            // Procesar según el tipo
+            switch (type) {
+            case AssetType::MODEL_FBX:
+                // El FBXLoader ya maneja esto automáticamente
+                break;
+
+            case AssetType::TEXTURE_PNG:
+            case AssetType::TEXTURE_JPG:
+            case AssetType::TEXTURE_DDS: {
+                // Importar textura
+                TextureData texture = TextureImporter::ImportFromFile(assetPath.string());
+                if (texture.IsValid()) {
+                    std::string filename = TextureImporter::GenerateTextureFilename(assetPath.string());
+                    TextureImporter::SaveToCustomFormat(texture, filename);
+                    std::cout << "  ? Texture processed: " << filename << std::endl;
+                }
+                break;
+            }
+
+            default:
+                break;
+            }
 
             processed++;
         }

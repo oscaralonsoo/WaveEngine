@@ -5,6 +5,8 @@
 #include <IL/ilu.h>
 #include <fstream>
 #include "Log.h"
+#include "TextureImporter.h"
+#include "LibraryManager.h"
 
 #define CHECKERS_WIDTH 64
 #define CHECKERS_HEIGHT 64
@@ -115,129 +117,106 @@ bool FileExists(const std::string& path)
 
 bool Texture::LoadFromFile(const std::string& path, bool flipVertically)
 {
- 
-    InitDevIL();
+    // Generar nombre de archivo en Library
+    std::string textureFilename = TextureImporter::GenerateTextureFilename(path);
+    std::string libraryPath = LibraryManager::GetTexturePath(textureFilename);
 
-    std::string fullPath;
+    // PASO 1: Verificar si existe en Library (cache)
+    if (LibraryManager::FileExists(libraryPath)) {
+        LOG_DEBUG(" Texture found in Library: %s", textureFilename.c_str());
 
-    // If the path is absolute (dropped file), use it directly
-    if (IsAbsolutePath(path))
-    {
-        fullPath = path;
+        // Cargar desde el formato custom
+        TextureData loadedTexture = TextureImporter::LoadFromCustomFormat(textureFilename);
+
+        if (loadedTexture.IsValid()) {
+            // Crear textura OpenGL desde los datos cargados
+            glGenTextures(1, &textureID);
+            glBindTexture(GL_TEXTURE_2D, textureID);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                loadedTexture.width, loadedTexture.height,
+                0, GL_RGBA, GL_UNSIGNED_BYTE, loadedTexture.pixels);
+            glGenerateMipmap(GL_TEXTURE_2D);
+
+            if (loadedTexture.channels == 4) {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            }
+
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            width = loadedTexture.width;
+            height = loadedTexture.height;
+            nrChannels = loadedTexture.channels;
+
+            LOG_DEBUG(" Texture loaded from Library cache");
+            LOG_CONSOLE(" Texture loaded from cache: %dx%d", width, height);
+
+            return true;
+        }
+        else {
+            LOG_DEBUG(" Cached texture corrupted, reimporting...");
+        }
     }
-    else
-    {
-        // If relative, build path from executable
-        char buffer[MAX_PATH];
-        GetModuleFileNameA(NULL, buffer, MAX_PATH);
-        std::string execPath(buffer);
-        size_t pos = execPath.find_last_of("\\/");
-        std::string execDir = execPath.substr(0, pos);
 
-        // Go up two levels: from build/ to Engine/, then to root
-        pos = execDir.find_last_of("\\/");
-        std::string parentDir = execDir.substr(0, pos);
-        pos = parentDir.find_last_of("\\/");
-        std::string rootDir = parentDir.substr(0, pos);
+    // PASO 2: Si no existe en cache, importar desde archivo original
+    LOG_DEBUG(" Importing texture from source file...");
+    LOG_CONSOLE(" Processing new texture...");
 
-        // Build full path to texture
-        fullPath = rootDir + "\\" + path;
-    }
+    TextureData importedTexture = TextureImporter::ImportFromFile(path);
 
-    // Normalize the path (convert backslashes to forward slashes)
-    fullPath = NormalizePath(fullPath);
-
-    LOG_DEBUG("=== DevIL Texture Loading ===");
-    LOG_DEBUG("Path: %s", fullPath.c_str());
-
-    // Verify that the file exists before attempting to load it
-    if (!FileExists(fullPath))
-    {
-        LOG_DEBUG("ERROR: Texture file does not exist");
-        LOG_CONSOLE("ERROR: Texture file not found");
+    if (!importedTexture.IsValid()) {
+        LOG_DEBUG(" Failed to import texture");
+        LOG_CONSOLE("ERROR: Failed to import texture");
         return false;
     }
 
-    // Generate an image ID in DevIL
-    ILuint imageID;
-    ilGenImages(1, &imageID);
-    ilBindImage(imageID);
+    // PASO 3: Guardar en Library para futuras cargas
+    bool saveSuccess = TextureImporter::SaveToCustomFormat(importedTexture, textureFilename);
 
-    // Load the image
-    if (!ilLoadImage(fullPath.c_str()))
-    {
-        ILenum error = ilGetError();
-        LOG_DEBUG("ERROR: DevIL failed to load image");
-        LOG_DEBUG("DevIL Error: %s", iluErrorString(error));
-        LOG_CONSOLE("ERROR: DevIL failed to load texture");
-        ilDeleteImages(1, &imageID);
-        return false;
+    if (saveSuccess) {
+        LOG_DEBUG(" Texture saved to Library: %s", textureFilename.c_str());
+        LOG_CONSOLE(" Texture cached for future loads");
+    }
+    else {
+        LOG_DEBUG(" Warning: Could not cache texture");
     }
 
-    // Convert the image to RGBA (standard format)
-    if (!ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE))
-    {
-        LOG_DEBUG("ERROR: Failed to convert image to RGBA format");
-        LOG_CONSOLE("ERROR: Failed to convert texture format");
-        ilDeleteImages(1, &imageID);
-        return false;
-    }
-
-    // Get image information
-    width = ilGetInteger(IL_IMAGE_WIDTH);
-    height = ilGetInteger(IL_IMAGE_HEIGHT);
-    nrChannels = ilGetInteger(IL_IMAGE_CHANNELS);
-    ILubyte* data = ilGetData();
-
-    LOG_DEBUG("Image properties:");
-    LOG_DEBUG("  Width: %d pixels", width);
-    LOG_DEBUG("  Height: %d pixels", height);
-    LOG_DEBUG("  Channels: %d", nrChannels);
-    LOG_DEBUG("  Size: %.2f KB", (width * height * 4) / 1024.0f);
-    LOG_CONSOLE("DevIL: Texture loaded - %dx%d, %d channels, %.2f KB", width, height, nrChannels, (width * height * 4) / 1024.0f);
-
-    if (!data)
-    {
-        LOG_DEBUG("ERROR: Failed to get image data from DevIL");
-        LOG_CONSOLE("ERROR: Could not extract texture data");
-        ilDeleteImages(1, &imageID);
-        return false;
-    }
-
-    LOG_DEBUG("Creating OpenGL texture object");
-
-    // Generate and configure the texture in OpenGL
+    // PASO 4: Crear textura OpenGL
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
-    // Configure wrapping parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Load image in OpenGL 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+        importedTexture.width, importedTexture.height,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, importedTexture.pixels);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    // Check if texture has alpha channel and adjust wrapping
-    if (nrChannels == 4)  // RGBA = tiene canal alpha
-    {
-        LOG_DEBUG("Texture has alpha channel - Setting wrapping to CLAMP_TO_EDGE");
+    if (importedTexture.channels == 4) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    LOG_DEBUG("OpenGL texture created - ID: %d", textureID);
+    width = importedTexture.width;
+    height = importedTexture.height;
+    nrChannels = importedTexture.channels;
 
-    ilDeleteImages(1, &imageID);
+    LOG_DEBUG(" Texture imported and loaded successfully");
+    LOG_CONSOLE(" Texture loaded: %dx%d, %d channels", width, height, nrChannels);
 
     return true;
 }
-
 void Texture::Bind()
 {
     glBindTexture(GL_TEXTURE_2D, textureID);

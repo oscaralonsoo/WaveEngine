@@ -108,6 +108,8 @@ set(IMPORTERS_SRC
     src/LibraryManager.h 
     src/MetaFile.cpp 
     src/MetaFile.h 
+    src/TextureImporter.cpp 
+    src/TextureImporter.h 
 )
 
 source_group("Source\\Core" FILES ${CORE_SRC})
