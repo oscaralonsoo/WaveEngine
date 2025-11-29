@@ -74,6 +74,12 @@ bool ModuleEditor::PreUpdate()
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
 
+    if (sceneWindow)
+    {
+        sceneViewportPos = sceneWindow->GetViewportPos();
+        sceneViewportSize = sceneWindow->GetViewportSize();
+    }
+
     return true;
 }
 
@@ -115,12 +121,6 @@ bool ModuleEditor::Update()
         DrawAboutWindow();
 
     HandleDeleteKey();
-
-    if (sceneWindow)
-    {
-        sceneViewportPos = sceneWindow->GetViewportPos();
-        sceneViewportSize = sceneWindow->GetViewportSize();
-    }
 
     return true;
 }
