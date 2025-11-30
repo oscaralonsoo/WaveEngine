@@ -15,6 +15,7 @@ public:
     bool ShouldShowAABB() const { return showAABB; }
     bool ShouldShowOctree() const { return showOctree; }
     bool ShouldShowRaycast() const { return showRaycast; }
+    bool ShouldShowZBuffer() const { return showZBuffer; }
 
 private:
     void DrawFPSGraph();
@@ -43,4 +44,5 @@ private:
     bool showAABB = false;
     bool showOctree = false;
     bool showRaycast = false;
+    bool showZBuffer = false;
 };

@@ -13,7 +13,8 @@
 #include "Primitives.h"
 #include "ComponentMesh.h"
 #include "Transform.h"           
-#include "ComponentCamera.h"     
+#include "ComponentCamera.h"   
+#include "ComponentMaterial.h"
 
 #include "ConfigurationWindow.h"
 #include "HierarchyWindow.h"
@@ -370,6 +371,10 @@ void ModuleEditor::CreatePrimitiveGameObject(const std::string& name, Mesh mesh)
         selectedMesh = mesh;
 
     meshComp->SetMesh(selectedMesh);
+
+    ComponentMaterial* materialComp = static_cast<ComponentMaterial*>(
+        Object->CreateComponent(ComponentType::MATERIAL)
+        );
 
     GameObject* root = Application::GetInstance().scene->GetRoot();
     root->AddChild(Object);

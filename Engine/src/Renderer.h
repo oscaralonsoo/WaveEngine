@@ -85,6 +85,10 @@ public:
     void UnbindFramebuffer();
     GLuint GetSceneTexture() const { return sceneTexture; }
 
+    // zBuffer visualization
+    bool IsShowingZBuffer() const { return showZBuffer; }
+    void SetShowZBuffer(bool show) { showZBuffer = show; }
+
 private:
     // Internal rendering methods
     void DrawGameObjectRecursive(GameObject* gameObject,
@@ -101,6 +105,7 @@ private:
     std::unique_ptr<Shader> defaultShader;
     std::unique_ptr<Shader> lineShader;
     std::unique_ptr<Shader> outlineShader;
+    std::unique_ptr<Shader> depthShader;
 
     // Default assets
     std::unique_ptr<Texture> defaultTexture;
@@ -134,6 +139,9 @@ private:
     GLuint rbo = 0;
     int framebufferWidth = 1280;
     int framebufferHeight = 720;
+
+    // zBuffer visualization
+    bool showZBuffer = false;
 
     void DrawRay(const glm::vec3& origin, const glm::vec3& direction,
         float length, const glm::vec3& color);

@@ -78,6 +78,14 @@ bool Renderer::Start()
         LOG_CONSOLE("Outline shader compiled successfully");
     }
 
+    depthShader = make_unique<Shader>();
+    if (!depthShader->CreateDepthVisualization())
+    {
+        LOG_DEBUG("ERROR: Failed to create depth visualization shader");
+        LOG_CONSOLE("ERROR: Failed to compile depth shader");
+        return false;
+    }
+
     // Generate default checkerboard texture for untextured objects
     defaultTexture = make_unique<Texture>();
     defaultTexture->CreateCheckerboard();
@@ -212,7 +220,14 @@ bool Renderer::Update()
     glClearColor(clearColorR, clearColorG, clearColorB, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    defaultShader->Use();
+    if (showZBuffer)
+    {
+        depthShader->Use();
+    }
+    else
+    {
+        defaultShader->Use();
+    }
 
     ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
     if (!camera) return true;
@@ -223,19 +238,27 @@ bool Renderer::Update()
     {
         camera->SetAspectRatio(aspectRatio);
     }
-    GLuint shaderProgram = defaultShader->GetProgramID();
+    Shader* currentShader = showZBuffer ? depthShader.get() : defaultShader.get();
+    GLuint shaderProgram = currentShader->GetProgramID();
 
     // Update camera matrices
-    glUniformMatrix4fv(defaultUniforms.projection, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-    glUniformMatrix4fv(defaultUniforms.view, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
 
-    // Bind default texture
-    glActiveTexture(GL_TEXTURE0);
-    glUniform1i(defaultUniforms.texture1, 0);
+    if (showZBuffer)
+    {
+        depthShader->SetFloat("nearPlane", camera->GetNearPlane());
+        depthShader->SetFloat("farPlane", camera->GetFarPlane());
+    }
+    else
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glUniform1i(defaultUniforms.texture1, 0);
+    }
 
     GameObject* root = Application::GetInstance().scene->GetRoot();
 
-    if (Application::GetInstance().grid)
+    if (!showZBuffer && Application::GetInstance().grid)
     {
         Application::GetInstance().grid->Draw();
     }
@@ -245,9 +268,12 @@ bool Renderer::Update()
         DrawScene();
     }
 
-    defaultTexture->Unbind();
+    if (!showZBuffer)
+    {
+        defaultTexture->Unbind();
+    }
 
-    if (editor)
+    if (!showZBuffer && editor)
     {
         // Draw AABBs if enabled
         if (editor->ShouldShowAABB())
@@ -323,6 +349,11 @@ bool Renderer::CleanUp()
         outlineShader->Delete();
     }
 
+    if (depthShader)
+    {
+        depthShader->Delete();
+    }
+
     if (normalLinesVAO != 0)
     {
         glDeleteVertexArrays(1, &normalLinesVAO);
@@ -371,11 +402,12 @@ void Renderer::CreateFramebuffer(int width, int height)
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sceneTexture, 0);
 
     // Renderbuffer objects
-	glGenRenderbuffers(1, &rbo); // Create renderbuffer
+    glGenRenderbuffers(1, &rbo); // Create renderbuffer
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height); // Used to create depth and stencil buffer
-	// Attach renderbuffer to framebuffer
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height); // Used to create depth and stencil buffer
+    // Attach renderbuffer to framebuffer
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
 
     // Check framebuffer completeness
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -717,23 +749,42 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject,
     }
 
     const glm::mat4& modelMatrix = transform->GetGlobalMatrix();
-    glUniformMatrix4fv(defaultUniforms.model, 1, GL_FALSE,
-        glm::value_ptr(modelMatrix));
 
-    defaultShader->SetVec3("tintColor", glm::vec3(1.0f));
+    Shader* currentShader = showZBuffer ? depthShader.get() : defaultShader.get();
+    currentShader->Use();
+
+    glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "projection"),
+        1, GL_FALSE, glm::value_ptr(renderCamera->GetProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "view"),
+        1, GL_FALSE, glm::value_ptr(renderCamera->GetViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "model"),
+        1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+    if (showZBuffer)
+    {
+        depthShader->SetFloat("nearPlane", renderCamera->GetNearPlane());
+        depthShader->SetFloat("farPlane", renderCamera->GetFarPlane());
+    }
+    else
+    {
+        defaultShader->SetVec3("tintColor", glm::vec3(1.0f));
+    }
 
     ComponentMaterial* material = static_cast<ComponentMaterial*>(
         gameObject->GetComponent(ComponentType::MATERIAL));
 
     bool materialBound = false;
-    if (material && material->IsActive())
+    if (!showZBuffer)
     {
-        material->Use();
-        materialBound = true;
-    }
-    else
-    {
-        defaultTexture->Bind();
+        if (material && material->IsActive())
+        {
+            material->Use();
+            materialBound = true;
+        }
+        else
+        {
+            defaultTexture->Bind();
+        }
     }
 
     const std::vector<Component*>& meshComponents =
@@ -796,10 +847,13 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject,
         }
     }
 
-    if (materialBound)
-        material->Unbind();
-    else
-        defaultTexture->Unbind();
+    if (!showZBuffer)
+    {
+        if (materialBound)
+            material->Unbind();
+        else
+            defaultTexture->Unbind();
+    }
 
     for (GameObject* child : gameObject->GetChildren())
     {

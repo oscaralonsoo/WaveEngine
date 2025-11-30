@@ -349,6 +349,16 @@ void ConfigurationWindow::DrawRendererSettings()
         return;
     }
 
+    if (ImGui::Checkbox("Show Z-Buffer", &showZBuffer))
+    {
+        Application::GetInstance().renderer->SetShowZBuffer(showZBuffer);
+    }
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::SetTooltip("Visualize depth buffer as grayscale\nWhite = Near, Black = Far");
+    }
+	ImGui::Spacing();
+
     bool faceCulling = renderer->IsFaceCullingEnabled();
     if (ImGui::Checkbox("Face Culling", &faceCulling))
     {

@@ -14,6 +14,7 @@ public:
     bool CreateSimpleColor(); // Color shader for transparent objects
     bool CreateWithDiscard(); // Shader with alpha discard for cutout textures
     bool CreateSingleColor(); // Solid color shader for outlines
+    bool CreateDepthVisualization(); // Z-Buffer visualization shader
 
     void Use() const;
     void Delete();
