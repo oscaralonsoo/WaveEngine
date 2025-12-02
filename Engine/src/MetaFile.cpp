@@ -1,4 +1,4 @@
-#include "MetaFile.h"
+﻿#include "MetaFile.h"
 #include "LibraryManager.h"
 #include <random>
 #include <iomanip>
@@ -44,6 +44,17 @@ bool MetaFile::Save(const std::string& metaFilePath) const {
     // Convertir rutas absolutas a relativas antes de guardar
     std::string relativeOriginalPath = MakeRelativeToProject(originalPath);
     std::string relativeLibraryPath = MakeRelativeToProject(libraryPath);
+
+    // ESCRIBIR LOS DATOS
+    file << "guid: " << guid << "\n";
+    file << "type: " << static_cast<int>(type) << "\n";
+    file << "originalPath: " << relativeOriginalPath << "\n";  
+    file << "libraryPath: " << relativeLibraryPath << "\n";    
+    file << "lastModified: " << lastModified << "\n";
+    file << "importScale: " << importSettings.importScale << "\n";
+    file << "generateNormals: " << (importSettings.generateNormals ? "1" : "0") << "\n";  // ← 1/0
+    file << "flipUVs: " << (importSettings.flipUVs ? "1" : "0") << "\n";                  // ← 1/0
+    file << "optimizeMeshes: " << (importSettings.optimizeMeshes ? "1" : "0") << "\n";    // ← 1/0
 
     file.close();
     return true;
@@ -199,14 +210,14 @@ void MetaFileManager::ScanAssets() {
             meta.type = type;
             meta.originalPath = assetPath;
             meta.lastModified = GetFileTimestamp(assetPath);
-            meta.libraryPath = ""; // Se asignara durante importaci�n
+            meta.libraryPath = ""; // Se asignara durante importación
 
             if (meta.Save(metaPath)) {
                 metasCreated++;
             }
         }
         else {
-            // Verificar si necesita actualizaci�n
+            // Verificar si necesita actualización
             MetaFile meta = MetaFile::Load(metaPath);
             long long currentTimestamp = GetFileTimestamp(assetPath);
 
@@ -242,7 +253,7 @@ bool MetaFileManager::NeedsReimport(const std::string& assetPath) {
     std::string metaPath = GetMetaPath(assetPath);
 
     if (!std::filesystem::exists(metaPath)) {
-        return true; // No hay .meta, necesita importaci�n
+        return true; // No hay .meta, necesita importación
     }
 
     MetaFile meta = MetaFile::Load(metaPath);
