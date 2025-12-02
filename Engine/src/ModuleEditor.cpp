@@ -77,8 +77,21 @@ bool ModuleEditor::PreUpdate()
 
     if (sceneWindow)
     {
+        ImVec2 oldSize = sceneViewportSize;
         sceneViewportPos = sceneWindow->GetViewportPos();
         sceneViewportSize = sceneWindow->GetViewportSize();
+
+        // Update camera aspect ratio when viewport size changes
+        if (sceneViewportSize.x > 0 && sceneViewportSize.y > 0 &&
+            (oldSize.x != sceneViewportSize.x || oldSize.y != sceneViewportSize.y))
+        {
+            float sceneAspect = sceneViewportSize.x / sceneViewportSize.y;
+            ComponentCamera* editorCamera = Application::GetInstance().camera->GetEditorCamera();
+            if (editorCamera)
+            {
+                editorCamera->SetAspectRatio(sceneAspect);
+            }
+        }
     }
 
     return true;
@@ -127,8 +140,23 @@ bool ModuleEditor::Update()
 
     if (sceneWindow)
     {
+        ImVec2 oldSize = sceneViewportSize;
         sceneViewportPos = sceneWindow->GetViewportPos();
         sceneViewportSize = sceneWindow->GetViewportSize();
+
+        // Update camera aspect ratio when viewport size changes
+        if (sceneViewportSize.x > 0 && sceneViewportSize.y > 0 &&
+            (oldSize.x != sceneViewportSize.x || oldSize.y != sceneViewportSize.y))
+        {
+            float sceneAspect = sceneViewportSize.x / sceneViewportSize.y;
+            ComponentCamera* editorCamera = Application::GetInstance().camera->GetEditorCamera();
+            if (editorCamera)
+            {
+                editorCamera->SetAspectRatio(sceneAspect);
+                LOG_DEBUG("Updated camera aspect ratio to %.3f (viewport: %.0fx%.0f)",
+                    sceneAspect, sceneViewportSize.x, sceneViewportSize.y);
+            }
+        }
     }
 
     UpdateCurrentWindow();

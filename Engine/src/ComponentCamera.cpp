@@ -69,12 +69,12 @@ void ComponentCamera::UpdateViewMatrix()
     if (transform)
     {
         glm::mat4 globalMatrix = transform->GetGlobalMatrix();
-        glm::vec3 position = glm::vec3(globalMatrix[3]);
-        // En OpenGL, forward es -Z local
-        glm::vec3 forward = -glm::normalize(glm::vec3(globalMatrix[2]));
-        glm::vec3 up = glm::normalize(glm::vec3(globalMatrix[1]));
 
-        viewMatrix = glm::lookAt(position, position + forward, up);
+        viewMatrix = glm::inverse(globalMatrix);
+
+        // Debug
+        glm::vec3 position = glm::vec3(globalMatrix[3]);
+        glm::vec3 forward = -glm::normalize(glm::vec3(globalMatrix[2]));
     }
 }
 
@@ -297,43 +297,37 @@ void ComponentCamera::FocusOnTarget(const glm::vec3& targetPosition, float targe
 
 glm::vec3 ComponentCamera::ScreenToWorldRay(int mouseX, int mouseY, int screenWidth, int screenHeight) const
 {
-    LOG_DEBUG("=== ScreenToWorldRay ===");
-    LOG_DEBUG("Input: mouse(%d, %d) screen(%d x %d)", mouseX, mouseY, screenWidth, screenHeight);
+    // Calculate aspect ratio from the provided dimensions
+    float actualAspectRatio = (float)screenWidth / (float)screenHeight;
 
-    // Normalize screen coordinates to [-1, 1] (NDC)
+    // Use the correct projection matrix for this specific viewport
+    glm::mat4 correctProjection = glm::perspective(glm::radians(fov), actualAspectRatio, nearPlane, farPlane);
+
+    // Normalize to NDC [-1, 1]
     float x = (2.0f * mouseX) / screenWidth - 1.0f;
     float y = 1.0f - (2.0f * mouseY) / screenHeight;
 
-    LOG_DEBUG("NDC coords: x=%.3f, y=%.3f", x, y);
+    // Create two points: one at near plane, one at far plane
+    glm::vec4 rayStartNDC = glm::vec4(x, y, -1.0f, 1.0f);
+    glm::vec4 rayEndNDC = glm::vec4(x, y, 1.0f, 1.0f);
 
-    // Create ray in clip space (pointing into the screen)
-    glm::vec4 rayClip = glm::vec4(x, y, -1.0f, 1.0f);
-    LOG_DEBUG("Ray clip: (%.3f, %.3f, %.3f, %.3f)", rayClip.x, rayClip.y, rayClip.z, rayClip.w);
-
-    // Transform to eye/camera space
-    glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
-    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
-    LOG_DEBUG("Ray eye: (%.3f, %.3f, %.3f, %.3f)", rayEye.x, rayEye.y, rayEye.z, rayEye.w);
+    // Inverse of view-projection matrix
+    glm::mat4 invVP = glm::inverse(correctProjection * viewMatrix);
 
     // Transform to world space
-    glm::vec4 rayWorld = glm::inverse(viewMatrix) * rayEye;
-    LOG_DEBUG("Ray world (before normalize): (%.3f, %.3f, %.3f, %.3f)",
-        rayWorld.x, rayWorld.y, rayWorld.z, rayWorld.w);
+    glm::vec4 rayStartWorld = invVP * rayStartNDC;
+    glm::vec4 rayEndWorld = invVP * rayEndNDC;
 
-    glm::vec3 rayDir = glm::normalize(glm::vec3(rayWorld));
+    // Perspective divide
+    rayStartWorld /= rayStartWorld.w;
+    rayEndWorld /= rayEndWorld.w;
 
-    LOG_DEBUG("Final ray direction: (%.3f, %.3f, %.3f)", rayDir.x, rayDir.y, rayDir.z);
-    LOG_DEBUG("Ray length: %.3f (should be ~1.0)", glm::length(rayDir));
-
-    // Also log camera info
-    glm::vec3 camPos = GetPosition();
-    glm::vec3 camFront = GetFront();
-    LOG_DEBUG("Camera pos: (%.2f, %.2f, %.2f)", camPos.x, camPos.y, camPos.z);
-    LOG_DEBUG("Camera front: (%.3f, %.3f, %.3f)", camFront.x, camFront.y, camFront.z);
-    LOG_DEBUG("======================");
+    // Calculate ray direction
+    glm::vec3 rayDir = glm::normalize(glm::vec3(rayEndWorld - rayStartWorld));
 
     return rayDir;
 }
+
 void ComponentCamera::GetFrustumCorners(glm::vec3 corners[8]) const
 {
     // Get camera properties
