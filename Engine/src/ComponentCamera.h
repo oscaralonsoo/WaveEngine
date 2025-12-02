@@ -53,8 +53,7 @@ public:
     void ResetPanInput() { firstPan = true; }
 
     // Camera utilities
-    void FocusOnTarget(const glm::vec3& targetPosition, float targetRadius = 1.0f);
-    void SetOrbitTarget(const glm::vec3& target) { orbitTarget = target; }
+    void FocusOnTarget(const glm::vec3& targetPosition, float targetRadius = 1.0f, float viewportAspectRatio = 0.0f);    void SetOrbitTarget(const glm::vec3& target) { orbitTarget = target; }
     glm::vec3 GetOrbitTarget() const { return orbitTarget; }
     glm::vec3 ScreenToWorldRay(int mouseX, int mouseY, int screenWidth, int screenHeight) const;
 

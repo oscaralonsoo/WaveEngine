@@ -352,50 +352,91 @@ bool Input::PreUpdate()
 		cameraTransform->SetPosition(cameraPos);
 	}
 
-	// Focus on selected object with F key
 	if (keyboard[SDL_SCANCODE_F] == KEY_DOWN)
 	{
 		if (Application::GetInstance().selectionManager->HasSelection())
 		{
-			GameObject* selected = Application::GetInstance().selectionManager->GetSelectedObject();
-			if (selected)
+			// Obtener to los objetos seleccionados
+			const std::vector<GameObject*>& selectedObjects =
+				Application::GetInstance().selectionManager->GetSelectedObjects();
+
+			if (!selectedObjects.empty())
 			{
-				ComponentMesh* mesh = static_cast<ComponentMesh*>(selected->GetComponent(ComponentType::MESH));
-				Transform* transform = static_cast<Transform*>(selected->GetComponent(ComponentType::TRANSFORM));
+				// Calcular AABB combinado que englobe to los objetos seleccionados
+				glm::vec3 combinedMin(FLT_MAX);
+				glm::vec3 combinedMax(-FLT_MAX);
+				bool hasValidAABB = false;
 
-				if (mesh && mesh->HasMesh() && transform)
+				for (GameObject* obj : selectedObjects)
 				{
-					glm::vec3 localMin = mesh->GetAABBMin();
-					glm::vec3 localMax = mesh->GetAABBMax();
-					glm::vec3 localCenter = (localMin + localMax) * 0.5f;
+					if (!obj) continue;
 
-					glm::mat4 globalMatrix = transform->GetGlobalMatrix();
-					glm::vec3 worldCenter = glm::vec3(globalMatrix * glm::vec4(localCenter, 1.0f));
+					ComponentMesh* mesh = static_cast<ComponentMesh*>(obj->GetComponent(ComponentType::MESH));
+					Transform* transform = static_cast<Transform*>(obj->GetComponent(ComponentType::TRANSFORM));
 
-					glm::vec3 localSize = localMax - localMin;
-					float radius = glm::length(localSize) * 0.5f;
+					if (mesh && mesh->HasMesh() && transform)
+					{
+						glm::vec3 localMin = mesh->GetAABBMin();
+						glm::vec3 localMax = mesh->GetAABBMax();
+						glm::mat4 globalMatrix = transform->GetGlobalMatrix();
 
-					glm::vec3 scale = transform->GetScale();
-					float maxScale = glm::max(glm::max(scale.x, scale.y), scale.z);
-					radius *= maxScale;
+						// Transformar las 8 esquinas del AABB local a mundo
+						glm::vec3 corners[8] = {
+							glm::vec3(globalMatrix * glm::vec4(localMin.x, localMin.y, localMin.z, 1.0f)),
+							glm::vec3(globalMatrix * glm::vec4(localMax.x, localMin.y, localMin.z, 1.0f)),
+							glm::vec3(globalMatrix * glm::vec4(localMin.x, localMax.y, localMin.z, 1.0f)),
+							glm::vec3(globalMatrix * glm::vec4(localMax.x, localMax.y, localMin.z, 1.0f)),
+							glm::vec3(globalMatrix * glm::vec4(localMin.x, localMin.y, localMax.z, 1.0f)),
+							glm::vec3(globalMatrix * glm::vec4(localMax.x, localMin.y, localMax.z, 1.0f)),
+							glm::vec3(globalMatrix * glm::vec4(localMin.x, localMax.y, localMax.z, 1.0f)),
+							glm::vec3(globalMatrix * glm::vec4(localMax.x, localMax.y, localMax.z, 1.0f))
+						};
 
-					if (radius < 0.5f)
+						// Expandir el AABB combinado con todas las esquinas
+						for (int i = 0; i < 8; ++i)
+						{
+							combinedMin = glm::min(combinedMin, corners[i]);
+							combinedMax = glm::max(combinedMax, corners[i]);
+						}
+
+						hasValidAABB = true;
+					}
+					else if (transform)
+					{
+						// Si no tiene mesh, usar solo su posición
+						glm::mat4 globalMatrix = transform->GetGlobalMatrix();
+						glm::vec3 position = glm::vec3(globalMatrix[3]);
+
+						combinedMin = glm::min(combinedMin, position);
+						combinedMax = glm::max(combinedMax, position);
+						hasValidAABB = true;
+					}
+				}
+
+				if (hasValidAABB)
+				{
+					// Calcular centro y radio del AABB combinado
+					glm::vec3 worldCenter = (combinedMin + combinedMax) * 0.5f;
+					glm::vec3 worldSize = combinedMax - combinedMin;
+
+					// Usar la dimensión máxima del AABB combinado
+					float maxDimension = glm::max(glm::max(worldSize.x, worldSize.y), worldSize.z);
+					float radius = maxDimension * 0.5f;
+
+					if (radius < 0.1f)
 						radius = 1.0f;
 
-					camera->FocusOnTarget(worldCenter, radius);
-					camera->SetOrbitTarget(worldCenter);
+					// Obtener el aspect ratio del viewport
+					ImVec2 sceneSize = Application::GetInstance().editor->sceneViewportSize;
+					float viewportAspectRatio = sceneSize.x / sceneSize.y;
 
-					LOG_DEBUG("Focused camera on '%s' at position (%.2f, %.2f, %.2f) with radius %.2f",
-						selected->GetName().c_str(), worldCenter.x, worldCenter.y, worldCenter.z, radius);
-				}
-				else if (transform)
-				{
-					glm::mat4 globalMatrix = transform->GetGlobalMatrix();
-					glm::vec3 position = glm::vec3(globalMatrix[3]);
-					camera->FocusOnTarget(position, 2.0f);
-					camera->SetOrbitTarget(position);
-					LOG_DEBUG("Focused camera on '%s' at position (%.2f, %.2f, %.2f)",
-						selected->GetName().c_str(), position.x, position.y, position.z);
+					LOG_DEBUG("Focus on %d object(s): worldSize(%.2f,%.2f,%.2f) maxDim=%.2f radius=%.2f",
+						(int)selectedObjects.size(),
+						worldSize.x, worldSize.y, worldSize.z,
+						maxDimension, radius);
+
+					camera->FocusOnTarget(worldCenter, radius, viewportAspectRatio);
+					camera->SetOrbitTarget(worldCenter);
 				}
 			}
 		}

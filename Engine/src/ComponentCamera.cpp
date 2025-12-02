@@ -1,4 +1,4 @@
-#include "ComponentCamera.h"
+﻿#include "ComponentCamera.h"
 #include "GameObject.h"
 #include "Transform.h"
 #include <glm/gtc/quaternion.hpp>
@@ -14,7 +14,7 @@ ComponentCamera::ComponentCamera(GameObject* owner)
     fov(45.0f),
     aspectRatio(16.0f / 9.0f),
     nearPlane(0.1f),
-    farPlane(100.0f),
+    farPlane(500.0f),
     yaw(-90.0f),
     pitch(0.0f),
     lastX(400.0f),
@@ -274,24 +274,45 @@ void ComponentCamera::HandlePanInput(float xoffset, float yoffset)
     orbitTarget += offset;
 }
 
-void ComponentCamera::FocusOnTarget(const glm::vec3& targetPosition, float targetRadius)
+void ComponentCamera::FocusOnTarget(const glm::vec3& targetPosition, float targetRadius, float viewportAspectRatio)
 {
     orbitTarget = targetPosition;
-    orbitDistance = targetRadius * 0.05f;
 
-    if (orbitDistance < 2.0f)
-        orbitDistance = 2.0f;
+    float actualAspectRatio = (viewportAspectRatio > 0.0f) ? viewportAspectRatio : aspectRatio;
 
-    if (orbitDistance > 30.0f)
-        orbitDistance = 30.0f;
+    float halfFovVertical = glm::radians(fov / 2.0f);
+
+    float margin = 1.5f;
+
+    // Calcular distancia para que quepa verticalmente
+    float distanceVertical = (targetRadius * margin) / tan(halfFovVertical);
+
+    // Calcular distancia para que quepa horizontalmente usando el aspect ratio correcto
+    float halfFovHorizontal = atan(tan(halfFovVertical) * actualAspectRatio);
+    float distanceHorizontal = (targetRadius * margin) / tan(halfFovHorizontal);
+
+    // Usar la mayor distancia
+    orbitDistance = glm::max(distanceVertical, distanceHorizontal);
+
+    // Aplicar solo un límite mínimo razonable
+    float minDist = nearPlane * 2.0f;
+    if (orbitDistance < minDist) {
+        orbitDistance = minDist;
+    }
 
     UpdateCameraVectors();
+
+    LOG_DEBUG("ANTES de SetPosition: orbitDistance=%.2f, farPlane=%.2f, nearPlane=%.2f",
+        orbitDistance, farPlane, nearPlane);
 
     Transform* transform = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
     if (transform)
     {
         glm::vec3 newPosition = orbitTarget - cameraFront * orbitDistance;
         transform->SetPosition(newPosition);
+
+        LOG_DEBUG("DESPUÉS de SetPosition: position=(%.2f,%.2f,%.2f)",
+            newPosition.x, newPosition.y, newPosition.z);
     }
 }
 
