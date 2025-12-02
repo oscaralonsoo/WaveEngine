@@ -152,16 +152,8 @@ bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::
         return false;
     }
 
-    LOG_DEBUG("[TextureImporter] Texture validation passed:");
-    LOG_DEBUG("  Width: %u", texture.width);
-    LOG_DEBUG("  Height: %u", texture.height);
-    LOG_DEBUG("  Channels: %u", texture.channels);
-    LOG_DEBUG("  Pixels pointer: %p", texture.pixels);
-    LOG_DEBUG("  Expected size: %zu bytes", expectedSize);
-
     std::ofstream file(fullPath, std::ios::binary);
     if (!file.is_open()) {
-        LOG_DEBUG("[TextureImporter] ERROR: Could not open file for writing: %s", fullPath.c_str());
         return false;
     }
 
@@ -196,9 +188,6 @@ bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::
     }
 
     file.close();
-
-    LOG_DEBUG("[TextureImporter] Texture saved successfully!");
-    LOG_DEBUG("  File size: %.2f KB", (sizeof(TextureHeader) + header.dataSize) / 1024.0f);
 
     return true;
 }
@@ -297,7 +286,7 @@ std::string TextureImporter::GenerateTextureFilename(const std::string& original
         canonicalPath = originalPath;
     }
 
-    // convert to lwercase
+    // convert to lowercase
     std::transform(canonicalPath.begin(), canonicalPath.end(),
         canonicalPath.begin(), ::tolower);
 
@@ -326,18 +315,16 @@ std::string TextureImporter::GenerateTextureFilename(const std::string& original
     std::hash<std::string> hasher;
     size_t hashValue = hasher(canonicalPath);
 
-    std::string originalExtension = path.extension().string();
-    std::transform(originalExtension.begin(), originalExtension.end(),
-        originalExtension.begin(), ::tolower);
-
+    // IMPORTANTE: Usar extensión .texture para nuestro formato custom
     std::stringstream ss;
-    ss << basename << "_" << std::hex << hashValue << originalExtension;  // ← .png, .jpg, etc.
+    ss << basename << "_" << std::hex << hashValue << ".texture";  // ← CORREGIDO
 
     std::string result = ss.str();
     LOG_DEBUG("[TextureImporter] Generated filename: %s", result.c_str());
 
     return result;
 }
+
 unsigned int TextureImporter::GetOpenGLFormat(unsigned int channels) {
     switch (channels) {
     case 1: return 0x1903; // GL_RED

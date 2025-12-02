@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <algorithm>
 #include <limits>
+#include <filesystem>
 #include "Application.h"
 #include "GameObject.h"
 #include "Transform.h"
@@ -15,6 +16,7 @@
 #include "ComponentMaterial.h"
 #include "MetaFile.h"
 #include "Log.h"
+#include "TextureImporter.h" 
 
 FileSystem::FileSystem() : Module() {}
 FileSystem::~FileSystem() {}
@@ -26,10 +28,13 @@ bool FileSystem::Awake()
 
 bool FileSystem::Start()
 {
-    // Inicializar estructura de Library
+   
     LibraryManager::Initialize();
     MetaFileManager::Initialize();
-    LOG_CONSOLE("FileSystem initialized");
+    LOG_CONSOLE("[2/4] MetaFileManager initialized");
+
+    MetaFileManager::ScanAssets();
+    ImportAssetsToLibrary();
 
     // Get executable directory
     char buffer[MAX_PATH];
@@ -56,9 +61,6 @@ bool FileSystem::Start()
 
     if (!assetsFound)
     {
-        LOG_CONSOLE("ERROR: Assets folder not found");
-        LOG_DEBUG("Attempted path: %s", assetsPath.c_str());
-
         // Create fallback geometry
         GameObject* pyramidObject = new GameObject("Pyramid");
         ComponentMesh* meshComp = static_cast<ComponentMesh*>(pyramidObject->CreateComponent(ComponentType::MESH));
@@ -69,12 +71,10 @@ bool FileSystem::Start()
         root->AddChild(pyramidObject);
         Application::GetInstance().scene->RebuildOctree();
 
-        LOG_CONSOLE("Using fallback geometry");
         return true;
     }
 
     std::string housePath = assetsPath + "\\BakerHouse.fbx";
-    LOG_CONSOLE("Loading default scene...");
 
     GameObject* houseModel = LoadFBXAsGameObject(housePath);
 
@@ -82,13 +82,10 @@ bool FileSystem::Start()
     {
         GameObject* root = Application::GetInstance().scene->GetRoot();
         root->AddChild(houseModel);
-        LOG_CONSOLE("Default model loaded successfully");
         Application::GetInstance().scene->RebuildOctree();
     }
     else
     {
-        LOG_CONSOLE("WARNING: Couldn't load default model, using fallback geometry");
-        LOG_DEBUG("Failed to load: %s", housePath.c_str());
 
         GameObject* pyramidObject = new GameObject("Pyramid");
         ComponentMesh* meshComp = static_cast<ComponentMesh*>(pyramidObject->CreateComponent(ComponentType::MESH));
@@ -113,21 +110,16 @@ bool FileSystem::Update()
 
         if (fileType == DROPPED_FBX)
         {
-            LOG_CONSOLE("Loading dropped model...");
-            LOG_DEBUG("File: %s", filePath.c_str());
 
             GameObject* loadedModel = LoadFBXAsGameObject(filePath);
             if (loadedModel != nullptr)
             {
                 GameObject* root = Application::GetInstance().scene->GetRoot();
                 root->AddChild(loadedModel);
-                LOG_CONSOLE("Model loaded: %s", loadedModel->GetName().c_str());
                 Application::GetInstance().scene->RebuildOctree();
             }
             else
             {
-                LOG_CONSOLE("ERROR: Failed to load model");
-                LOG_DEBUG("File: %s", filePath.c_str());
             }
         }
         else if (fileType == DROPPED_TEXTURE)
@@ -145,18 +137,9 @@ bool FileSystem::Update()
                         successCount++;
                     }
                 }
-
-                if (successCount > 0) {
-                    LOG_CONSOLE("Texture applied to %d object(s)", successCount);
-                }
-                else {
-                    LOG_CONSOLE("Failed to apply texture");
-                }
-                LOG_DEBUG("Applied to %d/%zu objects from: %s", successCount, selectedObjects.size(), filePath.c_str());
             }
             else
             {
-                LOG_CONSOLE("Loading texture...");
                 Application::GetInstance().renderer->LoadTexture(filePath);
             }
         }
@@ -488,4 +471,232 @@ bool FileSystem::ApplyTextureToGameObject(GameObject* obj, const std::string& te
     }
 
     return applied;
+}
+
+void FileSystem::ImportAssetsToLibrary()
+{
+    std::string assetsPath = LibraryManager::GetAssetsRoot();
+
+    int imported = 0;
+    int skipped = 0;
+    int errors = 0;
+    int totalFiles = 0;
+    int metaFiles = 0;
+    int unknownTypes = 0;
+
+    try {
+        // Recorrer RECURSIVAMENTE
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(assetsPath))
+        {
+            totalFiles++;
+
+            std::string fullPath = entry.path().string();
+            std::string filename = entry.path().filename().string();
+            std::string extension = entry.path().extension().string();
+
+            // Solo archivos regulares
+            if (!entry.is_regular_file()) {
+                continue;
+            }
+
+            // Ignorar .meta
+            if (extension == ".meta") {
+                metaFiles++;
+                continue;
+            }
+
+            // Verificar tipo
+            AssetType type = MetaFile::GetAssetType(extension);
+            LOG_CONSOLE("  Asset type: %d", static_cast<int>(type));
+
+            if (type == AssetType::UNKNOWN) {
+                unknownTypes++;
+                LOG_CONSOLE("  -> Skipping (unknown type)");
+                continue;
+            }
+
+            LOG_CONSOLE("  -> VALID ASSET DETECTED!");
+
+            // Verificar .meta
+            std::string metaPath = fullPath + ".meta";
+            LOG_CONSOLE("  Looking for .meta: %s", metaPath.c_str());
+
+            bool metaExists = std::filesystem::exists(metaPath);
+            LOG_CONSOLE("  .meta exists: %s", metaExists ? "YES" : "NO");
+
+            if (!metaExists) {
+                LOG_CONSOLE("  Creating new .meta...");
+                MetaFile newMeta = MetaFileManager::GetOrCreateMeta(fullPath);
+                bool saved = newMeta.Save(metaPath);
+                LOG_CONSOLE("  .meta created: %s", saved ? "YES" : "NO");
+            }
+
+            // Cargar .meta
+            LOG_CONSOLE("  Loading .meta...");
+            MetaFile meta = MetaFile::Load(metaPath);
+            LOG_CONSOLE("  GUID: %s", meta.guid.c_str());
+            LOG_CONSOLE("  Type: %d", static_cast<int>(meta.type));
+            LOG_CONSOLE("  Original path: %s", meta.originalPath.c_str());
+            LOG_CONSOLE("  Library path: %s", meta.libraryPath.c_str());
+            LOG_CONSOLE("  Last modified: %lld", meta.lastModified);
+
+            // Verificar si necesita import
+            bool needsImport = false;
+
+            LOG_CONSOLE("  Checking if needs reimport...");
+            if (meta.NeedsReimport(fullPath)) {
+                LOG_CONSOLE("  -> Needs reimport (timestamp changed)");
+                needsImport = true;
+            }
+
+            if (!needsImport && meta.libraryPath.empty()) {
+                LOG_CONSOLE("  -> Needs import (no library path)");
+                needsImport = true;
+            }
+
+            if (!needsImport && !meta.libraryPath.empty()) {
+                bool libExists = std::filesystem::exists(meta.libraryPath);
+                LOG_CONSOLE("  Library file exists: %s", libExists ? "YES" : "NO");
+                if (!libExists) {
+                    LOG_CONSOLE("  -> Needs import (library file missing)");
+                    needsImport = true;
+                }
+            }
+
+            if (!needsImport) {
+                LOG_CONSOLE("  -> SKIPPED (up-to-date)");
+                skipped++;
+                continue;
+            }
+
+            // IMPORTAR
+            LOG_CONSOLE("  *** IMPORTING ***");
+            bool success = false;
+
+            switch (type)
+            {
+            case AssetType::MODEL_FBX:
+                LOG_CONSOLE("  Import type: FBX MODEL");
+                success = ImportFBXToLibrary(fullPath, meta);
+                break;
+
+            case AssetType::TEXTURE_PNG:
+            case AssetType::TEXTURE_JPG:
+            case AssetType::TEXTURE_DDS:
+            case AssetType::TEXTURE_TGA:
+                LOG_CONSOLE("  Import type: TEXTURE");
+                success = ImportTextureToLibrary(fullPath, meta);
+                break;
+
+            default:
+                LOG_CONSOLE("  Import type: UNSUPPORTED");
+                break;
+            }
+
+            if (success) {
+                imported++;
+
+                // Actualizar .meta
+                meta.lastModified = MetaFileManager::GetFileTimestamp(fullPath);
+                bool saved = meta.Save(metaPath);
+                LOG_CONSOLE("  .meta updated: %s", saved ? "YES" : "NO");
+            }
+            else {
+                LOG_CONSOLE("  *** IMPORT FAILED ***");
+                errors++;
+            }
+
+            LOG_CONSOLE("----------------------------------------");
+        }
+    }
+    catch (const std::filesystem::filesystem_error& e) {
+        LOG_CONSOLE("FILESYSTEM ERROR: %s", e.what());
+    }
+    catch (const std::exception& e) {
+        LOG_CONSOLE("EXCEPTION: %s", e.what());
+    }
+}
+
+// Importar un FBX a Library
+bool FileSystem::ImportFBXToLibrary(const std::string& assetPath, MetaFile& meta)
+{
+
+    unsigned int importFlags =
+        aiProcess_Triangulate |
+        aiProcess_GenNormals |
+        aiProcess_FlipUVs |
+        aiProcess_JoinIdenticalVertices |
+        aiProcess_OptimizeMeshes |
+        aiProcess_ValidateDataStructure;
+
+    const aiScene* scene = aiImportFile(assetPath.c_str(), importFlags);
+
+    if (!scene->HasMeshes()) {
+        aiReleaseImport(scene);
+        return false;
+    }
+
+    bool allSuccess = true;
+
+    // Importar todas las meshes
+    for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+    {
+        LOG_CONSOLE("  [FBX Import] Processing mesh %d/%d", i + 1, scene->mNumMeshes);
+
+        aiMesh* aiMesh = scene->mMeshes[i];
+
+        std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
+        std::string fullPath = LibraryManager::GetMeshPath(meshFilename);
+
+        if (!LibraryManager::FileExists(fullPath))
+        {
+            Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
+
+            if (!MeshImporter::SaveToCustomFormat(mesh, meshFilename)) {
+                LOG_CONSOLE("  [FBX Import] ERROR: Failed to save mesh");
+                allSuccess = false;
+            }
+            else {
+                LOG_CONSOLE("  [FBX Import] Mesh saved successfully");
+            }
+        }
+        else {
+            LOG_CONSOLE("  [FBX Import] Mesh already exists, skipping");
+        }
+
+        // Primera mesh -> actualizar meta
+        if (i == 0) {
+            meta.libraryPath = fullPath;
+            LOG_CONSOLE("  [FBX Import] Updated meta library path");
+        }
+    }
+
+    aiReleaseImport(scene);
+
+    return allSuccess;
+}
+
+// Importar una textura a Library
+bool FileSystem::ImportTextureToLibrary(const std::string& assetPath, MetaFile& meta)
+{
+
+    std::string filename = TextureImporter::GenerateTextureFilename(assetPath);
+    std::string fullPath = LibraryManager::GetTexturePath(filename);
+    TextureData texture = TextureImporter::ImportFromFile(assetPath);
+
+    if (!texture.IsValid()) {
+        LOG_CONSOLE("  [Texture Import] ERROR: Failed to import (invalid data)");
+        return false;
+    }
+
+    LOG_CONSOLE("  [Texture Import] Saving to Library...");
+    if (!TextureImporter::SaveToCustomFormat(texture, filename)) {
+        LOG_CONSOLE("  [Texture Import] ERROR: Failed to save");
+        return false;
+    }
+
+    meta.libraryPath = fullPath;
+
+    LOG_CONSOLE("  [Texture Import] SUCCESS");
+    return true;
 }

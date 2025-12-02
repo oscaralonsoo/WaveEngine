@@ -11,6 +11,7 @@ struct aiNode;
 struct aiScene;
 struct aiMesh;
 struct aiMaterial;
+struct MetaFile;
 
 // Vertex data structure
 struct Vertex {
@@ -71,6 +72,8 @@ private:
     // Calculate world-space bounding box
     void CalculateBoundingBox(GameObject* obj, glm::vec3& minBounds, glm::vec3& maxBounds, const glm::mat4& parentTransform);
 
-    //// Detect and return rotation correction (Z-up to Y-up conversion)
-    //glm::quat DetectCorrectionRotation(const aiScene* scene, const glm::vec3& modelSize);
+    // NEW: Import system
+    void ImportAssetsToLibrary();
+    bool ImportFBXToLibrary(const std::string& assetPath, MetaFile& meta);
+    bool ImportTextureToLibrary(const std::string& assetPath, MetaFile& meta);
 };

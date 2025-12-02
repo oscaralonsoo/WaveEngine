@@ -1,8 +1,8 @@
-guid: 69453be8b24a086c4821a567b4305135
+guid: deed8acfd5de1bfbe5f3d22269a47582
 type: 2
-originalPath: C:\Users\aalca\Documents\GitHub\-engine\Engine\Assets\Transparent\grass.png
-libraryPath: 
-lastModified: 134069033712982532
+originalPath: Assets/Transparent/grass.png
+libraryPath: Library/Textures/grass_680023b85d50425.texture
+lastModified: 134090049249589182
 importScale: 1
 generateNormals: 1
 flipUVs: 1

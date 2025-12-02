@@ -4,6 +4,12 @@
 #include <windows.h>
 #include "MetaFile.h"
 #include "TextureImporter.h"
+#include "FileSystem.h"
+#include <assimp/scene.h>
+#include <assimp/postprocess.h> 
+#include <assimp/cimport.h>
+#include "MeshImporter.h"
+
 
 namespace fs = std::filesystem;
 
@@ -134,17 +140,13 @@ void LibraryManager::ClearLibrary() {
 }
 
 void LibraryManager::RegenerateFromAssets() {
-    LOG_CONSOLE("[LibraryManager] Starting Library regeneration from Assets...");
+    LOG_CONSOLE("[LibraryManager] Scanning Assets and importing missing files to Library...");
 
-    // Paso 1: Limpiar Library
-    ClearLibrary();
-
-    // Paso 2: Escanear Assets y crear/actualizar .meta
     MetaFileManager::ScanAssets();
 
-    // Paso 3: Procesar todos los assets que necesitan reimportación
     fs::path assetsPath = GetAssetsRoot();
     int processed = 0;
+    int skipped = 0;
     int errors = 0;
 
     try {
@@ -160,43 +162,88 @@ void LibraryManager::RegenerateFromAssets() {
             AssetType type = MetaFile::GetAssetType(extension);
             if (type == AssetType::UNKNOWN) continue;
 
-            // Verificar si necesita reimportación
-            if (MetaFileManager::NeedsReimport(assetPath.string())) {
-                LOG_DEBUG("Processing asset: %s", assetPath.filename().string().c_str());
+            // Procesar según el tipo
+            switch (type) {
+            case AssetType::MODEL_FBX: {
+                // Verificar si ya está en Library
+                const aiScene* scene = aiImportFile(assetPath.string().c_str(),
+                    aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_FlipUVs);
 
-                // Procesar según el tipo
-                switch (type) {
-                case AssetType::MODEL_FBX:
-                    // El FBXLoader ya maneja esto automáticamente
-                    processed++;
-                    break;
+                if (scene && scene->HasMeshes()) {
+                    bool allMeshesExist = true;
 
-                case AssetType::TEXTURE_PNG:
-                case AssetType::TEXTURE_JPG:
-                case AssetType::TEXTURE_DDS: {
-                    // Importar textura
+                    // Verificar si todas las meshes ya existen
+                    for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+                        aiMesh* aiMesh = scene->mMeshes[i];
+                        std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
+                        std::string fullPath = GetMeshPath(meshFilename);
+
+                        if (!FileExists(fullPath)) {
+                            allMeshesExist = false;
+                            break;
+                        }
+                    }
+
+                    if (!allMeshesExist) {
+                        // Importar todas las meshes del FBX
+                        LOG_DEBUG("Importing FBX: %s", assetPath.filename().string().c_str());
+                        for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+                            aiMesh* aiMesh = scene->mMeshes[i];
+                            Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
+                            std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
+                            MeshImporter::SaveToCustomFormat(mesh, meshFilename);
+                        }
+                        processed++;
+                    }
+                    else {
+                        skipped++;
+                    }
+
+                    aiReleaseImport(scene);
+                }
+                else {
+                    LOG_CONSOLE("[LibraryManager] ERROR: Failed to load FBX: %s",
+                        assetPath.filename().string().c_str());
+                    errors++;
+                }
+                break;
+            }
+
+            case AssetType::TEXTURE_PNG:
+            case AssetType::TEXTURE_JPG:
+            case AssetType::TEXTURE_DDS: {
+                // Verificar si ya está en Library
+                std::string filename = TextureImporter::GenerateTextureFilename(assetPath.string());
+                std::string fullPath = GetTexturePath(filename);
+
+                if (!FileExists(fullPath)) {
+                    LOG_DEBUG("Importing texture: %s", assetPath.filename().string().c_str());
                     TextureData texture = TextureImporter::ImportFromFile(assetPath.string());
                     if (texture.IsValid()) {
-                        std::string filename = TextureImporter::GenerateTextureFilename(assetPath.string());
                         TextureImporter::SaveToCustomFormat(texture, filename);
                         processed++;
                     }
                     else {
-                        LOG_CONSOLE("[LibraryManager] ERROR: Failed to import texture: %s", assetPath.filename().string().c_str());
+                        LOG_CONSOLE("[LibraryManager] ERROR: Failed to import texture: %s",
+                            assetPath.filename().string().c_str());
                         errors++;
                     }
-                    break;
                 }
+                else {
+                    skipped++;
+                }
+                break;
+            }
 
-                default:
-                    break;
-                }
+            default:
+                break;
             }
         }
     }
     catch (const fs::filesystem_error& e) {
-        LOG_CONSOLE("[LibraryManager] ERROR during regeneration: %s", e.what());
+        LOG_CONSOLE("[LibraryManager] ERROR during scan: %s", e.what());
     }
 
-    LOG_CONSOLE("[LibraryManager] Regeneration complete: %d assets processed, %d errors", processed, errors);
+    LOG_CONSOLE("[LibraryManager] Scan complete: %d imported, %d already in Library, %d errors",
+        processed, skipped, errors);
 }

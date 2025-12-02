@@ -558,16 +558,13 @@ bool Renderer::ShouldCullGameObject(GameObject* gameObject, const Frustum& frust
 void Renderer::DrawScene()
 {
     ZoneScoped;
-
     GameObject* root = Application::GetInstance().scene->GetRoot();
     if (root == nullptr)
         return;
 
     SelectionManager* selectionMgr = Application::GetInstance().selectionManager;
     const std::vector<GameObject*>& selectedObjects = selectionMgr->GetSelectedObjects();
-
     ComponentCamera* renderCamera = Application::GetInstance().camera->GetActiveCamera();
-
     ComponentCamera* cullingCamera = Application::GetInstance().camera->GetSceneCamera();
 
     if (cullingCamera == nullptr)
@@ -575,32 +572,26 @@ void Renderer::DrawScene()
         cullingCamera = renderCamera;
     }
 
-    // First pass: render all opaque objects
-    glStencilFunc(GL_ALWAYS, 0, 0xFF);
-    glStencilMask(0x00);
+    // ===== FIRST PASS: Render opaque objects and mark stencil for selected objects =====
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+    // Clear stencil buffer
+    glClear(GL_STENCIL_BUFFER_BIT);
+
+    // Draw all opaque objects, marking selected ones in stencil
     DrawGameObjectRecursive(root, false, renderCamera, cullingCamera);
 
-    if (!renderCamera) return;
-
-    outlineShader->Use();
-    glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE,
-        glm::value_ptr(renderCamera->GetProjectionMatrix()));
-    glUniformMatrix4fv(outlineUniforms.view, 1, GL_FALSE,
-        glm::value_ptr(renderCamera->GetViewMatrix()));
-    outlineShader->SetVec3("outlineColor", glm::vec3(1.0f, 0.41f, 0.71f));
-
-    float outlineThickness = 0.04f;
-    outlineShader->SetFloat("outlineThickness", outlineThickness);
-
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_DEPTH_TEST);
+    // Mark selected objects in stencil buffer
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
     glDepthMask(GL_FALSE);
 
     for (GameObject* selectedObj : selectedObjects)
     {
         if (!selectedObj->IsActive())
             continue;
-
         if (!IsGameObjectAndParentsActive(selectedObj))
             continue;
 
@@ -613,25 +604,30 @@ void Renderer::DrawScene()
         for (Component* comp : meshComponents)
         {
             ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
-
             if (meshComp->IsActive() && meshComp->HasMesh())
             {
                 const Mesh& mesh = meshComp->GetMesh();
-
                 glm::mat4 globalMatrix = transform->GetGlobalMatrix();
-                glUniformMatrix4fv(outlineUniforms.model, 1, GL_FALSE,
-                    glm::value_ptr(globalMatrix));
+
+                defaultShader->Use();
+                glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "model"),
+                    1, GL_FALSE, glm::value_ptr(globalMatrix));
+                glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "view"),
+                    1, GL_FALSE, glm::value_ptr(renderCamera->GetViewMatrix()));
+                glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "projection"),
+                    1, GL_FALSE, glm::value_ptr(renderCamera->GetProjectionMatrix()));
 
                 DrawMesh(mesh);
             }
         }
     }
 
-    glEnable(GL_DEPTH_TEST);
+    // Restore color and depth writing
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glDepthMask(GL_TRUE);
-    defaultShader->Use();
+    glStencilMask(0x00);
 
-    // Third pass: render transparent objects back-to-front
+    // ===== SECOND PASS: Render transparent objects back-to-front =====
     std::vector<TransparentObject> transparentObjects;
     CollectTransparentObjects(root, transparentObjects);
 
@@ -644,7 +640,63 @@ void Renderer::DrawScene()
     {
         DrawGameObjectRecursive(transparentObj.gameObject, true, renderCamera, cullingCamera);
     }
+
+    // ===== THIRD PASS: Draw outlines for selected objects (ALWAYS ON TOP) =====
+    if (!renderCamera) return;
+
+    // Draw outline where stencil != 1 (around the selected object)
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilMask(0x00);
+    glDisable(GL_DEPTH_TEST);
+
+    outlineShader->Use();
+    glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE,
+        glm::value_ptr(renderCamera->GetProjectionMatrix()));
+    glUniformMatrix4fv(outlineUniforms.view, 1, GL_FALSE,
+        glm::value_ptr(renderCamera->GetViewMatrix()));
+    outlineShader->SetVec3("outlineColor", glm::vec3(1.0f, 0.41f, 0.71f));
+
+    float outlineThickness = 0.04f;
+    outlineShader->SetFloat("outlineThickness", outlineThickness);
+
+    for (GameObject* selectedObj : selectedObjects)
+    {
+        if (!selectedObj->IsActive())
+            continue;
+        if (!IsGameObjectAndParentsActive(selectedObj))
+            continue;
+
+        Transform* transform = static_cast<Transform*>(selectedObj->GetComponent(ComponentType::TRANSFORM));
+        if (transform == nullptr) continue;
+
+        const std::vector<Component*>& meshComponents =
+            selectedObj->GetComponentsOfType(ComponentType::MESH);
+
+        for (Component* comp : meshComponents)
+        {
+            ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
+            if (meshComp->IsActive() && meshComp->HasMesh())
+            {
+                const Mesh& mesh = meshComp->GetMesh();
+                glm::mat4 globalMatrix = transform->GetGlobalMatrix();
+
+                glUniformMatrix4fv(outlineUniforms.model, 1, GL_FALSE,
+                    glm::value_ptr(globalMatrix));
+
+                DrawMesh(mesh);
+            }
+        }
+    }
+
+    // Restore render state
+    glStencilMask(0xFF);
+    glStencilFunc(GL_ALWAYS, 0, 0xFF);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_STENCIL_TEST);
+
+    defaultShader->Use();
 }
+
 void Renderer::DrawAllAABBs(GameObject* gameObject)
 {
     if (!gameObject || !gameObject->IsActive())
