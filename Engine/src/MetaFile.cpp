@@ -45,6 +45,22 @@ AssetType MetaFile::GetAssetType(const std::string& extension) {
     return AssetType::UNKNOWN;
 }
 
+void MetaFile::AddLibraryPath(const std::string& path) {
+    if (path.empty()) return;
+
+    // Evitar duplicados
+    for (const auto& existingPath : libraryPaths) {
+        if (existingPath == path) return;
+    }
+
+    libraryPaths.push_back(path);
+
+    // Actualizar libraryPath principal con el primer path
+    if (libraryPath.empty() && !libraryPaths.empty()) {
+        libraryPath = libraryPaths[0];
+    }
+}
+
 bool MetaFile::Save(const std::string& metaFilePath) const {
     std::ofstream file(metaFilePath);
     if (!file.is_open()) {
@@ -385,22 +401,6 @@ std::string MetaFileManager::GetAssetFromUID(UID uid) {
     }
 
     return "";  // No encontrado
-}
-
-void MetaFile::AddLibraryPath(const std::string& path) {
-    if (path.empty()) return;
-
-    // Evitar duplicados
-    for (const auto& existingPath : libraryPaths) {
-        if (existingPath == path) return;
-    }
-
-    libraryPaths.push_back(path);
-
-    // Actualizar libraryPath principal con el primer path
-    if (libraryPath.empty() && !libraryPaths.empty()) {
-        libraryPath = libraryPaths[0];
-    }
 }
 
 long long MetaFileManager::GetFileTimestamp(const std::string& filePath) {

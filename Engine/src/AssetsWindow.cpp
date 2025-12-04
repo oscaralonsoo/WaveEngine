@@ -4,7 +4,7 @@
 #include "LibraryManager.h"
 #include "MetaFile.h"
 #include "ModuleResources.h"
-#include "Log.h"  
+#include "Log.h"
 
 AssetsWindow::AssetsWindow()
     : EditorWindow("Assets"), selectedAsset(nullptr), iconSize(64.0f),
@@ -21,6 +21,135 @@ AssetsWindow::AssetsWindow()
     LOG_CONSOLE("Absolute path: %s", fs::absolute(currentPath).string().c_str());
 }
 
+AssetsWindow::~AssetsWindow()
+{
+}
+
+std::string AssetsWindow::TruncateFileName(const std::string& name, float maxWidth) const
+{
+    ImVec2 textSize = ImGui::CalcTextSize(name.c_str());
+
+    if (textSize.x <= maxWidth)
+        return name;
+
+    std::string truncated = name;
+    std::string suffix = "...";
+    ImVec2 suffixSize = ImGui::CalcTextSize(suffix.c_str());
+
+    while (truncated.length() > 3)
+    {
+        truncated = truncated.substr(0, truncated.length() - 1);
+        ImVec2 currentSize = ImGui::CalcTextSize((truncated + suffix).c_str());
+
+        if (currentSize.x <= maxWidth)
+            return truncated + suffix;
+    }
+
+    return suffix;
+}
+
+void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, const ImVec2& size)
+{
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    ImVec4 buttonColor = asset.isDirectory ?
+        ImVec4(0.8f, 0.7f, 0.3f, 1.0f) :
+        (asset.inMemory ? ImVec4(0.3f, 0.8f, 0.3f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+    ImU32 color = ImGui::ColorConvertFloat4ToU32(buttonColor);
+    ImU32 outlineColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+
+    ImVec2 center = ImVec2(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f);
+    float padding = size.x * 0.15f;
+
+    if (asset.isDirectory)
+    {
+        // Dibujar carpeta
+        float w = size.x - padding * 2;
+        float h = size.y - padding * 2;
+        ImVec2 topLeft(pos.x + padding, pos.y + padding + h * 0.2f);
+        ImVec2 bottomRight(pos.x + size.x - padding, pos.y + size.y - padding);
+
+        // Pestaña de la carpeta
+        ImVec2 tabStart(topLeft.x, topLeft.y);
+        ImVec2 tabEnd(topLeft.x + w * 0.4f, topLeft.y);
+        ImVec2 tabTop(topLeft.x + w * 0.35f, pos.y + padding);
+
+        drawList->AddQuadFilled(tabStart, tabEnd, tabTop, tabStart, color);
+        drawList->AddRectFilled(topLeft, bottomRight, color, 3.0f);
+        drawList->AddRect(topLeft, bottomRight, outlineColor, 3.0f, 0, 2.0f);
+    }
+    else if (asset.extension == ".fbx" || asset.extension == ".obj")
+    {
+        // Dibujar cubo 3D
+        float cubeSize = (size.x - padding * 2) * 0.6f;
+        ImVec2 p1(center.x - cubeSize * 0.5f, center.y);
+        ImVec2 p2(center.x + cubeSize * 0.5f, center.y);
+        ImVec2 p3(center.x, center.y - cubeSize * 0.7f);
+        ImVec2 p4(center.x, center.y + cubeSize * 0.7f);
+
+        drawList->AddTriangleFilled(p1, p2, p3, color);
+        drawList->AddTriangleFilled(p1, p2, p4, ImGui::ColorConvertFloat4ToU32(ImVec4(buttonColor.x * 0.7f, buttonColor.y * 0.7f, buttonColor.z * 0.7f, 1.0f)));
+        drawList->AddTriangle(p1, p2, p3, outlineColor, 2.0f);
+        drawList->AddTriangle(p1, p2, p4, outlineColor, 2.0f);
+    }
+    else if (asset.extension == ".png" || asset.extension == ".jpg" || asset.extension == ".jpeg" || asset.extension == ".dds")
+    {
+        // Dibujar imagen (rectángulo con esquinas)
+        float w = size.x - padding * 2;
+        float h = size.y - padding * 2;
+        ImVec2 topLeft(pos.x + padding, pos.y + padding);
+        ImVec2 bottomRight(pos.x + size.x - padding, pos.y + size.y - padding);
+
+        drawList->AddRectFilled(topLeft, bottomRight, color, 3.0f);
+        drawList->AddRect(topLeft, bottomRight, outlineColor, 3.0f, 0, 2.0f);
+
+        // Agregar "montañas" dentro
+        ImVec2 m1(topLeft.x + w * 0.2f, topLeft.y + h * 0.7f);
+        ImVec2 m2(topLeft.x + w * 0.4f, topLeft.y + h * 0.4f);
+        ImVec2 m3(topLeft.x + w * 0.6f, topLeft.y + h * 0.7f);
+        drawList->AddTriangleFilled(m1, m2, m3, ImGui::ColorConvertFloat4ToU32(ImVec4(0.3f, 0.3f, 0.3f, 0.8f)));
+
+        // Sol
+        drawList->AddCircleFilled(ImVec2(topLeft.x + w * 0.75f, topLeft.y + h * 0.25f), w * 0.1f, ImGui::ColorConvertFloat4ToU32(ImVec4(1.0f, 1.0f, 0.3f, 0.8f)));
+    }
+    else if (asset.extension == ".wav" || asset.extension == ".ogg" || asset.extension == ".mp3")
+    {
+        // Dibujar onda de audio
+        float w = size.x - padding * 2;
+        float h = size.y - padding * 2;
+        ImVec2 start(pos.x + padding, center.y);
+
+        int bars = 5;
+        float barWidth = w / (bars * 2);
+        for (int i = 0; i < bars; i++)
+        {
+            float barHeight = h * 0.3f * (1.0f + sin(i * 0.8f) * 0.7f);
+            ImVec2 p1(start.x + i * barWidth * 2, center.y - barHeight * 0.5f);
+            ImVec2 p2(start.x + i * barWidth * 2 + barWidth, center.y + barHeight * 0.5f);
+            drawList->AddRectFilled(p1, p2, color, 2.0f);
+        }
+    }
+    else
+    {
+        // Archivo genérico (hoja de papel)
+        float w = size.x - padding * 2;
+        float h = size.y - padding * 2;
+        ImVec2 topLeft(pos.x + padding, pos.y + padding);
+        ImVec2 bottomRight(pos.x + size.x - padding, pos.y + size.y - padding);
+
+        drawList->AddRectFilled(topLeft, bottomRight, color, 3.0f);
+        drawList->AddRect(topLeft, bottomRight, outlineColor, 3.0f, 0, 2.0f);
+
+        // Líneas de texto
+        for (int i = 0; i < 3; i++)
+        {
+            float y = topLeft.y + h * 0.3f + i * h * 0.15f;
+            drawList->AddLine(ImVec2(topLeft.x + w * 0.2f, y), ImVec2(bottomRight.x - w * 0.2f, y), outlineColor, 2.0f);
+        }
+    }
+}
+
 void AssetsWindow::Draw()
 {
     if (!isOpen) return;
@@ -31,7 +160,6 @@ void AssetsWindow::Draw()
         firstDraw = false;
     }
 
-    // Delete confirmation popup
     if (showDeleteConfirmation) {
         ImGui::OpenPopup("Delete Asset?");
         showDeleteConfirmation = false;
@@ -72,7 +200,6 @@ void AssetsWindow::Draw()
     {
         isHovered = ImGui::IsWindowHovered();
 
-        // toolbar
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
 
         if (ImGui::Button("Refresh"))
@@ -142,7 +269,6 @@ void AssetsWindow::Draw()
 
         ImGui::Separator();
 
-        // split view
         ImGui::BeginChild("FolderTree", ImVec2(200, 0), true);
         DrawFolderTree(assetsRootPath, "Assets");
         ImGui::EndChild();
@@ -270,15 +396,20 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
     ImGui::PushID(asset.path.c_str());
     ImGui::BeginGroup();
 
-    const char* icon = GetAssetIcon(asset.extension);
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 0.3f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
 
-    ImVec4 buttonColor = asset.isDirectory ?
-        ImVec4(0.8f, 0.7f, 0.3f, 1.0f) :
-        (asset.inMemory ? ImVec4(0.3f, 0.8f, 0.3f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+    bool clicked = ImGui::Button("##icon", ImVec2(iconSize, iconSize));
 
-    ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
+    ImGui::PopStyleColor(3);
 
-    if (ImGui::Button(icon, ImVec2(iconSize, iconSize)))
+    ImVec2 buttonPos = ImGui::GetItemRectMin();
+    DrawIconShape(asset, buttonPos, ImVec2(iconSize, iconSize));
+
+    bool isButtonHovered = ImGui::IsItemHovered();
+
+    if (clicked)
     {
         if (asset.isDirectory)
         {
@@ -291,9 +422,7 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
         }
     }
 
-    ImGui::PopStyleColor();
-
-    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+    if (isButtonHovered && ImGui::IsMouseDoubleClicked(0))
     {
         if (!asset.isDirectory)
         {
@@ -305,8 +434,14 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
         }
     }
 
+    std::string displayName = asset.name;
+    if (!isButtonHovered)
+    {
+        displayName = TruncateFileName(asset.name, iconSize);
+    }
+
     ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + iconSize);
-    ImGui::TextWrapped("%s", asset.name.c_str());
+    ImGui::TextWrapped("%s", displayName.c_str());
     ImGui::PopTextWrapPos();
 
     if (asset.inMemory)
@@ -316,7 +451,6 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
 
     ImGui::EndGroup();
 
-    // Context Menu with Delete option
     std::string popupID = "AssetContextMenu##" + asset.path;
     if (ImGui::BeginPopupContextItem(popupID.c_str()))
     {
@@ -367,7 +501,6 @@ bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
         }
         else
         {
-            // 1. Load .meta file to get UID and library paths
             std::string metaPath = asset.path + ".meta";
             unsigned long long uid = 0;
             std::vector<std::string> libraryPaths;
@@ -378,7 +511,6 @@ bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
                 libraryPaths = meta.GetAllLibraryPaths();
             }
 
-            // 2. Delete library files
             for (const auto& libPath : libraryPaths) {
                 if (!libPath.empty() && fs::exists(libPath)) {
                     LOG_CONSOLE("[AssetsWindow] Deleting library file: %s", libPath.c_str());
@@ -386,19 +518,16 @@ bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
                 }
             }
 
-            // 3. Delete .meta file
             if (fs::exists(metaPath)) {
                 LOG_CONSOLE("[AssetsWindow] Deleting meta file: %s", metaPath.c_str());
                 fs::remove(metaPath);
             }
 
-            // 4. Delete asset file
             if (fs::exists(asset.path)) {
                 LOG_CONSOLE("[AssetsWindow] Deleting asset file: %s", asset.path.c_str());
                 fs::remove(asset.path);
             }
 
-            // 5. Remove from ModuleResources
             if (uid != 0 && Application::GetInstance().resources) {
                 Application::GetInstance().resources->RemoveResource(uid);
             }
@@ -417,7 +546,6 @@ bool AssetsWindow::DeleteDirectory(const fs::path& dirPath)
     LOG_CONSOLE("[AssetsWindow] Deleting directory: %s", dirPath.string().c_str());
 
     try {
-        // 1. Collect UIDs and library paths from .meta files
         std::vector<std::pair<unsigned long long, std::vector<std::string>>> filesToDelete;
 
         for (const auto& entry : fs::recursive_directory_iterator(dirPath)) {
@@ -429,7 +557,6 @@ bool AssetsWindow::DeleteDirectory(const fs::path& dirPath)
             }
         }
 
-        // 2. Delete library files and remove from resources
         for (const auto& [uid, libraryPaths] : filesToDelete) {
             for (const auto& libPath : libraryPaths) {
                 if (!libPath.empty() && fs::exists(libPath)) {
@@ -443,7 +570,6 @@ bool AssetsWindow::DeleteDirectory(const fs::path& dirPath)
             }
         }
 
-        // 3. Delete entire directory
         fs::remove_all(dirPath);
 
         LOG_CONSOLE("[AssetsWindow] Directory deleted successfully");
@@ -525,20 +651,13 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
 
 const char* AssetsWindow::GetAssetIcon(const std::string& extension) const
 {
-    if (extension == ".fbx" || extension == ".obj")
-        return "MODEL";
-    if (extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".dds")
-        return "IMG";
-    if (extension == ".mesh")
-        return "MESH";
-    if (extension == ".texture")
-        return "TEX";
-    if (extension == ".wav" || extension == ".ogg" || extension == ".mp3")
-        return "AUDIO";
-    if (extension.empty())
-        return "FOLDER";
-
-    return "FILE";
+    if (extension.empty()) return "[DIR]";
+    if (extension == ".fbx" || extension == ".obj") return "[3D]";
+    if (extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".dds") return "[IMG]";
+    if (extension == ".mesh") return "[MSH]";
+    if (extension == ".texture") return "[TEX]";
+    if (extension == ".wav" || extension == ".ogg" || extension == ".mp3") return "[SND]";
+    return "[FILE]";
 }
 
 bool AssetsWindow::IsAssetFile(const std::string& extension) const

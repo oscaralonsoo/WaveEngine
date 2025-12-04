@@ -36,7 +36,7 @@ struct MetaFile {
     std::string originalPath;
 
     std::string libraryPath;                    // Path principal (para compatibilidad)
-    std::vector<std::string> libraryPaths;     
+    std::vector<std::string> libraryPaths;
 
     long long lastModified = 0;
     ImportSettings importSettings;
@@ -55,6 +55,7 @@ struct MetaFile {
     static std::string MakeAbsoluteFromProject(const std::string& relativePath);
 
     const std::vector<std::string>& GetAllLibraryPaths() const { return libraryPaths; }
+    void AddLibraryPath(const std::string& path);
 };
 
 // Manager para archivos .meta

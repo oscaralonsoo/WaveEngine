@@ -13,7 +13,7 @@ class ConsoleWindow;
 class SceneWindow;
 class GameObject;
 struct Mesh;
-struct AssetsWindow;
+class AssetsWindow;
 
 enum class EditorWindowType
 {

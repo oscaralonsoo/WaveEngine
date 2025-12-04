@@ -5,24 +5,26 @@
 #include <vector>
 #include <filesystem>
 
+struct ImVec2;
+
 namespace fs = std::filesystem;
 
 struct AssetEntry
 {
     std::string name;
     std::string path;
-    bool isDirectory;
+    bool isDirectory = false;
     std::string extension;
-    unsigned long long uid;
-    bool inMemory;
-    int references;
+    unsigned long long uid = 0;
+    bool inMemory = false;
+    int references = 0;
 };
 
 class AssetsWindow : public EditorWindow
 {
 public:
     AssetsWindow();
-    ~AssetsWindow() override = default;
+    ~AssetsWindow() override;
 
     void Draw() override;
 
@@ -38,6 +40,8 @@ private:
 
     const char* GetAssetIcon(const std::string& extension) const;
     bool IsAssetFile(const std::string& extension) const;
+    std::string TruncateFileName(const std::string& name, float maxWidth) const;
+    void DrawIconShape(const AssetEntry& asset, const ImVec2& pos, const ImVec2& size);
 
 private:
     std::string assetsRootPath;
