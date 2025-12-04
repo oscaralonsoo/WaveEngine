@@ -14,6 +14,7 @@
 #include "ModuleEditor.h"
 #include "SelectionManager.h"
 #include "ModuleCamera.h" 
+#include "ModuleResources.h" 
 
 class Module;
 
@@ -63,6 +64,7 @@ public:
     std::shared_ptr<ModuleCamera> camera;
     std::shared_ptr<ModuleEditor> editor;
     std::shared_ptr<Grid> grid;
+    std::shared_ptr<ModuleResources> resources;
 
     SelectionManager* selectionManager;
 

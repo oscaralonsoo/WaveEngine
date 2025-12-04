@@ -3,7 +3,11 @@
 #include <random>
 #include <iomanip>
 #include <iostream>
+#include <algorithm>
 #include <windows.h>
+#include "Log.h"
+
+// ========== MetaFile Implementation ==========
 
 std::string MetaFile::GenerateGUID() {
     std::random_device rd;
@@ -21,6 +25,13 @@ std::string MetaFile::GenerateGUID() {
     return ss.str();
 }
 
+UID MetaFile::GenerateUID() {
+    std::random_device rd;
+    std::mt19937_64 gen(rd());
+    std::uniform_int_distribution<UID> dis;
+    return dis(gen);
+}
+
 AssetType MetaFile::GetAssetType(const std::string& extension) {
     std::string ext = extension;
     std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
@@ -29,7 +40,7 @@ AssetType MetaFile::GetAssetType(const std::string& extension) {
     if (ext == ".png") return AssetType::TEXTURE_PNG;
     if (ext == ".jpg" || ext == ".jpeg") return AssetType::TEXTURE_JPG;
     if (ext == ".dds") return AssetType::TEXTURE_DDS;
-    if (ext == ".tga") return AssetType::TEXTURE_TGA;  
+    if (ext == ".tga") return AssetType::TEXTURE_TGA;
 
     return AssetType::UNKNOWN;
 }
@@ -47,17 +58,94 @@ bool MetaFile::Save(const std::string& metaFilePath) const {
 
     // ESCRIBIR LOS DATOS
     file << "guid: " << guid << "\n";
+    file << "uid: " << uid << "\n";
     file << "type: " << static_cast<int>(type) << "\n";
-    file << "originalPath: " << relativeOriginalPath << "\n";  
-    file << "libraryPath: " << relativeLibraryPath << "\n";    
+    file << "originalPath: " << relativeOriginalPath << "\n";
+    file << "libraryPath: " << relativeLibraryPath << "\n";
     file << "lastModified: " << lastModified << "\n";
     file << "importScale: " << importSettings.importScale << "\n";
-    file << "generateNormals: " << (importSettings.generateNormals ? "1" : "0") << "\n";  // ← 1/0
-    file << "flipUVs: " << (importSettings.flipUVs ? "1" : "0") << "\n";                  // ← 1/0
-    file << "optimizeMeshes: " << (importSettings.optimizeMeshes ? "1" : "0") << "\n";    // ← 1/0
+    file << "generateNormals: " << (importSettings.generateNormals ? "1" : "0") << "\n";
+    file << "flipUVs: " << (importSettings.flipUVs ? "1" : "0") << "\n";
+    file << "optimizeMeshes: " << (importSettings.optimizeMeshes ? "1" : "0") << "\n";
+    file << "generateMipmaps: " << (importSettings.generateMipmaps ? "1" : "0") << "\n";
+    file << "wrapMode: " << importSettings.wrapMode << "\n";
 
     file.close();
     return true;
+}
+
+MetaFile MetaFile::Load(const std::string& metaFilePath) {
+    MetaFile meta;
+
+    std::ifstream file(metaFilePath);
+    if (!file.is_open()) {
+        return meta;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        size_t colonPos = line.find(':');
+        if (colonPos == std::string::npos) continue;
+
+        std::string key = line.substr(0, colonPos);
+        std::string value = line.substr(colonPos + 2);
+
+        if (key == "guid") {
+            meta.guid = value;
+        }
+        else if (key == "uid") {
+            meta.uid = std::stoull(value);
+        }
+        else if (key == "type") {
+            meta.type = static_cast<AssetType>(std::stoi(value));
+        }
+        else if (key == "originalPath") {
+            meta.originalPath = MakeAbsoluteFromProject(value);
+        }
+        else if (key == "libraryPath") {
+            meta.libraryPath = MakeAbsoluteFromProject(value);
+        }
+        else if (key == "lastModified") {
+            meta.lastModified = std::stoll(value);
+        }
+        else if (key == "importScale") {
+            meta.importSettings.importScale = std::stof(value);
+        }
+        else if (key == "generateNormals") {
+            meta.importSettings.generateNormals = (value == "1");
+        }
+        else if (key == "flipUVs") {
+            meta.importSettings.flipUVs = (value == "1");
+        }
+        else if (key == "optimizeMeshes") {
+            meta.importSettings.optimizeMeshes = (value == "1");
+        }
+        else if (key == "generateMipmaps") {
+            meta.importSettings.generateMipmaps = (value == "1");
+        }
+        else if (key == "wrapMode") {
+            meta.importSettings.wrapMode = std::stoi(value);
+        }
+    }
+
+    file.close();
+    return meta;
+}
+
+bool MetaFile::NeedsReimport(const std::string& assetPath) const {
+    if (!std::filesystem::exists(assetPath)) {
+        return false;
+    }
+
+    long long currentTimestamp = std::filesystem::last_write_time(assetPath)
+        .time_since_epoch().count();
+
+    // Tolerancia de algunos segundos 
+    const long long tolerance = 20000000000; // unidades de 100 nanosegundos
+
+    long long diff = std::abs(currentTimestamp - lastModified);
+
+    return diff > tolerance;
 }
 
 std::string MetaFile::MakeRelativeToProject(const std::string& absolutePath) {
@@ -84,7 +172,6 @@ std::string MetaFile::MakeRelativeToProject(const std::string& absolutePath) {
         return result;
     }
     catch (...) {
-      
         return absolutePath;
     }
 }
@@ -116,64 +203,9 @@ std::string MetaFile::MakeAbsoluteFromProject(const std::string& relativePath) {
     }
 }
 
-MetaFile MetaFile::Load(const std::string& metaFilePath) {
-    MetaFile meta;
-
-    std::ifstream file(metaFilePath);
-    if (!file.is_open()) {
-        return meta;
-    }
-
-    std::string line;
-    while (std::getline(file, line)) {
-        size_t colonPos = line.find(':');
-        if (colonPos == std::string::npos) continue;
-
-        std::string key = line.substr(0, colonPos);
-        std::string value = line.substr(colonPos + 2);
-
-        if (key == "guid") meta.guid = value;
-        else if (key == "type") meta.type = static_cast<AssetType>(std::stoi(value));
-        else if (key == "originalPath") {
-            // Convertir de relativa a absoluta
-            meta.originalPath = MakeAbsoluteFromProject(value);
-        }
-        else if (key == "libraryPath") {
-            // Convertir de relativa a absoluta
-            meta.libraryPath = MakeAbsoluteFromProject(value);
-        }
-        else if (key == "lastModified") meta.lastModified = std::stoll(value);
-        else if (key == "importScale") meta.importSettings.importScale = std::stof(value);
-        else if (key == "generateNormals") meta.importSettings.generateNormals = (value == "1");
-        else if (key == "flipUVs") meta.importSettings.flipUVs = (value == "1");
-        else if (key == "optimizeMeshes") meta.importSettings.optimizeMeshes = (value == "1");
-    }
-
-    file.close();
-    return meta;
-}
-
-bool MetaFile::NeedsReimport(const std::string& assetPath) const {
-    if (!std::filesystem::exists(assetPath)) {
-        return false;
-    }
-
-    long long currentTimestamp = std::filesystem::last_write_time(assetPath)
-        .time_since_epoch().count();
-
-    // Tolerancia de algunos segundos 
-    const long long tolerance = 20000000000; // u de 100 nanosegundos
-
-    long long diff = std::abs(currentTimestamp - lastModified);
-
-    return diff > tolerance;
-}
-
-
-///// MetaFileManager Implementation/////
+// ========== MetaFileManager Implementation ==========
 
 void MetaFileManager::Initialize() {
-
     ScanAssets();
 }
 
@@ -181,11 +213,14 @@ void MetaFileManager::ScanAssets() {
     std::string assetsPath = LibraryManager::GetAssetsRoot();
 
     if (!std::filesystem::exists(assetsPath)) {
+        LOG_DEBUG("[MetaFileManager] Assets folder not found: %s", assetsPath.c_str());
         return;
     }
 
     int metasCreated = 0;
-    int metasUpdated = 0;
+    int metasExisting = 0;
+
+    LOG_DEBUG("[MetaFileManager] Scanning Assets folder: %s", assetsPath.c_str());
 
     // Iterar recursivamente por Assets/
     for (const auto& entry : std::filesystem::recursive_directory_iterator(assetsPath)) {
@@ -202,31 +237,31 @@ void MetaFileManager::ScanAssets() {
 
         std::string metaPath = GetMetaPath(assetPath);
 
-        // Verificar si .meta existe
+        // SOLO crear .meta si NO existe
         if (!std::filesystem::exists(metaPath)) {
             // Crear nuevo .meta
             MetaFile meta;
+            meta.uid = MetaFile::GenerateUID();
             meta.guid = MetaFile::GenerateGUID();
             meta.type = type;
             meta.originalPath = assetPath;
             meta.lastModified = GetFileTimestamp(assetPath);
-            meta.libraryPath = ""; // Se asignara durante importación
+            meta.libraryPath = ""; // Se asignará durante importación
 
             if (meta.Save(metaPath)) {
                 metasCreated++;
+                LOG_DEBUG("[MetaFileManager] Created meta: %s", metaPath.c_str());
             }
         }
         else {
-            // Verificar si necesita actualización
-            MetaFile meta = MetaFile::Load(metaPath);
-            long long currentTimestamp = GetFileTimestamp(assetPath);
-
-            if (meta.lastModified != currentTimestamp) {
-                metasUpdated++;
-            }
+            // Meta YA existe, NO tocar, solo contar
+            metasExisting++;
+            LOG_DEBUG("[MetaFileManager] Existing meta found: %s", metaPath.c_str());
         }
     }
 
+    LOG_CONSOLE("[MetaFileManager] Scan complete: %d created, %d existing",
+        metasCreated, metasExisting);
 }
 
 MetaFile MetaFileManager::GetOrCreateMeta(const std::string& assetPath) {
@@ -234,11 +269,21 @@ MetaFile MetaFileManager::GetOrCreateMeta(const std::string& assetPath) {
 
     // Intentar cargar .meta existente
     if (std::filesystem::exists(metaPath)) {
-        return MetaFile::Load(metaPath);
+        MetaFile meta = MetaFile::Load(metaPath);
+
+        // Si no tiene UID, asignarlo ahora
+        if (meta.uid == 0) {
+            meta.uid = MetaFile::GenerateUID();
+            meta.Save(metaPath);
+            LOG_DEBUG("[MetaFileManager] Assigned UID=%llu to existing meta", meta.uid);
+        }
+
+        return meta;
     }
 
     // Crear nuevo .meta
     MetaFile meta;
+    meta.uid = MetaFile::GenerateUID();
     meta.guid = MetaFile::GenerateGUID();
     meta.type = MetaFile::GetAssetType(std::filesystem::path(assetPath).extension().string());
     meta.originalPath = assetPath;
@@ -264,10 +309,56 @@ void MetaFileManager::RegenerateLibrary() {
     ScanAssets();
 }
 
-// Private Helpers
+MetaFile MetaFileManager::LoadMeta(const std::string& assetPath) {
+    std::string metaPath = GetMetaPath(assetPath);
 
-std::string MetaFileManager::GetMetaPath(const std::string& assetPath) {
-    return assetPath + ".meta";
+    if (std::filesystem::exists(metaPath)) {
+        return MetaFile::Load(metaPath);
+    }
+
+    return MetaFile();  // Retorna meta vacío si no existe
+}
+
+UID MetaFileManager::GetUIDFromAsset(const std::string& assetPath) {
+    MetaFile meta = LoadMeta(assetPath);
+
+    // Si no tiene UID, generar uno y guardarlo
+    if (meta.uid == 0 && std::filesystem::exists(assetPath)) {
+        meta.uid = MetaFile::GenerateUID();
+        std::string metaPath = GetMetaPath(assetPath);
+        meta.Save(metaPath);
+        LOG_DEBUG("[MetaFileManager] Generated new UID=%llu for %s", meta.uid, assetPath.c_str());
+    }
+
+    return meta.uid;
+}
+
+std::string MetaFileManager::GetAssetFromUID(UID uid) {
+    if (uid == 0) return "";
+
+    std::string assetsPath = LibraryManager::GetAssetsRoot();
+
+    if (!std::filesystem::exists(assetsPath)) {
+        return "";
+    }
+
+    // Buscar en todos los .meta files
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(assetsPath)) {
+        if (!entry.is_regular_file()) continue;
+
+        std::string path = entry.path().string();
+        std::string extension = entry.path().extension().string();
+
+        // Solo archivos .meta
+        if (extension != ".meta") continue;
+
+        MetaFile meta = MetaFile::Load(path);
+        if (meta.uid == uid) {
+            return meta.originalPath;
+        }
+    }
+
+    return "";  // No encontrado
 }
 
 long long MetaFileManager::GetFileTimestamp(const std::string& filePath) {
@@ -276,4 +367,10 @@ long long MetaFileManager::GetFileTimestamp(const std::string& filePath) {
     }
 
     return std::filesystem::last_write_time(filePath).time_since_epoch().count();
+}
+
+// Private Helpers
+
+std::string MetaFileManager::GetMetaPath(const std::string& assetPath) {
+    return assetPath + ".meta";
 }
