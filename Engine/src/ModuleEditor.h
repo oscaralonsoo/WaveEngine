@@ -11,6 +11,7 @@ class HierarchyWindow;
 class InspectorWindow;
 class ConsoleWindow;
 class SceneWindow;
+class GameWindow;
 class GameObject;
 struct Mesh;
 
@@ -18,6 +19,7 @@ enum class EditorWindowType
 {
     NONE = 0,
     SCENE,
+    GAME,
     CONFIGURATION,
     HIERARCHY,
     INSPECTOR,
@@ -40,10 +42,14 @@ public:
     // Access to windows
     InspectorWindow* GetInspector() const { return inspectorWindow.get(); }
     SceneWindow* GetSceneWindow() const { return sceneWindow.get(); }
+    GameWindow* GetGameWindow() const { return gameWindow.get(); }
     ConfigurationWindow* GetConfigWindow() const { return configWindow.get(); }
 
     ImVec2 sceneViewportPos = ImVec2(0, 0);
     ImVec2 sceneViewportSize = ImVec2(1280, 720);
+
+    ImVec2 gameViewportPos = ImVec2(0, 0);
+    ImVec2 gameViewportSize = ImVec2(1280, 720);
 
     // Methods for accessing viewport and debug settings
     bool ShouldShowVertexNormals() const;
@@ -72,6 +78,7 @@ private:
     std::unique_ptr<InspectorWindow> inspectorWindow;
     std::unique_ptr<ConsoleWindow> consoleWindow;
     std::unique_ptr<SceneWindow> sceneWindow;
+    std::unique_ptr<GameWindow> gameWindow;
 
     // About window state
     bool showAbout = false;

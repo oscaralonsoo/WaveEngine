@@ -76,6 +76,12 @@ bool ModuleCamera::Update()
         activeCamera->Update();
     }
 
+	// Update scene camera if different from active
+    if (sceneCamera && sceneCamera != activeCamera)
+    {
+        sceneCamera->Update();
+    }
+
     return true;
 }
 

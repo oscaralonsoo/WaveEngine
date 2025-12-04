@@ -104,8 +104,11 @@ bool Renderer::Start()
     outlineUniforms.view = glGetUniformLocation(outlineShader->GetProgramID(), "view");
     outlineUniforms.model = glGetUniformLocation(outlineShader->GetProgramID(), "model");
 
-	// Create framebuffer
+	// Create framebuffer (Scene window)
     CreateFramebuffer(framebufferWidth, framebufferHeight);
+
+    // Create framebuffer (Game window)
+    CreateGameFramebuffer(gameFramebufferWidth, gameFramebufferHeight);
 
     return true;
 }
@@ -322,6 +325,42 @@ bool Renderer::Update()
 
     UnbindFramebuffer();
 
+    // ========================== Game View ==========================
+    ComponentCamera* sceneCamera = Application::GetInstance().camera->GetSceneCamera();
+    ImVec2 gameViewportSize = editor->gameViewportSize;
+
+    if (sceneCamera && gameViewportSize.x > 0 && gameViewportSize.y > 0)
+    {
+        ResizeGameFramebuffer((int)gameViewportSize.x, (int)gameViewportSize.y);
+
+        BindGameFramebuffer();
+
+        glClearColor(clearColorR, clearColorG, clearColorB, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        defaultShader->Use();
+
+        float gameAspectRatio = gameViewportSize.x / gameViewportSize.y;
+        sceneCamera->SetAspectRatio(gameAspectRatio);
+
+        // Update camera matrices 
+        GLuint gameShaderProgram = defaultShader->GetProgramID();
+        glUniformMatrix4fv(glGetUniformLocation(gameShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(sceneCamera->GetProjectionMatrix()));
+        glUniformMatrix4fv(glGetUniformLocation(gameShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(sceneCamera->GetViewMatrix()));
+
+        glActiveTexture(GL_TEXTURE0);
+        glUniform1i(defaultUniforms.texture1, 0);
+
+            if (root != nullptr && root->GetChildren().size() > 0)
+        {
+            DrawScene(sceneCamera, sceneCamera, false);
+        }
+
+        defaultTexture->Unbind();
+
+        UnbindFramebuffer();
+    }
+
     return true;
 }
 
@@ -360,6 +399,7 @@ bool Renderer::CleanUp()
         glDeleteBuffers(1, &normalLinesVBO);
     }
 
+    // Clean up Scene framebuffer
     if (sceneTexture != 0)
     {
         glDeleteTextures(1, &sceneTexture);
@@ -376,6 +416,25 @@ bool Renderer::CleanUp()
     {
         glDeleteFramebuffers(1, &fbo);
         fbo = 0;
+    }
+
+    // Clean up Game framebuffer
+    if (gameTexture != 0)
+    {
+        glDeleteTextures(1, &gameTexture);
+        gameTexture = 0;
+    }
+
+    if (gameRbo != 0)
+    {
+        glDeleteRenderbuffers(1, &gameRbo);
+        gameRbo = 0;
+    }
+
+    if (gameFbo != 0)
+    {
+        glDeleteFramebuffers(1, &gameFbo);
+        gameFbo = 0;
     }
 
     LOG_DEBUG("Renderer cleaned up successfully");
@@ -557,15 +616,29 @@ bool Renderer::ShouldCullGameObject(GameObject* gameObject, const Frustum& frust
 }
 void Renderer::DrawScene()
 {
+    ComponentCamera* renderCamera = Application::GetInstance().camera->GetActiveCamera();
+    ComponentCamera* cullingCamera = Application::GetInstance().camera->GetSceneCamera();
+
+    if (cullingCamera == nullptr)
+    {
+        cullingCamera = renderCamera;
+    }
+
+    DrawScene(renderCamera, cullingCamera, true);
+}
+
+void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* cullingCamera, bool drawEditorFeatures)
+{
     ZoneScoped;
     GameObject* root = Application::GetInstance().scene->GetRoot();
     if (root == nullptr)
         return;
 
+    if (!renderCamera)
+        return;
+
     SelectionManager* selectionMgr = Application::GetInstance().selectionManager;
     const std::vector<GameObject*>& selectedObjects = selectionMgr->GetSelectedObjects();
-    ComponentCamera* renderCamera = Application::GetInstance().camera->GetActiveCamera();
-    ComponentCamera* cullingCamera = Application::GetInstance().camera->GetSceneCamera();
 
     if (cullingCamera == nullptr)
     {
@@ -582,50 +655,54 @@ void Renderer::DrawScene()
     // Draw all opaque objects, marking selected ones in stencil
     DrawGameObjectRecursive(root, false, renderCamera, cullingCamera);
 
-    // Mark selected objects in stencil buffer
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilMask(0xFF);
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    glDepthMask(GL_FALSE);
-
-    for (GameObject* selectedObj : selectedObjects)
+    // Only process selection highlighting if editor features are enabled
+    if (drawEditorFeatures)
     {
-        if (!selectedObj->IsActive())
-            continue;
-        if (!IsGameObjectAndParentsActive(selectedObj))
-            continue;
+        // Mark selected objects in stencil buffer
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+        glDepthMask(GL_FALSE);
 
-        Transform* transform = static_cast<Transform*>(selectedObj->GetComponent(ComponentType::TRANSFORM));
-        if (transform == nullptr) continue;
-
-        const std::vector<Component*>& meshComponents =
-            selectedObj->GetComponentsOfType(ComponentType::MESH);
-
-        for (Component* comp : meshComponents)
+        for (GameObject* selectedObj : selectedObjects)
         {
-            ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
-            if (meshComp->IsActive() && meshComp->HasMesh())
+            if (!selectedObj->IsActive())
+                continue;
+            if (!IsGameObjectAndParentsActive(selectedObj))
+                continue;
+
+            Transform* transform = static_cast<Transform*>(selectedObj->GetComponent(ComponentType::TRANSFORM));
+            if (transform == nullptr) continue;
+
+            const std::vector<Component*>& meshComponents =
+                selectedObj->GetComponentsOfType(ComponentType::MESH);
+
+            for (Component* comp : meshComponents)
             {
-                const Mesh& mesh = meshComp->GetMesh();
-                glm::mat4 globalMatrix = transform->GetGlobalMatrix();
+                ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
+                if (meshComp->IsActive() && meshComp->HasMesh())
+                {
+                    const Mesh& mesh = meshComp->GetMesh();
+                    glm::mat4 globalMatrix = transform->GetGlobalMatrix();
 
-                defaultShader->Use();
-                glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "model"),
-                    1, GL_FALSE, glm::value_ptr(globalMatrix));
-                glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "view"),
-                    1, GL_FALSE, glm::value_ptr(renderCamera->GetViewMatrix()));
-                glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "projection"),
-                    1, GL_FALSE, glm::value_ptr(renderCamera->GetProjectionMatrix()));
+                    defaultShader->Use();
+                    glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "model"),
+                        1, GL_FALSE, glm::value_ptr(globalMatrix));
+                    glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "view"),
+                        1, GL_FALSE, glm::value_ptr(renderCamera->GetViewMatrix()));
+                    glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "projection"),
+                        1, GL_FALSE, glm::value_ptr(renderCamera->GetProjectionMatrix()));
 
-                DrawMesh(mesh);
+                    DrawMesh(mesh);
+                }
             }
         }
-    }
 
-    // Restore color and depth writing
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glDepthMask(GL_TRUE);
-    glStencilMask(0x00);
+        // Restore color and depth writing
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glDepthMask(GL_TRUE);
+        glStencilMask(0x00);
+    }
 
     // ===== SECOND PASS: Render transparent objects back-to-front =====
     std::vector<TransparentObject> transparentObjects;
@@ -642,48 +719,49 @@ void Renderer::DrawScene()
     }
 
     // ===== THIRD PASS: Draw outlines for selected objects (ALWAYS ON TOP) =====
-    if (!renderCamera) return;
-
-    // Draw outline where stencil != 1 (around the selected object)
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilMask(0x00);
-    glDisable(GL_DEPTH_TEST);
-
-    outlineShader->Use();
-    glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE,
-        glm::value_ptr(renderCamera->GetProjectionMatrix()));
-    glUniformMatrix4fv(outlineUniforms.view, 1, GL_FALSE,
-        glm::value_ptr(renderCamera->GetViewMatrix()));
-    outlineShader->SetVec3("outlineColor", glm::vec3(1.0f, 0.41f, 0.71f));
-
-    float outlineThickness = 0.04f;
-    outlineShader->SetFloat("outlineThickness", outlineThickness);
-
-    for (GameObject* selectedObj : selectedObjects)
+    if (drawEditorFeatures)
     {
-        if (!selectedObj->IsActive())
-            continue;
-        if (!IsGameObjectAndParentsActive(selectedObj))
-            continue;
+        // Draw outline where stencil != 1 (around the selected object)
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
 
-        Transform* transform = static_cast<Transform*>(selectedObj->GetComponent(ComponentType::TRANSFORM));
-        if (transform == nullptr) continue;
+        outlineShader->Use();
+        glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE,
+            glm::value_ptr(renderCamera->GetProjectionMatrix()));
+        glUniformMatrix4fv(outlineUniforms.view, 1, GL_FALSE,
+            glm::value_ptr(renderCamera->GetViewMatrix()));
+        outlineShader->SetVec3("outlineColor", glm::vec3(1.0f, 0.41f, 0.71f));
 
-        const std::vector<Component*>& meshComponents =
-            selectedObj->GetComponentsOfType(ComponentType::MESH);
+        float outlineThickness = 0.04f;
+        outlineShader->SetFloat("outlineThickness", outlineThickness);
 
-        for (Component* comp : meshComponents)
+        for (GameObject* selectedObj : selectedObjects)
         {
-            ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
-            if (meshComp->IsActive() && meshComp->HasMesh())
+            if (!selectedObj->IsActive())
+                continue;
+            if (!IsGameObjectAndParentsActive(selectedObj))
+                continue;
+
+            Transform* transform = static_cast<Transform*>(selectedObj->GetComponent(ComponentType::TRANSFORM));
+            if (transform == nullptr) continue;
+
+            const std::vector<Component*>& meshComponents =
+                selectedObj->GetComponentsOfType(ComponentType::MESH);
+
+            for (Component* comp : meshComponents)
             {
-                const Mesh& mesh = meshComp->GetMesh();
-                glm::mat4 globalMatrix = transform->GetGlobalMatrix();
+                ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
+                if (meshComp->IsActive() && meshComp->HasMesh())
+                {
+                    const Mesh& mesh = meshComp->GetMesh();
+                    glm::mat4 globalMatrix = transform->GetGlobalMatrix();
 
-                glUniformMatrix4fv(outlineUniforms.model, 1, GL_FALSE,
-                    glm::value_ptr(globalMatrix));
+                    glUniformMatrix4fv(outlineUniforms.model, 1, GL_FALSE,
+                        glm::value_ptr(globalMatrix));
 
-                DrawMesh(mesh);
+                    DrawMesh(mesh);
+                }
             }
         }
     }
@@ -1367,4 +1445,61 @@ void Renderer::DrawAABB(const glm::vec3& min, const glm::vec3& max, const glm::v
     glDeleteVertexArrays(1, &aabbVAO);
 
     defaultShader->Use();
+}
+
+void Renderer::CreateGameFramebuffer(int width, int height)
+{
+    gameFramebufferWidth = width;
+    gameFramebufferHeight = height;
+
+    glGenFramebuffers(1, &gameFbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, gameFbo);
+
+    glGenTextures(1, &gameTexture);
+    glBindTexture(GL_TEXTURE_2D, gameTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gameTexture, 0);
+
+    glGenRenderbuffers(1, &gameRbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, gameRbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, gameRbo);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        LOG_DEBUG("ERROR::FRAMEBUFFER:: Game framebuffer is not complete!");
+        LOG_CONSOLE("ERROR: Failed to create game framebuffer");
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Renderer::ResizeGameFramebuffer(int width, int height)
+{
+    if (width <= 0 || height <= 0)
+        return;
+
+    if (gameFramebufferWidth == width && gameFramebufferHeight == height)
+        return;
+
+    gameFramebufferWidth = width;
+    gameFramebufferHeight = height;
+
+    // Delete old framebuffer resources
+    if (gameTexture != 0)
+        glDeleteTextures(1, &gameTexture);
+    if (gameRbo != 0)
+        glDeleteRenderbuffers(1, &gameRbo);
+    if (gameFbo != 0)
+        glDeleteFramebuffers(1, &gameFbo);
+
+    CreateGameFramebuffer(width, height);
+}
+
+void Renderer::BindGameFramebuffer()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, gameFbo);
+    glViewport(0, 0, gameFramebufferWidth, gameFramebufferHeight);
 }

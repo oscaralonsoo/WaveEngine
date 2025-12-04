@@ -23,7 +23,7 @@ set(CORE_SRC
     src/Input.h 
     src/Module.h 
     src/Window.cpp 
-    src/Window.h 
+    src/Window.h
 )
 
 set(RENDERING_SRC 
@@ -100,6 +100,8 @@ set(EDITOR_SRC
     src/HierarchyWindow.cpp 
     src/InspectorWindow.h
     src/InspectorWindow.cpp 
+    src/GameWindow.h
+    src/GameWindow.cpp
 )
 
 set(IMPORTERS_SRC 

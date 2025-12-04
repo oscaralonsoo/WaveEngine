@@ -21,6 +21,7 @@
 #include "InspectorWindow.h"
 #include "ConsoleWindow.h"
 #include "SceneWindow.h"
+#include "GameWindow.h"
 
 ModuleEditor::ModuleEditor() : Module()
 {
@@ -63,6 +64,7 @@ bool ModuleEditor::Start()
     inspectorWindow = std::make_unique<InspectorWindow>();
     consoleWindow = std::make_unique<ConsoleWindow>();
     sceneWindow = std::make_unique<SceneWindow>(inspectorWindow.get());
+    gameWindow = std::make_unique<GameWindow>();
 
     LOG_CONSOLE("Editor initialized");
 
@@ -126,7 +128,8 @@ bool ModuleEditor::Update()
 
     ImGui::End();
     
-    sceneWindow->Draw(); 
+    sceneWindow->Draw();
+    gameWindow->Draw();
     configWindow->Draw();
     consoleWindow->Draw();
     hierarchyWindow->Draw();
@@ -158,6 +161,12 @@ bool ModuleEditor::Update()
                     sceneAspect, sceneViewportSize.x, sceneViewportSize.y);
             }
         }
+    }
+
+    if (gameWindow)
+    {
+        gameViewportPos = gameWindow->GetViewportPos();
+        gameViewportSize = gameWindow->GetViewportSize();
     }
 
     UpdateCurrentWindow();
@@ -347,6 +356,10 @@ void ModuleEditor::ShowPlayToolbar()
 
     if (ImGui::Button("Play", ImVec2(40, 0))) {
         app.Play();
+        // Focus the Game window when entering play mode
+        if (gameWindow && gameWindow->IsOpen()) {
+            ImGui::SetWindowFocus("Game");
+        }
     }
 
     if (isPlaying) {
