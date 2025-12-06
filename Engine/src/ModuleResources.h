@@ -4,10 +4,10 @@
 #include <map>
 #include <string>
 
-// Tipo para los UIDs de recursos
+// Resource UIDs
 typedef unsigned long long UID;
 
-// Clase base para todos los recursos
+// Base class for all resources
 class Resource {
 public:
     enum Type {
@@ -30,16 +30,16 @@ public:
     bool IsLoadedToMemory() const { return loadedInMemory; }
     unsigned int GetReferenceCount() const { return referenceCount; }
 
-    // Carga en memoria (implementado por cada tipo de recurso)
+    // Load into memory (subclass implementation)
     virtual bool LoadInMemory() = 0;
 
-    // Descarga de memoria
+    // Unload from memory
     virtual void UnloadFromMemory() = 0;
 
 protected:
     UID uid = 0;
-    std::string assetsFile;      // Ruta en Assets/
-    std::string libraryFile;     // Ruta en Library/
+    std::string assetsFile;      // Path in Assets/
+    std::string libraryFile;     // Path in Library/
     Type type = UNKNOWN;
     unsigned int referenceCount = 0;
     bool loadedInMemory = false;
@@ -47,7 +47,7 @@ protected:
     friend class ModuleResources;
 };
 
-// Módulo central de gestión de recursos
+// Resource management module
 class ModuleResources : public Module {
 public:
     ModuleResources();
@@ -58,51 +58,52 @@ public:
     bool Update() override;
     bool CleanUp() override;
 
-    // Buscar UID de un archivo en Assets/
+    // Find UID from Assets/ file
     UID Find(const char* fileInAssets) const;
 
-    // Importar un nuevo archivo y devolverme su UID
+    // Import new file and return its UID
     UID ImportFile(const char* newFileInAssets);
 
-    // Generar nuevo UID único
+    // Generate unique UID
     UID GenerateNewUID();
 
-    // Solicitar un recurso (incrementa reference count)
+    // Request resource (increment ref count)
     const Resource* RequestResource(UID uid) const;
     Resource* RequestResource(UID uid);
 
-    // Liberar un recurso (decrementa reference count)
+    // Release resource (decrement ref count)
     void ReleaseResource(UID uid);
 
     void ModuleResources::LoadResourcesFromMetaFiles();
     Resource* ModuleResources::CreateNewResourceWithUID(const char* assetsFile, Resource::Type type, UID uid);
     bool ModuleResources::GetResourceInfo(UID uid, std::string& outAssetPath, std::string& outLibraryPath);
-    // Obtener tipo de recurso según extensión
+
+    // Get resource type from file extension
     Resource::Type GetResourceTypeFromExtension(const std::string& extension) const;
     void RemoveResource(UID uid);
 
 private:
-    // Crear un nuevo recurso según su tipo
+    // Create new resource by type
     Resource* CreateNewResource(const char* assetsFile, Resource::Type type);
 
-    // Generar ruta en Library/ para un recurso
+    // Generate Library/ path for resource
     std::string GenerateLibraryPath(Resource* resource);
 
-    // Cargar un recurso desde Library/ a memoria
+    // Load resource from Library/ into memory
     Resource* LoadResourceFromLibrary(UID uid);
 
-    // Guardar metadata de recurso
+    // Save resource metadata
     void SaveResourceMetadata(Resource* resource);
 
-    // Cargar metadata de recurso
+    // Load resource metadata
     bool LoadResourceMetadata(UID uid);
 
-    // Métodos de importación específicos
+    // Type-specific import methods
     bool ImportTexture(Resource* resource, const std::string& assetPath);
     bool ImportMesh(Resource* resource, const std::string& assetPath);
     bool ImportModel(Resource* resource, const std::string& assetPath);
 
 private:
-    std::map<UID, Resource*> resources;  // Mapa UID -> Resource*
-    UID nextUID = 1;                     // Contador para generar UIDs
+    std::map<UID, Resource*> resources;  // UID -> Resource* map
+    UID nextUID = 1;                     // UID counter
 };

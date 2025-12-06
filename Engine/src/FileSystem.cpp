@@ -47,14 +47,14 @@ bool FileSystem::Start()
         }
     }
 
-    // Verify Assets folder exists at project root
+    // Check if Assets folder exists
     std::string assetsPath = currentDir + "\\Assets\\Street";
     DWORD attribs = GetFileAttributesA(assetsPath.c_str());
     bool assetsFound = (attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY));
 
     if (!assetsFound)
     {
-        // Create fallback geometry
+        // Fallback geometry
         GameObject* pyramidObject = new GameObject("Pyramid");
         ComponentMesh* meshComp = static_cast<ComponentMesh*>(pyramidObject->CreateComponent(ComponentType::MESH));
         Mesh pyramidMesh = Primitives::CreatePyramid();
@@ -182,7 +182,7 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
         meta = MetaFile::Load(metaPath);
     }
     else {
-        // Si por alguna razón no existe, créalo
+        // Create if missing for some reason
         meta = MetaFileManager::GetOrCreateMeta(file_path);
     }
 
@@ -197,10 +197,10 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
 
     bool metaChanged = false;
 
-    // Verificar si el archivo fue modificado desde la última importación
+    // Check if file was modified since last import
     long long currentTimestamp = MetaFileManager::GetFileTimestamp(file_path);
     if (meta.lastModified != currentTimestamp) {
-        // El archivo cambió, actualizar metadata
+        // File changed, update metadata
         std::string modelFilename = MeshImporter::GenerateMeshFilename(
             std::filesystem::path(file_path).stem().string()
         );
@@ -209,7 +209,7 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
         metaChanged = true;
     }
 
-    // Solo guardar si hubo cambios
+    // Only save if something changed
     if (metaChanged) {
         meta.Save(metaPath);
         LOG_DEBUG("Meta updated: %s", meta.libraryPath.c_str());
@@ -247,7 +247,7 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
         transform->SetRotationQuat(glm::quat(rotation.w, rotation.x, rotation.y, rotation.z));
     }
 
-    // Process all meshes for this node
+    // Process meshes for this node
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
     {
         unsigned int meshIndex = node->mMeshes[i];
@@ -309,7 +309,7 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
         }
     }
 
-    // Recursively process child nodes
+    // Process child nodes recursively
     for (unsigned int i = 0; i < node->mNumChildren; i++)
     {
         GameObject* child = ProcessNode(node->mChildren[i], scene, directory);
@@ -326,7 +326,7 @@ Mesh FileSystem::ProcessMesh(aiMesh* aiMesh, const aiScene* scene)
     std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
     std::string fullPath = LibraryManager::GetMeshPath(meshFilename);
 
-    // PASO 1: Intentar cargar desde Library
+    // Try loading from Library first
     if (LibraryManager::FileExists(fullPath))
     {
         Mesh loadedMesh = MeshImporter::LoadFromCustomFormat(meshFilename);
@@ -345,7 +345,7 @@ Mesh FileSystem::ProcessMesh(aiMesh* aiMesh, const aiScene* scene)
         }
     }
 
-    // PASO 2: Procesar desde FBX
+    // Process from FBX
     LOG_CONSOLE("Processing mesh from FBX: %d vertices, %d triangles",
         aiMesh->mNumVertices, aiMesh->mNumFaces);
     LOG_DEBUG("New mesh: %s", aiMesh->mName.C_Str());
@@ -470,7 +470,7 @@ bool FileSystem::ApplyTextureToGameObject(GameObject* obj, const std::string& te
         }
     }
 
-    // Aplicar recursivamente a los hijos
+    // Apply recursively to children
     for (GameObject* child : obj->GetChildren())
     {
         if (ApplyTextureToGameObject(child, texturePath))

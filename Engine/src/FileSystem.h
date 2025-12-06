@@ -71,9 +71,4 @@ private:
 
     // Calculate world-space bounding box
     void CalculateBoundingBox(GameObject* obj, glm::vec3& minBounds, glm::vec3& maxBounds, const glm::mat4& parentTransform);
-
-    // NEW: Import system
-    void ImportAssetsToLibrary();
-    bool ImportFBXToLibrary(const std::string& assetPath, MetaFile& meta);
-    bool ImportTextureToLibrary(const std::string& assetPath, MetaFile& meta);
 };

@@ -31,20 +31,20 @@ bool ModuleResources::Awake() {
 bool ModuleResources::Start() {
     LOG_CONSOLE("[ModuleResources] Initializing...");
 
-    // PASO 1: Inicializar Library y MetaFile systems
+    // Init Library and MetaFile systems
     LibraryManager::Initialize();
     MetaFileManager::Initialize();
 
     LOG_CONSOLE("[ModuleResources] Library structure created");
 
-    // PASO 2: Escanear Assets/ y crear archivos .meta con UIDs
+    // Scan Assets/ and create .meta files with UIDs
     MetaFileManager::ScanAssets();
     LOG_CONSOLE("[ModuleResources] Asset metadata synchronized");
 
-    // PASO 3: Registrar todos los recursos desde .meta files ← NUEVO
+    // Register all resources from .meta files
     LoadResourcesFromMetaFiles();
 
-    // PASO 4: Importar todos los archivos de Assets/ a Library/
+    // Import all Assets/ files to Library/
     LOG_CONSOLE("[ModuleResources] Importing assets to Library...");
     LibraryManager::RegenerateFromAssets();
 
@@ -54,15 +54,15 @@ bool ModuleResources::Start() {
 }
 
 bool ModuleResources::Update() {
-    // Aquí se podría implementar hot-reloading
-    // Detectar cambios en Assets/ y reimportar automáticamente
+    // Hot-reloading could go here
+    // Detect changes in Assets/ and reimport automatically
     return true;
 }
 
 bool ModuleResources::CleanUp() {
     LOG_CONSOLE("[ModuleResources] Cleaning up...");
 
-    // Descargar todos los recursos de memoria
+    // Unload all resources from memory
     for (auto& pair : resources) {
         if (pair.second->IsLoadedToMemory()) {
             pair.second->UnloadFromMemory();
@@ -89,21 +89,21 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
     int registered = 0;
     int skipped = 0;
 
-    // Iterar por todos los archivos en Assets/
+    // Iterate all files in Assets/
     for (const auto& entry : std::filesystem::recursive_directory_iterator(assetsPath)) {
         if (!entry.is_regular_file()) continue;
 
         std::string assetPath = entry.path().string();
         std::string extension = entry.path().extension().string();
 
-        // Ignorar .meta files
+        // Skip .meta files
         if (extension == ".meta") continue;
 
-        // Solo procesar tipos soportados
+        // Only process supported types
         AssetType assetType = MetaFile::GetAssetType(extension);
         if (assetType == AssetType::UNKNOWN) continue;
 
-        // Cargar su .meta
+        // Load its .meta
         MetaFile meta = MetaFileManager::LoadMeta(assetPath);
 
         if (meta.uid == 0) {
@@ -112,14 +112,14 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
             continue;
         }
 
-        // Verificar que el archivo Library/ existe
+        // Check Library/ file exists
         if (!meta.libraryPath.empty() && !std::filesystem::exists(meta.libraryPath)) {
             LOG_DEBUG("[ModuleResources] Library file missing: %s", meta.libraryPath.c_str());
             skipped++;
             continue;
         }
 
-        // Crear recurso (sin cargar en memoria aún)
+        // Create resource (don't load into memory yet)
         Resource* resource = nullptr;
         Resource::Type resourceType = Resource::UNKNOWN;
 
@@ -134,7 +134,7 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
 
         case AssetType::MODEL_FBX:
             resourceType = Resource::MODEL;
-            // Por ahora solo registramos, el FBX se maneja diferente
+            // Just register for now, FBX handled differently
             break;
 
         default:
@@ -157,14 +157,14 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
 }
 
 UID ModuleResources::Find(const char* fileInAssets) const {
-    // Primero buscar en el mapa de recursos cargados
+    // First check loaded resources
     for (const auto& pair : resources) {
         if (pair.second->GetAssetFile() == fileInAssets) {
             return pair.second->GetUID();
         }
     }
 
-    // Si no está en memoria, buscar en .meta ← NUEVO
+    // Not in memory, check .meta
     UID uid = MetaFileManager::GetUIDFromAsset(fileInAssets);
     if (uid != 0) {
         LOG_DEBUG("[ModuleResources] Found UID=%llu in meta file", uid);
@@ -176,7 +176,7 @@ UID ModuleResources::Find(const char* fileInAssets) const {
 UID ModuleResources::ImportFile(const char* newFileInAssets) {
     LOG_DEBUG("[ModuleResources] Importing file: %s", newFileInAssets);
 
-    // Cargar o crear .meta (esto asigna UID si no existe)
+    // Load or create .meta (assigns UID if needed)
     MetaFile meta = MetaFileManager::GetOrCreateMeta(newFileInAssets);
 
     if (meta.uid == 0) {
@@ -184,14 +184,14 @@ UID ModuleResources::ImportFile(const char* newFileInAssets) {
         return 0;
     }
 
-    // Verificar si ya existe en recursos
+    // Check if already registered
     auto it = resources.find(meta.uid);
     if (it != resources.end()) {
         LOG_DEBUG("[ModuleResources] Resource already exists with UID: %llu", meta.uid);
         return meta.uid;
     }
 
-    // Determinar tipo de recurso
+    // Figure out resource type
     std::filesystem::path path(newFileInAssets);
     std::string extension = path.extension().string();
     Resource::Type type = GetResourceTypeFromExtension(extension);
@@ -201,14 +201,14 @@ UID ModuleResources::ImportFile(const char* newFileInAssets) {
         return 0;
     }
 
-    // Crear recurso usando el UID del .meta ← IMPORTANTE
+    // Create resource using .meta UID
     Resource* resource = CreateNewResourceWithUID(newFileInAssets, type, meta.uid);
     if (!resource) {
         LOG_DEBUG("[ModuleResources] ERROR: Failed to create resource");
         return 0;
     }
 
-    // Ejecutar importación según el tipo
+    // Run import based on type
     bool importSuccess = false;
 
     switch (type) {
@@ -236,7 +236,7 @@ UID ModuleResources::ImportFile(const char* newFileInAssets) {
         return 0;
     }
 
-    // Actualizar .meta con libraryPath
+    // Update .meta with libraryPath
     bool metaNeedsUpdate = false;
 
     if (meta.libraryPath != resource->libraryFile) {
@@ -290,14 +290,14 @@ Resource* ModuleResources::CreateNewResourceWithUID(const char* assetsFile, Reso
 }
 
 UID ModuleResources::GenerateNewUID() {
-    // Generar UID único usando random + timestamp
+    // Generate unique UID using random + timestamp
     random_device rd;
     mt19937_64 gen(rd());
     uniform_int_distribution<UID> dis;
 
     UID uid = 0;
 
-    // Asegurar que sea único
+    // Make sure it's unique
     do {
         uid = dis(gen);
     } while (resources.find(uid) != resources.end() || uid == 0);
@@ -310,13 +310,13 @@ const Resource* ModuleResources::RequestResource(UID uid) const {
 }
 
 Resource* ModuleResources::RequestResource(UID uid) {
-    // Buscar si el recurso ya está registrado
+    // Check if resource is already registered
     auto it = resources.find(uid);
 
     if (it != resources.end()) {
         Resource* resource = it->second;
 
-        // Si no está en memoria, cargarlo
+        // Load into memory if needed
         if (!resource->IsLoadedToMemory()) {
             LOG_DEBUG("[ModuleResources] Loading resource %llu into memory", uid);
             if (!resource->LoadInMemory()) {
@@ -325,7 +325,7 @@ Resource* ModuleResources::RequestResource(UID uid) {
             }
         }
 
-        // Incrementar reference count
+        // Bump ref count
         resource->referenceCount++;
 
         LOG_DEBUG("[ModuleResources] Resource %llu requested (refs: %u)",
@@ -334,7 +334,7 @@ Resource* ModuleResources::RequestResource(UID uid) {
         return resource;
     }
 
-    // Intentar cargar desde Library/
+    // Try loading from Library/
     LOG_DEBUG("[ModuleResources] Resource %llu not found, trying to load from library", uid);
     Resource* resource = LoadResourceFromLibrary(uid);
 
@@ -363,7 +363,7 @@ void ModuleResources::ReleaseResource(UID uid) {
         LOG_DEBUG("[ModuleResources] Resource %llu released (refs: %u)",
             uid, resource->referenceCount);
 
-        // Si llega a 0, descargar de memoria
+        // Unload from memory when no more refs
         if (resource->referenceCount == 0 && resource->IsLoadedToMemory()) {
             LOG_DEBUG("[ModuleResources] Unloading resource %llu from memory", uid);
             resource->UnloadFromMemory();
@@ -404,7 +404,7 @@ Resource* ModuleResources::CreateNewResource(const char* assetsFile, Resource::T
         resource = new ResourceMesh(uid);
         break;
 
-        // TODO: Añadir otros tipos
+        // TODO: Add other types
 
     default:
         LOG_DEBUG("[ModuleResources] ERROR: Unsupported resource type");
@@ -423,42 +423,42 @@ Resource* ModuleResources::CreateNewResource(const char* assetsFile, Resource::T
 }
 
 std::string ModuleResources::GenerateLibraryPath(Resource* resource) {
-    // La ruta en Library/ se generará según el tipo de recurso
-    // Por ahora retornamos vacío, se llenará durante la importación
+    // Library/ path generated by resource type
+    // For now return empty, filled during import
     return "";
 }
 
 Resource* ModuleResources::LoadResourceFromLibrary(UID uid) {
-    // TODO: Implementar carga desde metadata almacenada
+    // TODO: Load from stored metadata
     LOG_DEBUG("[ModuleResources] LoadResourceFromLibrary not yet implemented");
     return nullptr;
 }
 
 void ModuleResources::SaveResourceMetadata(Resource* resource) {
-    // TODO: Guardar metadata del recurso
+    // TODO: Save resource metadata
 }
 
 bool ModuleResources::LoadResourceMetadata(UID uid) {
-    // TODO: Cargar metadata del recurso
+    // TODO: Load resource metadata
     return false;
 }
 
-// Métodos privados de importación
+// Import methods
 bool ModuleResources::ImportTexture(Resource* resource, const std::string& assetPath) {
     LOG_DEBUG("[ModuleResources] Importing texture: %s", assetPath.c_str());
 
-    // Generar nombre de archivo en Library
+    // Generate filename in Library
     std::string filename = TextureImporter::GenerateTextureFilename(assetPath);
     std::string libraryPath = LibraryManager::GetTexturePath(filename);
 
-    // Verificar si ya existe en Library
+    // Check if already in Library
     if (LibraryManager::FileExists(libraryPath)) {
         LOG_DEBUG("[ModuleResources] Texture already exists in Library, skipping import");
         resource->libraryFile = libraryPath;
         return true;
     }
 
-    // Importar desde archivo original
+    // Import from original file
     TextureData textureData = TextureImporter::ImportFromFile(assetPath);
 
     if (!textureData.IsValid()) {
@@ -466,7 +466,7 @@ bool ModuleResources::ImportTexture(Resource* resource, const std::string& asset
         return false;
     }
 
-    // Guardar en Library
+    // Save to Library
     if (!TextureImporter::SaveToCustomFormat(textureData, filename)) {
         LOG_DEBUG("[ModuleResources] ERROR: Failed to save texture to Library");
         return false;
@@ -486,14 +486,14 @@ bool ModuleResources::ImportMesh(Resource* resource, const std::string& assetPat
 bool ModuleResources::ImportModel(Resource* resource, const std::string& assetPath) {
     LOG_DEBUG("[ModuleResources] Importing model: %s", assetPath.c_str());
 
-    // TODO: Implementar import de modelos FBX
-    // Por ahora dejamos que FileSystem maneje esto
+    // TODO: Implement FBX model import
+    //por ahora lo ahce FileSystem 
 
     return false;
 }
 
 bool ModuleResources::GetResourceInfo(UID uid, std::string& outAssetPath, std::string& outLibraryPath) {
-    // Primero buscar en recursos cargados
+    // First check loaded resources
     auto it = resources.find(uid);
     if (it != resources.end()) {
         outAssetPath = it->second->GetAssetFile();
@@ -501,7 +501,7 @@ bool ModuleResources::GetResourceInfo(UID uid, std::string& outAssetPath, std::s
         return true;
     }
 
-    // Si no está en memoria, buscar en .meta files
+    // Not in memory, check .meta files
     outAssetPath = MetaFileManager::GetAssetFromUID(uid);
     if (!outAssetPath.empty()) {
         MetaFile meta = MetaFileManager::LoadMeta(outAssetPath);
@@ -514,31 +514,29 @@ bool ModuleResources::GetResourceInfo(UID uid, std::string& outAssetPath, std::s
 
 void ModuleResources::RemoveResource(UID uid) {
     auto it = resources.find(uid);
-    
+
     if (it == resources.end()) {
         LOG_DEBUG("[ModuleResources] Resource %llu not found, nothing to remove", uid);
         return;
     }
-    
+
     Resource* resource = it->second;
-    
-    // Check if resource is still being used
+
+    // Warn if resource still has refs
     if (resource->GetReferenceCount() > 0) {
         LOG_CONSOLE("[ModuleResources] WARNING: Removing resource %llu that still has %u references",
             uid, resource->GetReferenceCount());
     }
-    
-    // Unload from memory if loaded
+
+    // Unload if loaded
     if (resource->IsLoadedToMemory()) {
         LOG_DEBUG("[ModuleResources] Unloading resource %llu before removal", uid);
         resource->UnloadFromMemory();
     }
-    
-    // Delete resource object
+
+    // Cleanup
     delete resource;
-    
-    // Remove from map
     resources.erase(it);
-    
+
     LOG_CONSOLE("[ModuleResources] Resource %llu removed from system", uid);
 }
