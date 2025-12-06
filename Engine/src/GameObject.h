@@ -20,6 +20,8 @@ public:
     void AddChild(GameObject* child);
     void RemoveChild(GameObject* child);
     void SetParent(GameObject* newParent);
+    void InsertChildAt(GameObject* child, int index);
+    int GetChildIndex(GameObject* child) const;
 
     void Update();
 

@@ -115,6 +115,30 @@ void GameObject::SetParent(GameObject* newParent) {
     }
 }
 
+void GameObject::InsertChildAt(GameObject* child, int index) {
+    if (child && child != this) {
+        if (child->parent) {
+            child->parent->RemoveChild(child);
+        }
+
+        child->parent = this;
+
+        if (index < 0) index = 0;
+        if (index > static_cast<int>(children.size())) index = static_cast<int>(children.size());
+
+        // Insert child
+        children.insert(children.begin() + index, child);
+    }
+}
+
+int GameObject::GetChildIndex(GameObject* child) const {
+    auto it = std::find(children.begin(), children.end(), child);
+    if (it != children.end()) {
+        return static_cast<int>(std::distance(children.begin(), it));
+    }
+    return -1;
+}
+
 void GameObject::Update() {
     if (!active) return;
 
