@@ -22,6 +22,7 @@
 #include "ConsoleWindow.h"
 #include "SceneWindow.h"
 #include "GameWindow.h"
+#include "AssetsWindow.h"
 
 ModuleEditor::ModuleEditor() : Module()
 {
@@ -65,6 +66,7 @@ bool ModuleEditor::Start()
     consoleWindow = std::make_unique<ConsoleWindow>();
     sceneWindow = std::make_unique<SceneWindow>(inspectorWindow.get());
     gameWindow = std::make_unique<GameWindow>();
+    assetsWindow = std::make_unique<AssetsWindow>();
 
     LOG_CONSOLE("Editor initialized");
 
@@ -134,6 +136,7 @@ bool ModuleEditor::Update()
     consoleWindow->Draw();
     hierarchyWindow->Draw();
     inspectorWindow->Draw();
+    assetsWindow->Draw();
 
     if (showAbout) {
         DrawAboutWindow();
@@ -235,6 +238,12 @@ void ModuleEditor::ShowMenuBar()
             if (ImGui::MenuItem("Inspector", NULL, &inspectorOpen))
             {
                 inspectorWindow->SetOpen(inspectorOpen);
+            }
+
+            bool assetsOpen = assetsWindow->IsOpen();
+            if (ImGui::MenuItem("Assets", NULL, &assetsOpen))
+            {
+                assetsWindow->SetOpen(assetsOpen);
             }
 
             ImGui::EndMenu();
@@ -635,6 +644,10 @@ void ModuleEditor::UpdateCurrentWindow()
 
     if (hierarchyWindow && hierarchyWindow->IsHovered()) {
         lastHoveredWindow = EditorWindowType::HIERARCHY;
+    }
+
+    if (assetsWindow && assetsWindow->IsHovered()) {
+        lastHoveredWindow = EditorWindowType::ASSETS;
     }
 
     if (lastHoveredWindow != EditorWindowType::NONE) {

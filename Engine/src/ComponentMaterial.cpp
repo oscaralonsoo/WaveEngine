@@ -3,9 +3,6 @@
 #include "Texture.h"
 #include <iostream>
 #include "Log.h"
-#include "TextureImporter.h"
-#include "MetaFile.h"
-#include "LibraryManager.h"
 
 ComponentMaterial::ComponentMaterial(GameObject* owner)
     : Component(owner, ComponentType::MATERIAL),
@@ -45,13 +42,6 @@ bool ComponentMaterial::LoadTexture(const std::string& path)
 
         LOG_CONSOLE("Texture loaded: %s", path.c_str());
 
-        // Actualizar metadata
-        MetaFile meta = MetaFileManager::GetOrCreateMeta(path);
-        std::string textureFilename = TextureImporter::GenerateTextureFilename(path);
-        meta.libraryPath = LibraryManager::GetTexturePath(textureFilename);
-        meta.lastModified = MetaFileManager::GetFileTimestamp(path);
-        std::string metaPath = path + ".meta";
-        meta.Save(metaPath);
 
         return true;
     }
@@ -59,6 +49,7 @@ bool ComponentMaterial::LoadTexture(const std::string& path)
     LOG_CONSOLE("Failed to load texture: %s", path.c_str());
     return false;
 }
+
 void ComponentMaterial::CreateCheckerboardTexture()
 {
     texture = std::make_unique<Texture>();

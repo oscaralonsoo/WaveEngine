@@ -1,9 +1,13 @@
-guid: 1103a616e1cb9a6c673f65b845e4e16f
+guid: 69627e7a936c5b49adae4c4bfcd6d5ad
+uid: 15934359037350201684
 type: 2
 originalPath: Assets/Transparent/grass.png
-libraryPath: Library/Textures/grass_b0315c70f4babe00.texture
-lastModified: 134090930125196741
+libraryPath: Library/Textures/grass_680023b85d50425.texture
+libraryPathCount: 0
+lastModified: 134090049249589182
 importScale: 1
 generateNormals: 1
 flipUVs: 1
 optimizeMeshes: 1
+generateMipmaps: 1
+wrapMode: 0

@@ -33,7 +33,7 @@ void TextureImporter::InitDevIL() {
     }
 }
 
-// IMPORT: Load texture using DevIL
+// Load texture using DevIL
 TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
     InitDevIL();
 
@@ -41,7 +41,7 @@ TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
 
     LOG_DEBUG("[TextureImporter] Importing texture: %s", filepath.c_str());
 
-    // Verify file exists
+    // Check file exists
     if (!std::filesystem::exists(filepath)) {
         LOG_DEBUG("[TextureImporter] ERROR: File does not exist: %s", filepath.c_str());
         return texture;
@@ -61,17 +61,17 @@ TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
         return texture;
     }
 
-    // Convert to RGBA format for consistency
+    // Convert to RGBA for consistency
     if (!ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE)) {
         LOG_DEBUG("[TextureImporter] ERROR: Failed to convert to RGBA format");
         ilDeleteImages(1, &imageID);
         return texture;
     }
 
-    // Extract image properties
+    // Get image properties
     texture.width = ilGetInteger(IL_IMAGE_WIDTH);
     texture.height = ilGetInteger(IL_IMAGE_HEIGHT);
-    texture.channels = 4; // We converted to RGBA above
+    texture.channels = 4; // Converted to RGBA above
 
     // Validate dimensions
     if (texture.width == 0 || texture.height == 0) {
@@ -91,14 +91,14 @@ TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
     // Calculate data size
     size_t dataSize = static_cast<size_t>(texture.width) * static_cast<size_t>(texture.height) * 4;
 
-    // Validate data size is reasonable (max 100MB for safety)
+    // Sanity check (max 100MB)
     if (dataSize == 0 || dataSize > 100000000) {
         LOG_DEBUG("[TextureImporter] ERROR: Invalid data size: %zu bytes", dataSize);
         ilDeleteImages(1, &imageID);
         return texture;
     }
 
-    // Allocate memory safely
+    // Allocate memory
     try {
         texture.pixels = new unsigned char[dataSize];
     }
@@ -108,7 +108,7 @@ TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
         return texture;
     }
 
-    // Copy pixel data to our structure
+    // Copy pixel data
     memcpy(texture.pixels, data, dataSize);
 
     LOG_DEBUG("[TextureImporter] Texture imported successfully:");
@@ -117,19 +117,19 @@ TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
     LOG_DEBUG("  Channels: %d", texture.channels);
     LOG_DEBUG("  Data size: %.2f KB", dataSize / 1024.0f);
 
-    // Clean up DevIL resources
+    // Cleanup
     ilDeleteImages(1, &imageID);
 
     return texture;
 }
 
-// SAVE: Save to custom binary format
+// Save to custom binary format
 bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::string& filename) {
     std::string fullPath = LibraryManager::GetTexturePath(filename);
 
     LOG_DEBUG("[TextureImporter] Saving texture to: %s", fullPath.c_str());
 
-    // Validate texture data BEFORE using it
+    // Validate texture data before use
     if (!texture.IsValid()) {
         LOG_DEBUG("[TextureImporter] ERROR: Invalid texture data (IsValid failed)");
         return false;
@@ -161,7 +161,7 @@ bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::
     TextureHeader header;
     header.width = texture.width;
     header.height = texture.height;
-    header.channels = 4; 
+    header.channels = 4;
     header.format = GetOpenGLFormat(4);
     header.dataSize = static_cast<unsigned int>(expectedSize);
     header.hasAlpha = (texture.channels == 4);
@@ -178,7 +178,7 @@ bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::
 
     LOG_DEBUG("[TextureImporter] Header written, writing pixel data...");
 
-    // Write pixel data - aqui ha petado como 67 veces
+    // Write pixel data
     file.write(reinterpret_cast<const char*>(texture.pixels), header.dataSize);
 
     if (!file.good()) {
@@ -192,7 +192,7 @@ bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::
     return true;
 }
 
-// LOAD: Load from custom binary format
+// Load from custom binary format
 TextureData TextureImporter::LoadFromCustomFormat(const std::string& filename) {
     std::string fullPath = LibraryManager::GetTexturePath(filename);
 
@@ -210,7 +210,7 @@ TextureData TextureImporter::LoadFromCustomFormat(const std::string& filename) {
     TextureHeader header;
     file.read(reinterpret_cast<char*>(&header), sizeof(TextureHeader));
 
-    // Validate header data
+    // Validate header
     if (!file.good()) {
         LOG_DEBUG("[TextureImporter] ERROR: Failed to read header");
         file.close();
@@ -225,7 +225,7 @@ TextureData TextureImporter::LoadFromCustomFormat(const std::string& filename) {
     }
 
 
-    // Safety check: max 100MB
+    // Safety check (max 100MB)
     if (header.dataSize > 100000000) {
         LOG_DEBUG("[TextureImporter] ERROR: Data size too large: %u bytes", header.dataSize);
         file.close();
@@ -286,7 +286,7 @@ std::string TextureImporter::GenerateTextureFilename(const std::string& original
         canonicalPath = originalPath;
     }
 
-    // convert to lowercase
+    // Convert to lowercase
     std::transform(canonicalPath.begin(), canonicalPath.end(),
         canonicalPath.begin(), ::tolower);
 
@@ -315,9 +315,9 @@ std::string TextureImporter::GenerateTextureFilename(const std::string& original
     std::hash<std::string> hasher;
     size_t hashValue = hasher(canonicalPath);
 
-    // IMPORTANTE: Usar extensión .texture para nuestro formato custom
+    // Use .texture extension for our custom format
     std::stringstream ss;
-    ss << basename << "_" << std::hex << hashValue << ".texture";  // ← CORREGIDO
+    ss << basename << "_" << std::hex << hashValue << ".texture";
 
     std::string result = ss.str();
     LOG_DEBUG("[TextureImporter] Generated filename: %s", result.c_str());

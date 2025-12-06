@@ -5,32 +5,32 @@
 
 struct TextureData;
 
-// Header structure for custom texture format
+// Header for custom texture format
 struct TextureHeader {
     unsigned int width = 0;
     unsigned int height = 0;
     unsigned int channels = 0;          // 1=Gray, 3=RGB, 4=RGBA
-    unsigned int format = 0;            //  (GL_RGB, GL_RGBA, etc.)
-    unsigned int dataSize = 0;          // Size of pixel data in bytes
+    unsigned int format = 0;            // GL_RGB, GL_RGBA, etc.
+    unsigned int dataSize = 0;          // Pixel data size in bytes
     bool hasAlpha = false;
-    bool compressed = false;            // Future use for DDS compression
+    bool compressed = false;            // Future use for DDS
 };
 
-// Runtime texture data structure
+// Runtime texture data
 struct TextureData {
     unsigned int width = 0;
     unsigned int height = 0;
     unsigned int channels = 0;
-    unsigned char* pixels = nullptr;    // Raw pixel data (RGBA format)
+    unsigned char* pixels = nullptr;    // Raw RGBA pixel data
 
     // Default constructor
     TextureData() = default;
 
-    // Disable copy to prevent double-free
+    // Prevent double-free
     TextureData(const TextureData&) = delete;
     TextureData& operator=(const TextureData&) = delete;
 
-    // Enable move semantics
+    // Move semantics
     TextureData(TextureData&& other) noexcept
         : width(other.width)
         , height(other.height)
@@ -82,25 +82,25 @@ public:
     TextureImporter();
     ~TextureImporter();
 
-    // IMPORT: Load texture using DevIL and convert to our TextureData structure
+    // Load texture via DevIL and convert to TextureData
     static TextureData ImportFromFile(const std::string& filepath);
 
-    // SAVE: Save TextureData to custom binary format in Library/Textures/
+    // Save TextureData to custom binary format in Library/Textures/
     static bool SaveToCustomFormat(const TextureData& texture, const std::string& filename);
 
-    // LOAD: Load from custom binary format back into TextureData structure
+    // Load from custom binary format back to TextureData
     static TextureData LoadFromCustomFormat(const std::string& filename);
 
-    // Utility: Generate unique filename for texture based on source path
+    // Generate unique filename based on source path
     static std::string GenerateTextureFilename(const std::string& originalPath);
 
-    // Utility: Get OpenGL format enum from channel count
+    // Get OpenGL format enum from channel count
     static unsigned int GetOpenGLFormat(unsigned int channels);
 
 private:
-    // Initialize DevIL library (called automatically)
+    // Init DevIL (called automatically)
     static void InitDevIL();
 
-    // Check if DevIL is initialized
+    // DevIL initialization state
     static bool s_devilInitialized;
 };

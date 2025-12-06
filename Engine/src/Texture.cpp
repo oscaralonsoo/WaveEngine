@@ -24,7 +24,7 @@ Texture::~Texture()
 void Texture::CreateCheckerboard()
 {
     LOG_DEBUG("Creating checkerboard pattern texture");
-    // patron checkerboard
+    // Checkerboard pattern
     static GLubyte checkerImage[CHECKERS_HEIGHT][CHECKERS_WIDTH][4];
 
     for (int i = 0; i < CHECKERS_HEIGHT; i++) {
@@ -37,7 +37,7 @@ void Texture::CreateCheckerboard()
         }
     }
 
-    // Generate texture in OpenGL
+    // Generate OpenGL texture
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
@@ -80,7 +80,7 @@ void Texture::InitDevIL()
     }
 }
 
-// Helper function to normalize path separators
+// Normalize path separators
 std::string NormalizePath(const std::string& path)
 {
     std::string normalized = path;
@@ -92,23 +92,23 @@ std::string NormalizePath(const std::string& path)
     return normalized;
 }
 
-// Helper function to check if path is absolute
+// Check if path is absolute
 bool IsAbsolutePath(const std::string& path)
 {
-    // Windows: Check for drive letter (C:, D:, etc.) or UNC path (\\)
+    // Windows: Drive letter (C:, D:, etc.) or UNC path (\\)
     if (path.length() >= 2)
     {
         if (path[1] == ':' || (path[0] == '\\' && path[1] == '\\'))
             return true;
     }
-    // Unix: Check for root (/)
+    // Unix: Root (/)
     if (!path.empty() && path[0] == '/')
         return true;
 
     return false;
 }
 
-// Helper function to check if file exists
+// Check if file exists
 bool FileExists(const std::string& path)
 {
     std::ifstream file(path);
@@ -117,19 +117,19 @@ bool FileExists(const std::string& path)
 
 bool Texture::LoadFromLibraryOrFile(const std::string& path, bool flipVertically)
 {
-    // Generar nombre de archivo en Library
+    // Generate Library filename
     std::string textureFilename = TextureImporter::GenerateTextureFilename(path);
     std::string libraryPath = LibraryManager::GetTexturePath(textureFilename);
 
-    // PASO 1: Verificar si existe en Library (cache)
+    // Try loading from Library cache first
     if (LibraryManager::FileExists(libraryPath)) {
-        LOG_DEBUG(" Texture found in Library: %s", textureFilename.c_str());
+        LOG_DEBUG("Texture found in Library: %s", textureFilename.c_str());
 
-        // Cargar desde el formato custom
+        // Load from custom format
         TextureData loadedTexture = TextureImporter::LoadFromCustomFormat(textureFilename);
 
         if (loadedTexture.IsValid()) {
-            // Crear textura OpenGL desde los datos cargados
+            // Create OpenGL texture from loaded data
             glGenTextures(1, &textureID);
             glBindTexture(GL_TEXTURE_2D, textureID);
 
@@ -154,40 +154,40 @@ bool Texture::LoadFromLibraryOrFile(const std::string& path, bool flipVertically
             height = loadedTexture.height;
             nrChannels = loadedTexture.channels;
 
-            LOG_DEBUG(" Texture loaded from Library cache");
-            LOG_CONSOLE(" Texture loaded from cache: %dx%d", width, height);
+            LOG_DEBUG("Texture loaded from Library cache");
+            LOG_CONSOLE("Texture loaded from cache: %dx%d", width, height);
 
             return true;
         }
         else {
-            LOG_DEBUG(" Cached texture corrupted, reimporting...");
+            LOG_DEBUG("Cached texture corrupted, reimporting...");
         }
     }
 
-    // PASO 2: Si no existe en cache, importar desde archivo original
-    LOG_DEBUG(" Importing texture from source file...");
-    LOG_CONSOLE(" Processing new texture...");
+    // Not in cache, import from original file
+    LOG_DEBUG("Importing texture from source file...");
+    LOG_CONSOLE("Processing new texture...");
 
     TextureData importedTexture = TextureImporter::ImportFromFile(path);
 
     if (!importedTexture.IsValid()) {
-        LOG_DEBUG(" Failed to import texture");
+        LOG_DEBUG("Failed to import texture");
         LOG_CONSOLE("ERROR: Failed to import texture");
         return false;
     }
 
-    // PASO 3: Guardar en Library para futuras cargas
+    // Save to Library for future loads
     bool saveSuccess = TextureImporter::SaveToCustomFormat(importedTexture, textureFilename);
 
     if (saveSuccess) {
-        LOG_DEBUG(" Texture saved to Library: %s", textureFilename.c_str());
-        LOG_CONSOLE(" Texture cached for future loads");
+        LOG_DEBUG("Texture saved to Library: %s", textureFilename.c_str());
+        LOG_CONSOLE("Texture cached for future loads");
     }
     else {
-        LOG_DEBUG(" Warning: Could not cache texture");
+        LOG_DEBUG("Warning: Could not cache texture");
     }
 
-    // PASO 4: Crear textura OpenGL
+    // Create OpenGL texture
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
@@ -212,8 +212,8 @@ bool Texture::LoadFromLibraryOrFile(const std::string& path, bool flipVertically
     height = importedTexture.height;
     nrChannels = importedTexture.channels;
 
-    LOG_DEBUG(" Texture imported and loaded successfully");
-    LOG_CONSOLE(" Texture loaded: %dx%d, %d channels", width, height, nrChannels);
+    LOG_DEBUG("Texture imported and loaded successfully");
+    LOG_CONSOLE("Texture loaded: %dx%d, %d channels", width, height, nrChannels);
 
     return true;
 }

@@ -1,9 +1,13 @@
-guid: 70b6034bdb3dc3d476e163892c6a1327
+guid: a802f8a0cdb70c17eba58bc426bb4dd4
+uid: 11406773169475134032
 type: 2
 originalPath: Assets/Pruebas/LondonHouse_Texture.png
-libraryPath: Library/Textures/londonhouse_texture_f236ae42b17b08cc.texture
-lastModified: 134090930122966215
+libraryPath: Library/Textures/londonhouse_texture_7b65c70c940971d.texture
+libraryPathCount: 0
+lastModified: 134090049246875488
 importScale: 1
 generateNormals: 1
 flipUVs: 1
 optimizeMeshes: 1
+generateMipmaps: 1
+wrapMode: 0

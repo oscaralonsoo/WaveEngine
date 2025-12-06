@@ -102,6 +102,8 @@ set(EDITOR_SRC
     src/InspectorWindow.cpp 
     src/GameWindow.h
     src/GameWindow.cpp
+    src/AssetsWindow.h
+    src/AssetsWindow.cpp 
 )
 
 set(IMPORTERS_SRC 
@@ -113,6 +115,12 @@ set(IMPORTERS_SRC
     src/MetaFile.h 
     src/TextureImporter.cpp 
     src/TextureImporter.h 
+    src/ModuleResources.cpp 
+    src/ModuleResources.h 
+    src/ResourceMesh.cpp 
+    src/ResourceMesh.h 
+    src/ResourceTexture.cpp 
+    src/ResourceTexture.h 
 )
 
 source_group("Source\\Core" FILES ${CORE_SRC})

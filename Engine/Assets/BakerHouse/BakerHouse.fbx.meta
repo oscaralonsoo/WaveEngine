@@ -1,9 +1,15 @@
-guid: 2049db8b0cb4f6cc362e5cf9e73d4a91
+guid: b8e00cc8b8f048374049bb6749c27188
+uid: 10065292122646416645
 type: 1
 originalPath: Assets/BakerHouse/BakerHouse.fbx
 libraryPath: Library/Meshes/chimney_2e7af36ca9a451d4.mesh
-lastModified: 134092591380711567
+libraryPathCount: 2
+libraryPath0: Library/Meshes/chimney_2e7af36ca9a451d4.mesh
+libraryPath1: Library/Meshes/baker_house_d917ec29d8a80295.mesh
+lastModified: 134065480819006763
 importScale: 1
 generateNormals: 1
 flipUVs: 1
 optimizeMeshes: 1
+generateMipmaps: 1
+wrapMode: 0

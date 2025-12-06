@@ -1,9 +1,14 @@
-guid: 45b16d971bda1b0d01c2f82df1f9ad01
+guid: 2044f26b9d64544539ea439f0ed70655
+uid: 8877508115253761641
 type: 1
 originalPath: Assets/Pruebas/LondonHouseFBX.fbx
 libraryPath: Library/Meshes/house_99722e1bd86397b.mesh
-lastModified: 134090930122916212
+libraryPathCount: 1
+libraryPath0: Library/Meshes/house_99722e1bd86397b.mesh
+lastModified: 134090049246807067
 importScale: 1
 generateNormals: 1
 flipUVs: 1
 optimizeMeshes: 1
+generateMipmaps: 1
+wrapMode: 0

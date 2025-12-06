@@ -1,9 +1,13 @@
-guid: 86b83b743f6c09335aa43e16f4fafe60
+guid: 738f13bc609829144f4649b6722effd7
+uid: 18327608308605655976
 type: 2
 originalPath: Assets/Street/Building_V02_C.png
-libraryPath: Library/Textures/building_v02_c_47edcb03ae1c5b2a.texture
-lastModified: 134092591381792554
+libraryPath: Library/Textures/building_v02_c_3d583a5de7b09237.texture
+libraryPathCount: 0
+lastModified: 134092582210109584
 importScale: 1
 generateNormals: 1
 flipUVs: 1
 optimizeMeshes: 1
+generateMipmaps: 1
+wrapMode: 0

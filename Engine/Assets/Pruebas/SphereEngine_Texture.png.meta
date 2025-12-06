@@ -1,9 +1,13 @@
-guid: 15b323d14139133ff0f4d616759b1847
+guid: 0e29feea6bc8f7e023ebe26201a1e6f3
+uid: 4567523999826480982
 type: 2
 originalPath: Assets/Pruebas/SphereEngine_Texture.png
-libraryPath: Library/Textures/sphereengine_texture_fec26341e996a96b.texture
-lastModified: 134090930124047243
+libraryPath: Library/Textures/sphereengine_texture_a385070c1f456610.texture
+libraryPathCount: 0
+lastModified: 134090049248113939
 importScale: 1
 generateNormals: 1
 flipUVs: 1
 optimizeMeshes: 1
+generateMipmaps: 1
+wrapMode: 0

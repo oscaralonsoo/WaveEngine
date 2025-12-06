@@ -1,9 +1,13 @@
-guid: 26b1d1e86cfd115f45203b6f46c13b8b
+guid: 41a228f7119cc1d5ddd5524df1981d71
+uid: 1735759818478498730
 type: 2
 originalPath: Assets/Pruebas/DropShipMain_Texture.png
-libraryPath: Library/Textures/dropshipmain_texture_360390b90fb9ab26.texture
-lastModified: 134090930122210778
+libraryPath: Library/Textures/dropshipmain_texture_f0eec6405c4ed3d1.texture
+libraryPathCount: 0
+lastModified: 134090049245901951
 importScale: 1
 generateNormals: 1
 flipUVs: 1
 optimizeMeshes: 1
+generateMipmaps: 1
+wrapMode: 0

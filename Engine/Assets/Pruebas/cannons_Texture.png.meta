@@ -1,9 +1,13 @@
-guid: 04070d7440acbf9f3a89ff753b443284
+guid: d9bdfe471a9234bcaf27b2957703891e
+uid: 8408334262680180614
 type: 2
 originalPath: Assets/Pruebas/cannons_Texture.png
-libraryPath: Library/Textures/cannons_texture_24f803921a5a0ef0.texture
-lastModified: 134090930125138430
+libraryPath: Library/Textures/cannons_texture_534402e66e6ebb59.texture
+libraryPathCount: 0
+lastModified: 134090049249515529
 importScale: 1
 generateNormals: 1
 flipUVs: 1
 optimizeMeshes: 1
+generateMipmaps: 1
+wrapMode: 0

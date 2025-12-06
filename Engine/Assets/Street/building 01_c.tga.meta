@@ -1,9 +1,13 @@
-guid: 7b6e8acb8091f0a4537f2f88fc802df7
+guid: e3ff5f6a143362896eb36b3f17ec5ba1
+uid: 4783185661379901126
 type: 5
 originalPath: Assets/Street/building 01_c.tga
-libraryPath: Library/Textures/building_01_c_78b1fa3edfaf2b81.texture
-lastModified: 134092591382709641
+libraryPath: 
+libraryPathCount: 0
+lastModified: 134092582208065197
 importScale: 1
 generateNormals: 1
 flipUVs: 1
 optimizeMeshes: 1
+generateMipmaps: 1
+wrapMode: 0

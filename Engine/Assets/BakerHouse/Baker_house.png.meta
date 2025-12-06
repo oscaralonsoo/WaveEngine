@@ -1,9 +1,13 @@
-guid: 74ccb2face378ed372266f785f9b75e1
+guid: 9197d1abc8a06eca2afc731f1637a710
+uid: 10961602616718160300
 type: 2
 originalPath: Assets/BakerHouse/Baker_house.png
-libraryPath: Library/Textures/baker_house_fd0bbb5df8fec8e5.texture
-lastModified: 134092591380959944
+libraryPath: Library/Textures/baker_house_ac6e807796a54516.texture
+libraryPathCount: 0
+lastModified: 134057679635580745
 importScale: 1
 generateNormals: 1
 flipUVs: 1
 optimizeMeshes: 1
+generateMipmaps: 1
+wrapMode: 0

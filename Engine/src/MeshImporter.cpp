@@ -183,7 +183,6 @@ Mesh MeshImporter::LoadFromCustomFormat(const std::string& filename) {
 }
 
 std::string MeshImporter::GenerateMeshFilename(const std::string& originalName) {
-    // Sanitizar nombre: remover espacios y caracteres especiales
     std::string sanitized = originalName;
     if (sanitized.empty()) {
         sanitized = "unnamed_mesh";
@@ -191,17 +190,16 @@ std::string MeshImporter::GenerateMeshFilename(const std::string& originalName) 
 
     std::replace(sanitized.begin(), sanitized.end(), ' ', '_');
 
-    // Remover caracteres especiales
     sanitized.erase(
         std::remove_if(sanitized.begin(), sanitized.end(),
             [](char c) { return !std::isalnum(c) && c != '_'; }),
         sanitized.end()
     );
 
-    // Convertir a minusculas para consistencia
+    // for consistency
     std::transform(sanitized.begin(), sanitized.end(), sanitized.begin(), ::tolower);
 
-    // Generar hash simple del nombre
+    // generate hash
     std::hash<std::string> hasher;
     size_t hashValue = hasher(originalName);
 

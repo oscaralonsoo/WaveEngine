@@ -1,77 +1,78 @@
-#pragma once
+ï»¿#pragma once
 
 #include <string>
-#include <chrono>
+#include <vector>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
 
-// Tipos de assets soportados
+typedef unsigned long long UID;
+
 enum class AssetType {
-    UNKNOWN,
-    MODEL_FBX,
-    TEXTURE_PNG,
-    TEXTURE_JPG,
-    TEXTURE_DDS,
-    TEXTURE_TGA  
+    UNKNOWN = 0,
+    MODEL_FBX = 1,
+    TEXTURE_PNG = 2,
+    TEXTURE_JPG = 3,
+    TEXTURE_DDS = 4,
+    TEXTURE_TGA = 5
 };
 
-// Metadata de un asset
+struct ImportSettings {
+    // Mesh/Model settings
+    float importScale = 1.0f;
+    bool generateNormals = true;
+    bool flipUVs = true;
+    bool optimizeMeshes = true;
+
+    // Texture settings (para futuro)
+    bool generateMipmaps = true;
+    int wrapMode = 0;  // 0=Repeat, 1=Clamp
+};
+
 struct MetaFile {
-    std::string guid;                    // Identificador único
-    AssetType type = AssetType::UNKNOWN; // Tipo de asset
-    std::string originalPath;            // Ruta en Assets/
-    std::string libraryPath;             // Ruta en Library/
-    long long lastModified = 0;          // Timestamp última modificación
+    UID uid = 0;                    // UID Ãºnico del recurso
+    std::string guid;               // GUID
+    AssetType type = AssetType::UNKNOWN;
+    std::string originalPath;
 
-    // Configuración de importación (específica por tipo)
-    struct ImportSettings {
-        float importScale = 1.0f;
-        bool generateNormals = true;
-        bool flipUVs = true;
-        bool optimizeMeshes = true;
-    } importSettings;
+    std::string libraryPath;                    // Path principal (para compatibilidad)
+    std::vector<std::string> libraryPaths;
 
-    // Generar GUID único
+    long long lastModified = 0;
+    ImportSettings importSettings;
+
     static std::string GenerateGUID();
-
-    // Determinar tipo de asset por extensión
+    static UID GenerateUID();
     static AssetType GetAssetType(const std::string& extension);
 
-    // Guardar metadata en archivo .meta
     bool Save(const std::string& metaFilePath) const;
-
-    // Cargar metadata desde archivo .meta
     static MetaFile Load(const std::string& metaFilePath);
 
-    // Verificar si el asset ha sido modificado
     bool NeedsReimport(const std::string& assetPath) const;
 
-    // Convertir ruta absoluta a relativa desde project root
+    // Helpers para rutas relativas
     static std::string MakeRelativeToProject(const std::string& absolutePath);
-
-    // Convertir ruta relativa a absoluta
     static std::string MakeAbsoluteFromProject(const std::string& relativePath);
+
+    const std::vector<std::string>& GetAllLibraryPaths() const { return libraryPaths; }
+    void AddLibraryPath(const std::string& path);
 };
 
-// Manager de archivos .meta
+// Manager para archivos .meta
 class MetaFileManager {
 public:
-    // Inicializar sistema de metadata
     static void Initialize();
-
-    // Escanear carpeta Assets/ y crear/actualizar .meta
     static void ScanAssets();
-
-    // Obtener o crear .meta para un asset
     static MetaFile GetOrCreateMeta(const std::string& assetPath);
-
-    // Verificar si un asset necesita reimportarse
     static bool NeedsReimport(const std::string& assetPath);
-
-    // Regenerar Library/ completa desde Assets/
     static void RegenerateLibrary();
+
+    // Queries Ãºtiles
+    static MetaFile LoadMeta(const std::string& assetPath);
+    static UID GetUIDFromAsset(const std::string& assetPath);
+    static std::string GetAssetFromUID(UID uid);
     static long long GetFileTimestamp(const std::string& filePath);
+
 private:
     static std::string GetMetaPath(const std::string& assetPath);
 };

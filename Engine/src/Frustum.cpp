@@ -48,9 +48,9 @@ const Plane& Frustum::GetPlane(int index) const
 
 void Frustum::ExtractFromMatrix(const glm::mat4& vp)
 {
-    // Extracción de planos del frustum de la matriz View-Projection
-    // En GLM, las matrices son column-major: vp[col][row]
-    // Las normales apuntan HACIA FUERA del frustum
+    // Extract frustum planes from View-Projection matrix
+    // GLM uses column-major order: vp[col][row]
+    // Normals point OUTWARD from frustum
 
     // LEFT plane (col3 + col0)
     planes[PLANE_LEFT].normal.x = vp[0][3] + vp[0][0];
@@ -121,9 +121,9 @@ FrustumTestResult Frustum::ContainsAABB(const glm::vec3& min, const glm::vec3& m
 
         for (int i = 0; i < 8; ++i)
         {
-            // Si la distancia es NEGATIVA, el punto está DENTRO (delante del plano)
-            // Si la distancia es POSITIVA, el punto está FUERA (detrás del plano)
-            if (planes[p].DistanceToPoint(vCorner[i]) < 0.0f)  // CAMBIO: >= a 
+            // Negative distance = point is INSIDE (in front of plane)
+            // Positive distance = point is OUTSIDE (behind plane)
+            if (planes[p].DistanceToPoint(vCorner[i]) < 0.0f)
             {
                 iPtIn = 0;
                 --iInCount;

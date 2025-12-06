@@ -14,6 +14,7 @@ class SceneWindow;
 class GameWindow;
 class GameObject;
 struct Mesh;
+class AssetsWindow;
 
 enum class EditorWindowType
 {
@@ -24,6 +25,7 @@ enum class EditorWindowType
     HIERARCHY,
     INSPECTOR,
     CONSOLE,
+    ASSETS,  
     ABOUT
 };
 
@@ -44,6 +46,7 @@ public:
     SceneWindow* GetSceneWindow() const { return sceneWindow.get(); }
     GameWindow* GetGameWindow() const { return gameWindow.get(); }
     ConfigurationWindow* GetConfigWindow() const { return configWindow.get(); }
+    AssetsWindow* GetAssetsWindow() const { return assetsWindow.get(); }
 
     ImVec2 sceneViewportPos = ImVec2(0, 0);
     ImVec2 sceneViewportSize = ImVec2(1280, 720);
@@ -79,6 +82,7 @@ private:
     std::unique_ptr<ConsoleWindow> consoleWindow;
     std::unique_ptr<SceneWindow> sceneWindow;
     std::unique_ptr<GameWindow> gameWindow;
+    std::unique_ptr<AssetsWindow> assetsWindow;
 
     // About window state
     bool showAbout = false;

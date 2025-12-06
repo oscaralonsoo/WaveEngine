@@ -34,7 +34,7 @@ void LibraryManager::Initialize() {
     // Go up 2 levels from executable (build/Debug/ -> build/ -> ProjectRoot/)
     currentDir = currentDir.parent_path().parent_path();
 
-    // Verify Assets folder exists at this level
+    // Check if Assets folder exists at this level
     fs::path assetsPath = currentDir / "Assets";
     bool assetsFound = fs::exists(assetsPath) && fs::is_directory(assetsPath);
 
@@ -120,7 +120,7 @@ void LibraryManager::ClearLibrary() {
         if (fs::exists(libraryPath)) {
             int filesDeleted = 0;
 
-            // Eliminar todos los archivos en Library/ recursivamente
+            // Delete all files in Library/ recursively
             for (const auto& entry : fs::recursive_directory_iterator(libraryPath)) {
                 if (entry.is_regular_file()) {
                     fs::remove(entry.path());
@@ -130,7 +130,7 @@ void LibraryManager::ClearLibrary() {
 
             LOG_CONSOLE("[LibraryManager] Deleted %d files from Library", filesDeleted);
 
-            // Recrear estructura de carpetas
+            // Recreate folder structure
             Initialize();
         }
     }
@@ -156,23 +156,34 @@ void LibraryManager::RegenerateFromAssets() {
             fs::path assetPath = entry.path();
             std::string extension = assetPath.extension().string();
 
-            // Ignorar .meta
+            // Skip .meta files
             if (extension == ".meta") continue;
 
             AssetType type = MetaFile::GetAssetType(extension);
             if (type == AssetType::UNKNOWN) continue;
 
-            // Procesar según el tipo
+            // Load .meta file
+            std::string assetPathStr = assetPath.string();
+            MetaFile meta = MetaFileManager::LoadMeta(assetPathStr);
+
+            if (meta.uid == 0) {
+                LOG_CONSOLE("[LibraryManager] ERROR: No UID in meta for: %s",
+                    assetPath.filename().string().c_str());
+                errors++;
+                continue;
+            }
+
+            // Process by type
             switch (type) {
             case AssetType::MODEL_FBX: {
-                // Verificar si ya está en Library
+                // Check if already in Library
                 const aiScene* scene = aiImportFile(assetPath.string().c_str(),
                     aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_FlipUVs);
 
                 if (scene && scene->HasMeshes()) {
                     bool allMeshesExist = true;
 
-                    // Verificar si todas las meshes ya existen
+                    // Check if all meshes already exist
                     for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
                         aiMesh* aiMesh = scene->mMeshes[i];
                         std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
@@ -185,17 +196,50 @@ void LibraryManager::RegenerateFromAssets() {
                     }
 
                     if (!allMeshesExist) {
-                        // Importar todas las meshes del FBX
+                        // Import all meshes from FBX
                         LOG_DEBUG("Importing FBX: %s", assetPath.filename().string().c_str());
+
+                        meta.libraryPaths.clear();
+
                         for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
                             aiMesh* aiMesh = scene->mMeshes[i];
                             Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
                             std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
-                            MeshImporter::SaveToCustomFormat(mesh, meshFilename);
+
+                            if (MeshImporter::SaveToCustomFormat(mesh, meshFilename)) {
+                                std::string fullMeshPath = GetMeshPath(meshFilename);
+                                meta.AddLibraryPath(fullMeshPath);
+                                LOG_DEBUG("[LibraryManager] Added mesh to meta: %s", fullMeshPath.c_str());
+                            }
                         }
+
+                        // Save .meta with all paths
+                        if (!meta.libraryPaths.empty()) {
+                            std::string metaPath = assetPathStr + ".meta";
+                            if (meta.Save(metaPath)) {
+                                LOG_DEBUG("[LibraryManager] Updated .meta with %d library paths",
+                                    (int)meta.libraryPaths.size());
+                            }
+                        }
+
                         processed++;
                     }
                     else {
+                        // Already exists, but check .meta has all libraryPaths
+                        if (meta.libraryPaths.empty()) {
+                            // Rebuild path list
+                            for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+                                aiMesh* aiMesh = scene->mMeshes[i];
+                                std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
+                                std::string fullMeshPath = GetMeshPath(meshFilename);
+                                meta.AddLibraryPath(fullMeshPath);
+                            }
+
+                            std::string metaPath = assetPathStr + ".meta";
+                            meta.Save(metaPath);
+                            LOG_DEBUG("[LibraryManager] Fixed empty libraryPaths in .meta with %d paths",
+                                (int)meta.libraryPaths.size());
+                        }
                         skipped++;
                     }
 
@@ -212,16 +256,32 @@ void LibraryManager::RegenerateFromAssets() {
             case AssetType::TEXTURE_PNG:
             case AssetType::TEXTURE_JPG:
             case AssetType::TEXTURE_DDS: {
-                // Verificar si ya está en Library
+                // Generate filename in Library
                 std::string filename = TextureImporter::GenerateTextureFilename(assetPath.string());
                 std::string fullPath = GetTexturePath(filename);
 
+                // Check if already in Library
                 if (!FileExists(fullPath)) {
                     LOG_DEBUG("Importing texture: %s", assetPath.filename().string().c_str());
                     TextureData texture = TextureImporter::ImportFromFile(assetPath.string());
+
                     if (texture.IsValid()) {
-                        TextureImporter::SaveToCustomFormat(texture, filename);
-                        processed++;
+                        if (TextureImporter::SaveToCustomFormat(texture, filename)) {
+                            meta.libraryPath = fullPath;
+
+                            std::string metaPath = assetPathStr + ".meta";
+                            if (meta.Save(metaPath)) {
+                                LOG_DEBUG("[LibraryManager] Updated .meta with library path: %s",
+                                    fullPath.c_str());
+                            }
+
+                            processed++;
+                        }
+                        else {
+                            LOG_CONSOLE("[LibraryManager] ERROR: Failed to save texture: %s",
+                                assetPath.filename().string().c_str());
+                            errors++;
+                        }
                     }
                     else {
                         LOG_CONSOLE("[LibraryManager] ERROR: Failed to import texture: %s",
@@ -230,6 +290,15 @@ void LibraryManager::RegenerateFromAssets() {
                     }
                 }
                 else {
+                    // Already exists, but check .meta has libraryPath
+                    if (meta.libraryPath.empty()) {
+                        meta.libraryPath = fullPath;
+
+                        std::string metaPath = assetPathStr + ".meta";
+                        meta.Save(metaPath);
+                        LOG_DEBUG("[LibraryManager] Fixed empty libraryPath in .meta: %s",
+                            fullPath.c_str());
+                    }
                     skipped++;
                 }
                 break;
