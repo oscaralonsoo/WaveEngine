@@ -262,8 +262,6 @@ void MetaFileManager::ScanAssets() {
     int metasCreated = 0;
     int metasExisting = 0;
 
-    LOG_DEBUG("[MetaFileManager] Scanning Assets folder: %s", assetsPath.c_str());
-
     // Recursively iterate through Assets/
     for (const auto& entry : std::filesystem::recursive_directory_iterator(assetsPath)) {
         if (!entry.is_regular_file()) continue;
@@ -292,13 +290,10 @@ void MetaFileManager::ScanAssets() {
 
             if (meta.Save(metaPath)) {
                 metasCreated++;
-                LOG_DEBUG("[MetaFileManager] Created meta: %s", metaPath.c_str());
             }
         }
         else {
-            // Meta already exists, don't touch it, just count
             metasExisting++;
-            LOG_DEBUG("[MetaFileManager] Existing meta found: %s", metaPath.c_str());
         }
     }
 
@@ -317,7 +312,6 @@ MetaFile MetaFileManager::GetOrCreateMeta(const std::string& assetPath) {
         if (meta.uid == 0) {
             meta.uid = MetaFile::GenerateUID();
             meta.Save(metaPath);
-            LOG_DEBUG("[MetaFileManager] Assigned UID=%llu to existing meta", meta.uid);
         }
 
         return meta;
@@ -369,7 +363,6 @@ UID MetaFileManager::GetUIDFromAsset(const std::string& assetPath) {
         meta.uid = MetaFile::GenerateUID();
         std::string metaPath = GetMetaPath(assetPath);
         meta.Save(metaPath);
-        LOG_DEBUG("[MetaFileManager] Generated new UID=%llu for %s", meta.uid, assetPath.c_str());
     }
 
     return meta.uid;

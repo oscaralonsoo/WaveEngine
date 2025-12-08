@@ -176,9 +176,23 @@ void LibraryManager::RegenerateFromAssets() {
             // Process by type
             switch (type) {
             case AssetType::MODEL_FBX: {
+                // ========== CONSTRUIR FLAGS SEGÚN .META ==========
+                unsigned int importFlags = aiProcess_Triangulate |
+                    aiProcess_JoinIdenticalVertices |
+                    aiProcess_ValidateDataStructure;
+
+                if (meta.importSettings.generateNormals) {
+                    importFlags |= aiProcess_GenNormals;
+                }
+                if (meta.importSettings.flipUVs) {
+                    importFlags |= aiProcess_FlipUVs;
+                }
+                if (meta.importSettings.optimizeMeshes) {
+                    importFlags |= aiProcess_OptimizeMeshes;
+                }
+
                 // Check if already in Library
-                const aiScene* scene = aiImportFile(assetPath.string().c_str(),
-                    aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_FlipUVs);
+                const aiScene* scene = aiImportFile(assetPath.string().c_str(), importFlags);
 
                 if (scene && scene->HasMeshes()) {
                     bool allMeshesExist = true;
@@ -204,6 +218,16 @@ void LibraryManager::RegenerateFromAssets() {
                         for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
                             aiMesh* aiMesh = scene->mMeshes[i];
                             Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
+
+                            // ========== APLICAR importScale A LOS VÉRTICES ==========
+                            if (meta.importSettings.importScale != 1.0f) {
+                                for (auto& vertex : mesh.vertices) {
+                                    vertex.position *= meta.importSettings.importScale;
+                                }
+                                LOG_DEBUG("[LibraryManager] Applied importScale %.3f to mesh vertices",
+                                    meta.importSettings.importScale);
+                            }
+
                             std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
 
                             if (MeshImporter::SaveToCustomFormat(mesh, meshFilename)) {
@@ -256,7 +280,7 @@ void LibraryManager::RegenerateFromAssets() {
             case AssetType::TEXTURE_PNG:
             case AssetType::TEXTURE_JPG:
             case AssetType::TEXTURE_DDS:
-            case AssetType::TEXTURE_TGA: {  
+            case AssetType::TEXTURE_TGA: {
                 // Generate filename in Library
                 std::string filename = TextureImporter::GenerateTextureFilename(assetPath.string());
                 std::string fullPath = GetTexturePath(filename);

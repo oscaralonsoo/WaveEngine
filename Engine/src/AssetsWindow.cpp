@@ -17,8 +17,6 @@ AssetsWindow::AssetsWindow()
     assetsRootPath = LibraryManager::GetAssetsRoot();
     currentPath = assetsRootPath;
 
-    LOG_CONSOLE("Assets root path: %s", assetsRootPath.c_str());
-    LOG_CONSOLE("Absolute path: %s", fs::absolute(currentPath).string().c_str());
 }
 
 AssetsWindow::~AssetsWindow()
@@ -344,12 +342,10 @@ void AssetsWindow::DrawFolderTree(const fs::path& path, const std::string& label
             }
             catch (...) {}
 
-            LOG_DEBUG("DEBUG: TreePop for %s", label.c_str());
             ImGui::TreePop();
         }
         else
         {
-            LOG_DEBUG("DEBUG: Node open but LEAF (No TreePop needed) for %s", label.c_str());
         }
     }
 
@@ -427,7 +423,6 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
         else
         {
             selectedAsset = const_cast<AssetEntry*>(&asset);
-            LOG_CONSOLE("Selected: %s", asset.name.c_str());
         }
     }
 
@@ -435,7 +430,6 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
     {
         if (!asset.isDirectory)
         {
-            LOG_CONSOLE("Opening: %s", asset.path.c_str());
         }
         else
         {
@@ -517,7 +511,6 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
 }
 bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
 {
-    LOG_CONSOLE("[AssetsWindow] Deleting asset: %s", asset.path.c_str());
 
     try {
         if (asset.isDirectory)
@@ -538,18 +531,15 @@ bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
 
             for (const auto& libPath : libraryPaths) {
                 if (!libPath.empty() && fs::exists(libPath)) {
-                    LOG_CONSOLE("[AssetsWindow] Deleting library file: %s", libPath.c_str());
                     fs::remove(libPath);
                 }
             }
 
             if (fs::exists(metaPath)) {
-                LOG_CONSOLE("[AssetsWindow] Deleting meta file: %s", metaPath.c_str());
                 fs::remove(metaPath);
             }
 
             if (fs::exists(asset.path)) {
-                LOG_CONSOLE("[AssetsWindow] Deleting asset file: %s", asset.path.c_str());
                 fs::remove(asset.path);
             }
 
@@ -561,14 +551,12 @@ bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
         }
     }
     catch (const fs::filesystem_error& e) {
-        LOG_CONSOLE("[AssetsWindow] ERROR deleting asset: %s", e.what());
         return false;
     }
 }
 
 bool AssetsWindow::DeleteDirectory(const fs::path& dirPath)
 {
-    LOG_CONSOLE("[AssetsWindow] Deleting directory: %s", dirPath.string().c_str());
 
     try {
         std::vector<std::pair<unsigned long long, std::vector<std::string>>> filesToDelete;
@@ -585,7 +573,6 @@ bool AssetsWindow::DeleteDirectory(const fs::path& dirPath)
         for (const auto& [uid, libraryPaths] : filesToDelete) {
             for (const auto& libPath : libraryPaths) {
                 if (!libPath.empty() && fs::exists(libPath)) {
-                    LOG_CONSOLE("[AssetsWindow] Deleting library file: %s", libPath.c_str());
                     fs::remove(libPath);
                 }
             }
@@ -597,11 +584,9 @@ bool AssetsWindow::DeleteDirectory(const fs::path& dirPath)
 
         fs::remove_all(dirPath);
 
-        LOG_CONSOLE("[AssetsWindow] Directory deleted successfully");
         return true;
     }
     catch (const fs::filesystem_error& e) {
-        LOG_CONSOLE("[AssetsWindow] ERROR deleting directory: %s", e.what());
         return false;
     }
 }
@@ -612,23 +597,17 @@ void AssetsWindow::RefreshAssets()
 
     if (!fs::exists(currentPath))
     {
-        LOG_DEBUG("[AssetsWindow] Path does not exist: %s", currentPath.c_str());
         return;
     }
 
     ScanDirectory(currentPath, currentAssets);
 
-    LOG_DEBUG("[AssetsWindow] Refreshed: %d assets found", (int)currentAssets.size());
 }
 
 void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEntry>& outAssets)
 {
     if (!fs::exists(directory))
         return;
-
-    LOG_CONSOLE("========================================");
-    LOG_CONSOLE("[AssetsWindow] Scanning directory: %s", directory.string().c_str());
-    LOG_CONSOLE("========================================");
 
     for (const auto& entry : fs::directory_iterator(directory))
     {
@@ -660,12 +639,9 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
         asset.references = 0;
         asset.uid = 0;
 
-        LOG_CONSOLE("\n[AssetsWindow] Processing: %s", filename.c_str());
 
-        // ===== CAMBIO PRINCIPAL: Si es carpeta, verificar recursivamente =====
         if (isDirectory)
         {
-            LOG_CONSOLE("  Type: Directory - checking for loaded assets inside...");
 
             ModuleResources* resources = Application::GetInstance().resources.get();
             if (resources)
@@ -736,33 +712,25 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                 asset.inMemory = anyLoaded;
                 asset.references = totalRefs;
 
-                LOG_CONSOLE("  RESULT (Folder): inMemory=%s, references=%d",
-                    anyLoaded ? "TRUE" : "FALSE", totalRefs);
             }
         }
-        // ===== CÓDIGO ORIGINAL PARA ARCHIVOS =====
         else
         {
             // Load UID from .meta
             std::string metaPath = asset.path + ".meta";
             if (fs::exists(metaPath))
             {
-                LOG_CONSOLE("  Meta file found: %s", metaPath.c_str());
                 MetaFile meta = MetaFile::Load(metaPath);
                 asset.uid = meta.uid;
-                LOG_CONSOLE("  UID: %llu", asset.uid);
 
                 // Check if loaded in memory and get reference count
                 if (asset.uid != 0 && Application::GetInstance().resources)
                 {
                     ModuleResources* resources = Application::GetInstance().resources.get();
-                    LOG_CONSOLE("  ModuleResources accessible: YES");
 
                     // For FBX files, check if any of the meshes are loaded
                     if (extension == ".fbx")
                     {
-                        LOG_CONSOLE("  Type: FBX Model");
-                        LOG_CONSOLE("  Library paths count: %d", (int)meta.libraryPaths.size());
 
                         // FBX contains multiple meshes in libraryPaths
                         int totalRefs = 0;
@@ -771,13 +739,10 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
 
                         // Iterate through all resources to find matching library paths
                         const auto& allResources = resources->GetAllResources();
-                        LOG_CONSOLE("  Total resources in system: %d", (int)allResources.size());
 
                         for (const std::string& libPath : meta.libraryPaths)
                         {
                             if (libPath.empty()) continue;
-
-                            LOG_CONSOLE("  Checking library path: %s", libPath.c_str());
 
                             // Find resource with this library path
                             bool found = false;
@@ -786,9 +751,6 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                                 if (pair.second->GetLibraryFile() == libPath)
                                 {
                                     found = true;
-                                    LOG_CONSOLE("    ✓ Found resource with UID %llu", pair.first);
-                                    LOG_CONSOLE("    Is loaded: %s", pair.second->IsLoadedToMemory() ? "YES" : "NO");
-                                    LOG_CONSOLE("    Refs: %u", pair.second->GetReferenceCount());
 
                                     if (pair.second->IsLoadedToMemory())
                                     {
@@ -802,58 +764,28 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                             }
 
                             if (!found) {
-                                LOG_CONSOLE("    ✗ No resource found for this library path");
                             }
                         }
 
                         asset.inMemory = anyLoaded;
                         asset.references = totalRefs;
 
-                        LOG_CONSOLE("  RESULT: inMemory=%s, references=%d, meshesLoaded=%d/%d",
-                            anyLoaded ? "TRUE" : "FALSE",
-                            totalRefs,
-                            meshesLoaded,
-                            (int)meta.libraryPaths.size());
                     }
                     else if (extension == ".png" || extension == ".jpg" || extension == ".jpeg" ||
                         extension == ".dds" || extension == ".tga")
                     {
-                        LOG_CONSOLE("  Type: Texture");
 
                         // For textures - direct resource lookup
                         asset.inMemory = resources->IsResourceLoaded(asset.uid);
                         asset.references = resources->GetResourceReferenceCount(asset.uid);
-
-                        LOG_CONSOLE("  IsResourceLoaded(%llu): %s", asset.uid, asset.inMemory ? "YES" : "NO");
-                        LOG_CONSOLE("  GetResourceReferenceCount(%llu): %d", asset.uid, asset.references);
-
-                        // Double check by looking at the resource directly
-                        const Resource* res = resources->GetResource(asset.uid);
-                        if (res) {
-                            LOG_CONSOLE("  Direct resource check:");
-                            LOG_CONSOLE("    Resource exists: YES");
-                            LOG_CONSOLE("    IsLoadedToMemory(): %s", res->IsLoadedToMemory() ? "YES" : "NO");
-                            LOG_CONSOLE("    GetReferenceCount(): %u", res->GetReferenceCount());
-                        }
-                        else {
-                            LOG_CONSOLE("  Direct resource check: Resource NOT FOUND in system");
-                        }
-
-                        LOG_CONSOLE("  RESULT: inMemory=%s, references=%d",
-                            asset.inMemory ? "TRUE" : "FALSE",
-                            asset.references);
                     }
                     else
                     {
-                        LOG_CONSOLE("  Type: Other (%s)", extension.c_str());
 
                         // For other asset types
                         asset.inMemory = resources->IsResourceLoaded(asset.uid);
                         asset.references = resources->GetResourceReferenceCount(asset.uid);
 
-                        LOG_CONSOLE("  RESULT: inMemory=%s, references=%d",
-                            asset.inMemory ? "TRUE" : "FALSE",
-                            asset.references);
                     }
                 }
                 else
@@ -882,9 +814,6 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
             return a.name < b.name;
         });
 
-    LOG_CONSOLE("========================================");
-    LOG_CONSOLE("[AssetsWindow] Scan complete: %d assets", (int)outAssets.size());
-    LOG_CONSOLE("========================================\n");
 }
 const char* AssetsWindow::GetAssetIcon(const std::string& extension) const
 {

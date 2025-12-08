@@ -143,22 +143,15 @@ bool Input::PreUpdate()
 				// Object selection: only if ALT is not pressed
 				if (!keys[SDL_SCANCODE_LALT] && !keys[SDL_SCANCODE_RALT] && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
 				{
-					LOG_DEBUG("=== LEFT CLICK DETECTED - Starting Selection ===");
-
 					ImVec2 scenePos = Application::GetInstance().editor->sceneViewportPos;
 					ImVec2 sceneSize = Application::GetInstance().editor->sceneViewportSize;
 
 					float relativeX = mouseXf - scenePos.x;
 					float relativeY = mouseYf - scenePos.y;
 
-					LOG_DEBUG("Mouse screen: (%.1f, %.1f) | Scene pos: (%.1f, %.1f) | Scene size: (%.1f, %.1f)",
-						mouseXf, mouseYf, scenePos.x, scenePos.y, sceneSize.x, sceneSize.y);
-					LOG_DEBUG("Relative to scene: (%.1f, %.1f)", relativeX, relativeY);
-
 					if (relativeX < 0 || relativeX > sceneSize.x ||
 						relativeY < 0 || relativeY > sceneSize.y)
 					{
-						LOG_DEBUG("Click outside scene viewport bounds - ignoring");
 						break;
 					}
 
@@ -170,10 +163,6 @@ bool Input::PreUpdate()
 						static_cast<int>(sceneSize.y)
 					);
 
-					LOG_DEBUG("Ray origin: (%.2f, %.2f, %.2f)", rayOrigin.x, rayOrigin.y, rayOrigin.z);
-					LOG_DEBUG("Ray direction: (%.2f, %.2f, %.2f)", rayDir.x, rayDir.y, rayDir.z);
-					LOG_DEBUG("Ray normalized: %s", glm::length(rayDir) > 0.99f && glm::length(rayDir) < 1.01f ? "YES" : "NO");
-
 					GameObject* root = Application::GetInstance().scene->GetRoot();
 					float minDist = std::numeric_limits<float>::max();
 					GameObject* clicked = FindClosestObjectToRayOptimized(root, rayOrigin, rayDir, minDist);
@@ -182,34 +171,25 @@ bool Input::PreUpdate()
 
 					if (clicked)
 					{
-						LOG_DEBUG("=== OBJECT HIT: '%s' at distance %.2f ===",
-							clicked->GetName().c_str(), minDist);
-
 						if (shiftPressed)
 						{
 							Application::GetInstance().selectionManager->ToggleSelection(clicked);
-							LOG_CONSOLE("Toggled selection: %s", clicked->GetName().c_str());
 						}
 						else
 						{
 							Application::GetInstance().selectionManager->SetSelectedObject(clicked);
-							LOG_CONSOLE("Selected: %s", clicked->GetName().c_str());
 						}
 					}
 					else
 					{
-						LOG_DEBUG("=== NO OBJECT HIT ===");
-
 						if (!shiftPressed)
 						{
 							Application::GetInstance().selectionManager->ClearSelection();
-							LOG_CONSOLE("Selection cleared");
 						}
 					}
 				}
 				else
 				{
-					LOG_DEBUG("Left click ignored - Alt is pressed (orbit mode)");
 					camera->ResetOrbitInput();
 					camera->HandleOrbitInput(mouseXf, mouseYf);
 				}
@@ -430,11 +410,6 @@ bool Input::PreUpdate()
 					ImVec2 sceneSize = Application::GetInstance().editor->sceneViewportSize;
 					float viewportAspectRatio = sceneSize.x / sceneSize.y;
 
-					LOG_DEBUG("Focus on %d object(s): worldSize(%.2f,%.2f,%.2f) maxDim=%.2f radius=%.2f",
-						(int)selectedObjects.size(),
-						worldSize.x, worldSize.y, worldSize.z,
-						maxDimension, radius);
-
 					camera->FocusOnTarget(worldCenter, radius, viewportAspectRatio);
 					camera->SetOrbitTarget(worldCenter);
 				}
@@ -463,7 +438,6 @@ GameObject* FindClosestObjectToRayOptimized(GameObject* root, const glm::vec3& r
 	ModuleScene* scene = Application::GetInstance().scene.get();
 	if (!scene)
 	{
-		LOG_DEBUG(">>> ERROR: No scene! <<<");
 		return nullptr;
 	}
 
@@ -471,15 +445,6 @@ GameObject* FindClosestObjectToRayOptimized(GameObject* root, const glm::vec3& r
 
 	if (octree)
 	{
-		LOG_DEBUG("========================================");
-		LOG_DEBUG(">>> Using OCTREE for picking <<<");
-		LOG_DEBUG("Octree stats: %d nodes, %d objects",
-			octree->GetTotalNodeCount(),
-			octree->GetTotalObjectCount());
-		LOG_DEBUG("Ray: origin(%.2f,%.2f,%.2f) dir(%.2f,%.2f,%.2f)",
-			rayOrigin.x, rayOrigin.y, rayOrigin.z,
-			rayDir.x, rayDir.y, rayDir.z);
-
 		Ray ray(rayOrigin, rayDir);
 		float distance;
 		GameObject* picked = octree->RayPick(ray, distance);
@@ -491,56 +456,28 @@ GameObject* FindClosestObjectToRayOptimized(GameObject* root, const glm::vec3& r
 			scene->lastRayDirection = rayDir;
 			scene->lastRayLength = distance;
 
-			LOG_DEBUG(">>> OCTREE SUCCESS: Found '%s' at distance %.2f <<<",
-				picked->GetName().c_str(), distance);
-			LOG_DEBUG("========================================");
 			return picked;
 		}
 		else
 		{
-			LOG_DEBUG(">>> OCTREE FAILED: No object found <<<");
-
 			scene->lastRayOrigin = rayOrigin;
 			scene->lastRayDirection = rayDir;
 			scene->lastRayLength = 100.0f;
 
-			LOG_DEBUG(">>> Trying FALLBACK method to verify... <<<");
 			float fallbackDist = std::numeric_limits<float>::max();
 			GameObject* fallbackResult = FindClosestObjectToRay(root, rayOrigin, rayDir, fallbackDist);
 
 			if (fallbackResult)
 			{
-				LOG_DEBUG(">>> FALLBACK FOUND: '%s' at distance %.2f <<<",
-					fallbackResult->GetName().c_str(), fallbackDist);
-				LOG_DEBUG(">>> PROBLEM: Octree missed an object! <<<");
-				LOG_DEBUG("========================================");
 				minDist = fallbackDist;
 				return fallbackResult;
-			}
-			else
-			{
-				LOG_DEBUG(">>> FALLBACK also found nothing <<<");
-				LOG_DEBUG(">>> Conclusion: No objects in ray path <<<");
-				LOG_DEBUG("========================================");
 			}
 		}
 
 		return picked;
 	}
 
-	LOG_DEBUG("========================================");
-	LOG_DEBUG(">>> No octree available - using FALLBACK <<<");
 	GameObject* result = FindClosestObjectToRay(root, rayOrigin, rayDir, minDist);
-	if (result)
-	{
-		LOG_DEBUG(">>> FALLBACK found: '%s' at distance %.2f <<<",
-			result->GetName().c_str(), minDist);
-	}
-	else
-	{
-		LOG_DEBUG(">>> FALLBACK found nothing <<<");
-	}
-	LOG_DEBUG("========================================");
 	return result;
 }
 
@@ -584,17 +521,10 @@ GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin,
 			float dist;
 			if (RayIntersectsAABB(rayOrigin, rayDir, worldMin, worldMax, dist))
 			{
-				LOG_DEBUG("  FALLBACK: Ray hit '%s' AABB at distance %.2f",
-					obj->GetName().c_str(), dist);
-				LOG_DEBUG("    World AABB: min(%.2f,%.2f,%.2f) max(%.2f,%.2f,%.2f)",
-					worldMin.x, worldMin.y, worldMin.z,
-					worldMax.x, worldMax.y, worldMax.z);
-
 				if (dist < minDist)
 				{
 					minDist = dist;
 					closest = obj;
-					LOG_DEBUG("    ^ This is now the closest!");
 				}
 			}
 		}

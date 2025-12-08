@@ -13,15 +13,10 @@ ComponentMaterial::ComponentMaterial(GameObject* owner)
     texturePath(""),
     originalTexturePath("")
 {
-    LOG_CONSOLE("[ComponentMaterial] Created for GameObject: %s",
-        owner ? owner->GetName().c_str() : "NULL");
 }
 
 ComponentMaterial::~ComponentMaterial()
 {
-    LOG_CONSOLE("[ComponentMaterial] Destroying component for GameObject: %s",
-        owner ? owner->GetName().c_str() : "NULL");
-
     ReleaseCurrentTexture();
 }
 
@@ -36,7 +31,6 @@ void ComponentMaterial::OnEditor()
 void ComponentMaterial::ReleaseCurrentTexture()
 {
     if (textureUID != 0) {
-        LOG_CONSOLE("[ComponentMaterial] Releasing texture UID %llu", textureUID);
         Application::GetInstance().resources->ReleaseResource(textureUID);
         textureUID = 0;
     }
@@ -50,9 +44,6 @@ bool ComponentMaterial::LoadTextureByUID(UID uid)
         LOG_DEBUG("[ComponentMaterial] Invalid UID");
         return false;
     }
-
-    LOG_CONSOLE("[ComponentMaterial] LoadTextureByUID(%llu) for GameObject: %s",
-        uid, owner ? owner->GetName().c_str() : "NULL");
 
     // Release current texture
     ReleaseCurrentTexture();
@@ -81,20 +72,11 @@ bool ComponentMaterial::LoadTextureByUID(UID uid)
     texturePath = texResource->GetAssetFile();
     originalTexturePath = texturePath;
 
-    LOG_CONSOLE("[ComponentMaterial] ✓ Texture loaded successfully!");
-    LOG_CONSOLE("  ✓ UID: %llu", uid);
-    LOG_CONSOLE("  ✓ Size: %ux%u", texResource->GetWidth(), texResource->GetHeight());
-    LOG_CONSOLE("  ✓ GPU ID: %u", texResource->GetGPU_ID());
-    LOG_CONSOLE("  ✓ References: %u", texResource->GetReferenceCount());
-
     return true;
 }
 
 bool ComponentMaterial::LoadTexture(const std::string& path)
 {
-    LOG_CONSOLE("[ComponentMaterial] LoadTexture(\"%s\") for GameObject: %s",
-        path.c_str(), owner ? owner->GetName().c_str() : "NULL");
-
     ModuleResources* resources = Application::GetInstance().resources.get();
     if (!resources) {
         LOG_CONSOLE("[ComponentMaterial] ERROR: ModuleResources not available");
@@ -105,15 +87,12 @@ bool ComponentMaterial::LoadTexture(const std::string& path)
 
     if (uid == 0) {
         // No existe, intentar importar
-        LOG_CONSOLE("[ComponentMaterial] Texture not registered, importing...");
         uid = resources->ImportFile(path.c_str());
 
         if (uid == 0) {
             LOG_CONSOLE("[ComponentMaterial] ERROR: Failed to import texture");
             return false;
         }
-
-        LOG_CONSOLE("[ComponentMaterial] Texture imported with UID: %llu", uid);
     }
 
     return LoadTextureByUID(uid);
@@ -126,8 +105,6 @@ void ComponentMaterial::CreateCheckerboardTexture()
 
     texturePath = "[Checkerboard Pattern]";
     originalTexturePath = "";
-
-    LOG_CONSOLE("[ComponentMaterial] Checkerboard texture set");
 }
 
 void ComponentMaterial::Use()
@@ -186,10 +163,8 @@ void ComponentMaterial::RestoreOriginalTexture()
 {
     if (originalTextureUID != 0) {
         LoadTextureByUID(originalTextureUID);
-        LOG_CONSOLE("[ComponentMaterial] Original texture restored (UID: %llu)", originalTextureUID);
     }
     else {
-        LOG_CONSOLE("[ComponentMaterial] No original texture to restore");
         CreateCheckerboardTexture();
     }
 }

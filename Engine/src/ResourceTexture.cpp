@@ -2,6 +2,7 @@
 #include "TextureImporter.h"
 #include "Log.h"
 #include <glad/glad.h>
+#include "MetaFile.h"
 
 ResourceTexture::ResourceTexture(UID uid)
     : Resource(uid, Resource::TEXTURE) {
@@ -13,7 +14,6 @@ ResourceTexture::~ResourceTexture() {
 
 bool ResourceTexture::LoadInMemory() {
     if (loadedInMemory) {
-        LOG_DEBUG("[ResourceTexture] Already loaded in memory");
         return true;
     }
 
@@ -21,8 +21,6 @@ bool ResourceTexture::LoadInMemory() {
         LOG_DEBUG("[ResourceTexture] ERROR: No library file specified");
         return false;
     }
-
-    LOG_DEBUG("[ResourceTexture] Loading texture from: %s", libraryFile.c_str());
 
     // Extract just the filename (no full path)
     std::string filename = libraryFile;
@@ -43,9 +41,30 @@ bool ResourceTexture::LoadInMemory() {
     glGenTextures(1, &gpu_id);
     glBindTexture(GL_TEXTURE_2D, gpu_id);
 
-    // Setup texture params
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // ========== LEER .META Y APLICAR SETTINGS ==========
+    MetaFile meta = MetaFileManager::LoadMeta(assetsFile);
+
+    if (meta.uid != 0) {
+        // Aplicar Wrap Mode desde .meta
+        GLenum wrapMode = GL_REPEAT;
+        switch (meta.importSettings.wrapMode) {
+        case 0: wrapMode = GL_REPEAT; break;
+        case 1: wrapMode = GL_CLAMP_TO_EDGE; break;
+        case 2: wrapMode = GL_MIRRORED_REPEAT; break;
+        case 3: wrapMode = GL_CLAMP_TO_BORDER; break;
+        default: wrapMode = GL_REPEAT; break;
+        }
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMode);
+    }
+    else {
+        // Valores por defecto si no hay .meta
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    }
+
+    // Filtros
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -55,7 +74,13 @@ bool ResourceTexture::LoadInMemory() {
         textureData.width, textureData.height,
         0, format, GL_UNSIGNED_BYTE, textureData.pixels);
 
-    glGenerateMipmap(GL_TEXTURE_2D);
+    // Generar mipmaps
+    if (meta.uid != 0 && meta.importSettings.generateMipmaps) {
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        glGenerateMipmap(GL_TEXTURE_2D); // Por defecto siempre los generamos
+    }
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -68,11 +93,6 @@ bool ResourceTexture::LoadInMemory() {
 
     loadedInMemory = true;
 
-    LOG_DEBUG("[ResourceTexture] Loaded successfully:");
-    LOG_DEBUG("  GPU ID: %u", gpu_id);
-    LOG_DEBUG("  Size: %ux%u", width, height);
-    LOG_DEBUG("  Channels: %u", depth);
-
     return true;
 }
 
@@ -82,7 +102,6 @@ void ResourceTexture::UnloadFromMemory() {
     }
 
     if (gpu_id != 0) {
-        LOG_DEBUG("[ResourceTexture] Unloading texture GPU ID: %u", gpu_id);
         glDeleteTextures(1, &gpu_id);
         gpu_id = 0;
     }

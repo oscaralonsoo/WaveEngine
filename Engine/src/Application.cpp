@@ -1,5 +1,6 @@
 ﻿#include "Application.h"
 #include <iostream>
+#include <chrono>
 
 Application::Application() : isRunning(true), playState(PlayState::EDITING)
 {
@@ -17,7 +18,6 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     time = std::make_shared<Time>();
     grid = std::make_shared<Grid>();
     resources = std::make_shared<ModuleResources>();
-
 
     AddModule(std::static_pointer_cast<Module>(window));
     AddModule(std::static_pointer_cast<Module>(input));
@@ -53,16 +53,36 @@ bool Application::Awake()
 bool Application::Start()
 {
     LOG_CONSOLE("Starting engine modules...");
+    LOG_CONSOLE("========================================");
+
+    auto totalStart = std::chrono::high_resolution_clock::now();
 
     bool result = true;
     for (const auto& module : moduleList) {
+        auto moduleStart = std::chrono::high_resolution_clock::now();
+
+        LOG_CONSOLE("Initializing: %s...", module->name.c_str());
+
         result = module.get()->Start();
+
+        auto moduleEnd = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(moduleEnd - moduleStart).count();
+
+        LOG_CONSOLE("  -> %s: %lld ms", module->name.c_str(), duration);
+
         if (!result) {
             LOG_DEBUG("ERROR: Module failed to start: %s", module->name.c_str());
             LOG_CONSOLE("ERROR: Failed to initialize module: %s", module->name.c_str());
             break;
         }
     }
+
+    auto totalEnd = std::chrono::high_resolution_clock::now();
+    auto totalDuration = std::chrono::duration_cast<std::chrono::milliseconds>(totalEnd - totalStart).count();
+
+    LOG_CONSOLE("========================================");
+    LOG_CONSOLE("TOTAL INIT TIME: %lld ms", totalDuration);
+    LOG_CONSOLE("========================================");
 
     if (result)
     {
@@ -201,7 +221,7 @@ bool Application::CleanUp()
     moduleList.clear();
 
     editor.reset();
-	camera.reset();
+    camera.reset();
     scene.reset();
     renderer.reset();
     renderContext.reset();

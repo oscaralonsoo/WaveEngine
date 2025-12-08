@@ -13,7 +13,6 @@ ResourceMesh::~ResourceMesh() {
 
 bool ResourceMesh::LoadInMemory() {
     if (loadedInMemory) {
-        LOG_DEBUG("[ResourceMesh] Already loaded in memory");
         return true;
     }
 
@@ -21,8 +20,6 @@ bool ResourceMesh::LoadInMemory() {
         LOG_DEBUG("[ResourceMesh] ERROR: No library file specified");
         return false;
     }
-
-    LOG_DEBUG("[ResourceMesh] Loading mesh from: %s", libraryFile.c_str());
 
     // only extract the name of the file
     std::string filename = libraryFile;
@@ -78,11 +75,6 @@ bool ResourceMesh::LoadInMemory() {
 
     loadedInMemory = true;
 
-    LOG_DEBUG("[ResourceMesh] Loaded successfully:");
-    LOG_DEBUG("  VAO: %u", mesh.VAO);
-    LOG_DEBUG("  Vertices: %zu", mesh.vertices.size());
-    LOG_DEBUG("  Triangles: %zu", mesh.indices.size() / 3);
-
     return true;
 }
 
@@ -90,8 +82,6 @@ void ResourceMesh::UnloadFromMemory() {
     if (!loadedInMemory) {
         return;
     }
-
-    LOG_DEBUG("[ResourceMesh] Unloading mesh VAO: %u", mesh.VAO);
 
     if (mesh.VAO != 0) {
         glDeleteVertexArrays(1, &mesh.VAO);

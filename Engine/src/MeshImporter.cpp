@@ -23,8 +23,6 @@ Mesh MeshImporter::ImportFromAssimp(const aiMesh* assimpMesh) {
         return mesh;
     }
 
-    LOG_DEBUG("Importing mesh: %s", assimpMesh->mName.C_Str());
-
     // Reserve space for efficiency
     mesh.vertices.reserve(assimpMesh->mNumVertices);
     mesh.indices.reserve(assimpMesh->mNumFaces * 3);
@@ -74,17 +72,12 @@ Mesh MeshImporter::ImportFromAssimp(const aiMesh* assimpMesh) {
         }
     }
 
-    LOG_DEBUG("  Imported: %d vertices, %d indices", mesh.vertices.size(), mesh.indices.size());
-
     return mesh;
 }
 
 // SAVE: Our Mesh -> Custom Binary Format
 bool MeshImporter::SaveToCustomFormat(const Mesh& mesh, const std::string& filename) {
     std::string fullPath = LibraryManager::GetMeshPath(filename);
-
-    LOG_DEBUG("Saving mesh to: %s", fullPath.c_str());
-
 
     std::ofstream file(fullPath, std::ios::binary);
     if (!file.is_open()) {
@@ -123,20 +116,12 @@ bool MeshImporter::SaveToCustomFormat(const Mesh& mesh, const std::string& filen
 
     file.close();
 
-    LOG_DEBUG("  Mesh saved successfully!");
-    LOG_DEBUG("  File size: %zu bytes",
-        sizeof(MeshHeader) +
-        mesh.vertices.size() * sizeof(Vertex) +
-        mesh.indices.size() * sizeof(unsigned int));
-
     return true;
 }
 
 // LOAD: Custom Binary Format -> Our Mesh
 Mesh MeshImporter::LoadFromCustomFormat(const std::string& filename) {
     std::string fullPath = LibraryManager::GetMeshPath(filename);
-
-    LOG_DEBUG("Loading mesh from: %s", fullPath.c_str());
 
     Mesh mesh;
 
@@ -149,13 +134,6 @@ Mesh MeshImporter::LoadFromCustomFormat(const std::string& filename) {
     // 1. Read header
     MeshHeader header;
     file.read(reinterpret_cast<char*>(&header), sizeof(MeshHeader));
-
-    LOG_DEBUG("  Header info:");
-    LOG_DEBUG("    Vertices: %u", header.numVertices);
-    LOG_DEBUG("    Indices: %u", header.numIndices);
-    LOG_DEBUG("    Bounding Box: Min(%.2f, %.2f, %.2f) Max(%.2f, %.2f, %.2f)",
-        header.boundingBoxMin.x, header.boundingBoxMin.y, header.boundingBoxMin.z,
-        header.boundingBoxMax.x, header.boundingBoxMax.y, header.boundingBoxMax.z);
 
     // 2. Read vertex data
     mesh.vertices.resize(header.numVertices);
@@ -176,8 +154,6 @@ Mesh MeshImporter::LoadFromCustomFormat(const std::string& filename) {
     }
 
     file.close();
-
-    LOG_DEBUG("  Mesh loaded successfully!");
 
     return mesh;
 }
@@ -208,6 +184,7 @@ std::string MeshImporter::GenerateMeshFilename(const std::string& originalName) 
 
     return ss.str();
 }
+
 void MeshImporter::CalculateBoundingBox(const Mesh& mesh, glm::vec3& minBounds, glm::vec3& maxBounds) {
     if (mesh.vertices.empty()) {
         minBounds = glm::vec3(0.0f);

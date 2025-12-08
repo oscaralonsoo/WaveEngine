@@ -12,18 +12,10 @@ ComponentMesh::ComponentMesh(GameObject* owner)
     meshUID(0),
     hasDirectMesh(false)
 {
-    LOG_CONSOLE("[ComponentMesh] Created for GameObject: %s", owner ? owner->GetName().c_str() : "NULL");
 }
 
 ComponentMesh::~ComponentMesh()
 {
-    LOG_CONSOLE("[ComponentMesh] Destroying component for GameObject: %s",
-        owner ? owner->GetName().c_str() : "NULL");
-
-    if (meshUID != 0) {
-        LOG_CONSOLE("[ComponentMesh] Will release mesh UID: %llu", meshUID);
-    }
-
     ReleaseCurrentMesh();
 
     // Clean up direct mesh GPU resources if present
@@ -31,7 +23,6 @@ ComponentMesh::~ComponentMesh()
         glDeleteVertexArrays(1, &directMesh.VAO);
         glDeleteBuffers(1, &directMesh.VBO);
         glDeleteBuffers(1, &directMesh.EBO);
-        LOG_CONSOLE("[ComponentMesh] Cleaned up direct mesh GPU resources");
     }
 }
 
@@ -46,9 +37,6 @@ void ComponentMesh::OnEditor()
 void ComponentMesh::ReleaseCurrentMesh()
 {
     if (meshUID != 0) {
-        LOG_CONSOLE("[ComponentMesh] ReleaseCurrentMesh() - Releasing UID %llu (GameObject: %s)",
-            meshUID, owner ? owner->GetName().c_str() : "NULL");
-
         Application::GetInstance().resources->ReleaseResource(meshUID);
         meshUID = 0;
     }
@@ -101,17 +89,11 @@ bool ComponentMesh::LoadMeshByUID(UID meshUID)
     // Store UID for reference
     this->meshUID = meshUID;
 
-    LOG_CONSOLE("✅ Mesh loaded successfully (UID: %llu, %d vertices, %d tris)",
-        meshUID, loadedMesh.vertices.size(), loadedMesh.indices.size() / 3);
-
     return true;
 }
 
 void ComponentMesh::SetMesh(const Mesh& mesh)
 {
-    LOG_CONSOLE("[ComponentMesh] SetMesh() called for GameObject: %s",
-        owner ? owner->GetName().c_str() : "NULL");
-
     // Release resource system mesh if any
     ReleaseCurrentMesh();
 
@@ -159,15 +141,6 @@ void ComponentMesh::SetMesh(const Mesh& mesh)
             (void*)offsetof(Vertex, texCoords));
 
         glBindVertexArray(0);
-
-        LOG_CONSOLE("[ComponentMesh] ✓ Direct mesh uploaded to GPU");
-        LOG_CONSOLE("  ✓ VAO: %u", directMesh.VAO);
-        LOG_CONSOLE("  ✓ Vertices: %zu", directMesh.vertices.size());
-        LOG_CONSOLE("  ✓ Indices: %zu", directMesh.indices.size());
-    }
-    else
-    {
-        LOG_CONSOLE("[ComponentMesh] WARNING: Direct mesh is empty!");
     }
 }
 
