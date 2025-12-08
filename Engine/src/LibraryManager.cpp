@@ -143,8 +143,6 @@ void LibraryManager::ClearLibrary() {
 void LibraryManager::RegenerateFromAssets() {
     LOG_CONSOLE("[LibraryManager] Scanning Assets and importing missing files to Library...");
 
-    MetaFileManager::ScanAssets();
-
     fs::path assetsPath = GetAssetsRoot();
     int processed = 0;
     int skipped = 0;
@@ -177,7 +175,29 @@ void LibraryManager::RegenerateFromAssets() {
             // Process by type
             switch (type) {
             case AssetType::MODEL_FBX: {
-                // ========== CONSTRUIR FLAGS SEGÚN .META ==========
+                //Check if library files exist BEFORE loading FBX
+                bool needsImport = false;
+
+                if (meta.libraryPaths.empty()) {
+                    // No library paths in meta - needs import
+                    needsImport = true;
+                }
+                else {
+                    // Check if all library files exist
+                    for (const auto& libPath : meta.libraryPaths) {
+                        if (!FileExists(libPath)) {
+                            needsImport = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!needsImport) {
+                    skipped++;
+                    break;
+                }
+
+                // ONLY LOAD FBX IF IMPORT IS NEEDED 
                 unsigned int importFlags = aiProcess_Triangulate |
                     aiProcess_JoinIdenticalVertices |
                     aiProcess_ValidateDataStructure;
@@ -192,83 +212,40 @@ void LibraryManager::RegenerateFromAssets() {
                     importFlags |= aiProcess_OptimizeMeshes;
                 }
 
-                // Check if already in Library
                 const aiScene* scene = aiImportFile(assetPath.string().c_str(), importFlags);
 
                 if (scene && scene->HasMeshes()) {
-                    bool allMeshesExist = true;
+                    LOG_DEBUG("Importing FBX: %s", assetPath.filename().string().c_str());
 
-                    // Check if all meshes already exist
+                    meta.libraryPaths.clear();
+
                     for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
                         aiMesh* aiMesh = scene->mMeshes[i];
+                        Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
+
+                        // Apply import scale
+                        if (meta.importSettings.importScale != 1.0f) {
+                            for (auto& vertex : mesh.vertices) {
+                                vertex.position *= meta.importSettings.importScale;
+                            }
+                        }
+
                         std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
-                        std::string fullPath = GetMeshPath(meshFilename);
 
-                        if (!FileExists(fullPath)) {
-                            allMeshesExist = false;
-                            break;
+                        if (MeshImporter::SaveToCustomFormat(mesh, meshFilename)) {
+                            std::string fullMeshPath = GetMeshPath(meshFilename);
+                            meta.AddLibraryPath(fullMeshPath);
                         }
                     }
 
-                    if (!allMeshesExist) {
-                        // Import all meshes from FBX
-                        LOG_DEBUG("Importing FBX: %s", assetPath.filename().string().c_str());
-
-                        meta.libraryPaths.clear();
-
-                        for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
-                            aiMesh* aiMesh = scene->mMeshes[i];
-                            Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
-
-                            // ========== APLICAR importScale A LOS VÉRTICES ==========
-                            if (meta.importSettings.importScale != 1.0f) {
-                                for (auto& vertex : mesh.vertices) {
-                                    vertex.position *= meta.importSettings.importScale;
-                                }
-                                LOG_DEBUG("[LibraryManager] Applied importScale %.3f to mesh vertices",
-                                    meta.importSettings.importScale);
-                            }
-
-                            std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
-
-                            if (MeshImporter::SaveToCustomFormat(mesh, meshFilename)) {
-                                std::string fullMeshPath = GetMeshPath(meshFilename);
-                                meta.AddLibraryPath(fullMeshPath);
-                                LOG_DEBUG("[LibraryManager] Added mesh to meta: %s", fullMeshPath.c_str());
-                            }
-                        }
-
-                        // Save .meta with all paths
-                        if (!meta.libraryPaths.empty()) {
-                            std::string metaPath = assetPathStr + ".meta";
-                            if (meta.Save(metaPath)) {
-                                LOG_DEBUG("[LibraryManager] Updated .meta with %d library paths",
-                                    (int)meta.libraryPaths.size());
-                            }
-                        }
-
-                        processed++;
-                    }
-                    else {
-                        // Already exists, but check .meta has all libraryPaths
-                        if (meta.libraryPaths.empty()) {
-                            // Rebuild path list
-                            for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
-                                aiMesh* aiMesh = scene->mMeshes[i];
-                                std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
-                                std::string fullMeshPath = GetMeshPath(meshFilename);
-                                meta.AddLibraryPath(fullMeshPath);
-                            }
-
-                            std::string metaPath = assetPathStr + ".meta";
-                            meta.Save(metaPath);
-                            LOG_DEBUG("[LibraryManager] Fixed empty libraryPaths in .meta with %d paths",
-                                (int)meta.libraryPaths.size());
-                        }
-                        skipped++;
+                    // Save .meta with all paths
+                    if (!meta.libraryPaths.empty()) {
+                        std::string metaPath = assetPathStr + ".meta";
+                        meta.Save(metaPath);
                     }
 
                     aiReleaseImport(scene);
+                    processed++;
                 }
                 else {
                     LOG_CONSOLE("[LibraryManager] ERROR: Failed to load FBX: %s",
@@ -286,7 +263,7 @@ void LibraryManager::RegenerateFromAssets() {
                 std::string filename = TextureImporter::GenerateTextureFilename(assetPath.string());
                 std::string fullPath = GetTexturePath(filename);
 
-                // Check if already in Library
+                // FAST CHECK: Only import if missing
                 if (!FileExists(fullPath)) {
                     LOG_DEBUG("Importing texture: %s", assetPath.filename().string().c_str());
                     TextureData texture = TextureImporter::ImportFromFile(assetPath.string());
@@ -294,13 +271,8 @@ void LibraryManager::RegenerateFromAssets() {
                     if (texture.IsValid()) {
                         if (TextureImporter::SaveToCustomFormat(texture, filename)) {
                             meta.libraryPath = fullPath;
-
                             std::string metaPath = assetPathStr + ".meta";
-                            if (meta.Save(metaPath)) {
-                                LOG_DEBUG("[LibraryManager] Updated .meta with library path: %s",
-                                    fullPath.c_str());
-                            }
-
+                            meta.Save(metaPath);
                             processed++;
                         }
                         else {
@@ -319,11 +291,8 @@ void LibraryManager::RegenerateFromAssets() {
                     // Already exists, but check .meta has libraryPath
                     if (meta.libraryPath.empty()) {
                         meta.libraryPath = fullPath;
-
                         std::string metaPath = assetPathStr + ".meta";
                         meta.Save(metaPath);
-                        LOG_DEBUG("[LibraryManager] Fixed empty libraryPath in .meta: %s",
-                            fullPath.c_str());
                     }
                     skipped++;
                 }

@@ -31,21 +31,16 @@ bool ModuleResources::Awake() {
 bool ModuleResources::Start() {
     LOG_CONSOLE("[ModuleResources] Initializing...");
 
-    // 1. Initialize Library structure
     LibraryManager::Initialize();
     LOG_CONSOLE("[ModuleResources] Library structure created");
 
-    // 2. Initialize MetaFileManager (esto ya hace ScanAssets internamente)
     MetaFileManager::Initialize();
     LOG_CONSOLE("[ModuleResources] Asset metadata synchronized");
 
-    // 3. Register resources from .meta files
     LoadResourcesFromMetaFiles();
 
-    // 4. COMMENTED OUT: Auto-import is slow and usually not needed at startup
-    // Only run this manually when you add new assets
-    // LOG_CONSOLE("[ModuleResources] Importing assets to Library...");
-    // LibraryManager::RegenerateFromAssets();
+    LOG_CONSOLE("[ModuleResources] Importing assets to Library...");
+    LibraryManager::RegenerateFromAssets();
 
     LOG_CONSOLE("[ModuleResources] Initialized successfully");
 
