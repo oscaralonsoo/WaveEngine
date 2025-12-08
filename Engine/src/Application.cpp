@@ -184,7 +184,7 @@ void Application::Play()
     // Save
     if (playState == PlayState::EDITING) {
         LOG_CONSOLE("Saving initial scene state...");
-        scene->SaveScene("../Library/Scene/__temp_scene_state__.json");
+        scene->SaveScene("../Library/TempScene/__temp_scene_state__.json");
     }
 
     playState = PlayState::PLAYING;
@@ -202,7 +202,7 @@ void Application::Stop()
     // Restore
     if (playState != PlayState::EDITING) {
         LOG_CONSOLE("Restoring initial scene state...");
-        scene->LoadScene("../Library/Scene/__temp_scene_state__.json");
+        scene->LoadScene("../Library/TempScene/__temp_scene_state__.json");
     }
 
     playState = PlayState::EDITING;

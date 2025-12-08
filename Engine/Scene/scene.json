@@ -1,0 +1,3311 @@
+{
+    "version": 1,
+    "gameObjects": [
+        {
+            "name": "RootNode",
+            "active": true,
+            "components": [
+                {
+                    "type": 0,
+                    "active": true,
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        0.051620494574308395,
+                        0.051620494574308395,
+                        0.051620494574308395
+                    ]
+                }
+            ],
+            "children": [
+                {
+                    "name": "City_building_041_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                30.69527816772461,
+                                2.121072952832037e-7,
+                                -21.612646102905273
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_041_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_041_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                -0.0,
+                                                90.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_041",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 4825408005568846037
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 3905483716992624552,
+                                                    "originalTextureUID": 3905483716992624552
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_040_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -34.679481506347656,
+                                -9.383451811117993e-7,
+                                30.643888473510742
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_040_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_040_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                -90.00000762939453
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_040",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 8597092849719282130
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 15474817188707382649,
+                                                    "originalTextureUID": 15474817188707382649
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_039_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -42.8072395324707,
+                                -9.383451811117993e-7,
+                                30.643888473510742
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_039_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_039_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                -90.00000762939453
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_039",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 2300288510879965875
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 15474817188707382649,
+                                                    "originalTextureUID": 15474817188707382649
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_038_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -41.64900207519531,
+                                0.0,
+                                16.495393753051758
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_038_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_038_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                -90.00000762939453
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_038",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 15523152688512757307
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 8502380221754367510,
+                                                    "originalTextureUID": 8502380221754367510
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_037_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -20.31769371032715,
+                                0.0,
+                                16.16360855102539
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_037_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_037_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                -0.0,
+                                                179.99996948242188
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_037",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 10699348935766937028
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 8502380221754367510,
+                                                    "originalTextureUID": 8502380221754367510
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_036_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -31.216331481933594,
+                                5.014607040720875e-7,
+                                -33.201576232910156
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_036_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_036_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                -90.00000762939453
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_036",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 16965501315811511551
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 2917341729023298754,
+                                                    "originalTextureUID": 2917341729023298754
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_035_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                13.38798999786377,
+                                -9.383451811117993e-7,
+                                40.80251693725586
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_035_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_035",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        },
+                                        {
+                                            "type": 1,
+                                            "active": true,
+                                            "meshUID": 18426429307856731554
+                                        },
+                                        {
+                                            "type": 2,
+                                            "active": true,
+                                            "textureUID": 15474817188707382649,
+                                            "originalTextureUID": 15474817188707382649
+                                        }
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_034_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                16.049516677856445,
+                                0.0,
+                                16.696884155273438
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_034_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_034_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                -89.99996185302734
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_034",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 1557948671546089868
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 8502380221754367510,
+                                                    "originalTextureUID": 8502380221754367510
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_033_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -32.36149597167969,
+                                5.014607040720875e-7,
+                                -42.37042236328125
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_033_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_033",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        },
+                                        {
+                                            "type": 1,
+                                            "active": true,
+                                            "meshUID": 10406466846861466603
+                                        },
+                                        {
+                                            "type": 2,
+                                            "active": true,
+                                            "textureUID": 2917341729023298754,
+                                            "originalTextureUID": 2917341729023298754
+                                        }
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_032_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -29.478403091430664,
+                                0.0,
+                                -21.01409912109375
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_032_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_032",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        },
+                                        {
+                                            "type": 1,
+                                            "active": true,
+                                            "meshUID": 5614071934138060687
+                                        },
+                                        {
+                                            "type": 2,
+                                            "active": true,
+                                            "textureUID": 15082328737085636245,
+                                            "originalTextureUID": 15082328737085636245
+                                        }
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_031_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -34.679481506347656,
+                                -9.383451811117993e-7,
+                                41.83556365966797
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_031_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_031_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                -90.00000762939453
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_031",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 12052634745257924858
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 15474817188707382649,
+                                                    "originalTextureUID": 15474817188707382649
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_030_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -42.8072395324707,
+                                -9.383451811117993e-7,
+                                41.83556365966797
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_030_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_030_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                -90.00000762939453
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_030",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 7513833219035375817
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 15474817188707382649,
+                                                    "originalTextureUID": 15474817188707382649
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Object010_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -20.604873657226563,
+                                -0.475959837436676,
+                                -4.066742420196533
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "Object010_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "Object010_$AssimpFbx$_GeometricTranslation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                18.101520538330078,
+                                                11.734103202819824,
+                                                0.475959837436676
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "Object010",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 17976807546440642501
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_028_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                13.38798999786377,
+                                -9.383451811117993e-7,
+                                33.75503921508789
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_028_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_028",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        },
+                                        {
+                                            "type": 1,
+                                            "active": true,
+                                            "meshUID": 1065968988303137996
+                                        },
+                                        {
+                                            "type": 2,
+                                            "active": true,
+                                            "textureUID": 15474817188707382649,
+                                            "originalTextureUID": 15474817188707382649
+                                        }
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_026_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                31.51188850402832,
+                                0.0,
+                                16.446016311645508
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_026_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_026_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                -0.0,
+                                                180.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_026",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 4574490649243093644
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 8502380221754367510,
+                                                    "originalTextureUID": 8502380221754367510
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_024_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -20.572771072387695,
+                                -0.06919445842504501,
+                                -43.060829162597656
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_024_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_024_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                -0.0,
+                                                180.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_024",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 10984445143145310622
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 32381950191347458,
+                                                    "originalTextureUID": 32381950191347458
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_023_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                42.13064193725586,
+                                -0.0000015106878663573298,
+                                -37.4932861328125
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_023_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_023",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        },
+                                        {
+                                            "type": 1,
+                                            "active": true,
+                                            "meshUID": 4212239591917480484
+                                        },
+                                        {
+                                            "type": 2,
+                                            "active": true,
+                                            "textureUID": 8725719464436003125,
+                                            "originalTextureUID": 8725719464436003125
+                                        }
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_022_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -20.831323623657227,
+                                0.0,
+                                27.426488876342773
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_022_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_022_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                -0.0,
+                                                179.99996948242188
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_022",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 16460172766905652969
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 8502380221754367510,
+                                                    "originalTextureUID": 8502380221754367510
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_017_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                44.26008224487305,
+                                8.553864176974457e-7,
+                                39.15372085571289
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_017_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_017_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                -0.0,
+                                                90.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_017",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 12685883869256349344
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 1215200086577370551,
+                                                    "originalTextureUID": 1215200086577370551
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_016_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                34.270423889160156,
+                                8.553864176974457e-7,
+                                41.972747802734375
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_016_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_016_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                -0.0,
+                                                179.99998474121094
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_016",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 12277005342151710285
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 1215200086577370551,
+                                                    "originalTextureUID": 1215200086577370551
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_014_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -19.439706802368164,
+                                0.0,
+                                -32.061729431152344
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_014_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_014_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                -0.0,
+                                                179.99998474121094
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_014",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 9000795216664331236
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 15082328737085636245,
+                                                    "originalTextureUID": 15082328737085636245
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_013_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -42.288055419921875,
+                                5.014607040720875e-7,
+                                -33.201576232910156
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_013_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_013_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                -0.0,
+                                                90.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_013",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 17056429653080346639
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 2917341729023298754,
+                                                    "originalTextureUID": 2917341729023298754
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_011_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                30.134540557861328,
+                                -0.0000015106878663573298,
+                                -37.4932861328125
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_011_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_011",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        },
+                                        {
+                                            "type": 1,
+                                            "active": true,
+                                            "meshUID": 16006394659329136674
+                                        },
+                                        {
+                                            "type": 2,
+                                            "active": true,
+                                            "textureUID": 8725719464436003125,
+                                            "originalTextureUID": 8725719464436003125
+                                        }
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_010_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                25.154010772705078,
+                                8.553864176974457e-7,
+                                39.15372085571289
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_010_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_010_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                -0.0,
+                                                90.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_010",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 14383100709000207736
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 1215200086577370551,
+                                                    "originalTextureUID": 1215200086577370551
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Plane001_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -0.02860260009765625,
+                                0.0,
+                                -0.026032090187072754
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "Plane001_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "Plane001_$AssimpFbx$_Scaling",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                0.9966352581977844,
+                                                0.9706164598464966,
+                                                0.9966352581977844
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "Plane001",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 11455927981444962854
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Line002_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -2.1597719192504883,
+                                0.0,
+                                -1.8538382053375244
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "Line002_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "Line002_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                -90.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "Line002",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 10007480190151804528
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_008_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                40.97999572753906,
+                                -0.0000020522466002148576,
+                                -18.270824432373047
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_008_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_008_$AssimpFbx$_Rotation",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                -0.0,
+                                                90.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        }
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "City_building_008",
+                                            "active": true,
+                                            "components": [
+                                                {
+                                                    "type": 0,
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ]
+                                                },
+                                                {
+                                                    "type": 1,
+                                                    "active": true,
+                                                    "meshUID": 14247364621409430569
+                                                },
+                                                {
+                                                    "type": 2,
+                                                    "active": true,
+                                                    "textureUID": 32381950191347458,
+                                                    "originalTextureUID": 32381950191347458
+                                                }
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_007_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                16.0104923248291,
+                                -0.0000015106878663573298,
+                                -37.4932861328125
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_007_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_007",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        },
+                                        {
+                                            "type": 1,
+                                            "active": true,
+                                            "meshUID": 13932192062959851656
+                                        },
+                                        {
+                                            "type": 2,
+                                            "active": true,
+                                            "textureUID": 8725719464436003125,
+                                            "originalTextureUID": 8725719464436003125
+                                        }
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_001_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                17.707164764404297,
+                                2.121072952832037e-7,
+                                -20.05327606201172
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_001_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_001",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        },
+                                        {
+                                            "type": 1,
+                                            "active": true,
+                                            "meshUID": 6406424316754169239
+                                        },
+                                        {
+                                            "type": 2,
+                                            "active": true,
+                                            "textureUID": 3905483716992624552,
+                                            "originalTextureUID": 3905483716992624552
+                                        }
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "City_building_004_$AssimpFbx$_Translation",
+                    "active": true,
+                    "components": [
+                        {
+                            "type": 0,
+                            "active": true,
+                            "position": [
+                                -41.47589111328125,
+                                0.0,
+                                -21.01409912109375
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "children": [
+                        {
+                            "name": "City_building_004_$AssimpFbx$_PreRotation",
+                            "active": true,
+                            "components": [
+                                {
+                                    "type": 0,
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        -90.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ]
+                                }
+                            ],
+                            "children": [
+                                {
+                                    "name": "City_building_004",
+                                    "active": true,
+                                    "components": [
+                                        {
+                                            "type": 0,
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ]
+                                        },
+                                        {
+                                            "type": 1,
+                                            "active": true,
+                                            "meshUID": 2795549343593994516
+                                        },
+                                        {
+                                            "type": 2,
+                                            "active": true,
+                                            "textureUID": 15082328737085636245,
+                                            "originalTextureUID": 15082328737085636245
+                                        }
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
