@@ -112,12 +112,7 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
             continue;
         }
 
-        // Check Library/ file exists
-        if (!meta.libraryPath.empty() && !std::filesystem::exists(meta.libraryPath)) {
-            LOG_DEBUG("[ModuleResources] Library file missing: %s", meta.libraryPath.c_str());
-            skipped++;
-            continue;
-        }
+        // El archivo será importado después en RegenerateFromAssets()
 
         // Create resource (don't load into memory yet)
         Resource* resource = nullptr;
@@ -134,8 +129,8 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
 
         case AssetType::MODEL_FBX:
             resourceType = Resource::MODEL;
-            // Just register for now, FBX handled differently
-            break;
+            // FBX handled differently, skip for now
+            continue;
 
         default:
             continue;
@@ -143,19 +138,41 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
 
         if (resource) {
             resource->assetsFile = assetPath;
-            resource->libraryFile = meta.libraryPath;
+
+            // Si libraryPath está vacío, generarlo ahora
+            if (meta.libraryPath.empty()) {
+                // Generate expected library path
+                if (resourceType == Resource::TEXTURE) {
+                    std::string filename = TextureImporter::GenerateTextureFilename(assetPath);
+                    resource->libraryFile = LibraryManager::GetTexturePath(filename);
+                }
+                else {
+                    resource->libraryFile = GenerateLibraryPath(resource);
+                }
+
+                LOG_DEBUG("[ModuleResources] Generated library path: %s",
+                    resource->libraryFile.c_str());
+            }
+            else {
+                resource->libraryFile = meta.libraryPath;
+            }
+
             resources[meta.uid] = resource;
             registered++;
 
-            LOG_DEBUG("[ModuleResources] Registered: UID=%llu, Type=%d, Asset=%s",
-                meta.uid, resourceType, assetPath.c_str());
+            LOG_DEBUG("[ModuleResources] Registered: UID=%llu, Type=%d, Asset=%s, Library=%s",
+                meta.uid, resourceType, assetPath.c_str(), resource->libraryFile.c_str());
+
+            if (!std::filesystem::exists(resource->libraryFile)) {
+                LOG_DEBUG("[ModuleResources] Library file missing (will be imported): %s",
+                    resource->libraryFile.c_str());
+            }
         }
     }
 
     LOG_CONSOLE("[ModuleResources] Resources registered: %d, skipped: %d",
         registered, skipped);
 }
-
 UID ModuleResources::Find(const char* fileInAssets) const {
     // First check loaded resources
     for (const auto& pair : resources) {
