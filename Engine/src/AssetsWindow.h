@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 #include <filesystem>
-
-struct ImVec2;
+#include <unordered_set>
+#include <imgui.h>
 
 namespace fs = std::filesystem;
 
@@ -13,44 +13,57 @@ struct AssetEntry
 {
     std::string name;
     std::string path;
-    bool isDirectory = false;
     std::string extension;
-    unsigned long long uid = 0;
-    bool inMemory = false;
-    int references = 0;
+    bool isDirectory;
+    bool inMemory;
+    unsigned int references;
+    unsigned long long uid;
+
+    // Para FBX expandibles
+    bool isFBX;
+    bool isExpanded;
+    std::vector<AssetEntry> subMeshes;  // Mallas contenidas en el FBX
 };
 
 class AssetsWindow : public EditorWindow
 {
 public:
     AssetsWindow();
-    ~AssetsWindow() override;
+    ~AssetsWindow();
 
     void Draw() override;
 
 private:
-    void DrawFolderTree(const fs::path& path, const std::string& label);
-    void DrawAssetsList();
-    void DrawAssetItem(const AssetEntry& asset, std::string& pathPendingToLoad);
     void RefreshAssets();
     void ScanDirectory(const fs::path& directory, std::vector<AssetEntry>& outAssets);
 
-    bool DeleteAsset(const AssetEntry& asset);
-    bool DeleteDirectory(const fs::path& dirPath);
+    void DrawFolderTree(const fs::path& path, const std::string& label);
+    void DrawAssetsList();
+    void DrawAssetItem(const AssetEntry& asset, std::string& pathPendingToLoad);
+    void DrawIconShape(const AssetEntry& entry, const ImVec2& pos, const ImVec2& size);
 
     const char* GetAssetIcon(const std::string& extension) const;
     bool IsAssetFile(const std::string& extension) const;
     std::string TruncateFileName(const std::string& name, float maxWidth) const;
-    void DrawIconShape(const AssetEntry& asset, const ImVec2& pos, const ImVec2& size);
 
-private:
+    bool DeleteAsset(const AssetEntry& asset);
+    bool DeleteDirectory(const fs::path& dirPath);
+
+    // Funciones para expandir FBX
+    void LoadFBXSubMeshes(AssetEntry& fbxAsset);
+    void DrawExpandableAssetItem(AssetEntry& asset, std::string& pathPendingToLoad);
+
     std::string assetsRootPath;
     std::string currentPath;
     std::vector<AssetEntry> currentAssets;
+
     AssetEntry* selectedAsset;
     float iconSize;
     bool showInMemoryOnly;
 
     bool showDeleteConfirmation;
     AssetEntry assetToDelete;
+
+    // Para rastrear qué FBX están expandidos
+    std::unordered_set<std::string> expandedFBXPaths;
 };

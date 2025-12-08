@@ -16,7 +16,6 @@ AssetsWindow::AssetsWindow()
 
     assetsRootPath = LibraryManager::GetAssetsRoot();
     currentPath = assetsRootPath;
-
 }
 
 AssetsWindow::~AssetsWindow()
@@ -53,15 +52,14 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
     ImVec4 buttonColor;
 
     if (asset.isDirectory) {
-        // Verde si tiene assets cargados, amarillo si no
         buttonColor = asset.inMemory ?
-            ImVec4(0.3f, 0.8f, 0.3f, 1.0f) :  // Verde: contiene assets en memoria
-            ImVec4(0.8f, 0.7f, 0.3f, 1.0f);    // Amarillo: carpeta vacía o sin assets cargados
+            ImVec4(0.3f, 0.8f, 0.3f, 1.0f) :
+            ImVec4(0.8f, 0.7f, 0.3f, 1.0f);
     }
     else {
         buttonColor = asset.inMemory ?
-            ImVec4(0.3f, 0.8f, 0.3f, 1.0f) :   // Verde: asset cargado
-            ImVec4(0.5f, 0.5f, 0.5f, 1.0f);    // Gris: asset no cargado
+            ImVec4(0.3f, 0.8f, 0.3f, 1.0f) :
+            ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
     }
 
     ImU32 color = ImGui::ColorConvertFloat4ToU32(buttonColor);
@@ -72,13 +70,11 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
 
     if (asset.isDirectory)
     {
-        // Dibujar carpeta
         float w = size.x - padding * 2;
         float h = size.y - padding * 2;
         ImVec2 topLeft(pos.x + padding, pos.y + padding + h * 0.2f);
         ImVec2 bottomRight(pos.x + size.x - padding, pos.y + size.y - padding);
 
-        // Pestaña de la carpeta
         ImVec2 tabStart(topLeft.x, topLeft.y);
         ImVec2 tabEnd(topLeft.x + w * 0.4f, topLeft.y);
         ImVec2 tabTop(topLeft.x + w * 0.35f, pos.y + padding);
@@ -89,7 +85,6 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
     }
     else if (asset.extension == ".fbx" || asset.extension == ".obj")
     {
-        // Dibujar cubo 3D
         float cubeSize = (size.x - padding * 2) * 0.6f;
         ImVec2 p1(center.x - cubeSize * 0.5f, center.y);
         ImVec2 p2(center.x + cubeSize * 0.5f, center.y);
@@ -103,7 +98,6 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
     }
     else if (asset.extension == ".png" || asset.extension == ".jpg" || asset.extension == ".jpeg" || asset.extension == ".dds")
     {
-        // Dibujar imagen (rectángulo con esquinas)
         float w = size.x - padding * 2;
         float h = size.y - padding * 2;
         ImVec2 topLeft(pos.x + padding, pos.y + padding);
@@ -112,18 +106,26 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
         drawList->AddRectFilled(topLeft, bottomRight, color, 3.0f);
         drawList->AddRect(topLeft, bottomRight, outlineColor, 3.0f, 0, 2.0f);
 
-        // Agregar "montañas" dentro
         ImVec2 m1(topLeft.x + w * 0.2f, topLeft.y + h * 0.7f);
         ImVec2 m2(topLeft.x + w * 0.4f, topLeft.y + h * 0.4f);
         ImVec2 m3(topLeft.x + w * 0.6f, topLeft.y + h * 0.7f);
         drawList->AddTriangleFilled(m1, m2, m3, ImGui::ColorConvertFloat4ToU32(ImVec4(0.3f, 0.3f, 0.3f, 0.8f)));
 
-        // Sol
         drawList->AddCircleFilled(ImVec2(topLeft.x + w * 0.75f, topLeft.y + h * 0.25f), w * 0.1f, ImGui::ColorConvertFloat4ToU32(ImVec4(1.0f, 1.0f, 0.3f, 0.8f)));
+    }
+    else if (asset.extension == ".mesh")
+    {
+        // Icono de mesh individual (triángulo simple)
+        float meshSize = (size.x - padding * 2) * 0.5f;
+        ImVec2 p1(center.x, center.y - meshSize * 0.6f);
+        ImVec2 p2(center.x - meshSize * 0.5f, center.y + meshSize * 0.4f);
+        ImVec2 p3(center.x + meshSize * 0.5f, center.y + meshSize * 0.4f);
+
+        drawList->AddTriangleFilled(p1, p2, p3, color);
+        drawList->AddTriangle(p1, p2, p3, outlineColor, 2.0f);
     }
     else if (asset.extension == ".wav" || asset.extension == ".ogg" || asset.extension == ".mp3")
     {
-        // Dibujar onda de audio
         float w = size.x - padding * 2;
         float h = size.y - padding * 2;
         ImVec2 start(pos.x + padding, center.y);
@@ -140,7 +142,6 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
     }
     else
     {
-        // Archivo genérico (hoja de papel)
         float w = size.x - padding * 2;
         float h = size.y - padding * 2;
         ImVec2 topLeft(pos.x + padding, pos.y + padding);
@@ -149,7 +150,6 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
         drawList->AddRectFilled(topLeft, bottomRight, color, 3.0f);
         drawList->AddRect(topLeft, bottomRight, outlineColor, 3.0f, 0, 2.0f);
 
-        // Líneas de texto
         for (int i = 0; i < 3; i++)
         {
             float y = topLeft.y + h * 0.3f + i * h * 0.15f;
@@ -157,6 +157,7 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
         }
     }
 }
+
 void AssetsWindow::Draw()
 {
     if (!isOpen) return;
@@ -321,7 +322,6 @@ void AssetsWindow::DrawFolderTree(const fs::path& path, const std::string& label
 
     if (ImGui::IsItemClicked())
     {
-        LOG_DEBUG("CLICKED: %s", path.string().c_str());
         currentPath = path.string();
         RefreshAssets();
     }
@@ -343,9 +343,6 @@ void AssetsWindow::DrawFolderTree(const fs::path& path, const std::string& label
             catch (...) {}
 
             ImGui::TreePop();
-        }
-        else
-        {
         }
     }
 
@@ -376,7 +373,12 @@ void AssetsWindow::DrawAssetsList()
         if (showInMemoryOnly && !asset.inMemory)
             continue;
 
-        DrawAssetItem(asset, pathPendingToLoad);
+        if (asset.isFBX) {
+            DrawExpandableAssetItem(asset, pathPendingToLoad);
+        }
+        else {
+            DrawAssetItem(asset, pathPendingToLoad);
+        }
 
         currentColumn++;
         if (currentColumn < columns)
@@ -394,6 +396,200 @@ void AssetsWindow::DrawAssetsList()
         currentPath = pathPendingToLoad;
         RefreshAssets();
     }
+}
+
+void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathPendingToLoad)
+{
+    ImGui::PushID(asset.path.c_str());
+    ImGui::BeginGroup();
+
+    // Botón de flecha para expandir/colapsar
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+    const char* arrowIcon = asset.isExpanded ? "v " : "> ";
+
+    if (ImGui::SmallButton(arrowIcon))
+    {
+        asset.isExpanded = !asset.isExpanded;
+
+        if (asset.isExpanded && asset.subMeshes.empty()) {
+            LoadFBXSubMeshes(asset);
+        }
+    }
+    ImGui::PopStyleColor();
+
+    ImGui::SameLine();
+
+    // Icono del FBX
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 0.3f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
+
+    bool clicked = ImGui::Button("##icon", ImVec2(iconSize, iconSize));
+
+    ImGui::PopStyleColor(3);
+
+    ImVec2 buttonPos = ImGui::GetItemRectMin();
+    DrawIconShape(asset, buttonPos, ImVec2(iconSize, iconSize));
+
+    bool isButtonHovered = ImGui::IsItemHovered();
+
+    if (clicked)
+    {
+        selectedAsset = &asset;
+    }
+
+    std::string displayName = asset.name;
+    if (!isButtonHovered)
+    {
+        displayName = TruncateFileName(asset.name, iconSize);
+    }
+
+    ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + iconSize);
+    ImGui::TextWrapped("%s", displayName.c_str());
+    ImGui::PopTextWrapPos();
+
+    if (asset.inMemory)
+    {
+        ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "Loaded: %d", asset.references);
+    }
+
+    ImGui::EndGroup();
+
+    // Context menu
+    std::string popupID = "AssetContextMenu##" + asset.path;
+    if (ImGui::BeginPopupContextItem(popupID.c_str()))
+    {
+        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "%s", asset.name.c_str());
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Delete"))
+        {
+            assetToDelete = asset;
+            showDeleteConfirmation = true;
+        }
+
+        if (asset.uid != 0)
+        {
+            ImGui::Separator();
+            ImGui::Text("UID: %llu", asset.uid);
+
+            if (asset.inMemory)
+            {
+                ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "Loaded in memory");
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::Text("%s", asset.name.c_str());
+        if (asset.uid != 0) {
+            ImGui::Text("UID: %llu", asset.uid);
+        }
+        ImGui::Text("Contains %zu meshes", asset.subMeshes.size());
+        ImGui::EndTooltip();
+    }
+
+    if (asset.isExpanded && !asset.subMeshes.empty())
+    {
+        // Continuar en la misma línea para expansión horizontal
+        ImGui::SameLine();
+
+        // Separador visual
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+        ImGui::Text(">");
+        ImGui::PopStyleColor();
+
+        // Dibujar cada submesh horizontalmente
+        for (size_t i = 0; i < asset.subMeshes.size(); ++i)
+        {
+            ImGui::SameLine();
+
+            auto& subMesh = asset.subMeshes[i];
+
+            ImGui::PushID(subMesh.path.c_str());
+            ImGui::BeginGroup();
+
+            // Icono de la mesh (más pequeño)
+            float smallIconSize = iconSize * 0.7f;
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 0.3f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
+
+            bool meshClicked = ImGui::Button("##meshicon", ImVec2(smallIconSize, smallIconSize));
+
+            ImGui::PopStyleColor(3);
+
+            ImVec2 meshButtonPos = ImGui::GetItemRectMin();
+            DrawIconShape(subMesh, meshButtonPos, ImVec2(smallIconSize, smallIconSize));
+
+            bool isMeshHovered = ImGui::IsItemHovered();
+
+            if (meshClicked)
+            {
+                selectedAsset = &subMesh;
+            }
+
+            // Nombre de la mesh
+            std::string meshDisplayName = subMesh.name;
+            if (!isMeshHovered)
+            {
+                meshDisplayName = TruncateFileName(subMesh.name, smallIconSize);
+            }
+
+            ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + smallIconSize);
+            ImGui::TextWrapped("%s", meshDisplayName.c_str());
+            ImGui::PopTextWrapPos();
+
+            if (subMesh.inMemory)
+            {
+                ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "R:%d", subMesh.references);
+            }
+
+            ImGui::EndGroup();
+
+            // Context menu para submesh
+            std::string meshPopupID = "MeshContextMenu##" + subMesh.path;
+            if (ImGui::BeginPopupContextItem(meshPopupID.c_str()))
+            {
+                ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "%s", subMesh.name.c_str());
+                ImGui::Separator();
+
+                if (subMesh.uid != 0)
+                {
+                    ImGui::Text("UID: %llu", subMesh.uid);
+
+                    if (subMesh.inMemory)
+                    {
+                        ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "Loaded in memory");
+                    }
+                }
+
+                ImGui::EndPopup();
+            }
+
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("Mesh: %s", subMesh.name.c_str());
+                if (subMesh.uid != 0) {
+                    ImGui::Text("UID: %llu", subMesh.uid);
+                }
+                if (subMesh.inMemory) {
+                    ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "Refs: %d", subMesh.references);
+                }
+                ImGui::EndTooltip();
+            }
+
+            ImGui::PopID();
+        }
+    }
+
+    ImGui::PopID();
 }
 
 void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendingToLoad)
@@ -428,10 +624,7 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
 
     if (isButtonHovered && ImGui::IsMouseDoubleClicked(0))
     {
-        if (!asset.isDirectory)
-        {
-        }
-        else
+        if (asset.isDirectory)
         {
             pathPendingToLoad = asset.path;
         }
@@ -447,7 +640,6 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
     ImGui::TextWrapped("%s", displayName.c_str());
     ImGui::PopTextWrapPos();
 
-    // Mostrar referencias tanto para archivos como para carpetas
     if (asset.inMemory)
     {
         if (asset.isDirectory) {
@@ -483,7 +675,6 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
             }
         }
 
-        // Info adicional para carpetas
         if (asset.isDirectory && asset.inMemory)
         {
             ImGui::Separator();
@@ -509,9 +700,85 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
 
     ImGui::PopID();
 }
+
+void AssetsWindow::LoadFBXSubMeshes(AssetEntry& fbxAsset)
+{
+    fbxAsset.subMeshes.clear();
+
+    // Cargar el .meta del FBX
+    std::string metaPath = fbxAsset.path + ".meta";
+    if (!fs::exists(metaPath)) {
+        LOG_DEBUG("[AssetsWindow] No .meta file found for FBX: %s", fbxAsset.path.c_str());
+        return;
+    }
+
+    MetaFile meta = MetaFile::Load(metaPath);
+
+    if (meta.libraryPaths.empty()) {
+        LOG_DEBUG("[AssetsWindow] FBX has no library paths in .meta");
+        return;
+    }
+
+    ModuleResources* resources = Application::GetInstance().resources.get();
+    if (!resources) {
+        LOG_DEBUG("[AssetsWindow] ModuleResources not available");
+        return;
+    }
+
+    // Crear una entrada AssetEntry por cada mesh en libraryPaths
+    int meshIndex = 0;
+    for (const std::string& libPath : meta.libraryPaths)
+    {
+        if (libPath.empty()) continue;
+
+        AssetEntry meshEntry;
+
+        // Extraer nombre del archivo mesh
+        fs::path meshPath(libPath);
+        meshEntry.name = meshPath.stem().string(); // Sin extensión
+
+        // Si el nombre está vacío o es genérico, usar índice
+        if (meshEntry.name.empty() || meshEntry.name == "unnamed_mesh") {
+            meshEntry.name = "Mesh_" + std::to_string(meshIndex);
+        }
+
+        meshEntry.path = libPath;
+        meshEntry.extension = ".mesh";
+        meshEntry.isDirectory = false;
+        meshEntry.isFBX = false;
+        meshEntry.isExpanded = false;
+        meshEntry.inMemory = false;
+        meshEntry.references = 0;
+        meshEntry.uid = 0;
+
+        // Buscar el UID correspondiente en resources
+        const auto& allResources = resources->GetAllResources();
+        for (const auto& pair : allResources)
+        {
+            if (pair.second->GetLibraryFile() == libPath)
+            {
+                meshEntry.uid = pair.first;
+
+                if (pair.second->IsLoadedToMemory())
+                {
+                    meshEntry.inMemory = true;
+                    meshEntry.references = pair.second->GetReferenceCount();
+                }
+
+                break;
+            }
+        }
+
+        fbxAsset.subMeshes.push_back(meshEntry);
+        meshIndex++;
+    }
+
+    LOG_DEBUG("[AssetsWindow] Loaded %zu submeshes for FBX: %s",
+        fbxAsset.subMeshes.size(), fbxAsset.name.c_str());
+}
+
 bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
 {
-
     try {
         if (asset.isDirectory)
         {
@@ -557,7 +824,6 @@ bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
 
 bool AssetsWindow::DeleteDirectory(const fs::path& dirPath)
 {
-
     try {
         std::vector<std::pair<unsigned long long, std::vector<std::string>>> filesToDelete;
 
@@ -639,17 +905,18 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
         asset.references = 0;
         asset.uid = 0;
 
+        asset.isFBX = (extension == ".fbx");
+        asset.isExpanded = false;
+        asset.subMeshes.clear();
 
         if (isDirectory)
         {
-
             ModuleResources* resources = Application::GetInstance().resources.get();
             if (resources)
             {
                 int totalRefs = 0;
                 bool anyLoaded = false;
 
-                // Iterar recursivamente en la carpeta
                 try {
                     for (const auto& subEntry : fs::recursive_directory_iterator(path))
                     {
@@ -671,7 +938,6 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                                 MetaFile subMeta = MetaFile::Load(subMetaPath);
                                 if (subMeta.uid != 0)
                                 {
-                                    // Para FBX: revisar todos los library paths
                                     if (subExt == ".fbx")
                                     {
                                         const auto& allResources = resources->GetAllResources();
@@ -693,7 +959,6 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                                             }
                                         }
                                     }
-                                    // Para otros assets
                                     else
                                     {
                                         if (resources->IsResourceLoaded(subMeta.uid))
@@ -711,81 +976,59 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
 
                 asset.inMemory = anyLoaded;
                 asset.references = totalRefs;
-
             }
         }
         else
         {
-            // Load UID from .meta
             std::string metaPath = asset.path + ".meta";
             if (fs::exists(metaPath))
             {
                 MetaFile meta = MetaFile::Load(metaPath);
                 asset.uid = meta.uid;
 
-                // Check if loaded in memory and get reference count
                 if (asset.uid != 0 && Application::GetInstance().resources)
                 {
                     ModuleResources* resources = Application::GetInstance().resources.get();
 
-                    // For FBX files, check if any of the meshes are loaded
                     if (extension == ".fbx")
                     {
-
-                        // FBX contains multiple meshes in libraryPaths
                         int totalRefs = 0;
                         bool anyLoaded = false;
-                        int meshesLoaded = 0;
 
-                        // Iterate through all resources to find matching library paths
                         const auto& allResources = resources->GetAllResources();
 
                         for (const std::string& libPath : meta.libraryPaths)
                         {
                             if (libPath.empty()) continue;
 
-                            // Find resource with this library path
-                            bool found = false;
                             for (const auto& pair : allResources)
                             {
                                 if (pair.second->GetLibraryFile() == libPath)
                                 {
-                                    found = true;
-
                                     if (pair.second->IsLoadedToMemory())
                                     {
                                         anyLoaded = true;
-                                        meshesLoaded++;
                                         int refs = pair.second->GetReferenceCount();
                                         totalRefs += refs;
                                     }
                                     break;
                                 }
                             }
-
-                            if (!found) {
-                            }
                         }
 
                         asset.inMemory = anyLoaded;
                         asset.references = totalRefs;
-
                     }
                     else if (extension == ".png" || extension == ".jpg" || extension == ".jpeg" ||
                         extension == ".dds" || extension == ".tga")
                     {
-
-                        // For textures - direct resource lookup
                         asset.inMemory = resources->IsResourceLoaded(asset.uid);
                         asset.references = resources->GetResourceReferenceCount(asset.uid);
                     }
                     else
                     {
-
-                        // For other asset types
                         asset.inMemory = resources->IsResourceLoaded(asset.uid);
                         asset.references = resources->GetResourceReferenceCount(asset.uid);
-
                     }
                 }
                 else
@@ -813,8 +1056,8 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                 return a.isDirectory > b.isDirectory;
             return a.name < b.name;
         });
-
 }
+
 const char* AssetsWindow::GetAssetIcon(const std::string& extension) const
 {
     if (extension.empty()) return "[DIR]";
