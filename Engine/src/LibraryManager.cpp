@@ -141,7 +141,7 @@ void LibraryManager::ClearLibrary() {
 }
 
 void LibraryManager::RegenerateFromAssets() {
-    LOG_CONSOLE("[LibraryManager] Scanning Assets and importing missing files to Library...");
+    LOG_CONSOLE("[LibraryManager] Scanning Assets and checking for changes (Timestamp check)...");
 
     fs::path assetsPath = GetAssetsRoot();
     int processed = 0;
@@ -155,7 +155,7 @@ void LibraryManager::RegenerateFromAssets() {
             fs::path assetPath = entry.path();
             std::string extension = assetPath.extension().string();
 
-            // Skip .meta files
+            // Skip .meta files (procesamos el asset, no su meta directamente)
             if (extension == ".meta") continue;
 
             AssetType type = MetaFile::GetAssetType(extension);
@@ -163,6 +163,12 @@ void LibraryManager::RegenerateFromAssets() {
 
             // Load .meta file
             std::string assetPathStr = assetPath.string();
+            std::string metaPathStr = assetPathStr + ".meta";
+
+            // Si no hay meta, probablemente es un archivo nuevo, lo saltamos por seguridad o lo creamos
+            // (Tu lógica actual asume que existe, así que seguimos esa línea)
+            if (!fs::exists(metaPathStr)) continue;
+
             MetaFile meta = MetaFileManager::LoadMeta(assetPathStr);
 
             if (meta.uid == 0) {
@@ -172,20 +178,33 @@ void LibraryManager::RegenerateFromAssets() {
                 continue;
             }
 
+            // --- TIMESTAMPS: Obtenemos fechas del Asset y del Meta ---
+            auto assetTime = fs::last_write_time(assetPath);
+            auto metaTime = fs::last_write_time(metaPathStr);
+
             // Process by type
             switch (type) {
             case AssetType::MODEL_FBX: {
-                //Check if library files exist BEFORE loading FBX
                 bool needsImport = false;
 
                 if (meta.libraryPaths.empty()) {
-                    // No library paths in meta - needs import
+                    // Si no tiene rutas guardadas, hay que importar
                     needsImport = true;
                 }
                 else {
-                    // Check if all library files exist
+                    // Comprobamos cada archivo generado en la Library
                     for (const auto& libPath : meta.libraryPaths) {
                         if (!FileExists(libPath)) {
+                            needsImport = true; // Falta archivo físico
+                            break;
+                        }
+
+                        // --- CAMBIO CLAVE: Comprobación de Fecha para Modelos ---
+                        auto libTime = fs::last_write_time(libPath);
+
+                        // Si el Asset o el Meta son mas nuevos que la Library -> REIMPORTAR
+                        if (assetTime > libTime || metaTime > libTime) {
+                            LOG_CONSOLE("[LibraryManager] Change detected in Model/Meta: %s", assetPath.filename().string().c_str());
                             needsImport = true;
                             break;
                         }
@@ -197,25 +216,19 @@ void LibraryManager::RegenerateFromAssets() {
                     break;
                 }
 
-                // ONLY LOAD FBX IF IMPORT IS NEEDED 
+                // --- IMPORTACIÓN FBX ---
                 unsigned int importFlags = aiProcess_Triangulate |
                     aiProcess_JoinIdenticalVertices |
                     aiProcess_ValidateDataStructure;
 
-                if (meta.importSettings.generateNormals) {
-                    importFlags |= aiProcess_GenNormals;
-                }
-                if (meta.importSettings.flipUVs) {
-                    importFlags |= aiProcess_FlipUVs;
-                }
-                if (meta.importSettings.optimizeMeshes) {
-                    importFlags |= aiProcess_OptimizeMeshes;
-                }
+                if (meta.importSettings.generateNormals) importFlags |= aiProcess_GenNormals;
+                if (meta.importSettings.flipUVs) importFlags |= aiProcess_FlipUVs;
+                if (meta.importSettings.optimizeMeshes) importFlags |= aiProcess_OptimizeMeshes;
 
                 const aiScene* scene = aiImportFile(assetPath.string().c_str(), importFlags);
 
                 if (scene && scene->HasMeshes()) {
-                    LOG_DEBUG("Importing FBX: %s", assetPath.filename().string().c_str());
+                    LOG_DEBUG("Re-Importing FBX: %s", assetPath.filename().string().c_str());
 
                     meta.libraryPaths.clear();
 
@@ -223,7 +236,6 @@ void LibraryManager::RegenerateFromAssets() {
                         aiMesh* aiMesh = scene->mMeshes[i];
                         Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
 
-                        // Apply import scale
                         if (meta.importSettings.importScale != 1.0f) {
                             for (auto& vertex : mesh.vertices) {
                                 vertex.position *= meta.importSettings.importScale;
@@ -238,10 +250,8 @@ void LibraryManager::RegenerateFromAssets() {
                         }
                     }
 
-                    // Save .meta with all paths
                     if (!meta.libraryPaths.empty()) {
-                        std::string metaPath = assetPathStr + ".meta";
-                        meta.Save(metaPath);
+                        meta.Save(metaPathStr);
                     }
 
                     aiReleaseImport(scene);
@@ -259,20 +269,34 @@ void LibraryManager::RegenerateFromAssets() {
             case AssetType::TEXTURE_JPG:
             case AssetType::TEXTURE_DDS:
             case AssetType::TEXTURE_TGA: {
-                // Generate filename in Library
                 std::string filename = TextureImporter::GenerateTextureFilename(assetPath.string());
                 std::string fullPath = GetTexturePath(filename);
 
-                // FAST CHECK: Only import if missing
+                bool needsImport = false;
+
+                // 1. ¿Existe el archivo en Library?
                 if (!FileExists(fullPath)) {
+                    needsImport = true;
+                }
+                else {
+                    // 2. --- CAMBIO CLAVE: Comprobación de Fecha para Texturas ---
+                    auto libTime = fs::last_write_time(fullPath);
+
+                    // Si la textura original (.png) o su configuración (.meta) son más nuevas -> REIMPORTAR
+                    if (assetTime > libTime || metaTime > libTime) {
+                        LOG_CONSOLE("[LibraryManager] Change detected in Texture/Meta: %s", assetPath.filename().string().c_str());
+                        needsImport = true;
+                    }
+                }
+
+                if (needsImport) {
                     LOG_DEBUG("Importing texture: %s", assetPath.filename().string().c_str());
                     TextureData texture = TextureImporter::ImportFromFile(assetPath.string());
 
                     if (texture.IsValid()) {
                         if (TextureImporter::SaveToCustomFormat(texture, filename)) {
                             meta.libraryPath = fullPath;
-                            std::string metaPath = assetPathStr + ".meta";
-                            meta.Save(metaPath);
+                            meta.Save(metaPathStr);
                             processed++;
                         }
                         else {
@@ -288,11 +312,10 @@ void LibraryManager::RegenerateFromAssets() {
                     }
                 }
                 else {
-                    // Already exists, but check .meta has libraryPath
+                    // Already exists and up to date, ensure meta has path
                     if (meta.libraryPath.empty()) {
                         meta.libraryPath = fullPath;
-                        std::string metaPath = assetPathStr + ".meta";
-                        meta.Save(metaPath);
+                        meta.Save(metaPathStr);
                     }
                     skipped++;
                 }
@@ -308,6 +331,6 @@ void LibraryManager::RegenerateFromAssets() {
         LOG_CONSOLE("[LibraryManager] ERROR during scan: %s", e.what());
     }
 
-    LOG_CONSOLE("[LibraryManager] Scan complete: %d imported, %d already in Library, %d errors",
+    LOG_CONSOLE("[LibraryManager] Scan complete: %d re-imported/new, %d synchronized, %d errors",
         processed, skipped, errors);
 }
