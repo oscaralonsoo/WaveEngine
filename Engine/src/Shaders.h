@@ -9,22 +9,22 @@ public:
     Shader();
     ~Shader();
 
-    // Shader creation methods for different use cases
-    bool Create(); // Standard textured shader
-    bool CreateSimpleColor(); // Color shader for transparent objects
-    bool CreateWithDiscard(); // Shader with alpha discard for cutout textures
-    bool CreateSingleColor(); // Solid color shader for outlines
-    bool CreateDepthVisualization(); // Z-Buffer visualization shader
+    bool Create();
+    bool CreateSimpleColor();
+    bool CreateWithDiscard();
+    bool CreateSingleColor();
+    bool CreateDepthVisualization();
+    bool CreateNoTexture(); // NUEVO: Shader para objetos sin textura con iluminación
 
     void Use() const;
     void Delete();
 
     unsigned int GetProgramID() const { return shaderProgram; }
 
-    // Uniform setters
     void SetVec3(const std::string& name, const glm::vec3& value) const;
     void SetFloat(const std::string& name, float value) const;
     void SetMat4(const std::string& name, const glm::mat4& mat) const;
+    void SetInt(const std::string& name, int value) const; // NUEVO
 
 private:
     unsigned int shaderProgram;

@@ -36,7 +36,7 @@ bool Renderer::Start()
     // Initialize default shader
     defaultShader = make_unique<Shader>();
 
-    if (!defaultShader->Create())
+    if (!defaultShader->CreateNoTexture())  
     {
         LOG_DEBUG("ERROR: Failed to create default shader");
         LOG_CONSOLE("ERROR: Failed to compile shaders");
@@ -904,19 +904,28 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject,
     {
         defaultShader->SetVec3("tintColor", glm::vec3(1.0f));
 
-        if (material && material->IsActive() && material->HasTexture())
+        // ===== SECCIÓN MODIFICADA =====
+        bool hasTexture = (material && material->IsActive() && material->HasTexture());
+
+        // Configurar uniform hasTexture
+        defaultShader->SetInt("hasTexture", hasTexture ? 1 : 0);
+
+        // Configurar dirección de luz (ajusta según prefieras)
+        defaultShader->SetVec3("lightDir", glm::vec3(1.0f, -1.0f, -1.0f));
+
+        if (hasTexture)
         {
             material->Use();  // Bind the material's texture
             materialBound = true;
         }
         else
         {
-            // No material, or material has no texture (checkerboard case)
-            defaultTexture->Bind();  // Use default checkerboard
+            glBindTexture(GL_TEXTURE_2D, 0); // No texture
         }
 
-        // Set the texture sampler uniform AFTER binding
+        // Set the texture sampler uniform
         glUniform1i(defaultUniforms.texture1, 0);
+        // ===== FIN SECCIÓN MODIFICADA =====
     }
 
     const std::vector<Component*>& meshComponents =
@@ -983,8 +992,7 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject,
     {
         if (materialBound)
             material->Unbind();
-        else
-            defaultTexture->Unbind();
+        // Ya no unbindeamos defaultTexture
     }
 
     for (GameObject* child : gameObject->GetChildren())

@@ -489,3 +489,121 @@ bool Shader::CreateDepthVisualization()
 
     return true;
 }
+
+bool Shader::CreateNoTexture()
+{
+    // Vertex shader con normales para iluminación
+    const char* vertexShaderSource = "#version 330 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "layout (location = 1) in vec3 aNormal;\n"
+        "layout (location = 2) in vec2 aTexCoord;\n"
+        "\n"
+        "out vec3 FragPos;\n"
+        "out vec3 Normal;\n"
+        "out vec2 TexCoord;\n"
+        "\n"
+        "uniform mat4 model;\n"
+        "uniform mat4 view;\n"
+        "uniform mat4 projection;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "   FragPos = vec3(model * vec4(aPos, 1.0));\n"
+        "   Normal = mat3(transpose(inverse(model))) * aNormal;\n"
+        "   TexCoord = aTexCoord;\n"
+        "   gl_Position = projection * view * vec4(FragPos, 1.0);\n"
+        "}\0";
+
+    // Fragment shader con iluminación simple + textura opcional
+    const char* fragmentShaderSource = "#version 330 core\n"
+        "out vec4 FragColor;\n"
+        "\n"
+        "in vec3 FragPos;\n"
+        "in vec3 Normal;\n"
+        "in vec2 TexCoord;\n"
+        "\n"
+        "uniform sampler2D texture1;\n"
+        "uniform bool hasTexture;\n"
+        "uniform vec3 tintColor;\n"
+        "uniform vec3 lightDir;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "   vec3 baseColor;\n"
+        "   \n"
+        "   if (hasTexture) {\n"
+        "       vec4 texColor = texture(texture1, TexCoord);\n"
+        "       if(texColor.a < 0.1) discard;\n"
+        "       baseColor = texColor.rgb * tintColor;\n"
+        "   } else {\n"
+        "       // Color gris por defecto sin textura\n"
+        "       baseColor = vec3(0.6, 0.6, 0.6);\n"
+        "   }\n"
+        "   \n"
+        "   // Iluminación difusa simple\n"
+        "   vec3 norm = normalize(Normal);\n"
+        "   vec3 light = normalize(-lightDir);\n"
+        "   float diff = max(dot(norm, light), 0.0);\n"
+        "   \n"
+        "   // Luz ambiental + difusa\n"
+        "   vec3 ambient = 0.3 * baseColor;\n"
+        "   vec3 diffuse = diff * baseColor;\n"
+        "   \n"
+        "   vec3 result = ambient + diffuse;\n"
+        "   FragColor = vec4(result, 1.0);\n"
+        "}\0";
+
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cerr << "ERROR: NoTexture Vertex Shader Compilation Failed\n" << infoLog << std::endl;
+        return false;
+    }
+
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cerr << "ERROR: NoTexture Fragment Shader Compilation Failed\n" << infoLog << std::endl;
+        glDeleteShader(vertexShader);
+        return false;
+    }
+
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cerr << "ERROR: NoTexture Shader Program Linking Failed\n" << infoLog << std::endl;
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+        return false;
+    }
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    LOG_CONSOLE("NoTexture shader created successfully!");
+
+    return true;
+}
+
+void Shader::SetInt(const std::string& name, int value) const
+{
+    glUniform1i(glGetUniformLocation(shaderProgram, name.c_str()), value);
+}

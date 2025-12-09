@@ -373,6 +373,7 @@ void AssetsWindow::DrawAssetsList()
         if (showInMemoryOnly && !asset.inMemory)
             continue;
 
+        // Solo FBX se expanden
         if (asset.isFBX) {
             DrawExpandableAssetItem(asset, pathPendingToLoad);
         }
@@ -397,7 +398,6 @@ void AssetsWindow::DrawAssetsList()
         RefreshAssets();
     }
 }
-
 void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathPendingToLoad)
 {
     ImGui::PushID(asset.path.c_str());
@@ -493,29 +493,73 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
         ImGui::EndTooltip();
     }
 
+    // Dibujar submeshes horizontalmente con wrapping
     if (asset.isExpanded && !asset.subMeshes.empty())
     {
-        // Continuar en la misma línea para expansión horizontal
-        ImGui::SameLine();
+        float smallIconSize = iconSize * 0.7f;
+        float itemWidth = smallIconSize + 15.0f;
 
-        // Separador visual
+        LOG_DEBUG("[DrawExpandableAsset] FBX: %s has %zu submeshes", asset.name.c_str(), asset.subMeshes.size());
+
+        ImGui::Dummy(ImVec2(0, 0));
+
+        // Calcular indentación para las submeshes
+        float indentSize = 30.0f;
+        float startX = ImGui::GetCursorPosX() + indentSize;
+
+        // Separador visual con indentación
+        ImGui::SetCursorPosX(startX);
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
         ImGui::Text(">");
         ImGui::PopStyleColor();
 
-        // Dibujar cada submesh horizontalmente
+        // Obtener el ancho disponible considerando la indentación
+        float windowContentWidth = ImGui::GetContentRegionAvail().x;
+        float currentX = startX;
+
+        LOG_DEBUG("[DrawExpandableAsset] startX: %.2f, windowContentWidth: %.2f, itemWidth: %.2f",
+            startX, windowContentWidth, itemWidth);
+
+        // Dibujar cada submesh
         for (size_t i = 0; i < asset.subMeshes.size(); ++i)
         {
-            ImGui::SameLine();
-
             auto& subMesh = asset.subMeshes[i];
+
+            // Verificar si necesitamos nueva línea
+            if (i > 0)
+            {
+                float remainingWidth = startX + windowContentWidth - currentX;
+
+                LOG_DEBUG("[DrawExpandableAsset] Mesh %zu: currentX: %.2f, remaining: %.2f",
+                    i, currentX, remainingWidth);
+
+                if (remainingWidth < itemWidth)
+                {
+                    // Nueva línea con indentación
+                    LOG_DEBUG("[DrawExpandableAsset] Mesh %zu: NUEVA LINEA", i);
+                    ImGui::NewLine();
+                    ImGui::SetCursorPosX(startX);
+                    currentX = startX;
+                }
+                else
+                {
+                    // Continuar en la misma línea
+                    ImGui::SameLine();
+                }
+            }
+            else
+            {
+                // Primera submesh - continuar en la misma línea del separador
+                ImGui::SameLine();
+            }
+
+            // Actualizar posición actual
+            currentX = ImGui::GetCursorPosX();
 
             ImGui::PushID(subMesh.path.c_str());
             ImGui::BeginGroup();
 
             // Icono de la mesh (más pequeño)
-            float smallIconSize = iconSize * 0.7f;
-
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 0.3f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
@@ -551,6 +595,9 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
             }
 
             ImGui::EndGroup();
+
+            // Actualizar currentX después del grupo (incluye el ancho del elemento)
+            currentX += itemWidth;
 
             // Context menu para submesh
             std::string meshPopupID = "MeshContextMenu##" + subMesh.path;
@@ -591,7 +638,6 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
 
     ImGui::PopID();
 }
-
 void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendingToLoad)
 {
     ImGui::PushID(asset.path.c_str());
@@ -705,27 +751,27 @@ void AssetsWindow::LoadFBXSubMeshes(AssetEntry& fbxAsset)
 {
     fbxAsset.subMeshes.clear();
 
-    // Cargar el .meta del FBX
     std::string metaPath = fbxAsset.path + ".meta";
     if (!fs::exists(metaPath)) {
-        LOG_DEBUG("[AssetsWindow] No .meta file found for FBX: %s", fbxAsset.path.c_str());
+        LOG_CONSOLE("[AssetsWindow] No .meta file found for FBX: %s", fbxAsset.path.c_str());
         return;
     }
 
     MetaFile meta = MetaFile::Load(metaPath);
 
     if (meta.libraryPaths.empty()) {
-        LOG_DEBUG("[AssetsWindow] FBX has no library paths in .meta");
+        LOG_CONSOLE("[AssetsWindow] FBX has no library paths in .meta");
         return;
     }
 
     ModuleResources* resources = Application::GetInstance().resources.get();
     if (!resources) {
-        LOG_DEBUG("[AssetsWindow] ModuleResources not available");
+        LOG_CONSOLE("[AssetsWindow] ModuleResources not available");
         return;
     }
 
-    // Crear una entrada AssetEntry por cada mesh en libraryPaths
+    const auto& allResources = resources->GetAllResources();
+
     int meshIndex = 0;
     for (const std::string& libPath : meta.libraryPaths)
     {
@@ -733,11 +779,9 @@ void AssetsWindow::LoadFBXSubMeshes(AssetEntry& fbxAsset)
 
         AssetEntry meshEntry;
 
-        // Extraer nombre del archivo mesh
         fs::path meshPath(libPath);
-        meshEntry.name = meshPath.stem().string(); // Sin extensión
+        meshEntry.name = meshPath.stem().string();
 
-        // Si el nombre está vacío o es genérico, usar índice
         if (meshEntry.name.empty() || meshEntry.name == "unnamed_mesh") {
             meshEntry.name = "Mesh_" + std::to_string(meshIndex);
         }
@@ -747,24 +791,31 @@ void AssetsWindow::LoadFBXSubMeshes(AssetEntry& fbxAsset)
         meshEntry.isDirectory = false;
         meshEntry.isFBX = false;
         meshEntry.isExpanded = false;
+        meshEntry.uid = 0;
         meshEntry.inMemory = false;
         meshEntry.references = 0;
-        meshEntry.uid = 0;
 
-        // Buscar el UID correspondiente en resources
-        const auto& allResources = resources->GetAllResources();
+        // Normalizar paths para comparación
+        std::string normalizedLibPath = libPath;
+        std::replace(normalizedLibPath.begin(), normalizedLibPath.end(), '\\', '/');
+        std::transform(normalizedLibPath.begin(), normalizedLibPath.end(),
+            normalizedLibPath.begin(), ::tolower);
+
+        // Buscar en recursos cargados
         for (const auto& pair : allResources)
         {
-            if (pair.second->GetLibraryFile() == libPath)
+            const char* resourceLibPathCStr = pair.second->GetLibraryFile();
+            std::string resourceLibPath(resourceLibPathCStr ? resourceLibPathCStr : "");
+            std::string normalizedResourcePath = resourceLibPath;
+            std::replace(normalizedResourcePath.begin(), normalizedResourcePath.end(), '\\', '/');
+            std::transform(normalizedResourcePath.begin(), normalizedResourcePath.end(),
+                normalizedResourcePath.begin(), ::tolower);
+
+            if (normalizedResourcePath == normalizedLibPath)
             {
                 meshEntry.uid = pair.first;
-
-                if (pair.second->IsLoadedToMemory())
-                {
-                    meshEntry.inMemory = true;
-                    meshEntry.references = pair.second->GetReferenceCount();
-                }
-
+                meshEntry.inMemory = pair.second->IsLoadedToMemory();
+                meshEntry.references = pair.second->GetReferenceCount();
                 break;
             }
         }
@@ -772,11 +823,7 @@ void AssetsWindow::LoadFBXSubMeshes(AssetEntry& fbxAsset)
         fbxAsset.subMeshes.push_back(meshEntry);
         meshIndex++;
     }
-
-    LOG_DEBUG("[AssetsWindow] Loaded %zu submeshes for FBX: %s",
-        fbxAsset.subMeshes.size(), fbxAsset.name.c_str());
 }
-
 bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
 {
     try {

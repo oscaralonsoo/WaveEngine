@@ -326,11 +326,6 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
                         }
                     }
                 }
-
-                if (!loaded)
-                {
-                    matComponent->CreateCheckerboardTexture();
-                }
             }
         }
     }
