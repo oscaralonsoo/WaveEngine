@@ -2,8 +2,9 @@ guid: e1f6543799d566a5e22ee87a15d63d0b
 uid: 13059021911400707629
 type: 2
 originalPath: Assets/Pruebas/DropShipParts_Texture.png
-libraryPath: Library/Textures/dropshipparts_texture_dcec58b6dec5244.texture
-libraryPathCount: 0
+libraryPath: Library/Textures/dropshipparts_texture_ec76a734f903ece2.texture
+libraryPathCount: 1
+libraryPath0: Library/Textures/dropshipparts_texture_dcec58b6dec5244.texture
 lastModified: 134090049246807067
 importScale: 1
 generateNormals: 1

@@ -2,8 +2,9 @@ guid: 2bb25c4b70fdd7f6a1657d50412a6a32
 uid: 12350882133131632490
 type: 2
 originalPath: Assets/Pruebas/LondonHouse_Texture.png
-libraryPath: Library/Textures/londonhouse_texture_7b65c70c940971d.texture
-libraryPathCount: 0
+libraryPath: Library/Textures/londonhouse_texture_11a4fad68b2c890f.texture
+libraryPathCount: 1
+libraryPath0: Library/Textures/londonhouse_texture_7b65c70c940971d.texture
 lastModified: 134090049246875488
 importScale: 1
 generateNormals: 1

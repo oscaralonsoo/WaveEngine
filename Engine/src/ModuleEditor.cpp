@@ -277,17 +277,16 @@ void ModuleEditor::ShowMenuBar()
                     );
                 if (transform)
                 {
-                    transform->SetPosition(glm::vec3(0.0f, 1.5f, 10.0f));
+                    glm::vec3 cameraEditor = app.camera.get()->GetEditorCamera()->GetPosition();
+                    transform->SetPosition(cameraEditor);
+                    transform->SetRotation(cameraEditor);
                 }
+
 
                 ComponentCamera* sceneCamera = static_cast<ComponentCamera*>(
                     cameraGO->CreateComponent(ComponentType::CAMERA)
                     );
 
-                if (sceneCamera)
-                {
-                    app.camera->SetSceneCamera(sceneCamera);
-                }
             }
 
             ImGui::EndMenu();

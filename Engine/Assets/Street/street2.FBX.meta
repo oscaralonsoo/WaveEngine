@@ -2,7 +2,7 @@ guid: d61b2c3aed1e87d12fc932fc1bed3c63
 uid: 16564318640181534291
 type: 1
 originalPath: Assets/Street/street2.FBX
-libraryPath: Library/Meshes/city_building_041_7e0063ef2b7d45eb.mesh
+libraryPath: Library/Models/street2_5e3b539318f44d64.mesh
 libraryPathCount: 30
 libraryPath0: Library/Meshes/city_building_041_7e0063ef2b7d45eb.mesh
 libraryPath1: Library/Meshes/city_building_040_7e0062ef2b7d4438.mesh
@@ -34,7 +34,7 @@ libraryPath26: Library/Meshes/city_building_008_7e0de2ef2b88a814.mesh
 libraryPath27: Library/Meshes/city_building_007_7e0dd9ef2b8898c9.mesh
 libraryPath28: Library/Meshes/city_building_001_7e0ddbef2b889c2f.mesh
 libraryPath29: Library/Meshes/city_building_004_7e0dd6ef2b8893b0.mesh
-lastModified: 134092582211747322
+lastModified: 134097397345041432
 importScale: 1
 generateNormals: 1
 flipUVs: 1

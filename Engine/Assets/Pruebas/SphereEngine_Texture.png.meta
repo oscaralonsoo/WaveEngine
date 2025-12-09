@@ -2,8 +2,9 @@ guid: 6e9f07e73fb12409ebe8651f5bfc8b8a
 uid: 12142372004773051329
 type: 2
 originalPath: Assets/Pruebas/SphereEngine_Texture.png
-libraryPath: Library/Textures/sphereengine_texture_a385070c1f456610.texture
-libraryPathCount: 0
+libraryPath: Library/Textures/sphereengine_texture_d4ca342e6184745a.texture
+libraryPathCount: 1
+libraryPath0: Library/Textures/sphereengine_texture_a385070c1f456610.texture
 lastModified: 134090049248113939
 importScale: 1
 generateNormals: 1

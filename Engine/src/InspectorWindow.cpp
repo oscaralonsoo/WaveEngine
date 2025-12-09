@@ -41,7 +41,21 @@ void InspectorWindow::Draw()
     }
 
     ImGui::Text("GameObject: %s", selectedObject->GetName().c_str());
-    ImGui::Separator();
+    ImGui::SameLine();
+
+    if (selectedObject->GetComponent(ComponentType::CAMERA)) {
+        bool isActive = false; // ActiveCamera
+        ImGui::Checkbox("##isActive",&isActive);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Set has Active Camera");
+        if (isActive) {
+            ComponentCamera* cameraGo = Application::GetInstance().camera.get()->GetSceneCamera();
+            ComponentCamera* ActiveCamera = Application::GetInstance().camera.get()->GetActiveCamera();
+            if (cameraGo != ActiveCamera) {
+                Application::GetInstance().camera->SetSceneCamera(cameraGo);
+            }
+
+        }
+    }
 
     DrawGizmoSettings();
     ImGui::Separator();

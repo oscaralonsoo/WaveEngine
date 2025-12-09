@@ -2,8 +2,9 @@ guid: b2d25d97eec9399fc554d83d5d82f92f
 uid: 15784619682774369185
 type: 2
 originalPath: Assets/BakerHouse/Baker_house.png
-libraryPath: Library/Textures/baker_house_ac6e807796a54516.texture
-libraryPathCount: 0
+libraryPath: Library/Textures/baker_house_8ff34c06905fe9dc.texture
+libraryPathCount: 1
+libraryPath0: Library/Textures/baker_house_ac6e807796a54516.texture
 lastModified: 134057679635580745
 importScale: 1
 generateNormals: 1

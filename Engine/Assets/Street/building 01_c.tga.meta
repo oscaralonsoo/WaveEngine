@@ -2,8 +2,9 @@ guid: 54bf572856ea8102ee6ce7858846e23f
 uid: 1215200086577370551
 type: 5
 originalPath: Assets/Street/building 01_c.tga
-libraryPath: Library/Textures/building_01_c_c2477a8474193826.texture
-libraryPathCount: 0
+libraryPath: Library/Textures/building_01_c_67247296b8ba5cf0.texture
+libraryPathCount: 1
+libraryPath0: Library/Textures/building_01_c_c2477a8474193826.texture
 lastModified: 134092582208065197
 importScale: 1
 generateNormals: 1

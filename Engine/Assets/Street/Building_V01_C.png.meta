@@ -2,8 +2,9 @@ guid: 10f8d08882b9eaff9a70ce499c08571d
 uid: 15474817188707382649
 type: 2
 originalPath: Assets/Street/Building_V01_C.png
-libraryPath: Library/Textures/building_v01_c_1a784a0d88bca3e.texture
-libraryPathCount: 0
+libraryPath: Library/Textures/building_v01_c_db5c2c49afbd5670.texture
+libraryPathCount: 1
+libraryPath0: Library/Textures/building_v01_c_1a784a0d88bca3e.texture
 lastModified: 134092582210063470
 importScale: 1
 generateNormals: 1

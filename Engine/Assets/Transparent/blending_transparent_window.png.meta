@@ -2,8 +2,9 @@ guid: 5970645ae3b01d086873f05eab728e8c
 uid: 15586214340175259194
 type: 2
 originalPath: Assets/Transparent/blending_transparent_window.png
-libraryPath: Library/Textures/blending_transparent_window_3ae5e2874b6f3396.texture
-libraryPathCount: 0
+libraryPath: Library/Textures/blending_transparent_window_3973c941f67d6a24.texture
+libraryPathCount: 1
+libraryPath0: Library/Textures/blending_transparent_window_3ae5e2874b6f3396.texture
 lastModified: 134090049249567571
 importScale: 1
 generateNormals: 1

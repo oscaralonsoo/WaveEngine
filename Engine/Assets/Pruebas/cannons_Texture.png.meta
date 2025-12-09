@@ -2,8 +2,9 @@ guid: 9be4d99444310564e02cbbecd7abe7d2
 uid: 5465828910284284629
 type: 2
 originalPath: Assets/Pruebas/cannons_Texture.png
-libraryPath: Library/Textures/cannons_texture_534402e66e6ebb59.texture
-libraryPathCount: 0
+libraryPath: Library/Textures/cannons_texture_17a59de918d67c63.texture
+libraryPathCount: 1
+libraryPath0: Library/Textures/cannons_texture_534402e66e6ebb59.texture
 lastModified: 134090049249515529
 importScale: 1
 generateNormals: 1

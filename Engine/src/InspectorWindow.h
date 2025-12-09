@@ -39,4 +39,5 @@ private:
     // Normals visualization
     bool showVertexNormals = false;
     bool showFaceNormals = false;
+
 };
