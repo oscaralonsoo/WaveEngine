@@ -7,23 +7,8 @@
 #include <windows.h>
 #include "Log.h"
 
-// ========== MetaFile Implementation ==========
-
-std::string MetaFile::GenerateGUID() {
-    std::random_device rd;
-    std::mt19937_64 gen(rd());
-    std::uniform_int_distribution<uint64_t> dis;
-
-    uint64_t part1 = dis(gen);
-    uint64_t part2 = dis(gen);
-
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0')
-        << std::setw(16) << part1
-        << std::setw(16) << part2;
-
-    return ss.str();
-}
+// META FILE IMPLEMENTATION
+///////////////////////////////
 
 UID MetaFile::GenerateUID() {
     std::random_device rd;
@@ -45,22 +30,6 @@ AssetType MetaFile::GetAssetType(const std::string& extension) {
     return AssetType::UNKNOWN;
 }
 
-void MetaFile::AddLibraryPath(const std::string& path) {
-    if (path.empty()) return;
-
-    // Avoid duplicates
-    for (const auto& existingPath : libraryPaths) {
-        if (existingPath == path) return;
-    }
-
-    libraryPaths.push_back(path);
-
-    // Update main libraryPath with first entry
-    if (libraryPath.empty() && !libraryPaths.empty()) {
-        libraryPath = libraryPaths[0];
-    }
-}
-
 bool MetaFile::Save(const std::string& metaFilePath) const {
     std::ofstream file(metaFilePath);
     if (!file.is_open()) {
@@ -70,21 +39,10 @@ bool MetaFile::Save(const std::string& metaFilePath) const {
 
     // Convert absolute paths to relative before saving
     std::string relativeOriginalPath = MakeRelativeToProject(originalPath);
-    std::string relativeLibraryPath = MakeRelativeToProject(libraryPath);
 
-    // Write data
-    file << "guid: " << guid << "\n";
+    // Write data 
     file << "uid: " << uid << "\n";
     file << "type: " << static_cast<int>(type) << "\n";
-    //file << "originalPath: " << relativeOriginalPath << "\n";
-    //file << "libraryPath: " << relativeLibraryPath << "\n";
-
-    //file << "libraryPathCount: " << libraryPaths.size() << "\n";
-    //for (size_t i = 0; i < libraryPaths.size(); ++i) {
-      //  std::string relativePath = MakeRelativeToProject(libraryPaths[i]);
-        //file << "libraryPath" << i << ": " << relativePath << "\n";
-    //}
-
     file << "lastModified: " << lastModified << "\n";
     file << "importScale: " << importSettings.importScale << "\n";
     file << "generateNormals: " << (importSettings.generateNormals ? "1" : "0") << "\n";
@@ -105,7 +63,6 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
         return meta;
     }
 
-    int libraryPathCount = 0;
     std::string line;
 
     while (std::getline(file, line)) {
@@ -115,10 +72,8 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
         std::string key = line.substr(0, colonPos);
         std::string value = line.substr(colonPos + 2);
 
-        if (key == "guid") {
-            meta.guid = value;
-        }
-        else if (key == "uid") {
+       
+        if (key == "uid") {
             meta.uid = std::stoull(value);
         }
         else if (key == "type") {
@@ -126,20 +81,6 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
         }
         else if (key == "originalPath") {
             meta.originalPath = MakeAbsoluteFromProject(value);
-        }
-        else if (key == "libraryPath") {
-            meta.libraryPath = MakeAbsoluteFromProject(value);
-        }
-        else if (key == "libraryPathCount") {
-            libraryPathCount = std::stoi(value);
-            meta.libraryPaths.reserve(libraryPathCount);
-        }
-        else if (key.find("libraryPath") == 0 && key.length() > 11) {
-            // libraryPath0, libraryPath1, etc.
-            std::string path = MakeAbsoluteFromProject(value);
-            if (!path.empty()) {
-                meta.libraryPaths.push_back(path);
-            }
         }
         else if (key == "lastModified") {
             meta.lastModified = std::stoll(value);
@@ -166,11 +107,6 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
 
     file.close();
 
-    // If libraryPaths is empty but libraryPath isn't, add it to the list
-    if (meta.libraryPaths.empty() && !meta.libraryPath.empty()) {
-        meta.libraryPaths.push_back(meta.libraryPath);
-    }
-
     return meta;
 }
 
@@ -182,8 +118,8 @@ bool MetaFile::NeedsReimport(const std::string& assetPath) const {
     long long currentTimestamp = std::filesystem::last_write_time(assetPath)
         .time_since_epoch().count();
 
-    // Tolerance of a few seconds 
-    const long long tolerance = 20000000000; // 100 nanosecond units
+    // Tolerance of a few seconds
+    const long long tolerance = 20000000000; 
 
     long long diff = std::abs(currentTimestamp - lastModified);
 
@@ -245,7 +181,8 @@ std::string MetaFile::MakeAbsoluteFromProject(const std::string& relativePath) {
     }
 }
 
-// ========== MetaFileManager Implementation ==========
+// METAFILE MANAGER IMPLEMENTATION
+///////////////////////////////////////////
 
 void MetaFileManager::Initialize() {
     ScanAssets();
@@ -282,11 +219,9 @@ void MetaFileManager::ScanAssets() {
             // Create new .meta
             MetaFile meta;
             meta.uid = MetaFile::GenerateUID();
-            meta.guid = MetaFile::GenerateGUID();
             meta.type = type;
             meta.originalPath = assetPath;
             meta.lastModified = GetFileTimestamp(assetPath);
-            meta.libraryPath = ""; // Will be set during import
 
             if (meta.Save(metaPath)) {
                 metasCreated++;
@@ -299,6 +234,43 @@ void MetaFileManager::ScanAssets() {
 
     LOG_CONSOLE("[MetaFileManager] Scan complete: %d created, %d existing",
         metasCreated, metasExisting);
+}
+
+bool MetaFileManager::UpdateMetaIfModified(const std::string& assetPath) {
+    std::string metaPath = GetMetaPath(assetPath);
+
+    // If no .meta exists, create new one
+    if (!std::filesystem::exists(metaPath)) {
+        LOG_CONSOLE("[MetaFileManager] No .meta found, creating for: %s", assetPath.c_str());
+        GetOrCreateMeta(assetPath);
+        return true;
+    }
+
+    // Load existing .meta
+    MetaFile meta = MetaFile::Load(metaPath);
+
+    // Check if timestamp changed
+    long long currentTimestamp = GetFileTimestamp(assetPath);
+
+    if (meta.lastModified != currentTimestamp) {
+        LOG_CONSOLE("[MetaFileManager] File modified, updating .meta: %s", assetPath.c_str());
+
+        // Update timestamp
+        meta.lastModified = currentTimestamp;
+
+        // Save changes
+        if (meta.Save(metaPath)) {
+            LOG_CONSOLE("[MetaFileManager] .meta updated successfully");
+            return true;
+        }
+        else {
+            LOG_CONSOLE("[MetaFileManager] ERROR: Failed to save .meta");
+            return false;
+        }
+    }
+
+    // No update needed
+    return false;
 }
 
 MetaFile MetaFileManager::GetOrCreateMeta(const std::string& assetPath) {
@@ -320,7 +292,6 @@ MetaFile MetaFileManager::GetOrCreateMeta(const std::string& assetPath) {
     // Create new .meta
     MetaFile meta;
     meta.uid = MetaFile::GenerateUID();
-    meta.guid = MetaFile::GenerateGUID();
     meta.type = MetaFile::GetAssetType(std::filesystem::path(assetPath).extension().string());
     meta.originalPath = assetPath;
     meta.lastModified = GetFileTimestamp(assetPath);

@@ -10,7 +10,6 @@
 #include <assimp/cimport.h>
 #include "MeshImporter.h"
 
-
 namespace fs = std::filesystem;
 
 bool LibraryManager::s_initialized = false;
@@ -23,18 +22,13 @@ void LibraryManager::Initialize() {
 
     LOG_CONSOLE("[LibraryManager] Initializing library structure...");
 
-    // Get executable directory
     char buffer[MAX_PATH];
     GetModuleFileNameA(NULL, buffer, MAX_PATH);
     fs::path execPath(buffer);
 
-    // Get directory containing executable
     fs::path currentDir = execPath.parent_path();
-
-    // Go up 2 levels from executable (build/Debug/ -> build/ -> ProjectRoot/)
     currentDir = currentDir.parent_path().parent_path();
 
-    // Check if Assets folder exists at this level
     fs::path assetsPath = currentDir / "Assets";
     bool assetsFound = fs::exists(assetsPath) && fs::is_directory(assetsPath);
 
@@ -44,15 +38,12 @@ void LibraryManager::Initialize() {
     }
     else {
         LOG_CONSOLE("[LibraryManager] ERROR: Could not find Assets folder at: %s", assetsPath.string().c_str());
-        LOG_DEBUG("Current dir: %s", currentDir.string().c_str());
         return;
     }
 
-    // Create Library root at project level
     fs::path libraryRoot = s_projectRoot / "Library";
     EnsureDirectoryExists(libraryRoot);
 
-    // Create all Library subdirectories
     EnsureDirectoryExists(libraryRoot / "Meshes");
     EnsureDirectoryExists(libraryRoot / "Materials");
     EnsureDirectoryExists(libraryRoot / "Textures");
@@ -88,12 +79,35 @@ std::string LibraryManager::GetAssetsRoot() {
     return (s_projectRoot / "Assets").string();
 }
 
-std::string LibraryManager::GetMeshPath(const std::string& filename) {
+// UID-based methods (primary)
+std::string LibraryManager::GetMeshPathFromUID(unsigned long long uid) {
+    std::string filename = std::to_string(uid) + ".mesh";
     return (s_projectRoot / "Library" / "Meshes" / filename).string();
 }
 
-std::string LibraryManager::GetMaterialPath(const std::string& filename) {
+std::string LibraryManager::GetMaterialPathFromUID(unsigned long long uid) {
+    std::string filename = std::to_string(uid) + ".mat";
     return (s_projectRoot / "Library" / "Materials" / filename).string();
+}
+
+std::string LibraryManager::GetTexturePathFromUID(unsigned long long uid) {
+    std::string filename = std::to_string(uid) + ".texture";
+    return (s_projectRoot / "Library" / "Textures" / filename).string();
+}
+
+std::string LibraryManager::GetModelPathFromUID(unsigned long long uid) {
+    std::string filename = std::to_string(uid) + ".model";
+    return (s_projectRoot / "Library" / "Models" / filename).string();
+}
+
+std::string LibraryManager::GetAnimationPathFromUID(unsigned long long uid) {
+    std::string filename = std::to_string(uid) + ".anim";
+    return (s_projectRoot / "Library" / "Animations" / filename).string();
+}
+
+// Legacy methods (for backward compatibility)
+std::string LibraryManager::GetMeshPath(const std::string& filename) {
+    return (s_projectRoot / "Library" / "Meshes" / filename).string();
 }
 
 std::string LibraryManager::GetTexturePath(const std::string& filename) {
@@ -102,10 +116,6 @@ std::string LibraryManager::GetTexturePath(const std::string& filename) {
 
 std::string LibraryManager::GetModelPath(const std::string& filename) {
     return (s_projectRoot / "Library" / "Models" / filename).string();
-}
-
-std::string LibraryManager::GetAnimationPath(const std::string& filename) {
-    return (s_projectRoot / "Library" / "Animations" / filename).string();
 }
 
 bool LibraryManager::FileExists(const fs::path& path) {
@@ -121,7 +131,6 @@ void LibraryManager::ClearLibrary() {
         if (fs::exists(libraryPath)) {
             int filesDeleted = 0;
 
-            // Delete all files in Library/ recursively
             for (const auto& entry : fs::recursive_directory_iterator(libraryPath)) {
                 if (entry.is_regular_file()) {
                     fs::remove(entry.path());
@@ -130,8 +139,6 @@ void LibraryManager::ClearLibrary() {
             }
 
             LOG_CONSOLE("[LibraryManager] Deleted %d files from Library", filesDeleted);
-
-            // Recreate folder structure
             Initialize();
         }
     }
@@ -155,18 +162,14 @@ void LibraryManager::RegenerateFromAssets() {
             fs::path assetPath = entry.path();
             std::string extension = assetPath.extension().string();
 
-            // Skip .meta files (procesamos el asset, no su meta directamente)
             if (extension == ".meta") continue;
 
             AssetType type = MetaFile::GetAssetType(extension);
             if (type == AssetType::UNKNOWN) continue;
 
-            // Load .meta file
             std::string assetPathStr = assetPath.string();
             std::string metaPathStr = assetPathStr + ".meta";
 
-            // Si no hay meta, probablemente es un archivo nuevo, lo saltamos por seguridad o lo creamos
-            // (Tu lógica actual asume que existe, así que seguimos esa línea)
             if (!fs::exists(metaPathStr)) continue;
 
             MetaFile meta = MetaFileManager::LoadMeta(assetPathStr);
@@ -178,36 +181,26 @@ void LibraryManager::RegenerateFromAssets() {
                 continue;
             }
 
-            // --- TIMESTAMPS: Obtenemos fechas del Asset y del Meta ---
             auto assetTime = fs::last_write_time(assetPath);
-            auto metaTime = fs::last_write_time(metaPathStr);
+            long long currentAssetTimestamp = assetTime.time_since_epoch().count();
 
-            // Process by type
+            const long long tolerance = 20000000000;
+
+            bool assetModified = (std::abs(currentAssetTimestamp - meta.lastModified) > tolerance);
+
             switch (type) {
             case AssetType::MODEL_FBX: {
                 bool needsImport = false;
 
-                if (meta.libraryPaths.empty()) {
-                    // Si no tiene rutas guardadas, hay que importar
+                if (assetModified) {
                     needsImport = true;
+                    LOG_CONSOLE("[LibraryManager] Asset modified: %s", assetPath.filename().string().c_str());
                 }
                 else {
-                    // Comprobamos cada archivo generado en la Library
-                    for (const auto& libPath : meta.libraryPaths) {
-                        if (!FileExists(libPath)) {
-                            needsImport = true; // Falta archivo físico
-                            break;
-                        }
-
-                        // --- CAMBIO CLAVE: Comprobación de Fecha para Modelos ---
-                        auto libTime = fs::last_write_time(libPath);
-
-                        // Si el Asset o el Meta son mas nuevos que la Library -> REIMPORTAR
-                        if (assetTime > libTime || metaTime > libTime) {
-                            LOG_CONSOLE("[LibraryManager] Change detected in Model/Meta: %s", assetPath.filename().string().c_str());
-                            needsImport = true;
-                            break;
-                        }
+                    std::string firstMeshPath = GetMeshPathFromUID(meta.uid);
+                    if (!FileExists(firstMeshPath)) {
+                        needsImport = true;
+                        LOG_CONSOLE("[LibraryManager] Missing library file for UID: %llu", meta.uid);
                     }
                 }
 
@@ -216,7 +209,6 @@ void LibraryManager::RegenerateFromAssets() {
                     break;
                 }
 
-                // --- IMPORTACIÓN FBX ---
                 unsigned int importFlags = aiProcess_Triangulate |
                     aiProcess_JoinIdenticalVertices |
                     aiProcess_ValidateDataStructure;
@@ -230,8 +222,6 @@ void LibraryManager::RegenerateFromAssets() {
                 if (scene && scene->HasMeshes()) {
                     LOG_DEBUG("Re-Importing FBX: %s", assetPath.filename().string().c_str());
 
-                    meta.libraryPaths.clear();
-
                     for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
                         aiMesh* aiMesh = scene->mMeshes[i];
                         Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
@@ -242,17 +232,14 @@ void LibraryManager::RegenerateFromAssets() {
                             }
                         }
 
-                        std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
+                        unsigned long long meshUID = meta.uid + i;
 
-                        if (MeshImporter::SaveToCustomFormat(mesh, meshFilename)) {
-                            std::string fullMeshPath = GetMeshPath(meshFilename);
-                            meta.AddLibraryPath(fullMeshPath);
-                        }
+                        std::string meshFilename = std::to_string(meshUID) + ".mesh";
+                        MeshImporter::SaveToCustomFormat(mesh, meshFilename);
                     }
 
-                    if (!meta.libraryPaths.empty()) {
-                        meta.Save(metaPathStr);
-                    }
+                    meta.lastModified = currentAssetTimestamp;
+                    meta.Save(metaPathStr);
 
                     aiReleaseImport(scene);
                     processed++;
@@ -269,55 +256,45 @@ void LibraryManager::RegenerateFromAssets() {
             case AssetType::TEXTURE_JPG:
             case AssetType::TEXTURE_DDS:
             case AssetType::TEXTURE_TGA: {
-                std::string filename = TextureImporter::GenerateTextureFilename(assetPath.string());
-                std::string fullPath = GetTexturePath(filename);
+                std::string fullPath = GetTexturePathFromUID(meta.uid);
 
                 bool needsImport = false;
 
-                // 1. ¿Existe el archivo en Library?
-                if (!FileExists(fullPath)) {
+                if (assetModified) {
                     needsImport = true;
+                    LOG_CONSOLE("[LibraryManager] Asset modified: %s", assetPath.filename().string().c_str());
                 }
-                else {
-                    // 2. --- CAMBIO CLAVE: Comprobación de Fecha para Texturas ---
-                    auto libTime = fs::last_write_time(fullPath);
-
-                    // Si la textura original (.png) o su configuración (.meta) son más nuevas -> REIMPORTAR
-                    if (assetTime > libTime || metaTime > libTime) {
-                        LOG_CONSOLE("[LibraryManager] Change detected in Texture/Meta: %s", assetPath.filename().string().c_str());
-                        needsImport = true;
-                    }
+                else if (!FileExists(fullPath)) {
+                    needsImport = true;
+                    LOG_CONSOLE("[LibraryManager] Missing library file for UID: %llu", meta.uid);
                 }
 
-                if (needsImport) {
-                    LOG_DEBUG("Importing texture: %s", assetPath.filename().string().c_str());
-                    TextureData texture = TextureImporter::ImportFromFile(assetPath.string());
+                if (!needsImport) {
+                    skipped++;
+                    break;
+                }
 
-                    if (texture.IsValid()) {
-                        if (TextureImporter::SaveToCustomFormat(texture, filename)) {
-                            meta.libraryPath = fullPath;
-                            meta.Save(metaPathStr);
-                            processed++;
-                        }
-                        else {
-                            LOG_CONSOLE("[LibraryManager] ERROR: Failed to save texture: %s",
-                                assetPath.filename().string().c_str());
-                            errors++;
-                        }
+                LOG_DEBUG("Importing texture: %s", assetPath.filename().string().c_str());
+
+                TextureData texture = TextureImporter::ImportFromFile(assetPath.string());
+
+                if (texture.IsValid()) {
+                    std::string filename = std::to_string(meta.uid) + ".texture";
+                    if (TextureImporter::SaveToCustomFormat(texture, filename)) {
+                        meta.lastModified = currentAssetTimestamp;
+                        meta.Save(metaPathStr);
+                        processed++;
                     }
                     else {
-                        LOG_CONSOLE("[LibraryManager] ERROR: Failed to import texture: %s",
+                        LOG_CONSOLE("[LibraryManager] ERROR: Failed to save texture: %s",
                             assetPath.filename().string().c_str());
                         errors++;
                     }
                 }
                 else {
-                    // Already exists and up to date, ensure meta has path
-                    if (meta.libraryPath.empty()) {
-                        meta.libraryPath = fullPath;
-                        meta.Save(metaPathStr);
-                    }
-                    skipped++;
+                    LOG_CONSOLE("[LibraryManager] ERROR: Failed to import texture: %s",
+                        assetPath.filename().string().c_str());
+                    errors++;
                 }
                 break;
             }

@@ -17,12 +17,17 @@ public:
     // Check if library is initialized
     static bool IsInitialized();
 
-    // Get full path for library file
+    // Get full path for library file using UID
+    static std::string GetMeshPathFromUID(unsigned long long uid);
+    static std::string GetMaterialPathFromUID(unsigned long long uid);
+    static std::string GetTexturePathFromUID(unsigned long long uid);
+    static std::string GetModelPathFromUID(unsigned long long uid);
+    static std::string GetAnimationPathFromUID(unsigned long long uid);
+
+    // Legacy compatibility methods (deprecated - use UID versions instead)
     static std::string GetMeshPath(const std::string& filename);
-    static std::string GetMaterialPath(const std::string& filename);
     static std::string GetTexturePath(const std::string& filename);
     static std::string GetModelPath(const std::string& filename);
-    static std::string GetAnimationPath(const std::string& filename);
 
     // Check if file exists in library
     static bool FileExists(const fs::path& path);

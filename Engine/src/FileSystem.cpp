@@ -166,19 +166,25 @@ bool FileSystem::CleanUp()
 
 GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
 {
-
-    // Load .meta before importing
+    // 1. Load/Create ONLY this file's .meta
     std::string metaPath = file_path + ".meta";
     MetaFile meta;
 
     if (std::filesystem::exists(metaPath)) {
         meta = MetaFile::Load(metaPath);
+
+        // Check if file was modified
+        if (meta.NeedsReimport(file_path)) {
+            LOG_CONSOLE("[FileSystem] File modified, reimporting: %s", file_path.c_str());
+        }
     }
     else {
+        // Create meta ONLY for this file
         meta = MetaFileManager::GetOrCreateMeta(file_path);
+        LOG_CONSOLE("[FileSystem] Created new .meta for: %s", file_path.c_str());
     }
 
-    // Build import flags dynamically from .meta settings
+    // 2. Build import flags from .meta settings
     unsigned int importFlags = aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices |
         aiProcess_ValidateDataStructure;
@@ -195,6 +201,7 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
         importFlags |= aiProcess_OptimizeMeshes;
     }
 
+    // 3. Import the FBX
     const aiScene* scene = aiImportFile(file_path.c_str(), importFlags);
 
     if (scene == nullptr)
@@ -223,7 +230,7 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
 
     NormalizeModelScale(rootObj, 5.0f);
 
-    // Apply importScale from .meta
+    // 4. Apply import scale
     if (meta.uid != 0 && meta.importSettings.importScale != 1.0f) {
         Transform* rootTransform = static_cast<Transform*>(
             rootObj->GetComponent(ComponentType::TRANSFORM));
@@ -235,26 +242,26 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
         }
     }
 
-    // Update .meta if necessary
+    // 5. Update .meta ONLY if something changed
     bool metaChanged = false;
 
+    // Update timestamp if file was modified
     long long currentTimestamp = MetaFileManager::GetFileTimestamp(file_path);
     if (meta.lastModified != currentTimestamp) {
-        std::string modelFilename = MeshImporter::GenerateMeshFilename(
-            std::filesystem::path(file_path).stem().string()
-        );
-        meta.libraryPath = LibraryManager::GetModelPath(modelFilename);
         meta.lastModified = currentTimestamp;
         metaChanged = true;
+        LOG_CONSOLE("[FileSystem] Updated timestamp for: %s", file_path.c_str());
     }
 
+    // Save ONLY if changed
     if (metaChanged) {
         meta.Save(metaPath);
+        LOG_CONSOLE("[FileSystem] Saved .meta for: %s", file_path.c_str());
     }
 
     aiReleaseImport(scene);
 
-    LOG_CONSOLE("Model loaded successfully");
+    LOG_CONSOLE("Model loaded successfully: %s", file_path.c_str());
 
     return rootObj;
 }
@@ -365,8 +372,11 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
 
 UID FileSystem::ProcessMesh(aiMesh* aiMesh, const aiScene* scene)
 {
-    std::string meshFilename = MeshImporter::GenerateMeshFilename(aiMesh->mName.C_Str());
-    std::string fullPath = LibraryManager::GetMeshPath(meshFilename);
+    // Generate a consistent filename based on mesh name
+    std::string meshName = aiMesh->mName.C_Str();
+    if (meshName.empty()) {
+        meshName = "unnamed_mesh";
+    }
 
     ModuleResources* resources = Application::GetInstance().resources.get();
     if (!resources) {
@@ -374,40 +384,43 @@ UID FileSystem::ProcessMesh(aiMesh* aiMesh, const aiScene* scene)
         return 0;
     }
 
-    // Check if mesh is already registered
+    // Check if mesh already exists by checking all registered mesh resources
+    std::hash<std::string> hasher;
+    size_t meshNameHash = hasher(meshName);
+
+    UID potentialUID = meshNameHash;
+
+    // Check if this UID already exists
     const auto& allResources = resources->GetAllResources();
-    for (const auto& pair : allResources) {
-        if (pair.second->GetLibraryFile() == fullPath) {
-            return pair.first;
-        }
+    auto it = allResources.find(potentialUID);
+    if (it != allResources.end() && it->second->GetType() == Resource::MESH) {
+        // Mesh already registered, return its UID
+        return potentialUID;
     }
 
-    // Load or import mesh
-    Mesh mesh;
-    bool needsImport = true;
+    // Import and save mesh
+    Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
 
-    if (LibraryManager::FileExists(fullPath)) {
-        mesh = MeshImporter::LoadFromCustomFormat(meshFilename);
-        if (!mesh.vertices.empty() && !mesh.indices.empty()) {
-            needsImport = false;
-        }
+    if (mesh.vertices.empty() || mesh.indices.empty()) {
+        LOG_CONSOLE("ERROR: Failed to import mesh");
+        return 0;
     }
 
-    if (needsImport) {
-        mesh = MeshImporter::ImportFromAssimp(aiMesh);
-        if (!mesh.vertices.empty() && !mesh.indices.empty()) {
-            MeshImporter::SaveToCustomFormat(mesh, meshFilename);
-        }
-        else {
-            LOG_CONSOLE("ERROR: Failed to import mesh");
-            return 0;
-        }
+    // Generate new UID for this mesh
+    UID meshUID = resources->GenerateNewUID();
+
+    // Save to Library using UID-based filename
+    std::string meshFilename = std::to_string(meshUID) + ".mesh";
+    if (!MeshImporter::SaveToCustomFormat(mesh, meshFilename)) {
+        LOG_CONSOLE("ERROR: Failed to save mesh to Library");
+        return 0;
     }
 
     // Register mesh in ModuleResources
-    UID meshUID = resources->GenerateNewUID();
+    std::string libraryPath = LibraryManager::GetMeshPathFromUID(meshUID);
+
     Resource* newResource = resources->CreateNewResourceWithUID(
-        fullPath.c_str(),
+        libraryPath.c_str(),  // Use library path as "asset" path for generated meshes
         Resource::MESH,
         meshUID
     );
@@ -417,11 +430,10 @@ UID FileSystem::ProcessMesh(aiMesh* aiMesh, const aiScene* scene)
         return 0;
     }
 
-    newResource->libraryFile = fullPath;
+    newResource->libraryFile = libraryPath;
 
     return meshUID;
 }
-
 void FileSystem::NormalizeModelScale(GameObject* rootObject, float targetSize)
 {
     glm::vec3 minBounds(std::numeric_limits<float>::max());

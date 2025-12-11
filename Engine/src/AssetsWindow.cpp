@@ -780,8 +780,8 @@ void AssetsWindow::LoadFBXSubMeshes(AssetEntry& fbxAsset)
 
     MetaFile meta = MetaFile::Load(metaPath);
 
-    if (meta.libraryPaths.empty()) {
-        LOG_CONSOLE("[AssetsWindow] FBX has no library paths in .meta");
+    if (meta.uid == 0) {
+        LOG_CONSOLE("[AssetsWindow] FBX has no UID in .meta");
         return;
     }
 
@@ -794,57 +794,47 @@ void AssetsWindow::LoadFBXSubMeshes(AssetEntry& fbxAsset)
     const auto& allResources = resources->GetAllResources();
 
     int meshIndex = 0;
-    for (const std::string& libPath : meta.libraryPaths)
+    const int maxMeshes = 100; // Safety limit
+
+    for (int i = 0; i < maxMeshes; i++)
     {
-        if (libPath.empty()) continue;
+        unsigned long long meshUID = meta.uid + i;
+        std::string libPath = LibraryManager::GetMeshPathFromUID(meshUID);
+
+        // Check if file exists
+        if (!LibraryManager::FileExists(libPath)) {
+            break; // No more meshes
+        }
 
         AssetEntry meshEntry;
 
         fs::path meshPath(libPath);
-        meshEntry.name = meshPath.stem().string();
-
-        if (meshEntry.name.empty() || meshEntry.name == "unnamed_mesh") {
-            meshEntry.name = "Mesh_" + std::to_string(meshIndex);
-        }
+        meshEntry.name = "Mesh_" + std::to_string(meshIndex);
 
         meshEntry.path = libPath;
         meshEntry.extension = ".mesh";
         meshEntry.isDirectory = false;
         meshEntry.isFBX = false;
         meshEntry.isExpanded = false;
-        meshEntry.uid = 0;
+        meshEntry.uid = meshUID;
         meshEntry.inMemory = false;
         meshEntry.references = 0;
 
-        // Normalizar paths para comparación
-        std::string normalizedLibPath = libPath;
-        std::replace(normalizedLibPath.begin(), normalizedLibPath.end(), '\\', '/');
-        std::transform(normalizedLibPath.begin(), normalizedLibPath.end(),
-            normalizedLibPath.begin(), ::tolower);
-
-        // Buscar en recursos cargados
-        for (const auto& pair : allResources)
+        // Check if loaded in memory
+        auto it = allResources.find(meshUID);
+        if (it != allResources.end())
         {
-            const char* resourceLibPathCStr = pair.second->GetLibraryFile();
-            std::string resourceLibPath(resourceLibPathCStr ? resourceLibPathCStr : "");
-            std::string normalizedResourcePath = resourceLibPath;
-            std::replace(normalizedResourcePath.begin(), normalizedResourcePath.end(), '\\', '/');
-            std::transform(normalizedResourcePath.begin(), normalizedResourcePath.end(),
-                normalizedResourcePath.begin(), ::tolower);
-
-            if (normalizedResourcePath == normalizedLibPath)
-            {
-                meshEntry.uid = pair.first;
-                meshEntry.inMemory = pair.second->IsLoadedToMemory();
-                meshEntry.references = pair.second->GetReferenceCount();
-                break;
-            }
+            meshEntry.inMemory = it->second->IsLoadedToMemory();
+            meshEntry.references = it->second->GetReferenceCount();
         }
 
         fbxAsset.subMeshes.push_back(meshEntry);
         meshIndex++;
     }
+
+    LOG_DEBUG("[AssetsWindow] Loaded %d submeshes for FBX: %s", meshIndex, fbxAsset.name.c_str());
 }
+
 bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
 {
     try {
@@ -856,28 +846,54 @@ bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
         {
             std::string metaPath = asset.path + ".meta";
             unsigned long long uid = 0;
-            std::vector<std::string> libraryPaths;
 
             if (fs::exists(metaPath)) {
                 MetaFile meta = MetaFile::Load(metaPath);
                 uid = meta.uid;
-                libraryPaths = meta.GetAllLibraryPaths();
-            }
 
-            for (const auto& libPath : libraryPaths) {
-                if (!libPath.empty() && fs::exists(libPath)) {
-                    fs::remove(libPath);
+                // For FBX files, delete all sequential mesh files
+                if (meta.type == AssetType::MODEL_FBX) {
+                    // Delete all mesh files with UIDs: base_uid, base_uid+1, base_uid+2, etc.
+                    for (int i = 0; i < 100; i++) {
+                        unsigned long long meshUID = uid + i;
+                        std::string libPath = LibraryManager::GetMeshPathFromUID(meshUID);
+
+                        if (fs::exists(libPath)) {
+                            fs::remove(libPath);
+                        }
+                        else {
+                            break; // No more meshes
+                        }
+                    }
+                }
+                else {
+                    // For textures and other single-file assets
+                    std::string libPath;
+
+                    if (meta.type == AssetType::TEXTURE_PNG ||
+                        meta.type == AssetType::TEXTURE_JPG ||
+                        meta.type == AssetType::TEXTURE_DDS ||
+                        meta.type == AssetType::TEXTURE_TGA) {
+                        libPath = LibraryManager::GetTexturePathFromUID(uid);
+                    }
+
+                    if (!libPath.empty() && fs::exists(libPath)) {
+                        fs::remove(libPath);
+                    }
                 }
             }
 
+            // Delete .meta file
             if (fs::exists(metaPath)) {
                 fs::remove(metaPath);
             }
 
+            // Delete asset file
             if (fs::exists(asset.path)) {
                 fs::remove(asset.path);
             }
 
+            // Remove from ModuleResources
             if (uid != 0 && Application::GetInstance().resources) {
                 Application::GetInstance().resources->RemoveResource(uid);
             }
@@ -886,6 +902,7 @@ bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
         }
     }
     catch (const fs::filesystem_error& e) {
+        LOG_CONSOLE("[AssetsWindow] ERROR deleting asset: %s", e.what());
         return false;
     }
 }
@@ -893,34 +910,62 @@ bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
 bool AssetsWindow::DeleteDirectory(const fs::path& dirPath)
 {
     try {
-        std::vector<std::pair<unsigned long long, std::vector<std::string>>> filesToDelete;
+        std::vector<unsigned long long> uidsToDelete;
 
+        // Collect all UIDs from .meta files in directory
         for (const auto& entry : fs::recursive_directory_iterator(dirPath)) {
             if (entry.is_regular_file() && entry.path().extension() == ".meta") {
                 MetaFile meta = MetaFile::Load(entry.path().string());
                 if (meta.uid != 0) {
-                    filesToDelete.push_back({ meta.uid, meta.GetAllLibraryPaths() });
+                    uidsToDelete.push_back(meta.uid);
+
+                    // For FBX files, also delete all mesh UIDs
+                    if (meta.type == AssetType::MODEL_FBX) {
+                        for (int i = 0; i < 100; i++) {
+                            unsigned long long meshUID = meta.uid + i;
+                            std::string libPath = LibraryManager::GetMeshPathFromUID(meshUID);
+
+                            if (fs::exists(libPath)) {
+                                fs::remove(libPath);
+                            }
+                            else {
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        // Delete single library file
+                        std::string libPath;
+
+                        if (meta.type == AssetType::TEXTURE_PNG ||
+                            meta.type == AssetType::TEXTURE_JPG ||
+                            meta.type == AssetType::TEXTURE_DDS ||
+                            meta.type == AssetType::TEXTURE_TGA) {
+                            libPath = LibraryManager::GetTexturePathFromUID(meta.uid);
+                        }
+
+                        if (!libPath.empty() && fs::exists(libPath)) {
+                            fs::remove(libPath);
+                        }
+                    }
                 }
             }
         }
 
-        for (const auto& [uid, libraryPaths] : filesToDelete) {
-            for (const auto& libPath : libraryPaths) {
-                if (!libPath.empty() && fs::exists(libPath)) {
-                    fs::remove(libPath);
-                }
-            }
-
-            if (Application::GetInstance().resources) {
+        // Remove from ModuleResources
+        if (Application::GetInstance().resources) {
+            for (unsigned long long uid : uidsToDelete) {
                 Application::GetInstance().resources->RemoveResource(uid);
             }
         }
 
+        // Delete entire directory
         fs::remove_all(dirPath);
 
         return true;
     }
     catch (const fs::filesystem_error& e) {
+        LOG_CONSOLE("[AssetsWindow] ERROR deleting directory: %s", e.what());
         return false;
     }
 }
@@ -1008,14 +1053,21 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                                 {
                                     if (subExt == ".fbx")
                                     {
+                                        // Para FBX, verificar todas las meshes con UIDs secuenciales
                                         const auto& allResources = resources->GetAllResources();
-                                        for (const std::string& libPath : subMeta.libraryPaths)
-                                        {
-                                            if (libPath.empty()) continue;
 
+                                        for (int i = 0; i < 100; i++) {
+                                            unsigned long long meshUID = subMeta.uid + i;
+                                            std::string meshLibPath = LibraryManager::GetMeshPathFromUID(meshUID);
+
+                                            if (!fs::exists(meshLibPath)) {
+                                                break; // No más meshes
+                                            }
+
+                                            // Verificar si está cargada en memoria
                                             for (const auto& pair : allResources)
                                             {
-                                                if (pair.second->GetLibraryFile() == libPath)
+                                                if (pair.second->GetLibraryFile() == meshLibPath)
                                                 {
                                                     if (pair.second->IsLoadedToMemory())
                                                     {
@@ -1027,8 +1079,18 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                                             }
                                         }
                                     }
+                                    else if (subExt == ".png" || subExt == ".jpg" || subExt == ".jpeg" ||
+                                        subExt == ".dds" || subExt == ".tga")
+                                    {
+                                        if (resources->IsResourceLoaded(subMeta.uid))
+                                        {
+                                            anyLoaded = true;
+                                            totalRefs += resources->GetResourceReferenceCount(subMeta.uid);
+                                        }
+                                    }
                                     else
                                     {
+                                        // Para otros tipos de assets
                                         if (resources->IsResourceLoaded(subMeta.uid))
                                         {
                                             anyLoaded = true;
@@ -1065,13 +1127,19 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
 
                         const auto& allResources = resources->GetAllResources();
 
-                        for (const std::string& libPath : meta.libraryPaths)
-                        {
-                            if (libPath.empty()) continue;
+                        // Verificar todas las meshes del FBX (UIDs secuenciales)
+                        for (int i = 0; i < 100; i++) {
+                            unsigned long long meshUID = meta.uid + i;
+                            std::string meshLibPath = LibraryManager::GetMeshPathFromUID(meshUID);
 
+                            if (!fs::exists(meshLibPath)) {
+                                break; // No más meshes
+                            }
+
+                            // Verificar si está cargada en memoria
                             for (const auto& pair : allResources)
                             {
-                                if (pair.second->GetLibraryFile() == libPath)
+                                if (pair.second->GetLibraryFile() == meshLibPath)
                                 {
                                     if (pair.second->IsLoadedToMemory())
                                     {
@@ -1099,19 +1167,6 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                         asset.references = resources->GetResourceReferenceCount(asset.uid);
                     }
                 }
-                else
-                {
-                    if (asset.uid == 0) {
-                        LOG_CONSOLE("  ERROR: UID is 0!");
-                    }
-                    if (!Application::GetInstance().resources) {
-                        LOG_CONSOLE("  ERROR: ModuleResources is NULL!");
-                    }
-                }
-            }
-            else
-            {
-                LOG_CONSOLE("  WARNING: No meta file found!");
             }
         }
 

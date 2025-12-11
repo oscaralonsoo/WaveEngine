@@ -24,24 +24,19 @@ struct ImportSettings {
     bool flipUVs = true;
     bool optimizeMeshes = true;
 
-    // Texture settings (para futuro)
+    // Texture settings
     bool generateMipmaps = true;
     int wrapMode = 0;  // 0=Repeat, 1=Clamp
 };
 
 struct MetaFile {
-    UID uid = 0;                    // UID único del recurso
-    std::string guid;               // GUID
+    UID uid = 0;                                // Unique ID of the resource
     AssetType type = AssetType::UNKNOWN;
-    std::string originalPath;
+    std::string originalPath;                   // Path to original asset file
 
-    std::string libraryPath;                    // Path principal (para compatibilidad)
-    std::vector<std::string> libraryPaths;
-
-    long long lastModified = 0;
+    long long lastModified = 0;                 // Timestamp of last modification
     ImportSettings importSettings;
 
-    static std::string GenerateGUID();
     static UID GenerateUID();
     static AssetType GetAssetType(const std::string& extension);
 
@@ -50,15 +45,12 @@ struct MetaFile {
 
     bool NeedsReimport(const std::string& assetPath) const;
 
-    // Helpers para rutas relativas
+    // Helpers for relative paths
     static std::string MakeRelativeToProject(const std::string& absolutePath);
     static std::string MakeAbsoluteFromProject(const std::string& relativePath);
-
-    const std::vector<std::string>& GetAllLibraryPaths() const { return libraryPaths; }
-    void AddLibraryPath(const std::string& path);
 };
 
-// Manager para archivos .meta
+// Manager for .meta files
 class MetaFileManager {
 public:
     static void Initialize();
@@ -66,8 +58,9 @@ public:
     static MetaFile GetOrCreateMeta(const std::string& assetPath);
     static bool NeedsReimport(const std::string& assetPath);
     static void RegenerateLibrary();
+    static bool UpdateMetaIfModified(const std::string& assetPath);
 
-    // Queries útiles
+    // Useful queries
     static MetaFile LoadMeta(const std::string& assetPath);
     static UID GetUIDFromAsset(const std::string& assetPath);
     static std::string GetAssetFromUID(UID uid);
