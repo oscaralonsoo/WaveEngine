@@ -6,6 +6,7 @@ class GameObject;
 class FileSystem;
 class Renderer;
 class ComponentCamera;
+class SceneWindow;
 
 class ModuleScene : public Module
 {
@@ -28,6 +29,7 @@ public:
     Octree* GetOctree() { return octree.get(); }
     void RebuildOctree();
     void UpdateObjectInOctree(GameObject* obj);
+    void MarkOctreeForRebuild() { needsOctreeRebuild = true; }
 
     // Scene serialization
     bool SaveScene(const std::string& filepath);

@@ -3,6 +3,8 @@
 #include "FileSystem.h"
 #include "GameObject.h"
 #include "Application.h"
+#include "ModuleEditor.h"
+#include "SceneWindow.h"
 #include <float.h>
 #include <functional>
 #include "ComponentMesh.h"
@@ -136,6 +138,9 @@ void ModuleScene::RebuildOctree()
         sceneMax.x - sceneMin.x,
         sceneMax.y - sceneMin.y,
         sceneMax.z - sceneMin.z);
+
+    // Resetear el flag después del rebuild
+    needsOctreeRebuild = false;
 }
 
 void ModuleScene::UpdateObjectInOctree(GameObject* obj)
@@ -163,8 +168,35 @@ bool ModuleScene::Update()
 
     if (needsOctreeRebuild)
     {
-        RebuildOctree();
+        LOG_DEBUG("Octree rebuild requested");
+
+        // Verificar si ModuleEditor existe y si el gizmo está siendo usado
+        ModuleEditor* editor = Application::GetInstance().editor.get();
+        if (editor && editor->GetSceneWindow())
+        {
+            bool gizmoActive = editor->GetSceneWindow()->IsGizmoBeingUsed();
+            LOG_DEBUG("Gizmo active: %s", gizmoActive ? "YES" : "NO");
+
+            if (!gizmoActive)
+            {
+                LOG_DEBUG("Rebuilding octree now");
+                RebuildOctree();
+            }
+            else
+            {
+                LOG_DEBUG("Skipping rebuild - gizmo is active");
+            }
+            // Si el gizmo está siendo usado, mantenemos el flag activo
+            // para que se reconstruya cuando se suelte
+        }
+        else
+        {
+            LOG_DEBUG("No editor/scene window, rebuilding normally");
+            // Si no hay editor o SceneWindow, reconstruir normalmente
+            RebuildOctree();
+        }
     }
+
     return true;
 }
 
@@ -337,10 +369,10 @@ void ModuleScene::ClearScene()
 
     if (!root) return;
 
-	// Selection
+    // Selection
     Application::GetInstance().selectionManager->ClearSelection();
 
-	// Scene Camera
+    // Scene Camera
     Application::GetInstance().camera->SetSceneCamera(nullptr);
 
     // Childrens

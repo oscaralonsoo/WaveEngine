@@ -17,6 +17,8 @@ public:
     ImVec2 GetViewportPos() const { return sceneViewportPos; }
     ImVec2 GetViewportSize() const { return sceneViewportSize; }
 
+    bool IsGizmoBeingUsed() const { return isGizmoActive; }
+
 private:
     void HandleGizmoInput();
     void DrawGizmo();
@@ -25,4 +27,6 @@ private:
 
     ImVec2 sceneViewportPos;
     ImVec2 sceneViewportSize;
+
+    bool isGizmoActive = false;
 };

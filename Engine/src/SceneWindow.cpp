@@ -88,16 +88,56 @@ void SceneWindow::HandleGizmoInput()
 
 void SceneWindow::DrawGizmo()
 {
+    // Primero verificar si el gizmo estaba siendo usado en el frame anterior
+    bool wasUsingGizmo = isGizmoActive;
+
     GameObject* selectedObject = Application::GetInstance().selectionManager->GetSelectedObject();
-    if (!selectedObject) return;
+    if (!selectedObject)
+    {
+        isGizmoActive = false;
+
+        // Si acabamos de soltar el gizmo, marcar que necesita rebuild
+        if (wasUsingGizmo)
+        {
+            Application::GetInstance().scene->MarkOctreeForRebuild();
+        }
+        return;
+    }
 
     ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-    if (!camera) return;
+    if (!camera)
+    {
+        isGizmoActive = false;
+
+        if (wasUsingGizmo)
+        {
+            Application::GetInstance().scene->MarkOctreeForRebuild();
+        }
+        return;
+    }
 
     Transform* transform = static_cast<Transform*>(selectedObject->GetComponent(ComponentType::TRANSFORM));
-    if (!transform) return;
+    if (!transform)
+    {
+        isGizmoActive = false;
 
-    if (sceneViewportSize.y <= 0.0f) return;
+        if (wasUsingGizmo)
+        {
+            Application::GetInstance().scene->MarkOctreeForRebuild();
+        }
+        return;
+    }
+
+    if (sceneViewportSize.y <= 0.0f)
+    {
+        isGizmoActive = false;
+
+        if (wasUsingGizmo)
+        {
+            Application::GetInstance().scene->MarkOctreeForRebuild();
+        }
+        return;
+    }
 
     ImGuizmo::SetOrthographic(false);
     ImGuizmo::SetDrawlist();
@@ -127,6 +167,9 @@ void SceneWindow::DrawGizmo()
         glm::value_ptr(transformMatrix)
     );
 
+    // Actualizar el flag de si el gizmo está siendo usado
+    isGizmoActive = ImGuizmo::IsUsing();
+
     if (ImGuizmo::IsUsing())
     {
         GameObject* parent = selectedObject->GetParent();
@@ -150,5 +193,10 @@ void SceneWindow::DrawGizmo()
         transform->SetPosition(position);
         transform->SetRotationQuat(rotation);
         transform->SetScale(scale);
+    }
+    else if (wasUsingGizmo)
+    {
+        // Acabamos de soltar el gizmo, marcar para rebuild del octree
+        Application::GetInstance().scene->MarkOctreeForRebuild();
     }
 }
