@@ -6,7 +6,9 @@
 #include "Transform.h"
 #include "ComponentMesh.h"
 #include "ComponentMaterial.h"
+#include "ComponentCamera.h"
 #include "ComponentRotate.h"
+#include "ResourceTexture.h"
 #include "Log.h"
 
 InspectorWindow::InspectorWindow()
@@ -44,19 +46,32 @@ void InspectorWindow::Draw()
     ImGui::SameLine();
 
     if (selectedObject->GetComponent(ComponentType::CAMERA)) {
-        bool isActive = false; // ActiveCamera
-        ImGui::Checkbox("##isActive",&isActive);
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Set has Active Camera");
-        if (isActive) {
-            ComponentCamera* cameraGo = Application::GetInstance().camera.get()->GetSceneCamera();
-            ComponentCamera* ActiveCamera = Application::GetInstance().camera.get()->GetActiveCamera();
-            if (cameraGo != ActiveCamera) {
-                Application::GetInstance().camera->SetSceneCamera(cameraGo);
-            }
+        ComponentCamera* selectedCamera = static_cast<ComponentCamera*>(selectedObject->GetComponent(ComponentType::CAMERA));
+        ComponentCamera* currentSceneCamera = Application::GetInstance().camera->GetSceneCamera();
 
+        bool isActive = (selectedCamera == currentSceneCamera);
+
+        if (ImGui::Checkbox("##isActive", &isActive)) {
+            if (isActive) {
+                Application::GetInstance().camera->SetSceneCamera(selectedCamera);
+            }
+        }
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("Set as Active Game Camera");
         }
     }
 
+    ImGui::Separator();
+
+    bool objectDeleted = DrawGameObjectSection(selectedObject);
+    if (objectDeleted)
+    {
+        ImGui::End();
+        return;
+    }
+
+    ImGui::Separator();
     DrawGizmoSettings();
     ImGui::Separator();
 
@@ -364,28 +379,132 @@ void InspectorWindow::DrawMeshComponent(GameObject* selectedObject)
 {
     ComponentMesh* meshComp = static_cast<ComponentMesh*>(selectedObject->GetComponent(ComponentType::MESH));
 
-    if (meshComp == nullptr || !meshComp->HasMesh()) return;
+    if (meshComp == nullptr) return;
 
     if (ImGui::CollapsingHeader("Mesh", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        const Mesh& mesh = meshComp->GetMesh();
+        ImGui::Text("Mesh:");
+        ImGui::SameLine();
 
-        ImGui::Text("Vertices: %d", (int)mesh.vertices.size());
-        ImGui::Text("Indices: %d", (int)mesh.indices.size());
-        ImGui::Text("Triangles: %d", (int)mesh.indices.size() / 3);
-
-        ImGui::Separator();
-
-        ImGui::Text("Normals Visualization:");
-
-        if (ImGui::Checkbox("Show Vertex Normals", &showVertexNormals))
+        // Mesh display
+        std::string currentMeshName = "None";
+        if (meshComp->HasMesh() && meshComp->IsUsingResourceMesh())
         {
-            LOG_DEBUG("Vertex normals visualization: %s", showVertexNormals ? "ON" : "OFF");
+            UID currentUID = meshComp->GetMeshUID();
+            ModuleResources* resources = Application::GetInstance().resources.get();
+            const Resource* res = resources->GetResourceDirect(currentUID);
+            if (res)
+            {
+                currentMeshName = std::string(res->GetAssetFile());
+                // Filename
+                size_t lastSlash = currentMeshName.find_last_of("/\\");
+                if (lastSlash != std::string::npos)
+                    currentMeshName = currentMeshName.substr(lastSlash + 1);
+            }
+            else
+            {
+                //Show UID
+                currentMeshName = "UID " + std::to_string(currentUID);
+            }
+        }
+        else if (meshComp->HasMesh() && meshComp->IsUsingDirectMesh())
+        {
+            currentMeshName = "[Primitive]";
         }
 
-        if (ImGui::Checkbox("Show Face Normals", &showFaceNormals))
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::BeginCombo("##MeshSelector", currentMeshName.c_str()))
         {
-            LOG_DEBUG("Face normals visualization: %s", showFaceNormals ? "ON" : "OFF");
+			// Get mesh resources
+            ModuleResources* resources = Application::GetInstance().resources.get();
+            const std::map<UID, Resource*>& allResources = resources->GetAllResources();
+
+            for (const auto& pair : allResources)
+            {
+                const Resource* res = pair.second;
+                if (res->GetType() == Resource::MESH)
+                {
+                    std::string meshName = res->GetAssetFile();
+
+                    // Filename
+                    size_t lastSlash = meshName.find_last_of("/\\");
+                    if (lastSlash != std::string::npos) meshName = meshName.substr(lastSlash + 1);
+
+                    UID meshUID = res->GetUID();
+                    bool isSelected = (meshComp->IsUsingResourceMesh() && meshComp->GetMeshUID() == meshUID);
+
+                    std::string displayName = meshName;
+                    if (res->IsLoadedToMemory())
+                    {
+                        displayName += " [Loaded]";
+                    }
+
+                    if (ImGui::Selectable(displayName.c_str(), isSelected))
+                    {
+                        if (meshComp->LoadMeshByUID(meshUID))
+                        {
+                            LOG_DEBUG("Assigned mesh '%s' (UID %llu) to GameObject '%s'",
+                                meshName.c_str(), meshUID, selectedObject->GetName().c_str());
+                            LOG_CONSOLE("Mesh '%s' assigned to '%s'",
+                                meshName.c_str(), selectedObject->GetName().c_str());
+                        }
+                        else
+                        {
+                            LOG_CONSOLE("Failed to load mesh '%s' (UID %llu)", meshName.c_str(), meshUID);
+                        }
+                    }
+
+                    if (isSelected)
+                    {
+						ImGui::SetItemDefaultFocus(); // Highlight selected item
+                    }
+
+                    // Show tooltip with UID and path
+                    if (ImGui::IsItemHovered())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::Text("UID: %llu", meshUID);
+                        ImGui::Text("Path: %s", res->GetAssetFile());
+                        if (res->IsLoadedToMemory())
+                        {
+                            ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "Loaded in memory");
+                        }
+                        ImGui::EndTooltip();
+                    }
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+        if (meshComp->HasMesh())
+        {
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            const Mesh& mesh = meshComp->GetMesh();
+
+            ImGui::Text("Mesh Statistics:");
+            ImGui::Text("Vertices: %d", (int)mesh.vertices.size());
+            ImGui::Text("Indices: %d", (int)mesh.indices.size());
+            ImGui::Text("Triangles: %d", (int)mesh.indices.size() / 3);
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            ImGui::Text("Normals Visualization:");
+
+            if (ImGui::Checkbox("Show Vertex Normals", &showVertexNormals))
+            {
+                LOG_DEBUG("Vertex normals visualization: %s", showVertexNormals ? "ON" : "OFF");
+            }
+
+            if (ImGui::Checkbox("Show Face Normals", &showFaceNormals))
+            {
+                LOG_DEBUG("Face normals visualization: %s", showFaceNormals ? "ON" : "OFF");
+            }
         }
     }
 }
@@ -394,77 +513,199 @@ void InspectorWindow::DrawMaterialComponent(GameObject* selectedObject)
 {
     ComponentMaterial* materialComp = static_cast<ComponentMaterial*>(selectedObject->GetComponent(ComponentType::MATERIAL));
 
-    if (materialComp != nullptr)
-    {
-        if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
-        {
-            ImGui::Text("Texture Information:");
+    if (materialComp == nullptr) return;
 
-            std::string texturePath = materialComp->GetTexturePath();
-            if (texturePath.empty() || texturePath == "[Checkerboard Pattern]")
+    if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Text("Texture:");
+        ImGui::SameLine();
+
+        // Texture display
+        std::string currentTextureName = "None";
+        if (materialComp->HasTexture())
+        {
+            UID currentUID = materialComp->GetTextureUID();
+            ModuleResources* resources = Application::GetInstance().resources.get();
+            const Resource* res = resources->GetResourceDirect(currentUID);
+            if (res)
             {
-                ImGui::Text("Path: Checkerboard");
+                currentTextureName = std::string(res->GetAssetFile());
+                // Filename
+                size_t lastSlash = currentTextureName.find_last_of("/\\");
+                if (lastSlash != std::string::npos) currentTextureName = currentTextureName.substr(lastSlash + 1);
             }
             else
             {
-                ImGui::Text("Path: %s", texturePath.c_str());
+                currentTextureName = "UID " + std::to_string(currentUID);
+            }
+        }
+
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::BeginCombo("##TextureSelector", currentTextureName.c_str()))
+        {
+            // Get texture resources
+            ModuleResources* resources = Application::GetInstance().resources.get();
+            const std::map<UID, Resource*>& allResources = resources->GetAllResources();
+
+            for (const auto& pair : allResources)
+            {
+                const Resource* res = pair.second;
+                if (res->GetType() == Resource::TEXTURE)
+                {
+                    std::string textureName = res->GetAssetFile();
+
+                    // Filename
+                    size_t lastSlash = textureName.find_last_of("/\\");
+                    if (lastSlash != std::string::npos) textureName = textureName.substr(lastSlash + 1);
+
+                    UID textureUID = res->GetUID();
+                    bool isSelected = (materialComp->HasTexture() && materialComp->GetTextureUID() == textureUID);
+
+                    std::string displayName = textureName;
+                    if (res->IsLoadedToMemory())
+                    {
+                        displayName += " [Loaded]";
+                    }
+
+                    // Get texture resource for tooltip preview
+                    const ResourceTexture* texRes = static_cast<const ResourceTexture*>(res);
+					unsigned int gpuID = texRes->GetGPU_ID(); 
+
+                    if (ImGui::Selectable(displayName.c_str(), isSelected))
+                    {
+                        if (materialComp->LoadTextureByUID(textureUID))
+                        {
+                            LOG_DEBUG("Assigned texture '%s' (UID %llu) to GameObject '%s'",
+                                textureName.c_str(), textureUID, selectedObject->GetName().c_str());
+                            LOG_CONSOLE("Texture '%s' assigned to '%s'",
+                                textureName.c_str(), selectedObject->GetName().c_str());
+                        }
+                        else
+                        {
+                            LOG_CONSOLE("Failed to load texture '%s' (UID %llu)", textureName.c_str(), textureUID);
+                        }
+                    }
+
+                    if (isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+
+                    // Show tooltip with UID and path
+                    if (ImGui::IsItemHovered())
+                    {
+                        ImGui::BeginTooltip();
+
+                        // Show preview
+                        if (gpuID != 0)
+                        {
+                            float tooltipPreviewSize = 128.0f;
+                            float width = (float)texRes->GetWidth();
+                            float height = (float)texRes->GetHeight();
+                            float scale = tooltipPreviewSize / std::max(width, height);
+                            ImVec2 tooltipSize(width * scale, height * scale);
+
+                            ImGui::Image((ImTextureID)(intptr_t)gpuID, tooltipSize);
+                            ImGui::Separator();
+                        }
+
+                        ImGui::Text("%s", textureName.c_str());
+                        ImGui::Text("UID: %llu", textureUID);
+                        ImGui::Text("Size: %d x %d", texRes->GetWidth(), texRes->GetHeight());
+                        ImGui::Text("Path: %s", res->GetAssetFile());
+                        if (res->IsLoadedToMemory())
+                        {
+                            ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "Loaded in memory");
+                        }
+                        else
+                        {
+                            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Not loaded");
+                        }
+                        ImGui::EndTooltip();
+                    }
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // Texture preview
+        if (materialComp->HasTexture())
+        {
+            UID currentUID = materialComp->GetTextureUID();
+            ModuleResources* resources = Application::GetInstance().resources.get();
+            const Resource* res = resources->GetResourceDirect(currentUID);
+
+            if (res && res->GetType() == Resource::TEXTURE)
+            {
+                const ResourceTexture* texRes = static_cast<const ResourceTexture*>(res);
+                unsigned int gpuID = texRes->GetGPU_ID();
+
+                if (gpuID != 0)
+                {
+                    ImGui::Text("Texture Preview:");
+
+                    float previewMaxSize = 256.0f;
+                    float width = (float)texRes->GetWidth();
+                    float height = (float)texRes->GetHeight();
+
+                    float scale = previewMaxSize / std::max(width, height);
+                    ImVec2 previewSize(width * scale, height * scale);
+
+                    // Center the image
+                    float windowWidth = ImGui::GetContentRegionAvail().x;
+                    float offsetX = (windowWidth - previewSize.x) * 0.5f;
+                    if (offsetX > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+
+                    // Display texture
+                    ImGui::Image((ImTextureID)(intptr_t)gpuID, previewSize);
+
+                    ImGui::Spacing();
+                    ImGui::Separator();
+                    ImGui::Spacing();
+                }
             }
 
             ImGui::Text("Size: %d x %d pixels", materialComp->GetTextureWidth(), materialComp->GetTextureHeight());
+        }
 
-            ImGui::Separator();
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
 
-            if (materialComp->HasOriginalTexture())
+        ImGui::Text("Actions:");
+        ImGui::Spacing();
+
+        if (ImGui::Button("Apply Checkerboard", ImVec2(-1, 0)))
+        {
+            materialComp->CreateCheckerboardTexture();
+            LOG_DEBUG("Applied checkerboard texture to: %s", selectedObject->GetName().c_str());
+            LOG_CONSOLE("Checkerboard texture applied to %s", selectedObject->GetName().c_str());
+        }
+
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Applies the default black and white checkerboard pattern");
+        }
+
+        ImGui::Spacing();
+
+        if (materialComp->HasOriginalTexture())
+        {
+            if (ImGui::Button("Restore Original", ImVec2(-1, 0)))
             {
-                ImGui::Separator();
-                ImGui::Text("Original Texture:");
-                ImGui::Text("Path: %s", materialComp->GetOriginalTexturePath().c_str());
-            }
-
-            ImGui::Separator();
-
-            ImGui::BeginGroup();
-
-            if (ImGui::Button("Apply Checkerboard"))
-            {
-                materialComp->CreateCheckerboardTexture();
-                LOG_DEBUG("Applied checkerboard texture to: %s", selectedObject->GetName().c_str());
-                LOG_CONSOLE("Checkerboard texture applied to %s", selectedObject->GetName().c_str());
+                materialComp->RestoreOriginalTexture();
+                LOG_DEBUG("Restored original texture to: %s", selectedObject->GetName().c_str());
+                LOG_CONSOLE("Original texture restored to %s", selectedObject->GetName().c_str());
             }
 
             if (ImGui::IsItemHovered())
             {
-                ImGui::SetTooltip("Applies the default black and white checkerboard pattern to this GameObject");
-            }
-
-            if (materialComp->HasOriginalTexture())
-            {
-                ImGui::SameLine();
-
-                if (ImGui::Button("Restore Original"))
-                {
-                    materialComp->RestoreOriginalTexture();
-                    LOG_DEBUG("Restored original texture to: %s", selectedObject->GetName().c_str());
-                    LOG_CONSOLE("Original texture restored to %s", selectedObject->GetName().c_str());
-                }
-
-                if (ImGui::IsItemHovered())
-                {
-                    ImGui::SetTooltip("Restores the original texture that was previously loaded");
-                }
-            }
-
-            ImGui::EndGroup();
-        }
-    }
-    else
-    {
-        ComponentMesh* meshComp = static_cast<ComponentMesh*>(selectedObject->GetComponent(ComponentType::MESH));
-        if (meshComp != nullptr && meshComp->HasMesh())
-        {
-            if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
-            {
-                ImGui::Text("No material component");
+                ImGui::SetTooltip("Restores the original texture that was previously loaded");
             }
         }
     }
@@ -486,4 +727,111 @@ void InspectorWindow::DrawRotateComponent(GameObject* selectedObject)
 
         rotateComp->OnEditor();
     }
+}
+
+bool InspectorWindow::DrawGameObjectSection(GameObject* selectedObject)
+{
+    bool objectDeleted = false;
+
+    if (ImGui::CollapsingHeader("GameObject", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Text("Actions:");
+        ImGui::Spacing();
+
+        // Delete button
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.1f, 0.1f, 1.0f));
+
+        if (ImGui::Button("Delete GameObject", ImVec2(-1, 0)))
+        {
+            if (selectedObject != Application::GetInstance().scene->GetRoot())
+            {
+                selectedObject->MarkForDeletion();
+                LOG_DEBUG("GameObject '%s' marked for deletion", selectedObject->GetName().c_str());
+                LOG_CONSOLE("GameObject '%s' marked for deletion", selectedObject->GetName().c_str());
+
+                Application::GetInstance().selectionManager->ClearSelection();
+                objectDeleted = true;
+            }
+            else
+            {
+                LOG_CONSOLE("Cannot delete Root GameObject!");
+            }
+        }
+
+        ImGui::PopStyleColor(3);
+
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Delete GameObject");
+            ImGui::Separator();
+            ImGui::Text("Marks this GameObject for deletion");
+            ImGui::Text("Shortcut: Backspace key");
+            ImGui::EndTooltip();
+        }
+
+        ImGui::Spacing();
+
+        // Create empty child button
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.3f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.1f, 1.0f));
+
+        if (ImGui::Button("Create Empty Child", ImVec2(-1, 0)))
+        {
+            GameObject* newChild = Application::GetInstance().scene->CreateGameObject("Empty");
+            newChild->SetParent(selectedObject);
+
+            Application::GetInstance().selectionManager->SetSelectedObject(newChild);
+
+            LOG_DEBUG("Created empty child for '%s'", selectedObject->GetName().c_str());
+            LOG_CONSOLE("Created empty child '%s' under '%s'", newChild->GetName().c_str(), selectedObject->GetName().c_str());
+        }
+
+        ImGui::PopStyleColor(3);
+
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Create Empty Child");
+            ImGui::Separator();
+            ImGui::Text("Creates a new empty GameObject as a child");
+            ImGui::Text("of this GameObject");
+            ImGui::EndTooltip();
+        }
+    }
+
+    return objectDeleted;
+}
+
+void InspectorWindow::GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects)
+{
+    if (root == nullptr)
+        return;
+
+    outObjects.push_back(root);
+
+    const std::vector<GameObject*>& children = root->GetChildren();
+    for (GameObject* child : children)
+    {
+        GetAllGameObjects(child, outObjects);
+    }
+}
+
+bool InspectorWindow::IsDescendantOf(GameObject* potentialDescendant, GameObject* potentialAncestor)
+{
+    if (potentialDescendant == nullptr || potentialAncestor == nullptr)
+        return false;
+
+    GameObject* current = potentialDescendant->GetParent();
+    while (current != nullptr)
+    {
+        if (current == potentialAncestor)
+            return true;
+        current = current->GetParent();
+    }
+
+    return false;
 }

@@ -338,21 +338,20 @@ void ModuleEditor::ShowMenuBar()
                 Application& app = Application::GetInstance();
                 GameObject* cameraGO = app.scene->CreateGameObject("Camera");
 
-                Transform* transform = static_cast<Transform*>(
-                    cameraGO->GetComponent(ComponentType::TRANSFORM)
-                    );
-                if (transform)
+                ComponentCamera* editorCam = app.camera->GetEditorCamera();
+                if (editorCam && editorCam->owner)
                 {
-                    glm::vec3 cameraEditor = app.camera.get()->GetEditorCamera()->GetPosition();
-                    transform->SetPosition(cameraEditor);
-                    transform->SetRotation(cameraEditor);
+                    Transform* editorTransform = static_cast<Transform*>(editorCam->owner->GetComponent(ComponentType::TRANSFORM));
+                    Transform* newCameraTransform = static_cast<Transform*>(cameraGO->GetComponent(ComponentType::TRANSFORM));
+
+                    if (editorTransform && newCameraTransform)
+                    {
+                        newCameraTransform->SetPosition(editorTransform->GetPosition());
+                        newCameraTransform->SetRotationQuat(editorTransform->GetRotationQuat());
+                    }
                 }
 
-
-                ComponentCamera* sceneCamera = static_cast<ComponentCamera*>(
-                    cameraGO->CreateComponent(ComponentType::CAMERA)
-                    );
-
+                ComponentCamera* sceneCamera = static_cast<ComponentCamera*>(cameraGO->CreateComponent(ComponentType::CAMERA));
             }
 
             ImGui::EndMenu();
@@ -511,6 +510,9 @@ void ModuleEditor::ShowPlayToolbar()
     // Stop button
     if (ImGui::Button("Stop", ImVec2(40, 0))) {
         app.Stop();
+        if (sceneWindow && sceneWindow->IsOpen()) {
+            ImGui::SetWindowFocus("Scene");
+        }
     }
 
     ImGui::SameLine();

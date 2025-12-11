@@ -1,8 +1,9 @@
 #pragma once
 
 #include "EditorWindow.h"
-#include <imgui.h> 
+#include <imgui.h>  
 #include <ImGuizmo.h>
+#include <vector>
 
 class GameObject;
 
@@ -25,12 +26,17 @@ public:
     bool ShouldShowFaceNormals() const { return showFaceNormals; }
 
 private:
+    bool DrawGameObjectSection(GameObject* selectedObject);
     void DrawGizmoSettings();
     void DrawTransformComponent(GameObject* selectedObject);
     void DrawCameraComponent(GameObject* selectedObject);
     void DrawMeshComponent(GameObject* selectedObject);
     void DrawMaterialComponent(GameObject* selectedObject);
     void DrawRotateComponent(GameObject* selectedObject);
+
+    // Helper methods
+    void GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects);
+    bool IsDescendantOf(GameObject* potentialDescendant, GameObject* potentialAncestor);
 
     // Gizmo state
     ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
