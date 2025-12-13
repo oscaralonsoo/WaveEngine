@@ -5,7 +5,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <rapidjson/document.h>
+#include <nlohmann/json.hpp>
 #include "Log.h"
 
 Transform::Transform(GameObject* owner)
@@ -161,40 +161,28 @@ void Transform::UpdateEulerFromQuaternion()
     rotation = glm::degrees(glm::eulerAngles(rotationQuat));
 }
 
-void Transform::Serialize(rapidjson::Value& componentObj, rapidjson::Value::AllocatorType& allocator) const
+void Transform::Serialize(nlohmann::json& componentObj) const
 {
     // Position
-    rapidjson::Value posArray(rapidjson::kArrayType);
-    posArray.PushBack(position.x, allocator);
-    posArray.PushBack(position.y, allocator);
-    posArray.PushBack(position.z, allocator);
-    componentObj.AddMember("position", posArray, allocator);
+    componentObj["position"] = { position.x, position.y, position.z };
 
     // Rotation
-    rapidjson::Value rotArray(rapidjson::kArrayType);
-    rotArray.PushBack(rotation.x, allocator);
-    rotArray.PushBack(rotation.y, allocator);
-    rotArray.PushBack(rotation.z, allocator);
-    componentObj.AddMember("rotation", rotArray, allocator);
+    componentObj["rotation"] = { rotation.x, rotation.y, rotation.z };
 
     // Scale
-    rapidjson::Value scaleArray(rapidjson::kArrayType);
-    scaleArray.PushBack(scale.x, allocator);
-    scaleArray.PushBack(scale.y, allocator);
-    scaleArray.PushBack(scale.z, allocator);
-    componentObj.AddMember("scale", scaleArray, allocator);
+    componentObj["scale"] = { scale.x, scale.y, scale.z };
 }
 
-void Transform::Deserialize(const rapidjson::Value& componentObj)
+void Transform::Deserialize(const nlohmann::json& componentObj)
 {
     // Position
-    if (componentObj.HasMember("position") && componentObj["position"].IsArray()) {
-        const rapidjson::Value& posArray = componentObj["position"];
-        if (posArray.Size() >= 3) {
+    if (componentObj.contains("position") && componentObj["position"].is_array()) {
+        auto& posArray = componentObj["position"];
+        if (posArray.size() >= 3) {
             position = glm::vec3(
-                posArray[0].GetFloat(),
-                posArray[1].GetFloat(),
-                posArray[2].GetFloat()
+                posArray[0].get<float>(),
+                posArray[1].get<float>(),
+                posArray[2].get<float>()
             );
             localDirty = true;
             globalDirty = true;
@@ -202,13 +190,13 @@ void Transform::Deserialize(const rapidjson::Value& componentObj)
     }
 
     // Rotation
-    if (componentObj.HasMember("rotation") && componentObj["rotation"].IsArray()) {
-        const rapidjson::Value& rotArray = componentObj["rotation"];
-        if (rotArray.Size() >= 3) {
+    if (componentObj.contains("rotation") && componentObj["rotation"].is_array()) {
+        auto& rotArray = componentObj["rotation"];
+        if (rotArray.size() >= 3) {
             rotation = glm::vec3(
-                rotArray[0].GetFloat(),
-                rotArray[1].GetFloat(),
-                rotArray[2].GetFloat()
+                rotArray[0].get<float>(),
+                rotArray[1].get<float>(),
+                rotArray[2].get<float>()
             );
             UpdateQuaternionFromEuler();
             localDirty = true;
@@ -217,13 +205,13 @@ void Transform::Deserialize(const rapidjson::Value& componentObj)
     }
 
     // Scale
-    if (componentObj.HasMember("scale") && componentObj["scale"].IsArray()) {
-        const rapidjson::Value& scaleArray = componentObj["scale"];
-        if (scaleArray.Size() >= 3) {
+    if (componentObj.contains("scale") && componentObj["scale"].is_array()) {
+        auto& scaleArray = componentObj["scale"];
+        if (scaleArray.size() >= 3) {
             scale = glm::vec3(
-                scaleArray[0].GetFloat(),
-                scaleArray[1].GetFloat(),
-                scaleArray[2].GetFloat()
+                scaleArray[0].get<float>(),
+                scaleArray[1].get<float>(),
+                scaleArray[2].get<float>()
             );
             localDirty = true;
             globalDirty = true;
