@@ -545,9 +545,12 @@ void InspectorWindow::DrawMaterialComponent(GameObject* selectedObject)
         ImGui::Text("Texture:");
         ImGui::SameLine();
 
-        // Texture display
         std::string currentTextureName = "None";
-        if (materialComp->HasTexture())
+
+        if (materialComp->IsUsingCheckerboard()) {
+            currentTextureName = "[Checkerboard Pattern]";
+        }
+        else if (materialComp->HasTexture())
         {
             UID currentUID = materialComp->GetTextureUID();
             ModuleResources* resources = Application::GetInstance().resources.get();
@@ -555,9 +558,9 @@ void InspectorWindow::DrawMaterialComponent(GameObject* selectedObject)
             if (res)
             {
                 currentTextureName = std::string(res->GetAssetFile());
-                // Filename
                 size_t lastSlash = currentTextureName.find_last_of("/\\");
-                if (lastSlash != std::string::npos) currentTextureName = currentTextureName.substr(lastSlash + 1);
+                if (lastSlash != std::string::npos)
+                    currentTextureName = currentTextureName.substr(lastSlash + 1);
             }
             else
             {
@@ -568,7 +571,21 @@ void InspectorWindow::DrawMaterialComponent(GameObject* selectedObject)
         ImGui::SetNextItemWidth(-1);
         if (ImGui::BeginCombo("##TextureSelector", currentTextureName.c_str()))
         {
-            // Get texture resources
+            bool isCheckerboardSelected = materialComp->IsUsingCheckerboard();
+            if (ImGui::Selectable("[Checkerboard Pattern]", isCheckerboardSelected))
+            {
+                materialComp->CreateCheckerboardTexture();
+                LOG_DEBUG("Applied checkerboard texture to: %s", selectedObject->GetName().c_str());
+                LOG_CONSOLE("Checkerboard texture applied to %s", selectedObject->GetName().c_str());
+            }
+
+            if (isCheckerboardSelected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::Separator();
+
             ModuleResources* resources = Application::GetInstance().resources.get();
             const std::map<UID, Resource*>& allResources = resources->GetAllResources();
 
@@ -579,12 +596,13 @@ void InspectorWindow::DrawMaterialComponent(GameObject* selectedObject)
                 {
                     std::string textureName = res->GetAssetFile();
 
-                    // Filename
                     size_t lastSlash = textureName.find_last_of("/\\");
                     if (lastSlash != std::string::npos) textureName = textureName.substr(lastSlash + 1);
 
                     UID textureUID = res->GetUID();
-                    bool isSelected = (materialComp->HasTexture() && materialComp->GetTextureUID() == textureUID);
+                    bool isSelected = (!materialComp->IsUsingCheckerboard() &&
+                        materialComp->HasTexture() &&
+                        materialComp->GetTextureUID() == textureUID);
 
                     std::string displayName = textureName;
                     if (res->IsLoadedToMemory())
@@ -592,9 +610,8 @@ void InspectorWindow::DrawMaterialComponent(GameObject* selectedObject)
                         displayName += " [Loaded]";
                     }
 
-                    // Get texture resource for tooltip preview
                     const ResourceTexture* texRes = static_cast<const ResourceTexture*>(res);
-					unsigned int gpuID = texRes->GetGPU_ID(); 
+                    unsigned int gpuID = texRes->GetGPU_ID();
 
                     if (ImGui::Selectable(displayName.c_str(), isSelected))
                     {
@@ -616,12 +633,10 @@ void InspectorWindow::DrawMaterialComponent(GameObject* selectedObject)
                         ImGui::SetItemDefaultFocus();
                     }
 
-                    // Show tooltip with UID and path
                     if (ImGui::IsItemHovered())
                     {
                         ImGui::BeginTooltip();
 
-                        // Show preview
                         if (gpuID != 0)
                         {
                             float tooltipPreviewSize = 128.0f;
@@ -658,41 +673,61 @@ void InspectorWindow::DrawMaterialComponent(GameObject* selectedObject)
         ImGui::Separator();
         ImGui::Spacing();
 
-        // Texture preview
         if (materialComp->HasTexture())
         {
-            UID currentUID = materialComp->GetTextureUID();
-            ModuleResources* resources = Application::GetInstance().resources.get();
-            const Resource* res = resources->GetResourceDirect(currentUID);
+            unsigned int gpuID = 0;
+            int texWidth = 0;
+            int texHeight = 0;
 
-            if (res && res->GetType() == Resource::TEXTURE)
+            if (materialComp->IsUsingCheckerboard())
             {
-                const ResourceTexture* texRes = static_cast<const ResourceTexture*>(res);
-                unsigned int gpuID = texRes->GetGPU_ID();
-
-                if (gpuID != 0)
+                Renderer* renderer = Application::GetInstance().renderer.get();
+                if (renderer)
                 {
-                    ImGui::Text("Texture Preview:");
-
-                    float previewMaxSize = 256.0f;
-                    float width = (float)texRes->GetWidth();
-                    float height = (float)texRes->GetHeight();
-
-                    float scale = previewMaxSize / std::max(width, height);
-                    ImVec2 previewSize(width * scale, height * scale);
-
-                    // Center the image
-                    float windowWidth = ImGui::GetContentRegionAvail().x;
-                    float offsetX = (windowWidth - previewSize.x) * 0.5f;
-                    if (offsetX > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
-
-                    // Display texture
-                    ImGui::Image((ImTextureID)(intptr_t)gpuID, previewSize);
-
-                    ImGui::Spacing();
-                    ImGui::Separator();
-                    ImGui::Spacing();
+                    Texture* defaultTex = renderer->GetDefaultTexture();
+                    if (defaultTex)
+                    {
+                        gpuID = defaultTex->GetID();
+                        texWidth = defaultTex->GetWidth();
+                        texHeight = defaultTex->GetHeight();
+                    }
                 }
+            }
+            else
+            {
+                UID currentUID = materialComp->GetTextureUID();
+                ModuleResources* resources = Application::GetInstance().resources.get();
+                const Resource* res = resources->GetResourceDirect(currentUID);
+
+                if (res && res->GetType() == Resource::TEXTURE)
+                {
+                    const ResourceTexture* texRes = static_cast<const ResourceTexture*>(res);
+                    gpuID = texRes->GetGPU_ID();
+                    texWidth = texRes->GetWidth();
+                    texHeight = texRes->GetHeight();
+                }
+            }
+
+            if (gpuID != 0)
+            {
+                ImGui::Text("Texture Preview:");
+
+                float previewMaxSize = 256.0f;
+                float width = (float)texWidth;
+                float height = (float)texHeight;
+
+                float scale = previewMaxSize / std::max(width, height);
+                ImVec2 previewSize(width * scale, height * scale);
+
+                float windowWidth = ImGui::GetContentRegionAvail().x;
+                float offsetX = (windowWidth - previewSize.x) * 0.5f;
+                if (offsetX > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+
+                ImGui::Image((ImTextureID)(intptr_t)gpuID, previewSize);
+
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Spacing();
             }
 
             ImGui::Text("Size: %d x %d pixels", materialComp->GetTextureWidth(), materialComp->GetTextureHeight());

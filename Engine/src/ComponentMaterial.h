@@ -17,7 +17,6 @@ public:
     void Deserialize(const nlohmann::json& componentObj) override;
 
     bool LoadTextureByUID(UID uid);
-
     bool LoadTexture(const std::string& path);
 
     void CreateCheckerboardTexture();
@@ -26,13 +25,13 @@ public:
     void Use();
     void Unbind();
 
-    bool HasTexture() const { return textureUID != 0; }
+    bool HasTexture() const { return textureUID != 0 || useCheckerboard; }
     bool HasOriginalTexture() const { return originalTextureUID != 0; }
+    bool IsUsingCheckerboard() const { return useCheckerboard; }
 
     UID GetTextureUID() const { return textureUID; }
     UID GetOriginalTextureUID() const { return originalTextureUID; }
 
-    //  por compatibilidad (deprecated)
     const std::string& GetTexturePath() const { return texturePath; }
     const std::string& GetOriginalTexturePath() const { return originalTexturePath; }
 
@@ -45,8 +44,8 @@ private:
 private:
     UID textureUID;
     UID originalTextureUID;
+    bool useCheckerboard;
 
-    //  paths por compatibilidad (deprecated)
     std::string texturePath;
     std::string originalTexturePath;
 };

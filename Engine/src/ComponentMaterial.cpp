@@ -3,6 +3,8 @@
 #include "Application.h"
 #include "ModuleResources.h"
 #include "ResourceTexture.h"
+#include "Renderer.h"
+#include "Texture.h"
 #include "Log.h"
 #include <glad/glad.h>
 
@@ -11,7 +13,8 @@ ComponentMaterial::ComponentMaterial(GameObject* owner)
     textureUID(0),
     originalTextureUID(0),
     texturePath(""),
-    originalTexturePath("")
+    originalTexturePath(""),
+    useCheckerboard(false)
 {
 }
 
@@ -36,6 +39,7 @@ void ComponentMaterial::ReleaseCurrentTexture()
     }
 
     texturePath = "";
+    useCheckerboard = false;
 }
 
 bool ComponentMaterial::LoadTextureByUID(UID uid)
@@ -45,10 +49,8 @@ bool ComponentMaterial::LoadTextureByUID(UID uid)
         return false;
     }
 
-    // Release current texture
     ReleaseCurrentTexture();
 
-    // Request texture resource
     ResourceTexture* texResource = dynamic_cast<ResourceTexture*>(
         Application::GetInstance().resources->RequestResource(uid)
         );
@@ -64,13 +66,11 @@ bool ComponentMaterial::LoadTextureByUID(UID uid)
         return false;
     }
 
-    // Store UID
     textureUID = uid;
     originalTextureUID = uid;
-
-    // Update path for compatibility
     texturePath = texResource->GetAssetFile();
     originalTexturePath = texturePath;
+    useCheckerboard = false;
 
     return true;
 }
@@ -86,7 +86,6 @@ bool ComponentMaterial::LoadTexture(const std::string& path)
     UID uid = resources->Find(path.c_str());
 
     if (uid == 0) {
-        // No existe, intentar importar
         uid = resources->ImportFile(path.c_str());
 
         if (uid == 0) {
@@ -100,22 +99,33 @@ bool ComponentMaterial::LoadTexture(const std::string& path)
 
 void ComponentMaterial::CreateCheckerboardTexture()
 {
-    // Release current texture
     ReleaseCurrentTexture();
 
+    useCheckerboard = true;
     texturePath = "[Checkerboard Pattern]";
     originalTexturePath = "";
+
+    LOG_DEBUG("[ComponentMaterial] Checkerboard texture activated");
 }
 
 void ComponentMaterial::Use()
 {
+    if (useCheckerboard) {
+        Renderer* renderer = Application::GetInstance().renderer.get();
+        if (renderer && renderer->GetDefaultTexture()) {
+            renderer->GetDefaultTexture()->Bind();
+        }
+        else {
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        return;
+    }
+
     if (textureUID == 0) {
-        // No texture, unbind
         glBindTexture(GL_TEXTURE_2D, 0);
         return;
     }
 
-    // Get texture resource
     const Resource* resource = Application::GetInstance().resources->GetResource(textureUID);
 
     if (!resource || !resource->IsLoadedToMemory()) {
@@ -139,6 +149,10 @@ void ComponentMaterial::Unbind()
 
 int ComponentMaterial::GetTextureWidth() const
 {
+    if (useCheckerboard) {
+        return 64;
+    }
+
     if (textureUID == 0) return 0;
 
     const Resource* resource = Application::GetInstance().resources->GetResource(textureUID);
@@ -150,6 +164,10 @@ int ComponentMaterial::GetTextureWidth() const
 
 int ComponentMaterial::GetTextureHeight() const
 {
+    if (useCheckerboard) {
+        return 64;
+    }
+
     if (textureUID == 0) return 0;
 
     const Resource* resource = Application::GetInstance().resources->GetResource(textureUID);
@@ -171,27 +189,32 @@ void ComponentMaterial::RestoreOriginalTexture()
 
 void ComponentMaterial::Serialize(nlohmann::json& componentObj) const
 {
-    // Serialize texture UIDs
     if (textureUID != 0) {
         componentObj["textureUID"] = textureUID;
     }
     if (originalTextureUID != 0) {
         componentObj["originalTextureUID"] = originalTextureUID;
     }
+    componentObj["useCheckerboard"] = useCheckerboard;
 }
 
 void ComponentMaterial::Deserialize(const nlohmann::json& componentObj)
 {
-    // Original texture UID first
     if (componentObj.contains("originalTextureUID")) {
         originalTextureUID = componentObj["originalTextureUID"].get<UID>();
     }
 
-    // Then
+    if (componentObj.contains("useCheckerboard")) {
+        useCheckerboard = componentObj["useCheckerboard"].get<bool>();
+    }
+
     if (componentObj.contains("textureUID")) {
         UID uid = componentObj["textureUID"].get<UID>();
         if (uid != 0) {
             LoadTextureByUID(uid);
         }
+    }
+    else if (useCheckerboard) {
+        CreateCheckerboardTexture();
     }
 }

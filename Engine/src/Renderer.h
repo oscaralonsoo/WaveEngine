@@ -32,6 +32,8 @@ public:
     bool CleanUp() override;
     bool PreUpdate() override;
 
+    Texture* GetDefaultTexture() const { return defaultTexture.get(); }
+
     // Mesh management
     void LoadMesh(Mesh& mesh);
     void DrawMesh(const Mesh& mesh);
