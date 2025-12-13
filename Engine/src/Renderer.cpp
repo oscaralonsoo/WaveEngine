@@ -717,14 +717,16 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
     {
         DrawGameObjectRecursive(transparentObj.gameObject, true, renderCamera, cullingCamera);
     }
-
-    // ===== THIRD PASS: Draw outlines for selected objects (ALWAYS ON TOP) =====
+    // ===== THIRD PASS: Draw outlines for selected objects =====
     if (drawEditorFeatures)
     {
         // Draw outline where stencil != 1 (around the selected object)
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
         glStencilMask(0x00);
-        glDisable(GL_DEPTH_TEST);
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);  // Dibuja donde profundidad <= depth buffer
+        glDepthMask(GL_FALSE);   // No modifica depth buffer
 
         outlineShader->Use();
         glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE,
@@ -769,6 +771,8 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
     // Restore render state
     glStencilMask(0xFF);
     glStencilFunc(GL_ALWAYS, 0, 0xFF);
+    glDepthMask(GL_TRUE);      // Restaurar escritura de profundidad
+    glDepthFunc(GL_LESS);      // Restaurar función de depth por defecto
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_STENCIL_TEST);
 
