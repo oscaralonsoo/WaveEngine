@@ -25,6 +25,23 @@ struct AssetEntry
     std::vector<AssetEntry> subMeshes;  // Mallas contenidas en el FBX
 };
 
+// Tipos de assets para drag & drop
+enum class DragDropAssetType
+{
+    UNKNOWN = 0,
+    FBX_MODEL,      // FBX completo (todas las meshes)
+    MESH,           // Mesh individual
+    TEXTURE,        // Texture (PNG, JPG, DDS, etc)
+};
+
+// Payload para drag & drop interno
+struct DragDropPayload
+{
+    std::string assetPath;
+    unsigned long long assetUID;
+    DragDropAssetType assetType;
+};
+
 class AssetsWindow : public EditorWindow
 {
 public:

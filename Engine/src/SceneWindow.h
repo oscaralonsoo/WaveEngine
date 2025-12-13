@@ -5,6 +5,8 @@
 #include <ImGuizmo.h>
 
 class InspectorWindow;
+class GameObject; 
+struct aiNode; 
 
 class SceneWindow : public EditorWindow
 {
@@ -22,6 +24,9 @@ public:
 private:
     void HandleGizmoInput();
     void DrawGizmo();
+    void HandleAssetDropTarget();  
+    unsigned long long FindTextureForDroppedMesh(unsigned long long meshUID); // Helper para encontrar textura
+    void ApplyMeshTransformFromFBX(GameObject* meshObject, unsigned long long meshUID); // Helper para aplicar transformación
 
     InspectorWindow* inspectorWindow;
 

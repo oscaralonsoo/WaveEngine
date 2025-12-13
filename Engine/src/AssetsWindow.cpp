@@ -5,6 +5,9 @@
 #include "MetaFile.h"
 #include "ModuleResources.h"
 #include "Log.h"
+#include "ComponentMesh.h"
+#include "GameObject.h"
+#include "ComponentMaterial.h"
 
 AssetsWindow::AssetsWindow()
     : EditorWindow("Assets"), selectedAsset(nullptr), iconSize(64.0f),
@@ -454,6 +457,20 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
 
     bool isButtonHovered = ImGui::IsItemHovered();
 
+    // Drag & Drop source for FBX
+    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+    {
+        static DragDropPayload payload; // Hacer estático para que persista
+        payload.assetPath = asset.path;
+        payload.assetUID = asset.uid;
+        payload.assetType = DragDropAssetType::FBX_MODEL;
+
+        ImGui::SetDragDropPayload("ASSET_ITEM", &payload, sizeof(DragDropPayload));
+        ImGui::Text("FBX: %s", asset.name.c_str());
+        LOG_CONSOLE("[DRAG START] FBX Model: %s (UID: %llu)", asset.name.c_str(), asset.uid);
+        ImGui::EndDragDropSource();
+    }
+
     if (clicked)
     {
         selectedAsset = &asset;
@@ -594,6 +611,20 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
 
             bool isMeshHovered = ImGui::IsItemHovered();
 
+            // Drag & Drop source for individual mesh
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+            {
+                static DragDropPayload payload; // Hacer estático para que persista
+                payload.assetPath = subMesh.path;
+                payload.assetUID = subMesh.uid;
+                payload.assetType = DragDropAssetType::MESH;
+
+                ImGui::SetDragDropPayload("ASSET_ITEM", &payload, sizeof(DragDropPayload));
+                ImGui::Text("Mesh: %s", subMesh.name.c_str());
+                LOG_CONSOLE("[DRAG START] SubMesh: %s (UID: %llu)", subMesh.name.c_str(), subMesh.uid);
+                ImGui::EndDragDropSource();
+            }
+
             if (meshClicked)
             {
                 selectedAsset = &subMesh;
@@ -659,6 +690,7 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
 
     ImGui::PopID();
 }
+
 void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendingToLoad)
 {
     ImGui::PushID(asset.path.c_str());
@@ -676,6 +708,38 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
     DrawIconShape(asset, buttonPos, ImVec2(iconSize, iconSize));
 
     bool isButtonHovered = ImGui::IsItemHovered();
+
+    // Drag & Drop source (solo para archivos, no directorios)
+    if (!asset.isDirectory && ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+    {
+        static DragDropPayload payload; // Hacer estático para que persista
+        payload.assetPath = asset.path;
+        payload.assetUID = asset.uid;
+
+        // Determinar el tipo de asset
+        if (asset.extension == ".png" || asset.extension == ".jpg" ||
+            asset.extension == ".jpeg" || asset.extension == ".dds" || asset.extension == ".tga")
+        {
+            payload.assetType = DragDropAssetType::TEXTURE;
+            ImGui::Text("Texture: %s", asset.name.c_str());
+            LOG_CONSOLE("[DRAG START] Texture: %s (UID: %llu)", asset.name.c_str(), asset.uid);
+        }
+        else if (asset.extension == ".mesh")
+        {
+            payload.assetType = DragDropAssetType::MESH;
+            ImGui::Text("Mesh: %s", asset.name.c_str());
+            LOG_CONSOLE("[DRAG START] Mesh: %s (UID: %llu)", asset.name.c_str(), asset.uid);
+        }
+        else
+        {
+            payload.assetType = DragDropAssetType::UNKNOWN;
+            ImGui::Text("Drag: %s", asset.name.c_str());
+            LOG_CONSOLE("[DRAG START] Unknown: %s (UID: %llu)", asset.name.c_str(), asset.uid);
+        }
+
+        ImGui::SetDragDropPayload("ASSET_ITEM", &payload, sizeof(DragDropPayload));
+        ImGui::EndDragDropSource();
+    }
 
     if (clicked)
     {
