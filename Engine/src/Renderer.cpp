@@ -932,7 +932,6 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject,
             {
                 glm::vec4 diffuse = material->GetDiffuseColor();
                 defaultShader->SetVec3("materialDiffuse", glm::vec3(diffuse.r, diffuse.g, diffuse.b));
-                LOG_DEBUG("Using material color: (%.2f, %.2f, %.2f)", diffuse.r, diffuse.g, diffuse.b);
             }
             else
             {
