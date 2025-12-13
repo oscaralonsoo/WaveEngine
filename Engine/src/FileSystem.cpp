@@ -221,7 +221,8 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
 
     LOG_CONSOLE("Found %d meshes, %d materials", scene->mNumMeshes, scene->mNumMaterials);
 
-    GameObject* rootObj = ProcessNode(scene->mRootNode, scene, directory);
+    int meshCounter = 0;
+    GameObject* rootObj = ProcessNode(scene->mRootNode, scene, directory, meta.uid, meshCounter);
 
     glm::vec3 minBounds(std::numeric_limits<float>::max());
     glm::vec3 maxBounds(std::numeric_limits<float>::lowest());
@@ -266,7 +267,7 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
     return rootObj;
 }
 
-GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const std::string& directory)
+GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const std::string& directory, UID baseUID, int& meshCounter)
 {
     std::string nodeName = node->mName.C_Str();
     if (nodeName.empty()) nodeName = "Unnamed";
@@ -292,7 +293,8 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
         unsigned int meshIndex = node->mMeshes[i];
         aiMesh* aiMesh = scene->mMeshes[meshIndex];
 
-        UID meshUID = ProcessMesh(aiMesh, scene);
+        UID meshUID = ProcessMesh(aiMesh, scene, baseUID, meshCounter);
+        meshCounter++; // Next mesh
 
         if (meshUID != 0)
         {
@@ -360,7 +362,7 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
     // Process child nodes recursively
     for (unsigned int i = 0; i < node->mNumChildren; i++)
     {
-        GameObject* child = ProcessNode(node->mChildren[i], scene, directory);
+        GameObject* child = ProcessNode(node->mChildren[i], scene, directory, baseUID, meshCounter);
         if (child != nullptr)
         {
             gameObject->AddChild(child);
@@ -370,32 +372,23 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
     return gameObject;
 }
 
-UID FileSystem::ProcessMesh(aiMesh* aiMesh, const aiScene* scene)
+UID FileSystem::ProcessMesh(aiMesh* aiMesh, const aiScene* scene, UID baseUID, int meshIndex)
 {
-    // Generate a consistent filename based on mesh name
-    std::string meshName = aiMesh->mName.C_Str();
-    if (meshName.empty()) {
-        meshName = "unnamed_mesh";
-    }
-
     ModuleResources* resources = Application::GetInstance().resources.get();
     if (!resources) {
         LOG_CONSOLE("ERROR: ModuleResources not available");
         return 0;
     }
 
-    // Check if mesh already exists by checking all registered mesh resources
-    std::hash<std::string> hasher;
-    size_t meshNameHash = hasher(meshName);
-
-    UID potentialUID = meshNameHash;
+    // BaseUID (from .meta) + mesh index
+    UID meshUID = baseUID + meshIndex;
 
     // Check if this UID already exists
     const auto& allResources = resources->GetAllResources();
-    auto it = allResources.find(potentialUID);
+    auto it = allResources.find(meshUID);
     if (it != allResources.end() && it->second->GetType() == Resource::MESH) {
         // Mesh already registered, return its UID
-        return potentialUID;
+        return meshUID;
     }
 
     // Import and save mesh
@@ -405,9 +398,6 @@ UID FileSystem::ProcessMesh(aiMesh* aiMesh, const aiScene* scene)
         LOG_CONSOLE("ERROR: Failed to import mesh");
         return 0;
     }
-
-    // Generate new UID for this mesh
-    UID meshUID = resources->GenerateNewUID();
 
     // Save to Library using UID-based filename
     std::string meshFilename = std::to_string(meshUID) + ".mesh";

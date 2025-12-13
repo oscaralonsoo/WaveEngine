@@ -167,7 +167,7 @@ void SceneWindow::DrawGizmo()
         glm::value_ptr(transformMatrix)
     );
 
-    // Actualizar el flag de si el gizmo está siendo usado
+    // Actualizar el flag de si el gizmo est?siendo usado
     isGizmoActive = ImGuizmo::IsUsing();
 
     if (ImGuizmo::IsUsing())

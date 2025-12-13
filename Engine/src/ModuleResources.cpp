@@ -116,23 +116,37 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
         case AssetType::TEXTURE_TGA:
             resourceType = Resource::TEXTURE;
             resource = new ResourceTexture(meta.uid);
+            if (resource) {
+                resource->assetsFile = assetPath;
+                resource->libraryFile = LibraryManager::GetTexturePathFromUID(meta.uid);
+                resources[meta.uid] = resource;
+                registered++;
+            }
             break;
 
         case AssetType::MODEL_FBX:
-            resourceType = Resource::MODEL;
-            continue;
+            // Register all meshes from this FBX model
+            // Each mesh has UID = meta.uid + index
+            for (unsigned int i = 0; i < 100; ++i) { // Max 100 meshes per model
+                UID meshUID = meta.uid + i;
+                std::string meshPath = LibraryManager::GetMeshPathFromUID(meshUID);
+
+                // Check if this mesh file exists
+                if (!std::filesystem::exists(meshPath)) {
+                    break; // No more meshes for this model
+                }
+
+                // Register this mesh
+                ResourceMesh* meshResource = new ResourceMesh(meshUID);
+                meshResource->assetsFile = assetPath;
+                meshResource->libraryFile = meshPath;
+                resources[meshUID] = meshResource;
+                registered++;
+            }
+            break;
 
         default:
             continue;
-        }
-
-        if (resource) {
-            resource->assetsFile = assetPath;
-            // Generate library path from UID
-            resource->libraryFile = LibraryManager::GetTexturePathFromUID(meta.uid);
-
-            resources[meta.uid] = resource;
-            registered++;
         }
     }
 

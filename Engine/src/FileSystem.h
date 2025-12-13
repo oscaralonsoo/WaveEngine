@@ -62,10 +62,10 @@ public:
 
 private:
     // Recursively process scene nodes
-    GameObject* ProcessNode(aiNode* node, const aiScene* scene, const std::string& directory);
+    GameObject* ProcessNode(aiNode* node, const aiScene* scene, const std::string& directory, UID baseUID, int& meshCounter);
 
     // Convert Assimp mesh to engine mesh format
-    UID ProcessMesh(aiMesh* aiMesh, const aiScene* scene);
+    UID ProcessMesh(aiMesh* aiMesh, const aiScene* scene, UID baseUID, int meshIndex);
 
     // Scale model to fit target size
     void NormalizeModelScale(GameObject* rootObject, float targetSize);
