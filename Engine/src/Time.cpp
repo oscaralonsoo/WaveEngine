@@ -2,7 +2,7 @@
 #include "Log.h"
 #include <SDL3/SDL.h>
 
-Time::Time() : Module(), deltaTime(0.0f), gameDeltaTime(0.0f), totalTime(0.0f), lastFrame(0.0f), isPaused(false), timeScale(1.0f), shouldStepFrame(false)
+Time::Time() : Module(), deltaTime(0.0f), gameDeltaTime(0.0f), totalTime(0.0f), gameTime(0.0f), lastFrame(0.0f), isPaused(true), timeScale(1.0f), shouldStepFrame(false)
 {
 }
 
@@ -37,6 +37,8 @@ bool Time::PreUpdate()
 		}
 	}
 
+	gameTime += gameDeltaTime;
+
 	return true;
 }
 
@@ -49,6 +51,7 @@ void Time::Reset()
 {
 	lastFrame = SDL_GetTicks() / 1000.0f;
 	totalTime = 0.0f;
+	gameTime = 0.0f;
 	deltaTime = 0.0f;
 	isPaused = false;
 }

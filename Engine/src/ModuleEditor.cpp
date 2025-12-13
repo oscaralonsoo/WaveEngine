@@ -556,9 +556,10 @@ void ModuleEditor::ShowPlayToolbar()
     // Center: Time display
     ImGui::SameLine(windowWidth * 0.4f);
 
-    float gameTime = app.time->GetTotalTime();
+    float totalTime = app.time->GetTotalTime();
+    float gameTime = app.time->GetGameTime();
     float realDt = app.time->GetRealDeltaTime();
-    ImGui::Text("Game Time: %.2fs | FPS: %.0f", gameTime, realDt > 0 ? 1.0f / realDt : 0.0f);
+    ImGui::Text("Total: %.2fs | Game: %.2fs | FPS: %.0f", totalTime, gameTime, realDt > 0 ? 1.0f / realDt : 0.0f);
 
     // Right side: Time scale
     ImGui::SameLine(windowWidth - 220.0f);

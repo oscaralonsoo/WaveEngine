@@ -14,6 +14,7 @@ public:
 	float GetDeltaTime() const { return gameDeltaTime; }
 	float GetRealDeltaTime() const { return deltaTime; }
 	float GetTotalTime() const { return totalTime; }
+	float GetGameTime() const { return gameTime; }
 	float GetTimeScale() const { return timeScale; }
 
 	void Pause() { isPaused = true; }
@@ -28,6 +29,7 @@ private:
 	float deltaTime;
 	float gameDeltaTime;
 	float totalTime;
+	float gameTime;
 	float lastFrame;
 	bool isPaused;
 	float timeScale;
