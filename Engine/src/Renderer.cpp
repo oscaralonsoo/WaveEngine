@@ -908,28 +908,41 @@ void Renderer::DrawGameObjectRecursive(GameObject* gameObject,
     {
         defaultShader->SetVec3("tintColor", glm::vec3(1.0f));
 
-        // ===== SECCIÓN MODIFICADA =====
         bool hasTexture = (material && material->IsActive() && material->HasTexture());
 
         // Configurar uniform hasTexture
         defaultShader->SetInt("hasTexture", hasTexture ? 1 : 0);
 
-        // Configurar dirección de luz (ajusta según prefieras)
+        // Configurar dirección de luz
         defaultShader->SetVec3("lightDir", glm::vec3(1.0f, -1.0f, -1.0f));
 
         if (hasTexture)
         {
             material->Use();  // Bind the material's texture
             materialBound = true;
+            // Con textura, usar blanco para no alterar el color de la textura
+            defaultShader->SetVec3("materialDiffuse", glm::vec3(1.0f));
         }
         else
         {
             glBindTexture(GL_TEXTURE_2D, 0); // No texture
+
+            // Enviar color difuso del material al shader
+            if (material && material->HasMaterialProperties())
+            {
+                glm::vec4 diffuse = material->GetDiffuseColor();
+                defaultShader->SetVec3("materialDiffuse", glm::vec3(diffuse.r, diffuse.g, diffuse.b));
+                LOG_DEBUG("Using material color: (%.2f, %.2f, %.2f)", diffuse.r, diffuse.g, diffuse.b);
+            }
+            else
+            {
+                // Color gris por defecto si no hay material
+                defaultShader->SetVec3("materialDiffuse", glm::vec3(0.6f, 0.6f, 0.6f));
+            }
         }
 
         // Set the texture sampler uniform
         glUniform1i(defaultUniforms.texture1, 0);
-        // ===== FIN SECCIÓN MODIFICADA =====
     }
 
     const std::vector<Component*>& meshComponents =

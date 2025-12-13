@@ -492,7 +492,6 @@ bool Shader::CreateDepthVisualization()
 
 bool Shader::CreateNoTexture()
 {
-    // Vertex shader con normales para iluminación
     const char* vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
         "layout (location = 1) in vec3 aNormal;\n"
@@ -514,7 +513,6 @@ bool Shader::CreateNoTexture()
         "   gl_Position = projection * view * vec4(FragPos, 1.0);\n"
         "}\0";
 
-    // Fragment shader con iluminación simple + textura opcional
     const char* fragmentShaderSource = "#version 330 core\n"
         "out vec4 FragColor;\n"
         "\n"
@@ -523,21 +521,21 @@ bool Shader::CreateNoTexture()
         "in vec2 TexCoord;\n"
         "\n"
         "uniform sampler2D texture1;\n"
-        "uniform bool hasTexture;\n"
+        "uniform int hasTexture;\n"
         "uniform vec3 tintColor;\n"
         "uniform vec3 lightDir;\n"
+        "uniform vec3 materialDiffuse;\n"
         "\n"
         "void main()\n"
         "{\n"
         "   vec3 baseColor;\n"
         "   \n"
-        "   if (hasTexture) {\n"
+        "   if (hasTexture == 1) {\n"
         "       vec4 texColor = texture(texture1, TexCoord);\n"
         "       if(texColor.a < 0.1) discard;\n"
         "       baseColor = texColor.rgb * tintColor;\n"
         "   } else {\n"
-        "       // Color gris por defecto sin textura\n"
-        "       baseColor = vec3(0.6, 0.6, 0.6);\n"
+        "       baseColor = materialDiffuse;\n"
         "   }\n"
         "   \n"
         "   // Iluminación difusa simple\n"
@@ -598,12 +596,20 @@ bool Shader::CreateNoTexture()
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    LOG_CONSOLE("NoTexture shader created successfully!");
 
     return true;
 }
-
 void Shader::SetInt(const std::string& name, int value) const
 {
     glUniform1i(glGetUniformLocation(shaderProgram, name.c_str()), value);
+}
+
+void Shader::SetVec4(const std::string& name, const glm::vec4& value) const
+{
+    glUniform4fv(glGetUniformLocation(shaderProgram, name.c_str()), 1, &value[0]);
+}
+
+void Shader::SetBool(const std::string& name, bool value) const
+{
+    glUniform1i(glGetUniformLocation(shaderProgram, name.c_str()), (int)value);
 }

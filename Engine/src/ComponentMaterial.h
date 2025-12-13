@@ -3,6 +3,7 @@
 #include "Component.h"
 #include "ModuleResources.h"  
 #include <string>
+#include <glm/glm.hpp> 
 
 class ComponentMaterial : public Component {
 public:
@@ -38,6 +39,28 @@ public:
     int GetTextureWidth() const;
     int GetTextureHeight() const;
 
+    //  Propiedades de material embebido
+    void SetDiffuseColor(const glm::vec4& color) { diffuseColor = color; hasMaterialProperties = true; }
+    void SetSpecularColor(const glm::vec4& color) { specularColor = color; hasMaterialProperties = true; }
+    void SetAmbientColor(const glm::vec4& color) { ambientColor = color; hasMaterialProperties = true; }
+    void SetEmissiveColor(const glm::vec4& color) { emissiveColor = color; hasMaterialProperties = true; }
+    void SetShininess(float value) { shininess = value; hasMaterialProperties = true; }
+    void SetOpacity(float value) { opacity = value; hasMaterialProperties = true; }
+    void SetMetallic(float value) { metallic = value; hasMaterialProperties = true; }
+    void SetRoughness(float value) { roughness = value; hasMaterialProperties = true; }
+
+    // Getters
+    glm::vec4 GetDiffuseColor() const { return diffuseColor; }
+    glm::vec4 GetSpecularColor() const { return specularColor; }
+    glm::vec4 GetAmbientColor() const { return ambientColor; }
+    glm::vec4 GetEmissiveColor() const { return emissiveColor; }
+    float GetShininess() const { return shininess; }
+    float GetOpacity() const { return opacity; }
+    float GetMetallic() const { return metallic; }
+    float GetRoughness() const { return roughness; }
+
+    bool HasMaterialProperties() const { return hasMaterialProperties; }
+
 private:
     void ReleaseCurrentTexture();
 
@@ -48,4 +71,17 @@ private:
 
     std::string texturePath;
     std::string originalTexturePath;
+
+    //  Propiedades del material
+    glm::vec4 diffuseColor = glm::vec4(1.0f);
+    glm::vec4 specularColor = glm::vec4(1.0f);
+    glm::vec4 ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+    glm::vec4 emissiveColor = glm::vec4(0.0f);
+
+    float shininess = 32.0f;
+    float opacity = 1.0f;
+    float metallic = 0.0f;
+    float roughness = 0.5f;
+
+    bool hasMaterialProperties = false;
 };

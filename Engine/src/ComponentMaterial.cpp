@@ -14,7 +14,8 @@ ComponentMaterial::ComponentMaterial(GameObject* owner)
     originalTextureUID(0),
     texturePath(""),
     originalTexturePath(""),
-    useCheckerboard(false)
+    useCheckerboard(false),
+    hasMaterialProperties(false)  
 {
 }
 
