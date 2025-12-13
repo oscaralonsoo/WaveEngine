@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <rapidjson/document.h>
+#include <nlohmann/json.hpp>
 
 class Component;
 enum class ComponentType;
@@ -38,8 +38,8 @@ public:
     bool IsMarkedForDeletion() const { return markedForDeletion; }
 
     // Serialization
-    void Serialize(rapidjson::Value& gameObjectArray, rapidjson::Value::AllocatorType& allocator) const;
-    static GameObject* Deserialize(const rapidjson::Value& gameObjectObj, GameObject* parent = nullptr);
+    void Serialize(nlohmann::json& gameObjectArray) const;
+    static GameObject* Deserialize(const nlohmann::json& gameObjectObj, GameObject* parent = nullptr);
 
 public:
     std::string name;

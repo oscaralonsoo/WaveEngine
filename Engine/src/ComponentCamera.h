@@ -15,8 +15,8 @@ public:
     void OnEditor() override;
 
     // Serialization
-    void Serialize(rapidjson::Value& componentObj, rapidjson::Value::AllocatorType& allocator) const override;
-    void Deserialize(const rapidjson::Value& componentObj) override;
+    void Serialize(nlohmann::json& componentObj) const override;
+    void Deserialize(const nlohmann::json& componentObj) override;
 
     // View & Projection
     const glm::mat4& GetViewMatrix() const { return viewMatrix; }

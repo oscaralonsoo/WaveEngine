@@ -6,7 +6,6 @@
 #include "Transform.h"
 #include "Log.h"
 #include <glad/glad.h>
-#include <rapidjson/document.h>
 
 ComponentMesh::ComponentMesh(GameObject* owner)
     : Component(owner, ComponentType::MESH),
@@ -304,35 +303,33 @@ void ComponentMesh::GetWorldAABB(glm::vec3& outMin, glm::vec3& outMax) const
     }
 }
 
-void ComponentMesh::Serialize(rapidjson::Value& componentObj, rapidjson::Value::AllocatorType& allocator) const
+void ComponentMesh::Serialize(nlohmann::json& componentObj) const
 {
     // UID
     if (meshUID != 0) {
-        componentObj.AddMember("meshUID", meshUID, allocator);
+        componentObj["meshUID"] = meshUID;
     }
 
     // Direct mesh
     if (hasDirectMesh && !primitiveType.empty()) {
-        rapidjson::Value primitiveTypeValue;
-        primitiveTypeValue.SetString(primitiveType.c_str(), static_cast<rapidjson::SizeType>(primitiveType.length()), allocator);
-        componentObj.AddMember("primitiveType", primitiveTypeValue, allocator);
+        componentObj["primitiveType"] = primitiveType;
     }
 }
 
-void ComponentMesh::Deserialize(const rapidjson::Value& componentObj)
+void ComponentMesh::Deserialize(const nlohmann::json& componentObj)
 {
     // UID
-    if (componentObj.HasMember("meshUID")) {
-        UID uid = componentObj["meshUID"].GetUint64();
+    if (componentObj.contains("meshUID")) {
+        UID uid = componentObj["meshUID"].get<UID>();
         if (uid != 0) {
             LoadMeshByUID(uid);
-            return; 
+            return;
         }
     }
 
-	// Primitive Type
-    if (componentObj.HasMember("primitiveType")) {
-        std::string primType = componentObj["primitiveType"].GetString();
+    // Primitive Type
+    if (componentObj.contains("primitiveType")) {
+        std::string primType = componentObj["primitiveType"].get<std::string>();
         primitiveType = primType;
 
         Mesh recreatedMesh;

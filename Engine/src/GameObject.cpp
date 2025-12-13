@@ -5,7 +5,7 @@
 #include "ComponentMaterial.h"
 #include "ComponentCamera.h"
 #include "ComponentRotate.h"
-#include <rapidjson/document.h>
+#include <nlohmann/json.hpp>
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
     CreateComponent(ComponentType::TRANSFORM);
@@ -154,50 +154,48 @@ void GameObject::Update() {
     }
 }
 
-void GameObject::Serialize(rapidjson::Value& gameObjectArray, rapidjson::Value::AllocatorType& allocator) const {
+void GameObject::Serialize(nlohmann::json& gameObjectArray) const {
+    // Create a JSON object
+    nlohmann::json gameObjectObj;
 
-	// Create a JSON object 
-	rapidjson::Value gameObjectObj(rapidjson::kObjectType); // kObjectType = type JSON
-	// Crate and set the name
-    rapidjson::Value nameValue;
-    nameValue.SetString(name.c_str(), static_cast<rapidjson::SizeType>(name.length()), allocator);
-    gameObjectObj.AddMember("name", nameValue, allocator);
-    gameObjectObj.AddMember("active", active, allocator);
+    // Set the name and active state
+    gameObjectObj["name"] = name;
+    gameObjectObj["active"] = active;
 
     // Components
-    rapidjson::Value componentsArray(rapidjson::kArrayType);
+    nlohmann::json componentsArray = nlohmann::json::array();
 
     for (const auto* component : components) {
-        rapidjson::Value componentObj(rapidjson::kObjectType);
-        componentObj.AddMember("type", static_cast<int>(component->GetType()), allocator);
-        componentObj.AddMember("active", component->IsActive(), allocator);
-        component->Serialize(componentObj, allocator);
-        componentsArray.PushBack(componentObj, allocator);
+        nlohmann::json componentObj;
+        componentObj["type"] = static_cast<int>(component->GetType());
+        componentObj["active"] = component->IsActive();
+        component->Serialize(componentObj);
+        componentsArray.push_back(componentObj);
     }
 
-    gameObjectObj.AddMember("components", componentsArray, allocator);
+    gameObjectObj["components"] = componentsArray;
 
-    // Childrens
-    rapidjson::Value childrenArray(rapidjson::kArrayType);
+    // Children
+    nlohmann::json childrenArray = nlohmann::json::array();
     for (const auto* child : children) {
-        child->Serialize(childrenArray, allocator);
+        child->Serialize(childrenArray);
     }
-    gameObjectObj.AddMember("children", childrenArray, allocator);
+    gameObjectObj["children"] = childrenArray;
 
-    gameObjectArray.PushBack(gameObjectObj, allocator);
+    gameObjectArray.push_back(gameObjectObj);
 }
 
-GameObject* GameObject::Deserialize(const rapidjson::Value& gameObjectObj, GameObject* parent) {
-    if (!gameObjectObj.IsObject()) {
+GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObject* parent) {
+    if (!gameObjectObj.is_object()) {
         return nullptr;
     }
 
     // Create gameobject
-    std::string objName = gameObjectObj.HasMember("name") ? gameObjectObj["name"].GetString() : "GameObject";
+    std::string objName = gameObjectObj.contains("name") ? gameObjectObj["name"].get<std::string>() : "GameObject";
     GameObject* newObject = new GameObject(objName);
 
-    if (gameObjectObj.HasMember("active")) {
-        newObject->SetActive(gameObjectObj["active"].GetBool()); 
+    if (gameObjectObj.contains("active")) {
+        newObject->SetActive(gameObjectObj["active"].get<bool>());
     }
 
     if (parent) {
@@ -205,15 +203,13 @@ GameObject* GameObject::Deserialize(const rapidjson::Value& gameObjectObj, GameO
     }
 
     // Components
-    if (gameObjectObj.HasMember("components")) {
-        const rapidjson::Value& componentsArray = gameObjectObj["components"];
+    if (gameObjectObj.contains("components") && gameObjectObj["components"].is_array()) {
+        const nlohmann::json& componentsArray = gameObjectObj["components"];
 
-        for (rapidjson::SizeType i = 0; i < componentsArray.Size(); ++i) {
-            const rapidjson::Value& componentObj = componentsArray[i];
+        for (const auto& componentObj : componentsArray) {
+            if (!componentObj.contains("type")) continue;
 
-            if (!componentObj.HasMember("type")) continue;
-
-            ComponentType type = static_cast<ComponentType>(componentObj["type"].GetInt());
+            ComponentType type = static_cast<ComponentType>(componentObj["type"].get<int>());
 
             Component* component = nullptr;
             if (type == ComponentType::TRANSFORM) {
@@ -223,19 +219,19 @@ GameObject* GameObject::Deserialize(const rapidjson::Value& gameObjectObj, GameO
             }
 
             if (component) {
-                if (componentObj.HasMember("active")) {
-                    component->SetActive(componentObj["active"].GetBool());
+                if (componentObj.contains("active")) {
+                    component->SetActive(componentObj["active"].get<bool>());
                 }
                 component->Deserialize(componentObj);
             }
         }
     }
 
-    // Childrens
-    if (gameObjectObj.HasMember("children")) {
-        const rapidjson::Value& childrenArray = gameObjectObj["children"];
-        for (rapidjson::SizeType i = 0; i < childrenArray.Size(); ++i) {
-            Deserialize(childrenArray[i], newObject);
+    // Children
+    if (gameObjectObj.contains("children") && gameObjectObj["children"].is_array()) {
+        const nlohmann::json& childrenArray = gameObjectObj["children"];
+        for (const auto& childObj : childrenArray) {
+            Deserialize(childObj, newObject);
         }
     }
 

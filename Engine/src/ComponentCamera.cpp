@@ -4,7 +4,6 @@
 #include <glm/gtc/quaternion.hpp>
 #include <iostream>
 #include "Log.h"
-#include <rapidjson/document.h>
 
 using namespace std;
 
@@ -381,32 +380,32 @@ void ComponentCamera::GetFrustumCorners(glm::vec3 corners[8]) const
     corners[7] = farCenter - right * (farWidth / 2.0f) + up * (farHeight / 2.0f); // Top-left
 }
 
-void ComponentCamera::Serialize(rapidjson::Value& componentObj, rapidjson::Value::AllocatorType& allocator) const
+void ComponentCamera::Serialize(nlohmann::json& componentObj) const
 {
     // Camera Components
-    componentObj.AddMember("fov", fov, allocator);
-    componentObj.AddMember("aspectRatio", aspectRatio, allocator);
-    componentObj.AddMember("nearPlane", nearPlane, allocator);
-    componentObj.AddMember("farPlane", farPlane, allocator);
-    componentObj.AddMember("frustumCullingEnabled", frustumCullingEnabled, allocator);
+    componentObj["fov"] = fov;
+    componentObj["aspectRatio"] = aspectRatio;
+    componentObj["nearPlane"] = nearPlane;
+    componentObj["farPlane"] = farPlane;
+    componentObj["frustumCullingEnabled"] = frustumCullingEnabled;
 }
 
-void ComponentCamera::Deserialize(const rapidjson::Value& componentObj)
+void ComponentCamera::Deserialize(const nlohmann::json& componentObj)
 {
     // Camera Parameters
-    if (componentObj.HasMember("fov")) {
-        SetFov(componentObj["fov"].GetFloat());
+    if (componentObj.contains("fov")) {
+        SetFov(componentObj["fov"].get<float>());
     }
-    if (componentObj.HasMember("aspectRatio")) {
-        SetAspectRatio(componentObj["aspectRatio"].GetFloat());
+    if (componentObj.contains("aspectRatio")) {
+        SetAspectRatio(componentObj["aspectRatio"].get<float>());
     }
-    if (componentObj.HasMember("nearPlane")) {
-        SetNearPlane(componentObj["nearPlane"].GetFloat());
+    if (componentObj.contains("nearPlane")) {
+        SetNearPlane(componentObj["nearPlane"].get<float>());
     }
-    if (componentObj.HasMember("farPlane")) {
-        SetFarPlane(componentObj["farPlane"].GetFloat());
+    if (componentObj.contains("farPlane")) {
+        SetFarPlane(componentObj["farPlane"].get<float>());
     }
-    if (componentObj.HasMember("frustumCullingEnabled")) {
-        SetFrustumCulling(componentObj["frustumCullingEnabled"].GetBool());
+    if (componentObj.contains("frustumCullingEnabled")) {
+        SetFrustumCulling(componentObj["frustumCullingEnabled"].get<bool>());
     }
 }

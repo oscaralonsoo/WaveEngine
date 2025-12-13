@@ -9,10 +9,7 @@
 #include <functional>
 #include "ComponentMesh.h"
 #include "ComponentCamera.h"
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/prettywriter.h>
+#include <nlohmann/json.hpp>
 #include <fstream>
 
 ModuleScene::ModuleScene() : Module()
@@ -272,27 +269,20 @@ bool ModuleScene::SaveScene(const std::string& filepath)
 {
     LOG_CONSOLE("Saving scene to: %s", filepath.c_str());
 
-    rapidjson::Document document;
-    document.SetObject();
-    rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
+    nlohmann::json document;
 
-    document.AddMember("version", 1, allocator);
+    document["version"] = 1;
 
     // Serialize gameobjects
-    rapidjson::Value gameObjectsArray(rapidjson::kArrayType);
+    nlohmann::json gameObjectsArray = nlohmann::json::array();
 
     if (root) {
         for (GameObject* child : root->GetChildren()) {
-            child->Serialize(gameObjectsArray, allocator);
+            child->Serialize(gameObjectsArray);
         }
     }
 
-    document.AddMember("gameObjects", gameObjectsArray, allocator);
-
-    // Convert to JSON string
-    rapidjson::StringBuffer buffer;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-    document.Accept(writer);
+    document["gameObjects"] = gameObjectsArray;
 
     // Write to file
     std::ofstream file(filepath);
@@ -301,7 +291,7 @@ bool ModuleScene::SaveScene(const std::string& filepath)
         return false;
     }
 
-    file << buffer.GetString();
+    file << document.dump(4);
     file.close();
 
     LOG_CONSOLE("Scene saved successfully");
@@ -319,17 +309,17 @@ bool ModuleScene::LoadScene(const std::string& filepath)
         return false;
     }
 
-    std::string jsonContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    file.close();
+    nlohmann::json document;
 
-    // Parse JSON
-    rapidjson::Document document;
-    document.Parse(jsonContent.c_str());
-
-    if (document.HasParseError()) {
-        LOG_CONSOLE("ERROR: Failed to parse JSON file");
+    try {
+        file >> document;
+    } catch (const nlohmann::json::parse_error& e) {
+        LOG_CONSOLE("ERROR: Failed to parse JSON file: %s", e.what());
+        file.close();
         return false;
     }
+
+    file.close();
 
     // Clear selection to avoid bugs
     Application::GetInstance().selectionManager->ClearSelection();
@@ -338,13 +328,13 @@ bool ModuleScene::LoadScene(const std::string& filepath)
     ClearScene();
 
     // Deserialize GameObjects
-    if (document.HasMember("gameObjects") && document["gameObjects"].IsArray()) {
-        const rapidjson::Value& gameObjectsArray = document["gameObjects"];
+    if (document.contains("gameObjects") && document["gameObjects"].is_array()) {
+        const nlohmann::json& gameObjectsArray = document["gameObjects"];
 
-        for (rapidjson::SizeType i = 0; i < gameObjectsArray.Size(); ++i) {
+        for (size_t i = 0; i < gameObjectsArray.size(); ++i) {
             GameObject* obj = GameObject::Deserialize(gameObjectsArray[i], root);
             if (!obj) {
-                LOG_CONSOLE("WARNING: Failed to deserialize GameObject at index %d", i);
+                LOG_CONSOLE("WARNING: Failed to deserialize GameObject at index %zu", i);
             }
         }
     }

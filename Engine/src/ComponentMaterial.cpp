@@ -5,7 +5,6 @@
 #include "ResourceTexture.h"
 #include "Log.h"
 #include <glad/glad.h>
-#include <rapidjson/document.h>
 
 ComponentMaterial::ComponentMaterial(GameObject* owner)
     : Component(owner, ComponentType::MATERIAL),
@@ -170,27 +169,27 @@ void ComponentMaterial::RestoreOriginalTexture()
     }
 }
 
-void ComponentMaterial::Serialize(rapidjson::Value& componentObj, rapidjson::Value::AllocatorType& allocator) const
+void ComponentMaterial::Serialize(nlohmann::json& componentObj) const
 {
     // Serialize texture UIDs
     if (textureUID != 0) {
-        componentObj.AddMember("textureUID", textureUID, allocator);
+        componentObj["textureUID"] = textureUID;
     }
     if (originalTextureUID != 0) {
-        componentObj.AddMember("originalTextureUID", originalTextureUID, allocator);
+        componentObj["originalTextureUID"] = originalTextureUID;
     }
 }
 
-void ComponentMaterial::Deserialize(const rapidjson::Value& componentObj)
+void ComponentMaterial::Deserialize(const nlohmann::json& componentObj)
 {
-    // Oiginal texture UID first
-    if (componentObj.HasMember("originalTextureUID")) {
-        originalTextureUID = componentObj["originalTextureUID"].GetUint64();
+    // Original texture UID first
+    if (componentObj.contains("originalTextureUID")) {
+        originalTextureUID = componentObj["originalTextureUID"].get<UID>();
     }
 
     // Then
-    if (componentObj.HasMember("textureUID")) {
-        UID uid = componentObj["textureUID"].GetUint64();
+    if (componentObj.contains("textureUID")) {
+        UID uid = componentObj["textureUID"].get<UID>();
         if (uid != 0) {
             LoadTextureByUID(uid);
         }

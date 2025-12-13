@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include <rapidjson/document.h>
+#include <nlohmann/json.hpp>
 
 class GameObject;
 
@@ -25,8 +25,8 @@ public:
     virtual void OnEditor() {};
 
     // Serialization
-    virtual void Serialize(rapidjson::Value& componentObj, rapidjson::Value::AllocatorType& allocator) const {};
-    virtual void Deserialize(const rapidjson::Value& componentObj) {};
+    virtual void Serialize(nlohmann::json& componentObj) const {};
+    virtual void Deserialize(const nlohmann::json& componentObj) {};
 
     ComponentType GetType() const { return type; }
     bool IsActive() const { return active; }
