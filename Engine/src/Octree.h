@@ -40,6 +40,7 @@ public:
 private:
     void Subdivide();
     void RedistributeObjects();
+    void CollapseIfPossible(); // Collapse node if it has few objects
     bool IsLeaf() const { return children[0] == nullptr; }
 
     // Helper to get world-space AABB of a GameObject

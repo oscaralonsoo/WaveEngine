@@ -156,6 +156,13 @@ bool OctreeNode::Remove(GameObject* obj)
     if (it != objects.end())
     {
         objects.erase(it);
+
+        // After removing, check if we should collapse this node
+        if (!IsLeaf())
+        {
+            CollapseIfPossible();
+        }
+
         return true;
     }
 
@@ -166,12 +173,85 @@ bool OctreeNode::Remove(GameObject* obj)
         {
             if (children[i] != nullptr && children[i]->Remove(obj))
             {
+                // After child removed object, check if we should collapse
+                CollapseIfPossible();
                 return true;
             }
         }
     }
 
     return false;
+}
+
+void OctreeNode::CollapseIfPossible()
+{
+    if (IsLeaf())
+        return;
+
+    // Count total objects in this node and all children
+    int totalObjects = objects.size();
+
+    std::function<void(OctreeNode*)> countObjects = [&](OctreeNode* node) {
+        if (!node) return;
+
+        totalObjects += node->objects.size();
+
+        if (!node->IsLeaf())
+        {
+            for (int i = 0; i < 8; ++i)
+            {
+                if (node->children[i] != nullptr)
+                {
+                    countObjects(node->children[i]);
+                }
+            }
+        }
+        };
+
+    for (int i = 0; i < 8; ++i)
+    {
+        if (children[i] != nullptr)
+        {
+            countObjects(children[i]);
+        }
+    }
+
+    // If total objects is less than max_objects, collapse
+    if (totalObjects <= max_objects)
+    {
+        // Collect all objects from children
+        std::vector<GameObject*> allObjects = objects;
+
+        std::function<void(OctreeNode*)> collectObjects = [&](OctreeNode* node) {
+            if (!node) return;
+
+            allObjects.insert(allObjects.end(), node->objects.begin(), node->objects.end());
+
+            if (!node->IsLeaf())
+            {
+                for (int i = 0; i < 8; ++i)
+                {
+                    if (node->children[i] != nullptr)
+                    {
+                        collectObjects(node->children[i]);
+                    }
+                }
+            }
+            };
+
+        for (int i = 0; i < 8; ++i)
+        {
+            if (children[i] != nullptr)
+            {
+                collectObjects(children[i]);
+                delete children[i];
+                children[i] = nullptr;
+            }
+        }
+
+        // Move all objects to this node
+        objects = allObjects;
+    }
 }
 
 void OctreeNode::Subdivide()
@@ -435,6 +515,10 @@ int OctreeNode::GetObjectCount() const
 
 void OctreeNode::DebugDraw() const
 {
+    // Skip drawing empty leaf nodes
+    if (IsLeaf() && objects.empty())
+        return;
+
     // Crear las 8 esquinas del AABB
     glm::vec3 corners[8] = {
         // Bottom face
@@ -527,9 +611,20 @@ void OctreeNode::DebugDraw() const
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),
             1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 
-        // Color basado en la profundidad del nodo
+        // Color based on node depth and occupancy
         float colorFactor = 1.0f - (current_depth / (float)max_depth);
-        glm::vec3 color = glm::vec3(1.0f, colorFactor, 0.0f); // Naranja a amarillo
+        glm::vec3 color;
+
+        if (!objects.empty())
+        {
+            // Nodes with objects are more visible
+            color = glm::vec3(1.0f, colorFactor * 0.5f + 0.5f, 0.0f); // Orange to yellow
+        }
+        else
+        {
+            // Empty nodes are dimmer
+            color = glm::vec3(0.3f, colorFactor * 0.3f, 0.0f); // Dark orange
+        }
 
         GLint colorLoc = glGetUniformLocation(shaderProgram, "color");
         if (colorLoc == -1)
@@ -543,7 +638,8 @@ void OctreeNode::DebugDraw() const
         // Deshabilitar depth test temporalmente para que siempre se vea
         glDisable(GL_DEPTH_TEST);
 
-        glLineWidth(3.0f);
+        float lineWidth = !objects.empty() ? 2.0f : 1.0f;
+        glLineWidth(lineWidth);
         glDrawArrays(GL_LINES, 0, lineVertices.size() / 3);
         glLineWidth(1.0f);
 
@@ -574,5 +670,3 @@ void OctreeNode::DebugDraw() const
         renderer->GetDefaultShader()->Use();
     }
 }
-
-

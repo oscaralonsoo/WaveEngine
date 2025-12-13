@@ -2,6 +2,8 @@
 #include "Module.h"
 #include "Octree.h"
 #include <memory>
+#include <vector>
+
 class GameObject;
 class FileSystem;
 class Renderer;
@@ -28,7 +30,6 @@ public:
 
     Octree* GetOctree() { return octree.get(); }
     void RebuildOctree();
-    void UpdateObjectInOctree(GameObject* obj);
     void MarkOctreeForRebuild() { needsOctreeRebuild = true; }
 
     // Scene serialization

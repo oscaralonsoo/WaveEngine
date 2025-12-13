@@ -4,7 +4,7 @@
 #include "GameObject.h"
 #include "Application.h"
 #include "ModuleEditor.h"
-#include "SceneWindow.h"
+#include "Transform.h"
 #include <float.h>
 #include <functional>
 #include "ComponentMesh.h"
@@ -49,6 +49,8 @@ bool ModuleScene::Start()
 
 void ModuleScene::RebuildOctree()
 {
+    LOG_DEBUG("[ModuleScene] Starting full octree rebuild");
+
     glm::vec3 sceneMin(std::numeric_limits<float>::max());
     glm::vec3 sceneMax(std::numeric_limits<float>::lowest());
 
@@ -88,9 +90,9 @@ void ModuleScene::RebuildOctree()
     }
     else
     {
-        // Expand bounds slightly (30%)
+        // Expand bounds significantly (50% margin)
         glm::vec3 size = sceneMax - sceneMin;
-        glm::vec3 margin = size * 0.3f;
+        glm::vec3 margin = size * 0.5f;
         sceneMin -= margin;
         sceneMax += margin;
     }
@@ -132,69 +134,26 @@ void ModuleScene::RebuildOctree()
         insertRecursive(root);
     }
 
-    LOG_CONSOLE("Octree rebuilt: %d objects in %d nodes (bounds: %.1fx%.1fx%.1f)",
-        octree->GetTotalObjectCount(),
-        octree->GetTotalNodeCount(),
-        sceneMax.x - sceneMin.x,
-        sceneMax.y - sceneMin.y,
-        sceneMax.z - sceneMin.z);
-
-    // Resetear el flag después del rebuild
+    // Reset flag after rebuild
     needsOctreeRebuild = false;
-}
 
-void ModuleScene::UpdateObjectInOctree(GameObject* obj)
-{
-    if (!octree || !obj)
-        return;
-
-    ComponentMesh* meshComp = static_cast<ComponentMesh*>(
-        obj->GetComponent(ComponentType::MESH));
-
-    if (!meshComp || !meshComp->HasMesh())
-        return;
-
-    // Remove from old position and reinsert
-    octree->Remove(obj);
-    octree->Insert(obj);
+    LOG_DEBUG("[ModuleScene] Octree rebuilt with %d objects", insertedCount);
+    LOG_CONSOLE("Octree rebuilt: %d objects", insertedCount);
 }
 
 bool ModuleScene::Update()
 {
+    // Update all GameObjects
     if (root)
     {
         root->Update();
     }
 
+    // Full rebuild only if explicitly requested
     if (needsOctreeRebuild)
     {
-        LOG_DEBUG("Octree rebuild requested");
-
-        // Verificar si ModuleEditor existe y si el gizmo está siendo usado
-        ModuleEditor* editor = Application::GetInstance().editor.get();
-        if (editor && editor->GetSceneWindow())
-        {
-            bool gizmoActive = editor->GetSceneWindow()->IsGizmoBeingUsed();
-            LOG_DEBUG("Gizmo active: %s", gizmoActive ? "YES" : "NO");
-
-            if (!gizmoActive)
-            {
-                LOG_DEBUG("Rebuilding octree now");
-                RebuildOctree();
-            }
-            else
-            {
-                LOG_DEBUG("Skipping rebuild - gizmo is active");
-            }
-            // Si el gizmo está siendo usado, mantenemos el flag activo
-            // para que se reconstruya cuando se suelte
-        }
-        else
-        {
-            LOG_DEBUG("No editor/scene window, rebuilding normally");
-            // Si no hay editor o SceneWindow, reconstruir normalmente
-            RebuildOctree();
-        }
+        LOG_DEBUG("[ModuleScene] Full octree rebuild requested");
+        RebuildOctree();
     }
 
     return true;
@@ -202,6 +161,14 @@ bool ModuleScene::Update()
 
 bool ModuleScene::PostUpdate()
 {
+    // Full rebuild only if explicitly requested
+    if (needsOctreeRebuild)
+    {
+        LOG_DEBUG("[ModuleScene] Full octree rebuild requested");
+        RebuildOctree();
+    }
+
+    // Cleanup marked objects
     if (root)
     {
         CleanupMarkedObjects(root);
@@ -260,6 +227,9 @@ void ModuleScene::CleanupMarkedObjects(GameObject* parent)
 
             parent->RemoveChild(child);
             delete child;
+
+            // Mark octree for rebuild after deletion
+            needsOctreeRebuild = true;
         }
         else
         {
@@ -357,6 +327,7 @@ bool ModuleScene::LoadScene(const std::string& filepath)
         }
     }
 
+    // Force full rebuild after loading scene
     needsOctreeRebuild = true;
 
     LOG_CONSOLE("Scene loaded successfully");

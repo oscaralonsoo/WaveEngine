@@ -3,16 +3,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
-#include "Application.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <rapidjson/document.h>
+#include "Log.h"
 
 Transform::Transform(GameObject* owner)
     : Component(owner, ComponentType::TRANSFORM),
     position(0.0f, 0.0f, 0.0f),
     rotation(0.0f, 0.0f, 0.0f),
-    rotationQuat(1.0f, 0.0f, 0.0f, 0.0f), 
+    rotationQuat(1.0f, 0.0f, 0.0f, 0.0f),
     scale(1.0f, 1.0f, 1.0f),
     localMatrix(1.0f),
     globalMatrix(1.0f),
@@ -23,12 +23,11 @@ Transform::Transform(GameObject* owner)
 
 void Transform::Update()
 {
-
+    // Transform doesn't need per-frame updates
 }
 
 void Transform::OnEditor()
 {
-
 }
 
 void Transform::SetPosition(const glm::vec3& pos)
@@ -39,8 +38,6 @@ void Transform::SetPosition(const glm::vec3& pos)
         localDirty = true;
         globalDirty = true;
         MarkChildrenGlobalDirty();
-
-        UpdateOctree();
     }
 }
 
@@ -53,8 +50,6 @@ void Transform::SetRotation(const glm::vec3& rot)
         localDirty = true;
         globalDirty = true;
         MarkChildrenGlobalDirty();
-
-        UpdateOctree();
     }
 }
 
@@ -67,8 +62,6 @@ void Transform::SetRotationQuat(const glm::quat& quat)
         localDirty = true;
         globalDirty = true;
         MarkChildrenGlobalDirty();
-
-        UpdateOctree();
     }
 }
 
@@ -80,8 +73,6 @@ void Transform::SetScale(const glm::vec3& scl)
         localDirty = true;
         globalDirty = true;
         MarkChildrenGlobalDirty();
-
-        UpdateOctree();
     }
 }
 
@@ -106,7 +97,7 @@ const glm::mat4& Transform::GetGlobalMatrix()
 void Transform::UpdateLocalMatrix()
 {
     glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), position);
-    glm::mat4 rotationMatrix = glm::mat4_cast(rotationQuat); 
+    glm::mat4 rotationMatrix = glm::mat4_cast(rotationQuat);
     glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale);
 
     localMatrix = translationMatrix * rotationMatrix * scaleMatrix;
@@ -170,15 +161,6 @@ void Transform::UpdateEulerFromQuaternion()
     rotation = glm::degrees(glm::eulerAngles(rotationQuat));
 }
 
-void Transform::UpdateOctree()
-{
-    Application& app = Application::GetInstance();
-    if (app.scene && owner)
-    {
-        app.scene->UpdateObjectInOctree(owner);
-    }
-}
-
 void Transform::Serialize(rapidjson::Value& componentObj, rapidjson::Value::AllocatorType& allocator) const
 {
     // Position
@@ -209,11 +191,13 @@ void Transform::Deserialize(const rapidjson::Value& componentObj)
     if (componentObj.HasMember("position") && componentObj["position"].IsArray()) {
         const rapidjson::Value& posArray = componentObj["position"];
         if (posArray.Size() >= 3) {
-            SetPosition(glm::vec3(
+            position = glm::vec3(
                 posArray[0].GetFloat(),
                 posArray[1].GetFloat(),
                 posArray[2].GetFloat()
-            ));
+            );
+            localDirty = true;
+            globalDirty = true;
         }
     }
 
@@ -221,11 +205,14 @@ void Transform::Deserialize(const rapidjson::Value& componentObj)
     if (componentObj.HasMember("rotation") && componentObj["rotation"].IsArray()) {
         const rapidjson::Value& rotArray = componentObj["rotation"];
         if (rotArray.Size() >= 3) {
-            SetRotation(glm::vec3(
+            rotation = glm::vec3(
                 rotArray[0].GetFloat(),
                 rotArray[1].GetFloat(),
                 rotArray[2].GetFloat()
-            ));
+            );
+            UpdateQuaternionFromEuler();
+            localDirty = true;
+            globalDirty = true;
         }
     }
 
@@ -233,11 +220,13 @@ void Transform::Deserialize(const rapidjson::Value& componentObj)
     if (componentObj.HasMember("scale") && componentObj["scale"].IsArray()) {
         const rapidjson::Value& scaleArray = componentObj["scale"];
         if (scaleArray.Size() >= 3) {
-            SetScale(glm::vec3(
+            scale = glm::vec3(
                 scaleArray[0].GetFloat(),
                 scaleArray[1].GetFloat(),
                 scaleArray[2].GetFloat()
-            ));
+            );
+            localDirty = true;
+            globalDirty = true;
         }
     }
 }

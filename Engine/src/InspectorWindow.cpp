@@ -177,41 +177,57 @@ void InspectorWindow::DrawTransformComponent(GameObject* selectedObject)
         glm::vec3 scale = transform->GetScale();
 
         bool transformChanged = false;
+        bool wasEditing = false;
 
         ImGui::Text("Position");
         ImGui::PushItemWidth(80);
         ImGui::Text("X"); ImGui::SameLine(20);
         if (ImGui::DragFloat("##PosX", &position.x, 0.1f)) transformChanged = true;
+        if (ImGui::IsItemDeactivatedAfterEdit()) wasEditing = true;
+
         ImGui::SameLine(120);
         ImGui::Text("Y"); ImGui::SameLine(130);
         if (ImGui::DragFloat("##PosY", &position.y, 0.1f)) transformChanged = true;
+        if (ImGui::IsItemDeactivatedAfterEdit()) wasEditing = true;
+
         ImGui::SameLine(230);
         ImGui::Text("Z"); ImGui::SameLine(240);
         if (ImGui::DragFloat("##PosZ", &position.z, 0.1f)) transformChanged = true;
+        if (ImGui::IsItemDeactivatedAfterEdit()) wasEditing = true;
 
         ImGui::Spacing();
 
         ImGui::Text("Rotation");
         ImGui::Text("X"); ImGui::SameLine(20);
         if (ImGui::DragFloat("##RotX", &rotation.x, 0.1f)) transformChanged = true;
+        if (ImGui::IsItemDeactivatedAfterEdit()) wasEditing = true;
+
         ImGui::SameLine(120);
         ImGui::Text("Y"); ImGui::SameLine(130);
         if (ImGui::DragFloat("##RotY", &rotation.y, 0.1f)) transformChanged = true;
+        if (ImGui::IsItemDeactivatedAfterEdit()) wasEditing = true;
+
         ImGui::SameLine(230);
         ImGui::Text("Z"); ImGui::SameLine(240);
         if (ImGui::DragFloat("##RotZ", &rotation.z, 0.1f)) transformChanged = true;
+        if (ImGui::IsItemDeactivatedAfterEdit()) wasEditing = true;
 
         ImGui::Spacing();
 
         ImGui::Text("Scale");
         ImGui::Text("X"); ImGui::SameLine(20);
         if (ImGui::DragFloat("##ScaleX", &scale.x, 0.1f)) transformChanged = true;
+        if (ImGui::IsItemDeactivatedAfterEdit()) wasEditing = true;
+
         ImGui::SameLine(120);
         ImGui::Text("Y"); ImGui::SameLine(130);
         if (ImGui::DragFloat("##ScaleY", &scale.y, 0.1f)) transformChanged = true;
+        if (ImGui::IsItemDeactivatedAfterEdit()) wasEditing = true;
+
         ImGui::SameLine(230);
         ImGui::Text("Z"); ImGui::SameLine(240);
         if (ImGui::DragFloat("##ScaleZ", &scale.z, 0.1f)) transformChanged = true;
+        if (ImGui::IsItemDeactivatedAfterEdit()) wasEditing = true;
 
         ImGui::PopItemWidth();
 
@@ -222,6 +238,12 @@ void InspectorWindow::DrawTransformComponent(GameObject* selectedObject)
             transform->SetScale(scale);
         }
 
+        if (wasEditing)
+        {
+            Application::GetInstance().scene->MarkOctreeForRebuild();
+            LOG_DEBUG("Octree rebuild requested after editing transform");
+        }
+
         ImGui::Spacing();
 
         if (ImGui::Button("Reset Transform"))
@@ -229,6 +251,9 @@ void InspectorWindow::DrawTransformComponent(GameObject* selectedObject)
             transform->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
             transform->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
             transform->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+
+            // Rebuild después de reset
+            Application::GetInstance().scene->MarkOctreeForRebuild();
 
             LOG_DEBUG("Transform reset for: %s", selectedObject->GetName().c_str());
             LOG_CONSOLE("Transform reset for: %s", selectedObject->GetName().c_str());
