@@ -9,6 +9,9 @@
 
 namespace fs = std::filesystem;
 
+// Forward declarations
+struct Mesh;
+
 struct AssetEntry
 {
     std::string name;
@@ -23,6 +26,10 @@ struct AssetEntry
     bool isFBX;
     bool isExpanded;
     std::vector<AssetEntry> subMeshes;  // Mallas contenidas en el FBX
+
+    // Preview/thumbnail
+    unsigned int previewTextureID = 0;  // OpenGL texture ID para el preview
+    bool previewLoaded = false;         // Si ya se intentó cargar el preview
 };
 
 // Tipos de assets para drag & drop
@@ -69,6 +76,12 @@ private:
     // Funciones para expandir FBX
     void LoadFBXSubMeshes(AssetEntry& fbxAsset);
     void DrawExpandableAssetItem(AssetEntry& asset, std::string& pathPendingToLoad);
+
+    // Preview/Thumbnail system
+    void LoadPreviewForAsset(AssetEntry& asset);
+    void UnloadPreviewForAsset(AssetEntry& asset);
+    unsigned int RenderMeshToTexture(const Mesh& mesh, int width, int height);
+    unsigned int RenderMultipleMeshesToTexture(const std::vector<const Mesh*>& meshes, int width, int height);
 
     std::string assetsRootPath;
     std::string currentPath;
