@@ -5,6 +5,8 @@
 #include <SDL3/SDL.h>
 #include <IL/il.h>
 #include <filesystem>
+#include <windows.h>
+#include <commdlg.h>
 
 #include "Application.h"
 #include "Log.h"
@@ -222,16 +224,24 @@ void ModuleEditor::ShowMenuBar()
         {
             if (ImGui::MenuItem("Save Scene"))
             {
-                Application& app = Application::GetInstance();
-                app.scene->SaveScene("../Scene/scene.json");
-                LOG_CONSOLE("Scene saved to ../Scene/scene.json");
+                std::string filepath = OpenSaveFile("../Scene/scene.json");
+                if (!filepath.empty())
+                {
+                    Application& app = Application::GetInstance();
+                    app.scene->SaveScene(filepath);
+                    LOG_CONSOLE("Scene saved to %s", filepath.c_str());
+                }
             }
 
             if (ImGui::MenuItem("Load Scene"))
             {
-                Application& app = Application::GetInstance();
-                app.scene->LoadScene("../Scene/scene.json");
-                LOG_CONSOLE("Scene loaded from ../Scene/scene.json");
+                std::string filepath = OpenLoadFile("../Scene/scene.json");
+                if (!filepath.empty())
+                {
+                    Application& app = Application::GetInstance();
+                    app.scene->LoadScene(filepath);
+                    LOG_CONSOLE("Scene loaded from %s", filepath.c_str());
+                }
             }
 
             ImGui::Separator();
@@ -853,4 +863,63 @@ std::vector<std::string> ModuleEditor::GetSavedLayouts()
     }
 
     return layouts;
+}
+
+std::string ModuleEditor::OpenSaveFile(const std::string& defaultPath)
+{
+    OPENFILENAMEA ofn;
+    char szFile[260] = { 0 };
+
+    // Get the default scene folder
+    std::filesystem::path scenePath = std::filesystem::current_path().parent_path().parent_path() / "Scene";
+    std::string sceneDir = scenePath.string();
+
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn); 
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFile = szFile; // Path
+    ofn.nMaxFile = sizeof(szFile); // Path size
+    ofn.lpstrFilter = "JSON Files\0*.json\0All Files\0*.*\0";
+	ofn.nFilterIndex = 1; // Default filter: .json
+	ofn.lpstrFileTitle = NULL; // Filename
+    ofn.nMaxFileTitle = 0; 
+	ofn.lpstrInitialDir = sceneDir.c_str(); // Open on
+	ofn.lpstrDefExt = "json"; // Default extension if not specified
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT; // Folder must exist, prompt if overwriting
+
+    if (GetSaveFileNameA(&ofn) == TRUE)
+    {
+        return std::string(ofn.lpstrFile);
+    }
+
+    return ""; // User cancelled
+}
+
+std::string ModuleEditor::OpenLoadFile(const std::string& defaultPath)
+{
+    OPENFILENAMEA ofn;
+    char szFile[260] = { 0 };
+
+    // Get the default scene folder
+    std::filesystem::path scenePath = std::filesystem::current_path().parent_path().parent_path() / "Scene";
+    std::string sceneDir = scenePath.string();
+
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "JSON Files\0*.json\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = sceneDir.c_str();
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+    if (GetOpenFileNameA(&ofn) == TRUE)
+    {
+        return std::string(ofn.lpstrFile);
+    }
+
+    return ""; // User cancelled
 }

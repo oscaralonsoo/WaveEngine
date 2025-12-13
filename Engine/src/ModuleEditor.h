@@ -81,6 +81,10 @@ private:
     void LoadLayout(const std::string& filename);
     std::vector<std::string> GetSavedLayouts();
 
+    // File Browser
+    std::string OpenSaveFile(const std::string& defaultPath);
+    std::string OpenLoadFile(const std::string& defaultPath);
+
     // Editor windows (owned by ModuleEditor)
     std::unique_ptr<ConfigurationWindow> configWindow;
     std::unique_ptr<HierarchyWindow> hierarchyWindow;

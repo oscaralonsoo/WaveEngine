@@ -1239,46 +1239,7 @@
                             "children": [
                                 {
                                     "active": true,
-                                    "children": [
-                                        {
-                                            "active": true,
-                                            "children": [],
-                                            "components": [
-                                                {
-                                                    "active": true,
-                                                    "position": [
-                                                        0.0,
-                                                        0.0,
-                                                        0.0
-                                                    ],
-                                                    "rotation": [
-                                                        0.0,
-                                                        0.0,
-                                                        0.0
-                                                    ],
-                                                    "scale": [
-                                                        1.0,
-                                                        1.0,
-                                                        1.0
-                                                    ],
-                                                    "type": 0
-                                                },
-                                                {
-                                                    "active": true,
-                                                    "meshUID": 5139974064370242982,
-                                                    "type": 1
-                                                },
-                                                {
-                                                    "active": true,
-                                                    "originalTextureUID": 7887423088524502703,
-                                                    "textureUID": 7887423088524502703,
-                                                    "type": 2,
-                                                    "useCheckerboard": false
-                                                }
-                                            ],
-                                            "name": "City_building_030"
-                                        }
-                                    ],
+                                    "children": [],
                                     "components": [
                                         {
                                             "active": true,
