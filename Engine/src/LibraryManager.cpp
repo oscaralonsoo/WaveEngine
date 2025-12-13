@@ -1,4 +1,4 @@
-#include "LibraryManager.h"
+﻿#include "LibraryManager.h"
 #include "Log.h"
 #include <iostream>
 #include <windows.h>
@@ -276,7 +276,10 @@ void LibraryManager::RegenerateFromAssets() {
 
                 LOG_DEBUG("Importing texture: %s", assetPath.filename().string().c_str());
 
-                TextureData texture = TextureImporter::ImportFromFile(assetPath.string());
+                TextureData texture = TextureImporter::ImportFromFile(
+                    assetPath.string(),
+                    meta.importSettings  
+                );
 
                 if (texture.IsValid()) {
                     std::string filename = std::to_string(meta.uid) + ".texture";
@@ -310,4 +313,156 @@ void LibraryManager::RegenerateFromAssets() {
 
     LOG_CONSOLE("[LibraryManager] Scan complete: %d re-imported/new, %d synchronized, %d errors",
         processed, skipped, errors);
+}
+
+bool LibraryManager::ReimportAsset(const std::string& assetPath) {
+    LOG_CONSOLE("[LibraryManager] Force reimporting: %s", assetPath.c_str());
+
+    if (!fs::exists(assetPath)) {
+        LOG_CONSOLE("[LibraryManager] ERROR: Asset not found: %s", assetPath.c_str());
+        return false;
+    }
+
+    // Cargar .meta
+    std::string metaPath = assetPath + ".meta";
+    if (!fs::exists(metaPath)) {
+        LOG_CONSOLE("[LibraryManager] ERROR: No .meta file found");
+        return false;
+    }
+
+    MetaFile meta = MetaFile::Load(metaPath);
+    if (meta.uid == 0) {
+        LOG_CONSOLE("[LibraryManager] ERROR: Invalid UID in .meta");
+        return false;
+    }
+
+    AssetType type = meta.type;
+    bool success = false;
+
+    switch (type) {
+    case AssetType::TEXTURE_PNG:
+    case AssetType::TEXTURE_JPG:
+    case AssetType::TEXTURE_DDS:
+    case AssetType::TEXTURE_TGA: {
+        LOG_CONSOLE("[LibraryManager] Reimporting texture...");
+
+        // Borrar archivo viejo en Library
+        std::string libraryPath = GetTexturePathFromUID(meta.uid);
+        if (fs::exists(libraryPath)) {
+            try {
+                fs::remove(libraryPath);
+                LOG_DEBUG("[LibraryManager] Deleted old library file: %s", libraryPath.c_str());
+            }
+            catch (const std::exception& e) {
+                LOG_CONSOLE("[LibraryManager] ERROR deleting old file: %s", e.what());
+            }
+        }
+
+        // Reimportar con settings del .meta
+        TextureData texture = TextureImporter::ImportFromFile(assetPath, meta.importSettings);
+
+        if (texture.IsValid()) {
+            std::string filename = std::to_string(meta.uid) + ".texture";
+            if (TextureImporter::SaveToCustomFormat(texture, filename)) {
+                // Actualizar timestamp
+                meta.lastModified = std::filesystem::last_write_time(assetPath)
+                    .time_since_epoch().count();
+                meta.Save(metaPath);
+
+                LOG_CONSOLE("[LibraryManager] Texture reimported successfully");
+                success = true;
+            }
+            else {
+                LOG_CONSOLE("[LibraryManager] ERROR: Failed to save texture");
+            }
+        }
+        else {
+            LOG_CONSOLE("[LibraryManager] ERROR: Failed to import texture");
+        }
+        break;
+    }
+
+    case AssetType::MODEL_FBX: {
+        LOG_CONSOLE("[LibraryManager] Reimporting FBX model...");
+
+        // Borrar todas las meshes viejas
+        int deletedCount = 0;
+        for (int i = 0; i < 100; i++) {
+            unsigned long long meshUID = meta.uid + i;
+            std::string meshPath = GetMeshPathFromUID(meshUID);
+
+            if (fs::exists(meshPath)) {
+                try {
+                    fs::remove(meshPath);
+                    deletedCount++;
+                }
+                catch (const std::exception& e) {
+                    LOG_CONSOLE("[LibraryManager] ERROR deleting mesh %d: %s", i, e.what());
+                }
+            }
+            else {
+                break; // No más meshes
+            }
+        }
+
+        LOG_CONSOLE("[LibraryManager] Deleted %d old mesh files", deletedCount);
+
+        // Reimportar FBX con settings del .meta
+        unsigned int importFlags = aiProcess_Triangulate |
+            aiProcess_JoinIdenticalVertices |
+            aiProcess_ValidateDataStructure;
+
+        if (meta.importSettings.generateNormals) importFlags |= aiProcess_GenNormals;
+        if (meta.importSettings.flipUVs) importFlags |= aiProcess_FlipUVs;
+        if (meta.importSettings.optimizeMeshes) importFlags |= aiProcess_OptimizeMeshes;
+
+        const aiScene* scene = aiImportFile(assetPath.c_str(), importFlags);
+
+        if (scene && scene->HasMeshes()) {
+            LOG_CONSOLE("[LibraryManager] Processing %d meshes...", scene->mNumMeshes);
+
+            for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+                aiMesh* aiMesh = scene->mMeshes[i];
+                Mesh mesh = MeshImporter::ImportFromAssimp(aiMesh);
+
+                // Aplicar escala
+                if (meta.importSettings.importScale != 1.0f) {
+                    for (auto& vertex : mesh.vertices) {
+                        vertex.position *= meta.importSettings.importScale;
+                    }
+                }
+
+                unsigned long long meshUID = meta.uid + i;
+                std::string meshFilename = std::to_string(meshUID) + ".mesh";
+
+                if (MeshImporter::SaveToCustomFormat(mesh, meshFilename)) {
+                    LOG_DEBUG("[LibraryManager] Saved mesh %d (UID: %llu)", i, meshUID);
+                }
+                else {
+                    LOG_CONSOLE("[LibraryManager] ERROR: Failed to save mesh %d", i);
+                }
+            }
+
+            // Actualizar timestamp
+            meta.lastModified = std::filesystem::last_write_time(assetPath)
+                .time_since_epoch().count();
+            meta.Save(metaPath);
+
+            aiReleaseImport(scene);
+
+            LOG_CONSOLE("[LibraryManager] FBX reimported successfully: %d meshes", scene->mNumMeshes);
+            success = true;
+        }
+        else {
+            LOG_CONSOLE("[LibraryManager] ERROR: Failed to load FBX");
+        }
+        break;
+    }
+
+    default:
+        LOG_CONSOLE("[LibraryManager] ERROR: Unsupported asset type");
+        break;
+    }
+
+    return success;
 }

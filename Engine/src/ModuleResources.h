@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Module.h"
 #include <map>
@@ -11,42 +11,50 @@ typedef unsigned long long UID;
 class Resource {
 public:
     enum Type {
+        UNKNOWN = 0,
         TEXTURE,
         MESH,
         MODEL,
         MATERIAL,
-        ANIMATION,
-        UNKNOWN
+        ANIMATION
     };
 
     Resource(UID uid, Type type);
     virtual ~Resource();
 
-    // Getters
-    Type GetType() const { return type; }
-    UID GetUID() const { return uid; }
-    const char* GetAssetFile() const { return assetsFile.c_str(); }
-    const char* GetLibraryFile() const { return libraryFile.c_str(); }
-    bool IsLoadedToMemory() const { return loadedInMemory; }
-    unsigned int GetReferenceCount() const { return referenceCount; }
-
-    // Load into memory (subclass implementation)
     virtual bool LoadInMemory() = 0;
-
-    // Unload from memory
     virtual void UnloadFromMemory() = 0;
-    std::string libraryFile;
+
+    // Getters
+    UID GetUID() const { return uid; }
+    Type GetType() const { return type; }
+    const std::string& GetAssetFile() const { return assetsFile; }
+    const std::string& GetLibraryFile() const { return libraryFile; }
+    unsigned int GetReferenceCount() const { return referenceCount; }
+    bool IsLoadedToMemory() const { return loadedInMemory; }
+
+    // ✅ ADD THESE SETTERS
+    void SetAssetFile(const std::string& file) { assetsFile = file; }
+    void SetLibraryFile(const std::string& file) { libraryFile = file; }
+
+    // ✅ AÑADIR ESTE MÉTODO
+    void ForceUnload() {
+        if (loadedInMemory) {
+            UnloadFromMemory();
+        }
+        referenceCount = 0;
+    }
+
 protected:
     UID uid = 0;
-    std::string assetsFile;      // Path in Assets/
-     // Path in Library/
     Type type = UNKNOWN;
+    std::string assetsFile;
+    std::string libraryFile;
     unsigned int referenceCount = 0;
     bool loadedInMemory = false;
 
     friend class ModuleResources;
 };
-
 // Resource management module
 class ModuleResources : public Module {
 public:

@@ -1,5 +1,6 @@
 ﻿#include "TextureImporter.h"
 #include "LibraryManager.h"
+#include "MetaFile.h"
 #include "Log.h"
 #include <IL/il.h>
 #include <IL/ilu.h>
@@ -19,29 +20,45 @@ void TextureImporter::InitDevIL() {
         ilInit();
         iluInit();
         ilEnable(IL_ORIGIN_SET);
-		ilOriginFunc(IL_ORIGIN_UPPER_LEFT); // Used to set origin to upper left
         s_devilInitialized = true;
     }
 }
 
-// Load texture using DevIL
 TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
+    // Crear settings por defecto
+    ImportSettings defaultSettings;
+    defaultSettings.flipUVs = true;
+    defaultSettings.flipHorizontal = false;
+    defaultSettings.generateMipmaps = true;
+    defaultSettings.wrapMode = 0; // Repeat
+    defaultSettings.filterMode = 2; // Trilinear
+    defaultSettings.maxTextureSize = 6; // 2048
+    defaultSettings.compressionFormat = 0; // None
+
+    // Llamar a la versión con settings
+    return ImportFromFile(filepath, defaultSettings);
+}
+
+TextureData TextureImporter::ImportFromFile(const std::string& filepath,
+    const ImportSettings& settings) {
     InitDevIL();
 
     TextureData texture;
 
-    // Check file exists
     if (!std::filesystem::exists(filepath)) {
         LOG_DEBUG("[TextureImporter] ERROR: File does not exist: %s", filepath.c_str());
         return texture;
     }
 
-    // Generate DevIL image ID
+    std::filesystem::path path(filepath);
+    std::string extension = path.extension().string();
+    std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
     ILuint imageID;
     ilGenImages(1, &imageID);
     ilBindImage(imageID);
 
-    // Load image
+    // Cargar imagen
     if (!ilLoadImage(filepath.c_str())) {
         ILenum error = ilGetError();
         LOG_DEBUG("[TextureImporter] ERROR: DevIL failed to load image: %s", iluErrorString(error));
@@ -49,26 +66,51 @@ TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
         return texture;
     }
 
-    // Convert to RGBA for consistency
+    if (settings.flipUVs) {
+        iluFlipImage();
+        LOG_DEBUG("[TextureImporter] Applied vertical flip (%s)", extension.c_str());
+    }
+
+    // Aplicar flip horizontal
+    if (settings.flipHorizontal) {
+        iluMirror();
+        LOG_DEBUG("[TextureImporter] Applied horizontal flip");
+    }
+
+    // Aplicar max texture size
+    int maxSize = settings.GetMaxTextureSizeValue();
+    int imgWidth = ilGetInteger(IL_IMAGE_WIDTH);
+    int imgHeight = ilGetInteger(IL_IMAGE_HEIGHT);
+
+    if (imgWidth > maxSize || imgHeight > maxSize) {
+        float scale = std::min((float)maxSize / imgWidth, (float)maxSize / imgHeight);
+        int newWidth = (int)(imgWidth * scale);
+        int newHeight = (int)(imgHeight * scale);
+
+        iluImageParameter(ILU_FILTER, ILU_BILINEAR);
+        iluScale(newWidth, newHeight, 1);
+
+        LOG_DEBUG("[TextureImporter] Resized texture from %dx%d to %dx%d",
+            imgWidth, imgHeight, newWidth, newHeight);
+    }
+
+    // Convert to RGBA
     if (!ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE)) {
         LOG_DEBUG("[TextureImporter] ERROR: Failed to convert to RGBA format");
         ilDeleteImages(1, &imageID);
         return texture;
     }
 
-    // Get image properties
     texture.width = ilGetInteger(IL_IMAGE_WIDTH);
     texture.height = ilGetInteger(IL_IMAGE_HEIGHT);
-    texture.channels = 4; // Converted to RGBA above
+    texture.channels = 4;
 
-    // Validate dimensions
     if (texture.width == 0 || texture.height == 0) {
         LOG_DEBUG("[TextureImporter] ERROR: Invalid image dimensions");
         ilDeleteImages(1, &imageID);
         return texture;
     }
 
-    // Get pixel data
     ILubyte* data = ilGetData();
     if (!data) {
         LOG_DEBUG("[TextureImporter] ERROR: Failed to get image data");
@@ -76,17 +118,14 @@ TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
         return texture;
     }
 
-    // Calculate data size
     size_t dataSize = static_cast<size_t>(texture.width) * static_cast<size_t>(texture.height) * 4;
 
-    // Sanity check (max 100MB)
     if (dataSize == 0 || dataSize > 100000000) {
         LOG_DEBUG("[TextureImporter] ERROR: Invalid data size: %zu bytes", dataSize);
         ilDeleteImages(1, &imageID);
         return texture;
     }
 
-    // Allocate memory
     try {
         texture.pixels = new unsigned char[dataSize];
     }
@@ -96,11 +135,11 @@ TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
         return texture;
     }
 
-    // Copy pixel data
     memcpy(texture.pixels, data, dataSize);
-
-    // Cleanup
     ilDeleteImages(1, &imageID);
+
+    LOG_DEBUG("[TextureImporter] Texture imported: %s (%dx%d) flipUVs=%d",
+        extension.c_str(), texture.width, texture.height, settings.flipUVs);
 
     return texture;
 }
@@ -109,7 +148,6 @@ TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
 bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::string& filename) {
     std::string fullPath = LibraryManager::GetTexturePath(filename);
 
-    // Validate texture data before use
     if (!texture.IsValid()) {
         LOG_DEBUG("[TextureImporter] ERROR: Invalid texture data");
         return false;
@@ -125,7 +163,6 @@ bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::
         return false;
     }
 
-    // Calculate expected data size
     size_t expectedSize = static_cast<size_t>(texture.width) * static_cast<size_t>(texture.height) * 4;
     if (expectedSize == 0 || expectedSize > 100000000) {
         LOG_DEBUG("[TextureImporter] ERROR: Invalid data size: %zu bytes", expectedSize);
@@ -138,7 +175,6 @@ bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::
         return false;
     }
 
-    // Build header
     TextureHeader header;
     header.width = texture.width;
     header.height = texture.height;
@@ -148,7 +184,6 @@ bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::
     header.hasAlpha = (texture.channels == 4);
     header.compressed = false;
 
-    // Write header
     file.write(reinterpret_cast<const char*>(&header), sizeof(TextureHeader));
 
     if (!file.good()) {
@@ -157,7 +192,6 @@ bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::
         return false;
     }
 
-    // Write pixel data
     file.write(reinterpret_cast<const char*>(texture.pixels), header.dataSize);
 
     if (!file.good()) {
@@ -167,7 +201,6 @@ bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::
     }
 
     file.close();
-
     return true;
 }
 
@@ -183,11 +216,9 @@ TextureData TextureImporter::LoadFromCustomFormat(const std::string& filename) {
         return texture;
     }
 
-    // Read header
     TextureHeader header;
     file.read(reinterpret_cast<char*>(&header), sizeof(TextureHeader));
 
-    // Validate header
     if (!file.good()) {
         LOG_DEBUG("[TextureImporter] ERROR: Failed to read header");
         file.close();
@@ -201,14 +232,12 @@ TextureData TextureImporter::LoadFromCustomFormat(const std::string& filename) {
         return texture;
     }
 
-    // Safety check (max 100MB)
     if (header.dataSize > 100000000) {
         LOG_DEBUG("[TextureImporter] ERROR: Data size too large: %u bytes", header.dataSize);
         file.close();
         return texture;
     }
 
-    // Allocate and read pixel data
     texture.width = header.width;
     texture.height = header.height;
     texture.channels = header.channels;
@@ -233,7 +262,6 @@ TextureData TextureImporter::LoadFromCustomFormat(const std::string& filename) {
     }
 
     file.close();
-
     return texture;
 }
 
@@ -253,20 +281,17 @@ std::string TextureImporter::GenerateTextureFilename(const std::string& original
         canonicalPath = originalPath;
     }
 
-    // Convert to lowercase
     std::transform(canonicalPath.begin(), canonicalPath.end(),
         canonicalPath.begin(), ::tolower);
 
     std::replace(canonicalPath.begin(), canonicalPath.end(), '\\', '/');
 
-    // Extract filename without extension
     std::string basename = path.stem().string();
 
     if (basename.empty()) {
         basename = "unnamed_texture";
     }
 
-    // Sanitize
     std::replace(basename.begin(), basename.end(), ' ', '_');
     basename.erase(
         std::remove_if(basename.begin(), basename.end(),
@@ -275,11 +300,9 @@ std::string TextureImporter::GenerateTextureFilename(const std::string& original
     );
     std::transform(basename.begin(), basename.end(), basename.begin(), ::tolower);
 
-    // Generate hash
     std::hash<std::string> hasher;
     size_t hashValue = hasher(canonicalPath);
 
-    // Use .texture extension for our custom format
     std::stringstream ss;
     ss << basename << "_" << std::hex << hashValue << ".texture";
 

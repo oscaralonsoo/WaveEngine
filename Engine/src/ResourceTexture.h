@@ -28,6 +28,7 @@ public:
     unsigned int GetGPU_ID() const { return gpu_id; }
     Format GetFormat() const { return format; }
 
+
 public:
     unsigned int width = 0;
     unsigned int height = 0;

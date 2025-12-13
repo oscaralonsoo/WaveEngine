@@ -512,7 +512,6 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
 
         ImGui::SetDragDropPayload("ASSET_ITEM", &payload, sizeof(DragDropPayload));
         ImGui::Text("FBX: %s", asset.name.c_str());
-        LOG_CONSOLE("[DRAG START] FBX Model: %s (UID: %llu)", asset.name.c_str(), asset.uid);
         ImGui::EndDragDropSource();
     }
 
@@ -693,7 +692,6 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
 
                 ImGui::SetDragDropPayload("ASSET_ITEM", &payload, sizeof(DragDropPayload));
                 ImGui::Text("Mesh: %s", subMesh.name.c_str());
-                LOG_CONSOLE("[DRAG START] SubMesh: %s (UID: %llu)", subMesh.name.c_str(), subMesh.uid);
                 ImGui::EndDragDropSource();
             }
 
@@ -794,19 +792,16 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
         {
             payload.assetType = DragDropAssetType::TEXTURE;
             ImGui::Text("Texture: %s", asset.name.c_str());
-            LOG_CONSOLE("[DRAG START] Texture: %s (UID: %llu)", asset.name.c_str(), asset.uid);
         }
         else if (asset.extension == ".mesh")
         {
             payload.assetType = DragDropAssetType::MESH;
             ImGui::Text("Mesh: %s", asset.name.c_str());
-            LOG_CONSOLE("[DRAG START] Mesh: %s (UID: %llu)", asset.name.c_str(), asset.uid);
         }
         else
         {
             payload.assetType = DragDropAssetType::UNKNOWN;
             ImGui::Text("Drag: %s", asset.name.c_str());
-            LOG_CONSOLE("[DRAG START] Unknown: %s (UID: %llu)", asset.name.c_str(), asset.uid);
         }
 
         ImGui::SetDragDropPayload("ASSET_ITEM", &payload, sizeof(DragDropPayload));

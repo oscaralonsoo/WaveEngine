@@ -1,5 +1,5 @@
-#include "ImportSettingsWindow.h"
-#include "ImportSettingsWindow.h"
+﻿#include "ImportSettingsWindow.h"
+#include "ModuleResources.h"
 #include "MetaFile.h"
 #include "LibraryManager.h"
 #include "Application.h"
@@ -408,24 +408,62 @@ void ImportSettingsWindow::ApplyChanges()
     if (!hasUnsavedChanges)
         return;
 
-    // Update meta file with new settings
     currentMeta.importSettings = workingSettings;
 
-    // Save meta file
     std::string metaPath = currentAssetPath + ".meta";
-    if (currentMeta.Save(metaPath))
-    {
+    if (currentMeta.Save(metaPath)) {
         LOG_CONSOLE("[ImportSettings] Settings saved to .meta: %s", currentAssetPath.c_str());
-        LOG_CONSOLE("[ImportSettings] Changes will apply on next import of this asset");
+
+        if (LibraryManager::ReimportAsset(currentAssetPath)) {
+            LOG_CONSOLE("[ImportSettings] Asset reimported with new settings!");
+
+            ModuleResources* resources = Application::GetInstance().resources.get();
+            if (resources && currentMeta.uid != 0) {
+
+                if (currentMeta.type == AssetType::TEXTURE_PNG ||
+                    currentMeta.type == AssetType::TEXTURE_JPG ||
+                    currentMeta.type == AssetType::TEXTURE_DDS ||
+                    currentMeta.type == AssetType::TEXTURE_TGA)
+                {
+                    Resource* resource = const_cast<Resource*>(resources->GetResource(currentMeta.uid));
+                    if (resource && resource->IsLoadedToMemory()) {
+                        LOG_CONSOLE("[ImportSettings] Force unloading texture (refs: %d)",
+                            resource->GetReferenceCount());
+
+                        resource->ForceUnload();
+
+                        LOG_CONSOLE("[ImportSettings] Texture unloaded - will reload on next use");
+                    }
+                }
+                else if (currentMeta.type == AssetType::MODEL_FBX)
+                {
+                    // Para FBX, descargar todas las meshes
+                    int unloadedCount = 0;
+                    for (int i = 0; i < 100; i++) {
+                        unsigned long long meshUID = currentMeta.uid + i;
+                        Resource* resource = const_cast<Resource*>(resources->GetResource(meshUID));
+
+                        if (!resource) break;
+
+                        if (resource->IsLoadedToMemory()) {
+                            resource->ForceUnload();
+                            unloadedCount++;
+                        }
+                    }
+                    LOG_CONSOLE("[ImportSettings] %d meshes unloaded - will reload on next use", unloadedCount);
+                }
+            }
+        }
+        else {
+            LOG_CONSOLE("[ImportSettings] ERROR: Failed to reimport asset");
+        }
 
         hasUnsavedChanges = false;
     }
-    else
-    {
+    else {
         LOG_CONSOLE("[ImportSettings] ERROR: Failed to save settings");
     }
 }
-
 void ImportSettingsWindow::ResetToDefaults()
 {
     // Reset to default values

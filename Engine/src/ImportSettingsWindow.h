@@ -4,6 +4,8 @@
 #include "MetaFile.h"
 #include <string>
 
+
+
 class ImportSettingsWindow : public EditorWindow
 {
 public:
