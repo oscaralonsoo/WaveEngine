@@ -44,12 +44,20 @@ bool MetaFile::Save(const std::string& metaFilePath) const {
     file << "uid: " << uid << "\n";
     file << "type: " << static_cast<int>(type) << "\n";
     file << "lastModified: " << lastModified << "\n";
+
+    // Model settings
     file << "importScale: " << importSettings.importScale << "\n";
     file << "generateNormals: " << (importSettings.generateNormals ? "1" : "0") << "\n";
     file << "flipUVs: " << (importSettings.flipUVs ? "1" : "0") << "\n";
     file << "optimizeMeshes: " << (importSettings.optimizeMeshes ? "1" : "0") << "\n";
+    file << "upAxis: " << importSettings.upAxis << "\n";
+    file << "frontAxis: " << importSettings.frontAxis << "\n";
+
+    // Texture settings
     file << "generateMipmaps: " << (importSettings.generateMipmaps ? "1" : "0") << "\n";
-    file << "wrapMode: " << importSettings.wrapMode << "\n";
+    file << "filterMode: " << importSettings.filterMode << "\n";
+    file << "flipHorizontal: " << (importSettings.flipHorizontal ? "1" : "0") << "\n";
+    file << "maxTextureSize: " << importSettings.maxTextureSize << "\n";
 
     file.close();
     return true;
@@ -72,7 +80,6 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
         std::string key = line.substr(0, colonPos);
         std::string value = line.substr(colonPos + 2);
 
-       
         if (key == "uid") {
             meta.uid = std::stoull(value);
         }
@@ -85,6 +92,7 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
         else if (key == "lastModified") {
             meta.lastModified = std::stoll(value);
         }
+        // Model settings
         else if (key == "importScale") {
             meta.importSettings.importScale = std::stof(value);
         }
@@ -97,11 +105,24 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
         else if (key == "optimizeMeshes") {
             meta.importSettings.optimizeMeshes = (value == "1");
         }
+        else if (key == "upAxis") {
+            meta.importSettings.upAxis = std::stoi(value);
+        }
+        else if (key == "frontAxis") {
+            meta.importSettings.frontAxis = std::stoi(value);
+        }
+        // Texture settings
         else if (key == "generateMipmaps") {
             meta.importSettings.generateMipmaps = (value == "1");
         }
-        else if (key == "wrapMode") {
-            meta.importSettings.wrapMode = std::stoi(value);
+        else if (key == "filterMode") {
+            meta.importSettings.filterMode = std::stoi(value);
+        }
+        else if (key == "flipHorizontal") {
+            meta.importSettings.flipHorizontal = (value == "1");
+        }
+        else if (key == "maxTextureSize") {
+            meta.importSettings.maxTextureSize = std::stoi(value);
         }
     }
 

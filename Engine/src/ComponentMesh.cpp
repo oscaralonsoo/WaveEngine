@@ -6,7 +6,7 @@
 #include "Transform.h"
 #include "Log.h"
 #include <glad/glad.h>
-
+#include "Application.h"
 ComponentMesh::ComponentMesh(GameObject* owner)
     : Component(owner, ComponentType::MESH),
     meshUID(0),

@@ -11,6 +11,7 @@ namespace fs = std::filesystem;
 
 // Forward declarations
 struct Mesh;
+class ImportSettingsWindow;  
 
 struct AssetEntry
 {
@@ -97,4 +98,6 @@ private:
 
     // Para rastrear qué FBX están expandidos
     std::unordered_set<std::string> expandedFBXPaths;
+
+    ImportSettingsWindow* importSettingsWindow;  
 };

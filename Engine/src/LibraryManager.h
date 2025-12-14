@@ -5,44 +5,38 @@
 
 namespace fs = std::filesystem;
 
-// Centralized manager for Library folder structure
 class LibraryManager {
 public:
-    // Init all library directories (finds project root automatically)
     static void Initialize();
-
-    // Ensure directory exists
     static void EnsureDirectoryExists(const fs::path& path);
-
-    // Check if library is initialized
     static bool IsInitialized();
 
-    // Get full path for library file using UID
+    // UID-based paths
     static std::string GetMeshPathFromUID(unsigned long long uid);
     static std::string GetMaterialPathFromUID(unsigned long long uid);
     static std::string GetTexturePathFromUID(unsigned long long uid);
     static std::string GetModelPathFromUID(unsigned long long uid);
     static std::string GetAnimationPathFromUID(unsigned long long uid);
 
-    // Legacy compatibility methods (deprecated - use UID versions instead)
+    // Legacy compatibility
     static std::string GetMeshPath(const std::string& filename);
     static std::string GetTexturePath(const std::string& filename);
     static std::string GetModelPath(const std::string& filename);
 
-    // Check if file exists in library
     static bool FileExists(const fs::path& path);
 
-    // Get base paths
+    // Base paths
     static std::string GetLibraryRoot();
     static std::string GetAssetsRoot();
 
-    // Clear entire Library folder
+    // Library management
     static void ClearLibrary();
-
-    // Regenerate Library from Assets using .meta files
     static void RegenerateFromAssets();
+
+    // ? NUEVO: Reimportar un solo asset
+    static bool ReimportAsset(const std::string& assetPath);
 
 private:
     static bool s_initialized;
-    static fs::path s_projectRoot;  // Project root directory (parent of build/)
+    static fs::path s_projectRoot;
 };

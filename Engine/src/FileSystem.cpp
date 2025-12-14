@@ -479,10 +479,11 @@ UID FileSystem::ProcessMesh(aiMesh* aiMesh, const aiScene* scene, UID baseUID, i
         return 0;
     }
 
-    newResource->libraryFile = libraryPath;
+    newResource->SetLibraryFile(libraryPath);
 
     return meshUID;
 }
+
 void FileSystem::NormalizeModelScale(GameObject* rootObject, float targetSize)
 {
     glm::vec3 minBounds(std::numeric_limits<float>::max());

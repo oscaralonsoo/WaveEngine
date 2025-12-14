@@ -105,6 +105,8 @@ set(EDITOR_SRC
     src/GameWindow.cpp
     src/AssetsWindow.h
     src/AssetsWindow.cpp 
+    src/ImportSettingsWindow.h
+    src/ImportSettingsWindow.cpp 
 )
 
 set(IMPORTERS_SRC 

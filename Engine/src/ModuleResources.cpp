@@ -86,17 +86,15 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
         std::string assetPath = entry.path().string();
         std::string extension = entry.path().extension().string();
 
-        // Skip .meta files themselves
         if (extension == ".meta") continue;
 
         AssetType assetType = MetaFile::GetAssetType(extension);
         if (assetType == AssetType::UNKNOWN) continue;
 
-        // Load meta file IF IT EXISTS 
         std::string metaPath = assetPath + ".meta";
         if (!std::filesystem::exists(metaPath)) {
             skipped++;
-            continue; // Skip files without .meta
+            continue;
         }
 
         MetaFile meta = MetaFile::Load(metaPath);
@@ -117,29 +115,25 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
             resourceType = Resource::TEXTURE;
             resource = new ResourceTexture(meta.uid);
             if (resource) {
-                resource->assetsFile = assetPath;
-                resource->libraryFile = LibraryManager::GetTexturePathFromUID(meta.uid);
+                resource->SetAssetFile(assetPath);
+                resource->SetLibraryFile(LibraryManager::GetTexturePathFromUID(meta.uid));
                 resources[meta.uid] = resource;
                 registered++;
             }
             break;
 
         case AssetType::MODEL_FBX:
-            // Register all meshes from this FBX model
-            // Each mesh has UID = meta.uid + index
-            for (unsigned int i = 0; i < 100; ++i) { // Max 100 meshes per model
+            for (unsigned int i = 0; i < 100; ++i) {
                 UID meshUID = meta.uid + i;
                 std::string meshPath = LibraryManager::GetMeshPathFromUID(meshUID);
 
-                // Check if this mesh file exists
                 if (!std::filesystem::exists(meshPath)) {
-                    break; // No more meshes for this model
+                    break;
                 }
 
-                // Register this mesh
                 ResourceMesh* meshResource = new ResourceMesh(meshUID);
-                meshResource->assetsFile = assetPath;
-                meshResource->libraryFile = meshPath;
+                meshResource->SetAssetFile(assetPath);
+                meshResource->SetLibraryFile(meshPath);
                 resources[meshUID] = meshResource;
                 registered++;
             }
@@ -153,7 +147,6 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
     LOG_CONSOLE("[ModuleResources] Resources registered: %d, skipped: %d",
         registered, skipped);
 }
-
 UID ModuleResources::Find(const char* fileInAssets) const {
     for (const auto& pair : resources) {
         if (pair.second->GetAssetFile() == fileInAssets) {
@@ -249,20 +242,20 @@ Resource* ModuleResources::CreateNewResourceWithUID(const char* assetsFile, Reso
     }
 
     if (resource) {
-        resource->assetsFile = assetsFile;
+        resource->SetAssetFile(assetsFile);
+
         // Generate library path from UID based on type
         if (type == Resource::TEXTURE) {
-            resource->libraryFile = LibraryManager::GetTexturePathFromUID(uid);
+            resource->SetLibraryFile(LibraryManager::GetTexturePathFromUID(uid));
         }
         else if (type == Resource::MESH) {
-            resource->libraryFile = LibraryManager::GetMeshPathFromUID(uid);
+            resource->SetLibraryFile(LibraryManager::GetMeshPathFromUID(uid));
         }
         resources[uid] = resource;
     }
 
     return resource;
 }
-
 UID ModuleResources::GenerateNewUID() {
     random_device rd;
     mt19937_64 gen(rd());
@@ -387,11 +380,39 @@ bool ModuleResources::ImportTexture(Resource* resource, const std::string& asset
     std::string libraryPath = LibraryManager::GetTexturePathFromUID(resource->GetUID());
 
     if (LibraryManager::FileExists(libraryPath)) {
-        resource->libraryFile = libraryPath;
+        resource->SetLibraryFile(libraryPath);
         return true;
     }
 
-    TextureData textureData = TextureImporter::ImportFromFile(assetPath);
+    std::string metaPath = assetPath + ".meta";
+    MetaFile meta;
+
+    if (std::filesystem::exists(metaPath)) {
+        meta = MetaFile::Load(metaPath);
+    }
+    else {
+        // Si no existe .meta, crear uno con defaults apropiados
+        meta = MetaFileManager::GetOrCreateMeta(assetPath);
+
+        std::filesystem::path path(assetPath);
+        std::string extension = path.extension().string();
+        std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+        // TGA viene invertido por defecto, así que NO flipear
+        // PNG/JPG vienen normal, así que SÍ flipear para OpenGL
+        if (extension == ".tga") {
+            meta.importSettings.flipUVs = false;  // TGA ya viene invertido
+        }
+        else {
+            meta.importSettings.flipUVs = true;   // PNG/JPG necesitan flip
+        }
+
+        meta.Save(metaPath);
+        LOG_DEBUG("[ModuleResources] Created .meta with flipUVs=%d for %s",
+            meta.importSettings.flipUVs, extension.c_str());
+    }
+
+    TextureData textureData = TextureImporter::ImportFromFile(assetPath, meta.importSettings);
 
     if (!textureData.IsValid()) {
         LOG_CONSOLE("ERROR: Failed to import texture: %s", assetPath.c_str());
@@ -403,7 +424,7 @@ bool ModuleResources::ImportTexture(Resource* resource, const std::string& asset
         return false;
     }
 
-    resource->libraryFile = libraryPath;
+    resource->SetLibraryFile(libraryPath);
     return true;
 }
 
