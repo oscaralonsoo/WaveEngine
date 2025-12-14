@@ -33,7 +33,6 @@ AssetsWindow::AssetsWindow()
 
 AssetsWindow::~AssetsWindow()
 {
-    // Limpiar todos los previews
     for (auto& asset : currentAssets)
     {
         UnloadPreviewForAsset(asset);
@@ -269,7 +268,7 @@ void AssetsWindow::Draw()
         fs::path activeRoot;
         std::string rootName;
 
-        // Detectar en qué rama estamos
+        // Detect which branch we are on
         bool isInScene = (currentPath.find(sceneRootPath) != std::string::npos);
 
         if (isInScene) {
@@ -289,7 +288,7 @@ void AssetsWindow::Draw()
         }
         else
         {
-            // Botón para volver a la raíz activa (Assets o Scene)
+            // Button to return to the active root (Assets or Scene)
             if (ImGui::SmallButton((rootName + "##BreadcrumbRoot").c_str()))
             {
                 currentPath = activeRoot.string();
@@ -299,7 +298,7 @@ void AssetsWindow::Draw()
             std::string pathStr = relativePath.string();
             size_t pos = 0;
             std::string token;
-            fs::path accumulatedPath = activeRoot; // Usar activeRoot para la acumulación
+            fs::path accumulatedPath = activeRoot; 
 
             while ((pos = pathStr.find("\\")) != std::string::npos || (pos = pathStr.find("/")) != std::string::npos)
             {
@@ -435,13 +434,13 @@ void AssetsWindow::DrawAssetsList()
         if (showInMemoryOnly && !asset.inMemory)
             continue;
 
-        // Cargar preview si aún no se ha cargado
+        // Load preview if it has not yet been loaded
         if (!asset.isDirectory && !asset.previewLoaded)
         {
             LoadPreviewForAsset(asset);
         }
 
-        // Solo FBX se expanden
+        // Only FBX files expand
         if (asset.isFBX) {
             DrawExpandableAssetItem(asset, pathPendingToLoad);
         }
@@ -472,7 +471,7 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
     ImGui::PushID(asset.path.c_str());
     ImGui::BeginGroup();
 
-    // Botón de flecha para expandir/colapsar
+    // Arrow button to expand/collapse
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
     const char* arrowIcon = asset.isExpanded ? "v " : "> ";
 
@@ -488,7 +487,7 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
 
     ImGui::SameLine();
 
-    // Icono del FBX
+    // FBX icon
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 0.3f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
@@ -505,7 +504,7 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
     // Drag & Drop source for FBX
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
     {
-        static DragDropPayload payload; // Hacer estático para que persista
+        static DragDropPayload payload; 
         payload.assetPath = asset.path;
         payload.assetUID = asset.uid;
         payload.assetType = DragDropAssetType::FBX_MODEL;
@@ -596,7 +595,7 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
         ImGui::EndTooltip();
     }
 
-    // Dibujar submeshes horizontalmente con wrapping
+    // Draw submeshes horizontally with wrapping
     if (asset.isExpanded && !asset.subMeshes.empty())
     {
         float smallIconSize = iconSize * 0.7f;
@@ -606,35 +605,35 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
 
         ImGui::Dummy(ImVec2(0, 0));
 
-        // Calcular indentación para las submeshes
+        // Calculate indentation for submeshes
         float indentSize = 30.0f;
         float startX = ImGui::GetCursorPosX() + indentSize;
 
-        // Separador visual con indentación
+        // Visual separator with indentation
         ImGui::SetCursorPosX(startX);
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
         ImGui::Text(">");
         ImGui::PopStyleColor();
 
-        // Obtener el ancho disponible considerando la indentación
+        // Obtain the available width considering the indentation
         float windowContentWidth = ImGui::GetContentRegionAvail().x;
         float currentX = startX;
 
         LOG_DEBUG("[DrawExpandableAsset] startX: %.2f, windowContentWidth: %.2f, itemWidth: %.2f",
             startX, windowContentWidth, itemWidth);
 
-        // Dibujar cada submesh
+        // Draw each submesh
         for (size_t i = 0; i < asset.subMeshes.size(); ++i)
         {
             auto& subMesh = asset.subMeshes[i];
 
-            // Cargar preview si aún no se ha cargado
+            // Load preview if it has not yet been loaded
             if (!subMesh.previewLoaded)
             {
                 LoadPreviewForAsset(subMesh);
             }
 
-            // Verificar si necesitamos nueva línea
+            // Check if we need a new line
             if (i > 0)
             {
                 float remainingWidth = startX + windowContentWidth - currentX;
@@ -644,7 +643,7 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
 
                 if (remainingWidth < itemWidth)
                 {
-                    // Nueva línea con indentación
+                    // New line with indentation
                     LOG_DEBUG("[DrawExpandableAsset] Mesh %zu: NUEVA LINEA", i);
                     ImGui::NewLine();
                     ImGui::SetCursorPosX(startX);
@@ -652,23 +651,22 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
                 }
                 else
                 {
-                    // Continuar en la misma línea
                     ImGui::SameLine();
                 }
             }
             else
             {
-                // Primera submesh - continuar en la misma línea del separador
+                // First submesh - continue on the same line as the separator
                 ImGui::SameLine();
             }
 
-            // Actualizar posición actual
+            // Update current position
             currentX = ImGui::GetCursorPosX();
 
             ImGui::PushID(subMesh.path.c_str());
             ImGui::BeginGroup();
 
-            // Icono de la mesh (más pequeño)
+            // Mesh icon (smaller)
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 0.3f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
@@ -685,7 +683,7 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
             // Drag & Drop source for individual mesh
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
             {
-                static DragDropPayload payload; // Hacer estático para que persista
+                static DragDropPayload payload; 
                 payload.assetPath = subMesh.path;
                 payload.assetUID = subMesh.uid;
                 payload.assetType = DragDropAssetType::MESH;
@@ -700,7 +698,6 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
                 selectedAsset = &subMesh;
             }
 
-            // Nombre de la mesh
             std::string meshDisplayName = subMesh.name;
             if (!isMeshHovered)
             {
@@ -718,10 +715,10 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
 
             ImGui::EndGroup();
 
-            // Actualizar currentX después del grupo (incluye el ancho del elemento)
+            // Update currentX after the group (includes the width of the element)
             currentX += itemWidth;
 
-            // Context menu para submesh
+            // Context menu for submesh
             std::string meshPopupID = "MeshContextMenu##" + subMesh.path;
             if (ImGui::BeginPopupContextItem(meshPopupID.c_str()))
             {
@@ -779,14 +776,14 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
 
     bool isButtonHovered = ImGui::IsItemHovered();
 
-    // Drag & Drop source (solo para archivos, no directorios)
+    // Drag & Drop source 
     if (!asset.isDirectory && ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
     {
-        static DragDropPayload payload; // Hacer estático para que persista
+        static DragDropPayload payload; 
         payload.assetPath = asset.path;
         payload.assetUID = asset.uid;
 
-        // Determinar el tipo de asset
+        // Determine the type of asset
         if (asset.extension == ".png" || asset.extension == ".jpg" ||
             asset.extension == ".jpeg" || asset.extension == ".dds" || asset.extension == ".tga")
         {
@@ -1121,7 +1118,6 @@ bool AssetsWindow::DeleteDirectory(const fs::path& dirPath)
 
 void AssetsWindow::RefreshAssets()
 {
-    // Limpiar previews antiguos
     for (auto& asset : currentAssets)
     {
         UnloadPreviewForAsset(asset);
@@ -1207,7 +1203,7 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                                 {
                                     if (subExt == ".fbx")
                                     {
-                                        // Para FBX, verificar todas las meshes con UIDs secuenciales
+                                        // For FBX, verify all meshes with sequential UIDs
                                         const auto& allResources = resources->GetAllResources();
 
                                         for (int i = 0; i < 100; i++) {
@@ -1215,10 +1211,10 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                                             std::string meshLibPath = LibraryManager::GetMeshPathFromUID(meshUID);
 
                                             if (!fs::exists(meshLibPath)) {
-                                                break; // No más meshes
+                                                break; 
                                             }
 
-                                            // Verificar si está cargada en memoria
+                                            // Check if it is loaded in memory
                                             for (const auto& pair : allResources)
                                             {
                                                 if (pair.second->GetLibraryFile() == meshLibPath)
@@ -1244,7 +1240,7 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                                     }
                                     else
                                     {
-                                        // Para otros tipos de assets
+                                        // For other types of assets
                                         if (resources->IsResourceLoaded(subMeta.uid))
                                         {
                                             anyLoaded = true;
@@ -1281,16 +1277,16 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
 
                         const auto& allResources = resources->GetAllResources();
 
-                        // Verificar todas las meshes del FBX (UIDs secuenciales)
+                        // Verify all meshes in the FBX (sequential UIDs)
                         for (int i = 0; i < 100; i++) {
                             unsigned long long meshUID = meta.uid + i;
                             std::string meshLibPath = LibraryManager::GetMeshPathFromUID(meshUID);
 
                             if (!fs::exists(meshLibPath)) {
-                                break; // No más meshes
+                                break; 
                             }
 
-                            // Verificar si está cargada en memoria
+                            // Check if it is loaded in memory
                             for (const auto& pair : allResources)
                             {
                                 if (pair.second->GetLibraryFile() == meshLibPath)
@@ -1364,17 +1360,17 @@ bool AssetsWindow::IsAssetFile(const std::string& extension) const
 
 void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
 {
-    // Si ya se intentó cargar, no volver a intentar
+    // If loading has already been attempted, do not try again.
     if (asset.previewLoaded)
         return;
 
     asset.previewLoaded = true;
 
-    // Texturas (PNG, JPG, JPEG, TGA)
+    // Textures (PNG, JPG, JPEG, TGA)
     if (asset.extension == ".png" || asset.extension == ".jpg" ||
         asset.extension == ".jpeg" || asset.extension == ".tga")
     {
-        // Cargar imagen directamente con stb_image
+        // Load image directly with stb_image
         int width, height, channels;
         stbi_set_flip_vertically_on_load(true);
 
@@ -1387,13 +1383,13 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
             glGenTextures(1, &textureID);
             glBindTexture(GL_TEXTURE_2D, textureID);
 
-            // Configurar parámetros
+            // Configure parameters
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-            // Determinar formato
+            // Determine format
             GLenum format = GL_RGB;
             if (channels == 1)
                 format = GL_RED;
@@ -1402,12 +1398,12 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
             else if (channels == 4)
                 format = GL_RGBA;
 
-            // Subir datos
+            // Upload data
             glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 
             glBindTexture(GL_TEXTURE_2D, 0);
 
-            // Liberar datos
+            // unload dat
             stbi_image_free(data);
 
             // Guardar ID
@@ -1420,10 +1416,8 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
             LOG_DEBUG("[AssetsWindow] Failed to load preview for: %s", asset.name.c_str());
         }
     }
-    // Texturas DDS
     else if (asset.extension == ".dds")
     {
-        // Para DDS, usar el sistema de recursos existente
         if (asset.uid != 0)
         {
             ModuleResources* resources = Application::GetInstance().resources.get();
@@ -1442,7 +1436,7 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
             }
         }
     }
-    // Meshes individuales
+    // Individual meshes
     else if (asset.extension == ".mesh")
     {
         if (asset.uid != 0)
@@ -1450,7 +1444,7 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
             ModuleResources* resources = Application::GetInstance().resources.get();
             if (resources)
             {
-                // Cargar la mesh temporalmente
+                // Load the mesh temporarily
                 ResourceMesh* meshResource = dynamic_cast<ResourceMesh*>(
                     resources->RequestResource(asset.uid)
                     );
@@ -1459,19 +1453,18 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
                 {
                     const Mesh& mesh = meshResource->GetMesh();
 
-                    // Renderizar a textura
+                    // Render to texture
                     int previewSize = static_cast<int>(iconSize * 2);
                     asset.previewTextureID = RenderMeshToTexture(mesh, previewSize, previewSize);
 
                     LOG_DEBUG("[AssetsWindow] Rendered preview for mesh: %s", asset.name.c_str());
 
-                    // Liberar recurso
                     resources->ReleaseResource(asset.uid);
                 }
             }
         }
     }
-    // FBX (renderizar TODAS las meshes juntas)
+    // FBX (render ALL meshes together)
     else if (asset.extension == ".fbx")
     {
         if (asset.uid != 0)
@@ -1479,10 +1472,10 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
             ModuleResources* resources = Application::GetInstance().resources.get();
             if (resources)
             {
-                // Cargar todas las meshes del FBX
+                // Load all meshes from the FBX
                 std::vector<const Mesh*> meshes;
 
-                // Intentar cargar hasta 100 meshes (UID secuenciales)
+                // Attempt to load up to 100 meshes (sequential UIDs)
                 for (int i = 0; i < 100; i++)
                 {
                     unsigned long long meshUID = asset.uid + i;
@@ -1505,14 +1498,14 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
 
                 if (!meshes.empty())
                 {
-                    // Renderizar todas las meshes juntas
+                    // Render all meshes together
                     int previewSize = static_cast<int>(iconSize * 2);
                     asset.previewTextureID = RenderMultipleMeshesToTexture(meshes, previewSize, previewSize);
 
                     LOG_DEBUG("[AssetsWindow] Rendered preview for FBX: %s (%zu meshes)",
                         asset.name.c_str(), meshes.size());
 
-                    // Liberar recursos
+                    // Free up resources
                     for (int i = 0; i < static_cast<int>(meshes.size()); i++)
                     {
                         resources->ReleaseResource(asset.uid + i);
@@ -1525,10 +1518,10 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
 
 void AssetsWindow::UnloadPreviewForAsset(AssetEntry& asset)
 {
-    // Liberar texturas que cargamos nosotros (no las del resource system)
+    // Release textures that we load ourselves (not those from the resource system)
     if (asset.previewTextureID != 0)
     {
-        // Solo liberamos si no es una textura DDS del resource system
+        // We only release it if it is not a DDS texture from the resource system.
         if (asset.extension != ".dds")
         {
             glDeleteTextures(1, &asset.previewTextureID);
@@ -1541,18 +1534,18 @@ void AssetsWindow::UnloadPreviewForAsset(AssetEntry& asset)
 
 unsigned int AssetsWindow::RenderMeshToTexture(const Mesh& mesh, int width, int height)
 {
-    // Guardar estado actual de OpenGL
+    // Save current OpenGL state
     GLint oldFBO, oldViewport[4];
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
     glGetIntegerv(GL_VIEWPORT, oldViewport);
 
-    // Crear framebuffer para renderizar off-screen
+    // Create framebuffer for off-screen rendering
     GLuint fbo, colorTexture, depthRBO;
 
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    // Crear textura para el color
+    // Create texture for colour
     glGenTextures(1, &colorTexture);
     glBindTexture(GL_TEXTURE_2D, colorTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
@@ -1562,13 +1555,13 @@ unsigned int AssetsWindow::RenderMeshToTexture(const Mesh& mesh, int width, int 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
 
-    // Crear renderbuffer para depth
+    // Create render buffer for depth
     glGenRenderbuffers(1, &depthRBO);
     glBindRenderbuffer(GL_RENDERBUFFER, depthRBO);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRBO);
 
-    // Verificar que el framebuffer está completo
+    // Verify that the framebuffer is complete
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         LOG_DEBUG("[RenderMeshToTexture] ERROR: Framebuffer incomplete");
@@ -1579,18 +1572,14 @@ unsigned int AssetsWindow::RenderMeshToTexture(const Mesh& mesh, int width, int 
         return 0;
     }
 
-    // Configurar viewport
     glViewport(0, 0, width, height);
 
-    // Limpiar con fondo gris oscuro
     glClearColor(0.2f, 0.2f, 0.25f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Habilitar depth test
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    // Calcular AABB de la mesh para posicionar la cámara
     glm::vec3 minBounds(FLT_MAX);
     glm::vec3 maxBounds(-FLT_MAX);
 
@@ -1604,7 +1593,7 @@ unsigned int AssetsWindow::RenderMeshToTexture(const Mesh& mesh, int width, int 
     glm::vec3 size = maxBounds - minBounds;
     float maxDim = glm::max(size.x, glm::max(size.y, size.z));
 
-    // Configurar matrices de cámara
+    // Configure camera arrays
     float distance = maxDim * 2.2f;
     glm::vec3 cameraPos = center + glm::vec3(distance * 0.6f, distance * 0.4f, distance * 0.6f);
 
@@ -1613,7 +1602,7 @@ unsigned int AssetsWindow::RenderMeshToTexture(const Mesh& mesh, int width, int 
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 mvp = projection * view * model;
 
-    // Shader simple inline
+    // Simple inline shader
     const char* vertexShaderSrc = R"(
         #version 330 core
         layout(location = 0) in vec3 aPos;
@@ -1646,7 +1635,7 @@ unsigned int AssetsWindow::RenderMeshToTexture(const Mesh& mesh, int width, int 
         }
     )";
 
-    // Compilar shader
+    // Compile shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSrc, nullptr);
     glCompileShader(vertexShader);
@@ -1663,7 +1652,6 @@ unsigned int AssetsWindow::RenderMeshToTexture(const Mesh& mesh, int width, int 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    // Usar shader
     glUseProgram(shaderProgram);
 
     GLint mvpLoc = glGetUniformLocation(shaderProgram, "mvp");
@@ -1672,7 +1660,6 @@ unsigned int AssetsWindow::RenderMeshToTexture(const Mesh& mesh, int width, int 
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
     }
 
-    // Renderizar la mesh
     if (mesh.VAO != 0 && !mesh.indices.empty())
     {
         glBindVertexArray(mesh.VAO);
@@ -1680,14 +1667,11 @@ unsigned int AssetsWindow::RenderMeshToTexture(const Mesh& mesh, int width, int 
         glBindVertexArray(0);
     }
 
-    // Limpiar shader
     glDeleteProgram(shaderProgram);
 
-    // Restaurar estado
     glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
     glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
 
-    // Limpiar framebuffer y depth buffer (pero mantener la textura)
     glDeleteFramebuffers(1, &fbo);
     glDeleteRenderbuffers(1, &depthRBO);
 
@@ -1699,18 +1683,18 @@ unsigned int AssetsWindow::RenderMultipleMeshesToTexture(const std::vector<const
     if (meshes.empty())
         return 0;
 
-    // Guardar estado actual de OpenGL
+    // Save current OpenGL state
     GLint oldFBO, oldViewport[4];
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
     glGetIntegerv(GL_VIEWPORT, oldViewport);
 
-    // Crear framebuffer para renderizar off-screen
+    // Create framebuffer for off-screen rendering
     GLuint fbo, colorTexture, depthRBO;
 
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    // Crear textura para el color
+    // Create texture for colour
     glGenTextures(1, &colorTexture);
     glBindTexture(GL_TEXTURE_2D, colorTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
@@ -1720,13 +1704,13 @@ unsigned int AssetsWindow::RenderMultipleMeshesToTexture(const std::vector<const
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
 
-    // Crear renderbuffer para depth
+    // Create render buffer for depth
     glGenRenderbuffers(1, &depthRBO);
     glBindRenderbuffer(GL_RENDERBUFFER, depthRBO);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRBO);
 
-    // Verificar que el framebuffer está completo
+    // Verify that the framebuffer is complete
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         LOG_DEBUG("[RenderMultipleMeshesToTexture] ERROR: Framebuffer incomplete");
@@ -1737,18 +1721,17 @@ unsigned int AssetsWindow::RenderMultipleMeshesToTexture(const std::vector<const
         return 0;
     }
 
-    // Configurar viewport
+    // Configure viewport
     glViewport(0, 0, width, height);
 
-    // Limpiar con fondo gris oscuro
+    // Clean with dark grey background
     glClearColor(0.2f, 0.2f, 0.25f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Habilitar depth test
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    // Calcular AABB global de todas las meshes combinadas
+    // Calculate global AABB of all combined meshes
     glm::vec3 globalMinBounds(FLT_MAX);
     glm::vec3 globalMaxBounds(-FLT_MAX);
 
@@ -1765,7 +1748,7 @@ unsigned int AssetsWindow::RenderMultipleMeshesToTexture(const std::vector<const
     glm::vec3 size = globalMaxBounds - globalMinBounds;
     float maxDim = glm::max(size.x, glm::max(size.y, size.z));
 
-    // Configurar matrices de cámara
+    // Configure camera arrays
     float distance = maxDim * 2.2f;
     glm::vec3 cameraPos = center + glm::vec3(distance * 0.6f, distance * 0.4f, distance * 0.6f);
 
@@ -1833,7 +1816,6 @@ unsigned int AssetsWindow::RenderMultipleMeshesToTexture(const std::vector<const
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
     }
 
-    // Renderizar todas las meshes
     for (const Mesh* mesh : meshes)
     {
         if (mesh->VAO != 0 && !mesh->indices.empty())
@@ -1844,14 +1826,11 @@ unsigned int AssetsWindow::RenderMultipleMeshesToTexture(const std::vector<const
         }
     }
 
-    // Limpiar shader
     glDeleteProgram(shaderProgram);
 
-    // Restaurar estado
     glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
     glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
 
-    // Limpiar framebuffer y depth buffer (pero mantener la textura)
     glDeleteFramebuffers(1, &fbo);
     glDeleteRenderbuffers(1, &depthRBO);
 

@@ -27,7 +27,6 @@ Component* GameObject::CreateComponent(ComponentType type) {
     switch (type) {
     case ComponentType::TRANSFORM:
         if (GetComponent(ComponentType::TRANSFORM) != nullptr) {
-            LOG_DEBUG("GameObject '%s' has a Transform", name.c_str());
             return GetComponent(ComponentType::TRANSFORM);
         }
         newComponent = new Transform(this);
@@ -39,7 +38,6 @@ Component* GameObject::CreateComponent(ComponentType type) {
 
     case ComponentType::MATERIAL:
         if (GetComponent(ComponentType::MATERIAL) != nullptr) {
-            LOG_DEBUG("GameObject '%s' has a Material", name.c_str());
             return GetComponent(ComponentType::MATERIAL);
         }
         newComponent = new ComponentMaterial(this);

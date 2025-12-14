@@ -336,13 +336,13 @@ bool Input::PreUpdate()
 	{
 		if (Application::GetInstance().selectionManager->HasSelection())
 		{
-			// Obtener to los objetos seleccionados
+			// Get all selected objects
 			const std::vector<GameObject*>& selectedObjects =
 				Application::GetInstance().selectionManager->GetSelectedObjects();
 
 			if (!selectedObjects.empty())
 			{
-				// Calcular AABB combinado que englobe to los objetos seleccionados
+				// Calculate combined AABB that encompasses all selected objects
 				glm::vec3 combinedMin(FLT_MAX);
 				glm::vec3 combinedMax(-FLT_MAX);
 				bool hasValidAABB = false;
@@ -360,7 +360,7 @@ bool Input::PreUpdate()
 						glm::vec3 localMax = mesh->GetAABBMax();
 						glm::mat4 globalMatrix = transform->GetGlobalMatrix();
 
-						// Transformar las 8 esquinas del AABB local a mundo
+						// Transform the 8 corners of the local AABB to world space
 						glm::vec3 corners[8] = {
 							glm::vec3(globalMatrix * glm::vec4(localMin.x, localMin.y, localMin.z, 1.0f)),
 							glm::vec3(globalMatrix * glm::vec4(localMax.x, localMin.y, localMin.z, 1.0f)),
@@ -372,7 +372,7 @@ bool Input::PreUpdate()
 							glm::vec3(globalMatrix * glm::vec4(localMax.x, localMax.y, localMax.z, 1.0f))
 						};
 
-						// Expandir el AABB combinado con todas las esquinas
+						// Expand the AABB combined with all corners
 						for (int i = 0; i < 8; ++i)
 						{
 							combinedMin = glm::min(combinedMin, corners[i]);
@@ -383,7 +383,7 @@ bool Input::PreUpdate()
 					}
 					else if (transform)
 					{
-						// Si no tiene mesh, usar solo su posición
+						// If there is no mesh, use only its position
 						glm::mat4 globalMatrix = transform->GetGlobalMatrix();
 						glm::vec3 position = glm::vec3(globalMatrix[3]);
 
@@ -395,18 +395,18 @@ bool Input::PreUpdate()
 
 				if (hasValidAABB)
 				{
-					// Calcular centro y radio del AABB combinado
+					// Calculate centre and radius of the combined AABB
 					glm::vec3 worldCenter = (combinedMin + combinedMax) * 0.5f;
 					glm::vec3 worldSize = combinedMax - combinedMin;
 
-					// Usar la dimensión máxima del AABB combinado
+					// Use the maximum dimension of the combined AABB
 					float maxDimension = glm::max(glm::max(worldSize.x, worldSize.y), worldSize.z);
 					float radius = maxDimension * 0.5f;
 
 					if (radius < 0.1f)
 						radius = 1.0f;
 
-					// Obtener el aspect ratio del viewport
+					// Obtain the aspect ratio of the viewport
 					ImVec2 sceneSize = Application::GetInstance().editor->sceneViewportSize;
 					float viewportAspectRatio = sceneSize.x / sceneSize.y;
 

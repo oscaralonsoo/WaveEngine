@@ -33,7 +33,6 @@ public:
     static void ClearLibrary();
     static void RegenerateFromAssets();
 
-    // ? NUEVO: Reimportar un solo asset
     static bool ReimportAsset(const std::string& assetPath);
 
 private:

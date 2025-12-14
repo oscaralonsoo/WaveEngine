@@ -14,7 +14,7 @@ public:
     bool CreateWithDiscard();
     bool CreateSingleColor();
     bool CreateDepthVisualization();
-    bool CreateNoTexture(); // NUEVO: Shader para objetos sin textura con iluminación
+    bool CreateNoTexture(); 
 
     void Use() const;
     void Delete();

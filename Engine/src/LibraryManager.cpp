@@ -17,33 +17,32 @@ namespace fs = std::filesystem;
 bool LibraryManager::s_initialized = false;
 fs::path LibraryManager::s_projectRoot;
 
-// Función para rotar vertices según configuración de ejes
+// Function to rotate vertices according to axis configuration
 void ApplyAxisConversion(Mesh& mesh, int upAxis, int frontAxis) {
     // upAxis: 0=Y-Up, 1=Z-Up
     // frontAxis: 0=Z-Forward, 1=Y-Forward, 2=X-Forward
-
     glm::mat4 transform = glm::mat4(1.0f);
 
-    // Conversiones de Up Axis
-    if (upAxis == 1) {  // Z-Up (rotar de Y-Up a Z-Up)
-        // Rotar -90° alrededor del eje X
+    // Up Axis conversions
+    if (upAxis == 1) {  // Z-Up (rotate from Y-Up to Z-Up)
+        // Rotate -90° around X axis
         transform = glm::rotate(transform, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         LOG_DEBUG("[AxisConversion] Applying Z-Up conversion (rotate -90° on X)");
     }
 
-    // Conversiones de Front Axis
-    if (frontAxis == 1) {  // Y-Forward (desde Z-Forward)
-        // Rotar 90° alrededor del eje X
+    // Front Axis conversions
+    if (frontAxis == 1) {  // Y-Forward (from Z-Forward)
+        // Rotate 90° around X axis
         transform = glm::rotate(transform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         LOG_DEBUG("[AxisConversion] Applying Y-Forward conversion (rotate 90° on X)");
     }
-    else if (frontAxis == 2) {  // X-Forward (desde Z-Forward)
-        // Rotar -90° alrededor del eje Y
+    else if (frontAxis == 2) {  // X-Forward (from Z-Forward)
+        // Rotate -90° around Y axis
         transform = glm::rotate(transform, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         LOG_DEBUG("[AxisConversion] Applying X-Forward conversion (rotate -90° on Y)");
     }
 
-    // Aplicar transformación a todos los vértices
+    // Apply transformation to all vertices
     for (auto& vertex : mesh.vertices) {
         glm::vec4 pos = glm::vec4(vertex.position, 1.0f);
         glm::vec4 norm = glm::vec4(vertex.normal, 0.0f);
@@ -75,7 +74,6 @@ void LibraryManager::Initialize() {
 
     if (assetsFound) {
         s_projectRoot = currentDir;
-        LOG_CONSOLE("[LibraryManager] Project root found at: %s", s_projectRoot.string().c_str());
     }
     else {
         LOG_CONSOLE("[LibraryManager] ERROR: Could not find Assets folder at: %s", assetsPath.string().c_str());
@@ -146,7 +144,6 @@ std::string LibraryManager::GetAnimationPathFromUID(unsigned long long uid) {
     return (s_projectRoot / "Library" / "Animations" / filename).string();
 }
 
-// Legacy methods (for backward compatibility)
 std::string LibraryManager::GetMeshPath(const std::string& filename) {
     return (s_projectRoot / "Library" / "Meshes" / filename).string();
 }
@@ -301,11 +298,6 @@ bool LibraryManager::ReimportAsset(const std::string& assetPath) {
         const aiScene* scene = aiImportFile(assetPath.c_str(), importFlags);
 
         if (scene && scene->HasMeshes()) {
-            LOG_CONSOLE("[LibraryManager] Processing %d meshes with settings:", scene->mNumMeshes);
-            LOG_CONSOLE("  - Import Scale: %.3f", meta.importSettings.importScale);
-            LOG_CONSOLE("  - Generate Normals: %s", meta.importSettings.generateNormals ? "YES" : "NO");
-            LOG_CONSOLE("  - Flip UVs: %s", meta.importSettings.flipUVs ? "YES" : "NO");
-            LOG_CONSOLE("  - Optimize Meshes: %s", meta.importSettings.optimizeMeshes ? "YES" : "NO");
 
             for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
                 aiMesh* aiMesh = scene->mMeshes[i];
@@ -401,13 +393,11 @@ void LibraryManager::RegenerateFromAssets() {
 
                 if (assetModified) {
                     needsImport = true;
-                    LOG_CONSOLE("[LibraryManager] Asset modified: %s", assetPath.filename().string().c_str());
                 }
                 else {
                     std::string firstMeshPath = GetMeshPathFromUID(meta.uid);
                     if (!FileExists(firstMeshPath)) {
                         needsImport = true;
-                        LOG_CONSOLE("[LibraryManager] Missing library file for UID: %llu", meta.uid);
                     }
                 }
 

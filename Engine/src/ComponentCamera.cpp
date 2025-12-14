@@ -284,17 +284,17 @@ void ComponentCamera::FocusOnTarget(const glm::vec3& targetPosition, float targe
 
     float margin = 1.5f;
 
-    // Calcular distancia para que quepa verticalmente
+    // Calculate distance so that it fits vertically
     float distanceVertical = (targetRadius * margin) / tan(halfFovVertical);
 
-    // Calcular distancia para que quepa horizontalmente usando el aspect ratio correcto
+    // Calculate distance to fit horizontally using the correct aspect ratio
     float halfFovHorizontal = atan(tan(halfFovVertical) * actualAspectRatio);
     float distanceHorizontal = (targetRadius * margin) / tan(halfFovHorizontal);
 
-    // Usar la mayor distancia
+    // Use the greatest distance
     orbitDistance = glm::max(distanceVertical, distanceHorizontal);
 
-    // Aplicar solo un límite mínimo razonable
+    // Apply only a reasonable minimum limit
     float minDist = nearPlane * 2.0f;
     if (orbitDistance < minDist) {
         orbitDistance = minDist;

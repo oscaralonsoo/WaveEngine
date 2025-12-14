@@ -561,7 +561,6 @@ bool Shader::CreateNoTexture()
     if (!success)
     {
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cerr << "ERROR: NoTexture Vertex Shader Compilation Failed\n" << infoLog << std::endl;
         return false;
     }
 

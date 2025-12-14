@@ -291,9 +291,6 @@ bool Renderer::Update()
             Octree* octree = Application::GetInstance().scene->GetOctree();
             if (octree)
             {
-                //LOG_DEBUG(" Drawing octree with %d nodes, %d objects",
-                //    octree->GetTotalNodeCount(),
-                //    octree->GetTotalObjectCount());
                 octree->DebugDraw();
             }
             else
@@ -314,7 +311,7 @@ bool Renderer::Update()
                 DrawRay(scene->lastRayOrigin,
                     scene->lastRayDirection,
                     scene->lastRayLength,
-                    glm::vec3(1.0f, 0.0f, 1.0f)); // Magenta color
+                    glm::vec3(1.0f, 0.0f, 1.0f));
             }
             else
             {
@@ -326,7 +323,7 @@ bool Renderer::Update()
 
     UnbindFramebuffer();
 
-    // ========================== Game View ==========================
+    // Game View //////////////
     ComponentCamera* sceneCamera = Application::GetInstance().camera->GetSceneCamera();
     ImVec2 gameViewportSize = editor->gameViewportSize;
 
@@ -580,7 +577,7 @@ bool Renderer::ShouldCullGameObject(GameObject* gameObject, const Frustum& frust
                 static int debugCounter = 0;
                 if (debugCounter++ % 60 == 0)
                 {
-                    // Mostrar los 6 planos del frustum
+                    // Display the 6 planes of the frustum
                     LOG_DEBUG("Frustum planes:");
                     for (int i = 0; i < 6; i++)
                     {
@@ -592,7 +589,7 @@ bool Renderer::ShouldCullGameObject(GameObject* gameObject, const Frustum& frust
                             plane.distance);
                     }
 
-                    // Mostrar posición de la cámara
+                    // Display camera position
                     ComponentCamera* cam = Application::GetInstance().camera->GetSceneCamera();
                     if (cam)
                     {
@@ -604,7 +601,6 @@ bool Renderer::ShouldCullGameObject(GameObject* gameObject, const Frustum& frust
                         LOG_DEBUG("Camera: FOV=%.1f Near=%.2f Far=%.2f",
                             cam->GetFov(), cam->GetNearPlane(), cam->GetFarPlane());
                     }
-                    LOG_DEBUG("====================");
                 }
             }
 
@@ -646,7 +642,7 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
         cullingCamera = renderCamera;
     }
 
-    // ===== FIRST PASS: Render opaque objects and mark stencil for selected objects =====
+    // FIRST PASS: Render opaque objects and mark stencil for selected objects =====
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
@@ -705,7 +701,7 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
         glStencilMask(0x00);
     }
 
-    // ===== SECOND PASS: Render transparent objects back-to-front =====
+    //  SECOND PASS: Render transparent objects back-to-front =====
     std::vector<TransparentObject> transparentObjects;
     CollectTransparentObjects(root, transparentObjects);
 
@@ -718,7 +714,7 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
     {
         DrawGameObjectIterative(transparentObj.gameObject, true, renderCamera, cullingCamera);
     }
-    // ===== THIRD PASS: Draw outlines for selected objects =====
+    //  THIRD PASS: Draw outlines for selected objects =====
     if (drawEditorFeatures)
     {
         // Draw outline where stencil != 1 (around the selected object)
@@ -726,8 +722,8 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
         glStencilMask(0x00);
 
         glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);  // Dibuja donde profundidad <= depth buffer
-        glDepthMask(GL_FALSE);   // No modifica depth buffer
+        glDepthFunc(GL_LEQUAL);  
+        glDepthMask(GL_FALSE);   
 
         outlineShader->Use();
         glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE,
@@ -772,8 +768,8 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
     // Restore render state
     glStencilMask(0xFF);
     glStencilFunc(GL_ALWAYS, 0, 0xFF);
-    glDepthMask(GL_TRUE);      // Restaurar escritura de profundidad
-    glDepthFunc(GL_LESS);      // Restaurar función de depth por defecto
+    glDepthMask(GL_TRUE);      
+    glDepthFunc(GL_LESS);      
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_STENCIL_TEST);
 
@@ -920,24 +916,23 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
 
             bool hasTexture = (material && material->IsActive() && material->HasTexture());
 
-            // Configurar uniform hasTexture
+            // Configure uniform hasTexture
             defaultShader->SetInt("hasTexture", hasTexture ? 1 : 0);
 
-            // Configurar dirección de luz
+            // Configure light direction
             defaultShader->SetVec3("lightDir", glm::vec3(1.0f, -1.0f, -1.0f));
 
             if (hasTexture)
             {
                 material->Use();  // Bind the material's texture
                 materialBound = true;
-                // Con textura, usar blanco para no alterar el color de la textura
                 defaultShader->SetVec3("materialDiffuse", glm::vec3(1.0f));
             }
             else
             {
                 glBindTexture(GL_TEXTURE_2D, 0); // No texture
 
-                // Enviar color difuso del material al shader
+                // Send diffuse colour of the material to the shader
                 if (material && material->HasMaterialProperties())
                 {
                     glm::vec4 diffuse = material->GetDiffuseColor();
@@ -945,7 +940,7 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
                 }
                 else
                 {
-                    // Color gris por defecto si no hay material
+                    // Default colour grey if no material is available
                     defaultShader->SetVec3("materialDiffuse", glm::vec3(0.6f, 0.6f, 0.6f));
                 }
             }
@@ -1018,7 +1013,6 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
         {
             if (materialBound)
                 material->Unbind();
-            // Ya no unbindeamos defaultTexture
         }
 
 		// LIFO((Last In, First Out) to process children

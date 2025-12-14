@@ -50,7 +50,6 @@ void Frustum::ExtractFromMatrix(const glm::mat4& vp)
 {
     // Extract frustum planes from View-Projection matrix
     // GLM uses column-major order: vp[col][row]
-    // Normals point OUTWARD from frustum
 
     // LEFT plane (col3 + col0)
     planes[PLANE_LEFT].normal.x = vp[0][3] + vp[0][0];

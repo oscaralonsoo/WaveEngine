@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 
 struct TextureData;
-struct ImportSettings; // Forward declaration
+struct ImportSettings; 
 
 // Header for custom texture format
 struct TextureHeader {

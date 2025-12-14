@@ -23,7 +23,6 @@ Transform::Transform(GameObject* owner)
 
 void Transform::Update()
 {
-    // Transform doesn't need per-frame updates
 }
 
 void Transform::OnEditor()

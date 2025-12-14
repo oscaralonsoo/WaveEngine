@@ -53,7 +53,7 @@ bool ResourceTexture::LoadInMemory() {
     if (meta.uid != 0) {
         LOG_DEBUG("[ResourceTexture] Applying import settings from .meta");
 
-        // Wrap mode siempre REPEAT (default)
+        // Wrap mode always REPEAT (default)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 

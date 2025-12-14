@@ -221,9 +221,6 @@ bool TextureImporter::SaveToCustomFormat(const TextureData& texture, const std::
 
     file.close();
 
-    LOG_DEBUG("[TextureImporter] Saved texture: %s (%ux%u, %u bytes)",
-        fullPath.c_str(), header.width, header.height, header.dataSize);
-
     return true;
 }
 

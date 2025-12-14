@@ -341,7 +341,7 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
             }
         }
 
-        // PROCESAR MATERIALES CON PROPIEDADES EMBEBIDAS
+        // PROCESSING MATERIALS WITH EMBEDDED PROPERTIES
         if (aiMesh->mMaterialIndex >= 0)
         {
             aiMaterial* material = scene->mMaterials[aiMesh->mMaterialIndex];
@@ -355,7 +355,7 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
                     gameObject->CreateComponent(ComponentType::MATERIAL));
             }
 
-            // Extraer color difuso
+            // extract diffuse color
             aiColor4D diffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
             if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &diffuseColor))
             {
@@ -369,7 +369,7 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
                     diffuseColor.r, diffuseColor.g, diffuseColor.b, diffuseColor.a);
             }
 
-            // Extraer color especular
+            // extract specular color (no implementado)
             aiColor4D specularColor(1.0f, 1.0f, 1.0f, 1.0f);
             if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &specularColor))
             {
@@ -383,7 +383,7 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
                     specularColor.r, specularColor.g, specularColor.b);
             }
 
-            // Extraer color ambiente
+            // Extraer color ambiente(no implementado)
             aiColor4D ambientColor(0.2f, 0.2f, 0.2f, 1.0f);
             if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &ambientColor))
             {
@@ -395,7 +395,7 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
                 ));
             }
 
-            // Extraer color emisivo
+            // Extraer color emisivo(no implementado)
             aiColor4D emissiveColor(0.0f, 0.0f, 0.0f, 1.0f);
             if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_EMISSIVE, &emissiveColor))
             {

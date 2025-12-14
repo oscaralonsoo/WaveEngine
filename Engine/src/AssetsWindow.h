@@ -26,11 +26,11 @@ struct AssetEntry
     // Para FBX expandibles
     bool isFBX;
     bool isExpanded;
-    std::vector<AssetEntry> subMeshes;  // Mallas contenidas en el FBX
+    std::vector<AssetEntry> subMeshes;
 
     // Preview/thumbnail
-    unsigned int previewTextureID = 0;  // OpenGL texture ID para el preview
-    bool previewLoaded = false;         // Si ya se intentó cargar el preview
+    unsigned int previewTextureID = 0;  
+    bool previewLoaded = false;         
 };
 
 // Tipos de assets para drag & drop

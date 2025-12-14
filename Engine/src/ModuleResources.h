@@ -33,11 +33,9 @@ public:
     unsigned int GetReferenceCount() const { return referenceCount; }
     bool IsLoadedToMemory() const { return loadedInMemory; }
 
-    // ✅ ADD THESE SETTERS
     void SetAssetFile(const std::string& file) { assetsFile = file; }
     void SetLibraryFile(const std::string& file) { libraryFile = file; }
 
-    // ✅ AÑADIR ESTE MÉTODO
     void ForceUnload() {
         if (loadedInMemory) {
             UnloadFromMemory();
@@ -107,8 +105,6 @@ public:
 
     // Remove resource from system
     void RemoveResource(UID uid);
-
-    // EDITOR / DEBUG METHODS - For inspecting resources
 
     // Get all resources (for editor)
     const std::map<UID, Resource*>& GetAllResources() const { return resources; }

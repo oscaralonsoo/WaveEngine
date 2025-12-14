@@ -18,5 +18,5 @@ public:
     unsigned int GetNumTriangles() const { return mesh.indices.size() / 3; }
 
 private:
-    Mesh mesh;  // Datos de la malla
+    Mesh mesh;  
 };

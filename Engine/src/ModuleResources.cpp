@@ -52,7 +52,6 @@ bool ModuleResources::Update() {
 }
 
 bool ModuleResources::CleanUp() {
-    LOG_CONSOLE("[ModuleResources] Cleaning up...");
 
     for (auto& pair : resources) {
         if (pair.second->IsLoadedToMemory()) {
@@ -391,25 +390,22 @@ bool ModuleResources::ImportTexture(Resource* resource, const std::string& asset
         meta = MetaFile::Load(metaPath);
     }
     else {
-        // Si no existe .meta, crear uno con defaults apropiados
+        // If .meta doesn't exist, create one with appropriate defaults
         meta = MetaFileManager::GetOrCreateMeta(assetPath);
-
         std::filesystem::path path(assetPath);
         std::string extension = path.extension().string();
         std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
 
-        // TGA viene invertido por defecto, así que NO flipear
-        // PNG/JPG vienen normal, así que SÍ flipear para OpenGL
+        // TGA comes flipped by default, so DON'T flip
+        // PNG/JPG come normal, so DO flip for OpenGL
         if (extension == ".tga") {
-            meta.importSettings.flipUVs = false;  // TGA ya viene invertido
+            meta.importSettings.flipUVs = false;  // TGA already comes flipped
         }
         else {
-            meta.importSettings.flipUVs = true;   // PNG/JPG necesitan flip
+            meta.importSettings.flipUVs = true;   // PNG/JPG need flip
         }
 
         meta.Save(metaPath);
-        LOG_DEBUG("[ModuleResources] Created .meta with flipUVs=%d for %s",
-            meta.importSettings.flipUVs, extension.c_str());
     }
 
     TextureData textureData = TextureImporter::ImportFromFile(assetPath, meta.importSettings);

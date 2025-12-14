@@ -39,7 +39,7 @@ public:
     int GetTextureWidth() const;
     int GetTextureHeight() const;
 
-    //  Propiedades de material embebido
+    // Embedded material properties
     void SetDiffuseColor(const glm::vec4& color) { diffuseColor = color; hasMaterialProperties = true; }
     void SetSpecularColor(const glm::vec4& color) { specularColor = color; hasMaterialProperties = true; }
     void SetAmbientColor(const glm::vec4& color) { ambientColor = color; hasMaterialProperties = true; }
@@ -74,7 +74,7 @@ private:
     std::string texturePath;
     std::string originalTexturePath;
 
-    //  Propiedades del material
+    //  Material properties
     glm::vec4 diffuseColor = glm::vec4(1.0f);
     glm::vec4 specularColor = glm::vec4(1.0f);
     glm::vec4 ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
