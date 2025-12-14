@@ -415,6 +415,10 @@ void ModuleEditor::ShowMenuBar()
 
         if (ImGui::BeginMenu("Help"))
         {
+            if (ImGui::MenuItem("Web"))
+            {
+                SDL_OpenURL("https://audra0000.github.io/Engine/");
+            }
             if (ImGui::MenuItem("Documentation"))
             {
                 SDL_OpenURL("https://github.com/Audra0000/Engine/blob/main/README.md");
