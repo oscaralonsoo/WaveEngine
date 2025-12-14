@@ -153,10 +153,13 @@ Includes the following menu options:
 ---
 
 ## ✨ Extra features 
+- **Transparente textures**
+- **zBuffer**
+- **Assets icons**
 - **Asset Deletion:** Delete assets directly from the explorer with automatic cleanup of associated Library files
 - **Import Settings:** Basic implementation of import options for different asset types:
-  - **Textures:** Control filtering modes, UV wrapping behavior, and flip options (X/Y axes)
-  - **Meshes:** Configure global scaling, axis orientation
+  - **Textures:** Control filtering modes, max texture size, and flip options (X/Y axes)
+  - **Meshes:** Configure global scaling, axis configuration, Post-processing options: generate normals, flip uv, optimize meshes
   - **Metadata:** All import settings are saved in .meta files to ensure proper regeneration of the Library folder
 
 ---

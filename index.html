@@ -190,6 +190,39 @@
             background: var(--primary);
         }
 
+        /* Engine Preview Section */
+        .engine-preview {
+            background: var(--surface);
+            padding: 3rem 0;
+            margin: 2rem 0;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .preview-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .preview-image {
+            width: 100%;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            display: block;
+            margin: 0 auto;
+            max-height: 600px;
+            object-fit: contain;
+        }
+
+        .preview-caption {
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
         /* Section Styling */
         section {
             padding: 4rem 0;
@@ -672,6 +705,49 @@
                 align-items: center;
             }
         }
+
+        /* New styles for v2.0 features */
+        .version-badge {
+            background: var(--accent);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: 1rem;
+            transform: translateY(-0.3rem);
+        }
+
+        .gizmo-controls {
+            margin-top: 2rem;
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .gizmo-controls h3 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .new-feature {
+            background: rgba(0, 200, 151, 0.1);
+            border-left: 3px solid var(--success);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        .core-feature {
+            background: rgba(131, 56, 236, 0.1);
+            border-left: 3px solid var(--accent);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
     </style>
 </head>
 <body>
@@ -689,7 +765,7 @@
                         <li><a href="#features">Features</a></li>
                         <li><a href="#controls">Controls</a></li>
                         <li><a href="#team">Team</a></li>
-                        <li><a href="#github" class="btn">GitHub</a></li>
+                        <li><a href="https://github.com/Audra0000/Engine" class="btn">GitHub</a></li>
                     </ul>
                 </nav>
             </div>
@@ -700,342 +776,18 @@
     <section class="hero">
         <div class="container">
             <div class="hero-content">
-                <h1>🌊 Wave Engine</h1>
+                <h1>🌊 Wave Engine <span class="version-badge">v2.0</span></h1>
                 <p>A custom 3D game engine developed in C++ using OpenGL as the main graphics API</p>
                 <div class="hero-buttons">
-                    <a href="#github" class="btn">View on GitHub</a>
+                    <a href="https://github.com/Audra0000/Engine" class="btn">View on GitHub</a>
                     <a href="#features" class="btn btn-outline">Explore Features</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Overview Section -->
-    <section id="overview" class="overview">
+    <!-- Engine Preview Section -->
+    <section class="engine-preview">
         <div class="container">
-            <div class="section-heading">
-                <h2>Engine Overview</h2>
-                <p>Building a solid foundation for future game development</p>
-            </div>
-            <div class="overview-content">
-                <div class="overview-text">
-                    <h3>Powerful C++ 3D Game Engine</h3>
-                    <p>Wave Engine is a custom 3D game engine developed in C++ using OpenGL as the main graphics API. It integrates several external libraries such as Assimp (for 3D model loading), DevIL (for texture management), and ImGui (for the user interface).</p>
-                    <p>Currently in its first version, the engine focuses on building a solid foundation. It supports loading FBX models with textures, transforming them in position, rotation, and scale, and provides configuration options to customize the engine's behavior.</p>
-                    <p>This stage represents the core structure upon which future features and systems will be developed.</p>
-                    <div class="tech-stack">
-                        <span class="tech-item">C++</span>
-                        <span class="tech-item">OpenGL</span>
-                        <span class="tech-item">Assimp</span>
-                        <span class="tech-item">DevIL</span>
-                        <span class="tech-item">ImGui</span>
-                    </div>
-                </div>
-                <div class="github-card">
-                    <i class="fab fa-github"></i>
-                    <h3>GitHub Repository</h3>
-                    <p>Contribute to the development of Wave Engine</p>
-                    <div class="github-stats">
-                        <div class="stat-item">
-                            <div class="stat-number">v1.0</div>
-                            <div class="stat-label">Version</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">MIT</div>
-                            <div class="stat-label">License</div>
-                        </div>
-                    </div>
-                    <a href="https://github.com/Audra0000/Engine" target="_blank" class="btn">Visit Repository</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Team Section -->
-    <section id="team" class="team">
-        <div class="container">
-            <div class="section-heading">
-                <h2>Team Members</h2>
-                <p>The talented developers behind Wave Engine</p>
-            </div>
-            <div class="team-members">
-                <div class="team-member">
-                    <div class="member-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <h3 class="member-name">Haosheng Li</h3>
-                    <div class="member-role">Engine Developer</div>
-                    <p>C++ specialist with expertise in graphics programming</p>
-                    <div class="social-links">
-                        <a href="https://github.com/HaosLii" target="_blank" class="social-link">
-                            <i class="fab fa-github"></i>
-                        </a>
-                    </div>
-                </div>
-                <div class="team-member">
-                    <div class="member-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <h3 class="member-name">Ana Alcaraz</h3>
-                    <div class="member-role">Engine Developer</div>
-                    <p>3D engine architecture and UI/UX design specialist</p>
-                    <div class="social-links">
-                        <a href="https://github.com/Audra0000" target="_blank" class="social-link">
-                            <i class="fab fa-github"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Controls Section -->
-    <section id="controls" class="controls-section">
-        <div class="container">
-            <div class="section-heading">
-                <h2>Engine Controls</h2>
-                <p>Master the interface to maximize your workflow</p>
-            </div>
-            <div class="controls-container">
-                <table class="controls-table">
-                    <thead>
-                        <tr>
-                            <th>Action</th>
-                            <th>Key 1</th>
-                            <th>Key 2</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Up</td>
-                            <td><span class="key-binding">Space</span></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Down</td>
-                            <td><span class="key-binding">Left Ctrl</span></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Zoom</td>
-                            <td><span class="key-binding">Mouse wheel</span></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Velocity ×2</td>
-                            <td><span class="key-binding">Hold Shift</span></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Free movement</td>
-                            <td><span class="key-binding">Right Mouse Button</span></td>
-                            <td><span class="key-binding">WASD</span></td>
-                        </tr>
-                        <tr>
-                            <td>Orbit</td>
-                            <td><span class="key-binding">Left Alt</span></td>
-                            <td><span class="key-binding">Left Mouse Button</span></td>
-                        </tr>
-                        <tr>
-                            <td>Focus</td>
-                            <td><span class="key-binding">F</span></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Select</td>
-                            <td><span class="key-binding">Left Mouse Button</span></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Multiple select</td>
-                            <td><span class="key-binding">Shift</span></td>
-                            <td><span class="key-binding">Left Mouse Button</span></td>
-                        </tr>
-                        <tr>
-                            <td>Delete object</td>
-                            <td><span class="key-binding">Backspace</span></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section id="features" class="features">
-        <div class="container">
-            <div class="section-heading">
-                <h2>Engine Features</h2>
-                <p>Powerful tools for game development and 3D visualization</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <i class="fas fa-terminal feature-icon"></i>
-                    <h3>Console</h3>
-                    <p>The console logs all engine events and processes, such as:</p>
-                    <ul>
-                        <li>Loading geometry (via ASSIMP)</li>
-                        <li>Loading textures (via DevIL)</li>
-                        <li>Initialization of external libraries</li>
-                        <li>Application flow and error messages</li>
-                    </ul>
-                    <p>Interactive options include:</p>
-                    <ul>
-                        <li>Clear: Erases all current console messages</li>
-                        <li>Log filters: Enable/disable display of specific log types (info, warnings, errors)</li>
-                    </ul>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-cog feature-icon"></i>
-                    <h3>Configuration</h3>
-                    <p>The configuration window is divided into five tabs:</p>
-                    <ul>
-                        <li><strong>FPS:</strong> Displays current frame rate and performance data</li>
-                        <li><strong>Window:</strong> Customize application window size, resolution, fullscreen, borderless mode</li>
-                        <li><strong>Camera:</strong> Adjust sensitivities, reset settings, view current position, and see controls summary</li>
-                        <li><strong>Renderer:</strong> Enable/disable face culling, toggle wireframe mode, change background color</li>
-                        <li><strong>Hardware:</strong> View detailed system hardware information</li>
-                    </ul>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-object-group feature-icon"></i>
-                    <h3>Scene Management</h3>
-                    <p>Complete control over your 3D scene with:</p>
-                    <ul>
-                        <li><strong>Hierarchy:</strong> Displays all loaded GameObjects for easy selection and organization</li>
-                        <li><strong>Inspector:</strong> Detailed information and transformation options for selected GameObjects</li>
-                        <li><strong>Object Selection:</strong> Select scene objects directly using the mouse</li>
-                        <li><strong>Transformation Tools:</strong> Move, rotate, and scale objects using interactive gizmos</li>
-                        <li><strong>Mesh Data:</strong> View mesh statistics and toggle normal visualization (per-triangle / per-face)</li>
-                        <li><strong>Material Editor:</strong> View texture paths and dimensions with optional checker pattern preview</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- UI Section -->
-    <section class="ui-section">
-        <div class="container">
-            <div class="section-heading">
-                <h2>User Interface</h2>
-                <p>Intuitive and powerful editor tools</p>
-            </div>
-            <div class="ui-preview">
-                <div class="ui-card">
-                    <div class="ui-card-header">Toolbar</div>
-                    <div class="ui-card-content">
-                        <h4>Menu Options</h4>
-                        <ul>
-                            <li><strong>File:</strong> Exit the program</li>
-                            <li><strong>View:</strong> Show/hide editor windows</li>
-                            <li><strong>Help:</strong> Access documentation, report bugs, download latest version</li>
-                            <li><strong>About:</strong> Engine information, version, authors, libraries, and license</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="ui-card">
-                    <div class="ui-card-header">Hierarchy</div>
-                    <div class="ui-card-content">
-                        <h4>Scene Organization</h4>
-                        <p>Displays all loaded GameObjects in the current scene, allowing easy selection and organization of scene elements.</p>
-                        <div class="tabs">
-                            <span class="tab">Scene Root</span>
-                            <span class="tab">Models</span>
-                            <span class="tab">Lights</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="ui-card">
-                    <div class="ui-card-header">Inspector</div>
-                    <div class="ui-card-content">
-                        <h4>Object Properties</h4>
-                        <p>Provides detailed information and transformation options for the selected GameObject:</p>
-                        <ul>
-                            <li><strong>Transform:</strong> Modify position, rotation, and scale directly</li>
-                            <li><strong>Mesh:</strong> Displays mesh data and normal visualization options</li>
-                            <li><strong>Material:</strong> Shows texture path and dimensions</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">WAVE ENGINE</div>
-                <p>A powerful custom 3D game engine for developers and creators</p>
-                <div class="footer-links">
-                    <a href="https://github.com/Audra0000/Engine" target="_blank">
-                        <i class="fab fa-github"></i> GitHub Repository
-                    </a>
-                    <a href="#features">
-                        <i class="fas fa-features"></i> Features
-                    </a>
-                    <a href="#team">
-                        <i class="fas fa-users"></i> Team
-                    </a>
-                </div>
-                <div class="copyright">
-                    <p>© 2025 Wave Engine — Developed by Haosheng Li & Ana Alcaraz — MIT License</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        // Simple scroll animation for navigation
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                
-                const targetId = this.getAttribute('href');
-                if (targetId === '#') return;
-                
-                const targetElement = document.querySelector(targetId);
-                if (targetElement) {
-                    window.scrollTo({
-                        top: targetElement.offsetTop - 80,
-                        behavior: 'smooth'
-                    });
-                    
-                    // Update active nav item
-                    document.querySelectorAll('nav a').forEach(link => {
-                        link.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                }
-            });
-        });
-        
-        // Add scroll spy to update active nav item
-        window.addEventListener('scroll', function() {
-            const sections = document.querySelectorAll('section');
-            const scrollPosition = window.scrollY + 100;
-            
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                const sectionHeight = section.offsetHeight;
-                const sectionId = section.getAttribute('id');
-                
-                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                    document.querySelectorAll('nav a').forEach(link => {
-                        link.classList.remove('active');
-                    });
-                    
-                    if (sectionId) {
-                        const activeLink = document.querySelector(`nav a[href="#${sectionId}"]`);
-                        if (activeLink) {
-                            activeLink.classList.add('active');
-                        }
-                    }
-                }
-            });
-        });
-    </script>
-</body>
-</html>
+            <div class="preview-content">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAIAAAAVFBUnAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5wQfDh0XQjVqVQAAIABJREFUeNrs3XlcVFX/B/DvzOw9s8wOwzCzDDsIgqCCyqL4K4qKlqKkKqWYKqWkqLmY65NqWm5pKqVZaWm+1LQstbRcUjQVU1FzXxQVQVnE3cFhZu7v+8d97jgDzADuMMPMfD7y4cPc+9y595z7uXfuOedcQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQg
