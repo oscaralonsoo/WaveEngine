@@ -18,7 +18,7 @@
 
 AssetsWindow::AssetsWindow()
     : EditorWindow("Assets"), selectedAsset(nullptr), iconSize(64.0f),
-    showInMemoryOnly(false), showDeleteConfirmation(false)
+    showInMemoryOnly(false), show3DPreviews(true), showDeleteConfirmation(false)
 {
     if (!LibraryManager::IsInitialized()) {
         LibraryManager::Initialize();
@@ -67,8 +67,8 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
 {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-    // Si hay preview texture, mostrarla
-    if (asset.previewTextureID != 0)
+    // Si hay preview texture Y está activado show3DPreviews, mostrarla
+    if (show3DPreviews && asset.previewTextureID != 0)
     {
         ImVec2 topLeft = pos;
         ImVec2 bottomRight = ImVec2(pos.x + size.x, pos.y + size.y);
@@ -85,7 +85,7 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
         return;
     }
 
-    // Si no hay preview, usar los iconos dibujados originales
+    // Si no hay preview o está desactivado show3DPreviews, usar los iconos dibujados originales
     ImVec4 buttonColor;
 
     if (asset.isDirectory) {
@@ -200,9 +200,12 @@ void AssetsWindow::Draw()
     if (!isOpen) return;
 
     static bool firstDraw = true;
+    static bool previousShow3DPreviews = true; // Variable static para detectar cambios
+
     if (firstDraw) {
         RefreshAssets();
         firstDraw = false;
+        previousShow3DPreviews = show3DPreviews; // Sincronizar después del primer refresh
     }
 
     if (showDeleteConfirmation) {
@@ -256,6 +259,59 @@ void AssetsWindow::Draw()
         ImGui::Checkbox("In Memory Only", &showInMemoryOnly);
 
         ImGui::SameLine();
+        // previousShow3DPreviews ya está declarado arriba como static
+        ImGui::Checkbox("3D Previews", &show3DPreviews);
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("Show 3D preview for FBX models");
+            ImGui::EndTooltip();
+        }
+
+        // Si cambió el estado del checkbox, recargar o descargar los previews
+        if (previousShow3DPreviews != show3DPreviews)
+        {
+            for (auto& asset : currentAssets)
+            {
+                // Solo afecta a FBX y MESH
+                if (asset.extension == ".fbx" || asset.extension == ".mesh")
+                {
+                    if (show3DPreviews)
+                    {
+                        // Activado: marcar para recargar
+                        asset.previewLoaded = false;
+                        asset.previewTextureID = 0;
+                    }
+                    else
+                    {
+                        // Desactivado: descargar preview 3D
+                        UnloadPreviewForAsset(asset);
+                    }
+                }
+
+                // Procesar submeshes de FBX
+                if (asset.isFBX)
+                {
+                    for (auto& subMesh : asset.subMeshes)
+                    {
+                        if (show3DPreviews)
+                        {
+                            subMesh.previewLoaded = false;
+                            subMesh.previewTextureID = 0;
+                        }
+                        else
+                        {
+                            UnloadPreviewForAsset(subMesh);
+                        }
+                    }
+                }
+            }
+
+            // Actualizar el valor previo después de procesar el cambio
+            previousShow3DPreviews = show3DPreviews;
+        }
+
+        ImGui::SameLine();
         ImGui::SetNextItemWidth(100.0f);
         ImGui::SliderFloat("Icon Size", &iconSize, 32.0f, 128.0f, "%.0f");
 
@@ -298,7 +354,7 @@ void AssetsWindow::Draw()
             std::string pathStr = relativePath.string();
             size_t pos = 0;
             std::string token;
-            fs::path accumulatedPath = activeRoot; 
+            fs::path accumulatedPath = activeRoot;
 
             while ((pos = pathStr.find("\\")) != std::string::npos || (pos = pathStr.find("/")) != std::string::npos)
             {
@@ -434,8 +490,8 @@ void AssetsWindow::DrawAssetsList()
         if (showInMemoryOnly && !asset.inMemory)
             continue;
 
-        // Load preview if it has not yet been loaded
-        if (!asset.isDirectory && !asset.previewLoaded)
+        // Load preview only if show3DPreviews is enabled
+        if (!asset.isDirectory && !asset.previewLoaded && show3DPreviews)
         {
             LoadPreviewForAsset(asset);
         }
@@ -504,7 +560,7 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
     // Drag & Drop source for FBX
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
     {
-        static DragDropPayload payload; 
+        static DragDropPayload payload;
         payload.assetPath = asset.path;
         payload.assetUID = asset.uid;
         payload.assetType = DragDropAssetType::FBX_MODEL;
@@ -628,7 +684,8 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
             auto& subMesh = asset.subMeshes[i];
 
             // Load preview if it has not yet been loaded
-            if (!subMesh.previewLoaded)
+            // Solo cargar si show3DPreviews está activado
+            if (!subMesh.previewLoaded && show3DPreviews)
             {
                 LoadPreviewForAsset(subMesh);
             }
@@ -683,7 +740,7 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
             // Drag & Drop source for individual mesh
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
             {
-                static DragDropPayload payload; 
+                static DragDropPayload payload;
                 payload.assetPath = subMesh.path;
                 payload.assetUID = subMesh.uid;
                 payload.assetType = DragDropAssetType::MESH;
@@ -757,7 +814,6 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
 
     ImGui::PopID();
 }
-
 void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendingToLoad)
 {
     ImGui::PushID(asset.path.c_str());
@@ -779,7 +835,7 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
     // Drag & Drop source 
     if (!asset.isDirectory && ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
     {
-        static DragDropPayload payload; 
+        static DragDropPayload payload;
         payload.assetPath = asset.path;
         payload.assetUID = asset.uid;
 
@@ -1211,7 +1267,7 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                                             std::string meshLibPath = LibraryManager::GetMeshPathFromUID(meshUID);
 
                                             if (!fs::exists(meshLibPath)) {
-                                                break; 
+                                                break;
                                             }
 
                                             // Check if it is loaded in memory
@@ -1283,7 +1339,7 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                             std::string meshLibPath = LibraryManager::GetMeshPathFromUID(meshUID);
 
                             if (!fs::exists(meshLibPath)) {
-                                break; 
+                                break;
                             }
 
                             // Check if it is loaded in memory
@@ -1439,6 +1495,13 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
     // Individual meshes
     else if (asset.extension == ".mesh")
     {
+        // Solo cargar preview 3D si está activado
+        if (!show3DPreviews)
+        {
+            // No hacer nada, pero ya está marcado como previewLoaded = true arriba
+            return;
+        }
+
         if (asset.uid != 0)
         {
             ModuleResources* resources = Application::GetInstance().resources.get();
@@ -1467,6 +1530,13 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
     // FBX (render ALL meshes together)
     else if (asset.extension == ".fbx")
     {
+        // Solo cargar preview 3D si está activado
+        if (!show3DPreviews)
+        {
+            // No hacer nada, pero ya está marcado como previewLoaded = true arriba
+            return;
+        }
+
         if (asset.uid != 0)
         {
             ModuleResources* resources = Application::GetInstance().resources.get();

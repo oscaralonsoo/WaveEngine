@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 
 // Forward declarations
 struct Mesh;
-class ImportSettingsWindow;  
+class ImportSettingsWindow;
 
 struct AssetEntry
 {
@@ -29,8 +29,8 @@ struct AssetEntry
     std::vector<AssetEntry> subMeshes;
 
     // Preview/thumbnail
-    unsigned int previewTextureID = 0;  
-    bool previewLoaded = false;         
+    unsigned int previewTextureID = 0;
+    bool previewLoaded = false;
 };
 
 // Tipos de assets para drag & drop
@@ -92,6 +92,7 @@ private:
     AssetEntry* selectedAsset;
     float iconSize;
     bool showInMemoryOnly;
+    bool show3DPreviews;  // Nueva variable para controlar previews 3D en FBX
 
     bool showDeleteConfirmation;
     AssetEntry assetToDelete;
@@ -99,5 +100,5 @@ private:
     // Para rastrear qué FBX están expandidos
     std::unordered_set<std::string> expandedFBXPaths;
 
-    ImportSettingsWindow* importSettingsWindow;  
+    ImportSettingsWindow* importSettingsWindow;
 };
