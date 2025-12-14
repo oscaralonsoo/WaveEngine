@@ -1,11 +1,11 @@
 uid: 5139974064370242971
 type: 1
 lastModified: 134101026431047380
-importScale: 0.76
+importScale: 1
 generateNormals: 1
-flipUVs: 0
+flipUVs: 1
 optimizeMeshes: 1
-upAxis: 1
+upAxis: 0
 frontAxis: 0
 generateMipmaps: 1
 filterMode: 2

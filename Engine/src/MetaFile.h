@@ -18,13 +18,17 @@ enum class AssetType {
 };
 
 struct ImportSettings {
-    // Mesh/Model settings (SOLO LO QUE FUNCIONA)
+    // Mesh/Model settings
     float importScale = 1.0f;
     bool generateNormals = true;
     bool flipUVs = true;
     bool optimizeMeshes = true;
 
-    // Texture settings (SOLO LO QUE FUNCIONA)
+    // Axis configuration
+    int upAxis = 0;        // 0=Y-Up, 1=Z-Up
+    int frontAxis = 0;     // 0=Z-Forward, 1=Y-Forward, 2=X-Forward
+
+    // Texture settings
     bool generateMipmaps = true;
     int filterMode = 2;    // 0=Point, 1=Bilinear, 2=Trilinear
     bool flipHorizontal = false;
