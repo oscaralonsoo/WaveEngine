@@ -499,7 +499,7 @@
         }
 
         .ui-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-50px);
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
         }
 
@@ -672,6 +672,49 @@
                 align-items: center;
             }
         }
+
+        /* New styles for v2.0 features */
+        .version-badge {
+            background: var(--accent);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: 1rem;
+            transform: translateY(-0.3rem);
+        }
+
+        .gizmo-controls {
+            margin-top: 2rem;
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .gizmo-controls h3 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .new-feature {
+            background: rgba(0, 200, 151, 0.1);
+            border-left: 3px solid var(--success);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        .core-feature {
+            background: rgba(131, 56, 236, 0.1);
+            border-left: 3px solid var(--accent);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
     </style>
 </head>
 <body>
@@ -697,10 +740,10 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section class = "hero">
         <div class="container">
             <div class="hero-content">
-                <h1>🌊 Wave Engine</h1>
+                <h1>🌊 Wave Engine <span class="version-badge">v2.0</span></h1>
                 <p>A custom 3D game engine developed in C++ using OpenGL as the main graphics API</p>
                 <div class="hero-buttons">
                     <a href="#github" class="btn">View on GitHub</a>
@@ -721,8 +764,8 @@
                 <div class="overview-text">
                     <h3>Powerful C++ 3D Game Engine</h3>
                     <p>Wave Engine is a custom 3D game engine developed in C++ using OpenGL as the main graphics API. It integrates several external libraries such as Assimp (for 3D model loading), DevIL (for texture management), and ImGui (for the user interface).</p>
-                    <p>Currently in its first version, the engine focuses on building a solid foundation. It supports loading FBX models with textures, transforming them in position, rotation, and scale, and provides configuration options to customize the engine's behavior.</p>
-                    <p>This stage represents the core structure upon which future features and systems will be developed.</p>
+                    <p class="new-feature"><strong>Version 2.0</strong> has evolved beyond simple FBX dependency, implementing a complete resource management system with custom file formats and significant rendering optimizations.</p>
+                    <p>The engine now features an advanced editor interface with scene serialization, resource management, and acceleration structures for optimal performance.</p>
                     <div class="tech-stack">
                         <span class="tech-item">C++</span>
                         <span class="tech-item">OpenGL</span>
@@ -737,7 +780,7 @@
                     <p>Contribute to the development of Wave Engine</p>
                     <div class="github-stats">
                         <div class="stat-item">
-                            <div class="stat-number">v1.0</div>
+                            <div class="stat-number">v2.0</div>
                             <div class="stat-label">Version</div>
                         </div>
                         <div class="stat-item">
@@ -856,8 +899,61 @@
                             <td><span class="key-binding">Backspace</span></td>
                             <td></td>
                         </tr>
+                        <tr>
+                            <td>Move</td>
+                            <td><span class="key-binding">W</span></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Rotate</td>
+                            <td><span class="key-binding">E</span></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Scale</td>
+                            <td><span class="key-binding">R</span></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Toggle Coordinate System</td>
+                            <td><span class="key-binding">T</span></td>
+                            <td></td>
+                        </tr>
                     </tbody>
                 </table>
+            </div>
+            
+            <div class="gizmo-controls">
+                <h3>Gizmo Controls</h3>
+                <p>Use these keys to manipulate objects in the scene:</p>
+                <div class="controls-container">
+                    <table class="controls-table">
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>Key</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Move</td>
+                                <td><span class="key-binding">W</span></td>
+                            </tr>
+                            <tr>
+                                <td>Rotate</td>
+                                <td><span class="key-binding">E</span></td>
+                            </tr>
+                            <tr>
+                                <td>Scale</td>
+                                <td><span class="key-binding">R</span></td>
+                            </tr>
+                            <tr>
+                                <td>Toggle Coordinate System</td>
+                                <td><span class="key-binding">T</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </section>
@@ -877,6 +973,7 @@
                     <ul>
                         <li>Loading geometry (via ASSIMP)</li>
                         <li>Loading textures (via DevIL)</li>
+                        <li>Resource management operations</li>
                         <li>Initialization of external libraries</li>
                         <li>Application flow and error messages</li>
                     </ul>
@@ -893,8 +990,8 @@
                     <ul>
                         <li><strong>FPS:</strong> Displays current frame rate and performance data</li>
                         <li><strong>Window:</strong> Customize application window size, resolution, fullscreen, borderless mode</li>
-                        <li><strong>Camera:</strong> Adjust sensitivities, reset settings, view current position, and see controls summary</li>
-                        <li><strong>Renderer:</strong> Enable/disable face culling, toggle wireframe mode, change background color</li>
+                        <li><strong>Camera:</strong> Adjust sensitivities, reset settings, view position, change active camera</li>
+                        <li><strong>Renderer:</strong> Toggle face culling, wireframe mode, background color, debug visualizations</li>
                         <li><strong>Hardware:</strong> View detailed system hardware information</li>
                     </ul>
                 </div>
@@ -903,12 +1000,45 @@
                     <h3>Scene Management</h3>
                     <p>Complete control over your 3D scene with:</p>
                     <ul>
-                        <li><strong>Hierarchy:</strong> Displays all loaded GameObjects for easy selection and organization</li>
-                        <li><strong>Inspector:</strong> Detailed information and transformation options for selected GameObjects</li>
-                        <li><strong>Object Selection:</strong> Select scene objects directly using the mouse</li>
-                        <li><strong>Transformation Tools:</strong> Move, rotate, and scale objects using interactive gizmos</li>
-                        <li><strong>Mesh Data:</strong> View mesh statistics and toggle normal visualization (per-triangle / per-face)</li>
-                        <li><strong>Material Editor:</strong> View texture paths and dimensions with optional checker pattern preview</li>
+                        <li><strong>Hierarchy:</strong> Full GameObject hierarchy with parent-child relationships</li>
+                        <li><strong>Inspector:</strong> Detailed object properties and transformation options</li>
+                        <li><strong>Scene Serialization:</strong> Save and load scenes to custom file formats</li>
+                        <li><strong>Runtime Transformations:</strong> Position, rotation, and scale at runtime</li>
+                        <li><strong>Mesh Data:</strong> View mesh statistics and toggle normal visualization</li>
+                        <li><strong>Material Editor:</strong> Preview textures with optional checker pattern</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-database feature-icon"></i>
+                    <h3>Resource Management</h3>
+                    <p>Advanced asset handling system:</p>
+                    <ul>
+                        <li>Complete asset pipeline with custom file formats</li>
+                        <li>Assets stored in "Assets" folder with optimized versions in "Library"</li>
+                        <li>Reference counting for efficient resource loading</li>
+                        <li>Automatic Library regeneration from Assets and metadata</li>
+                        <li>Runtime asset importing</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-bolt feature-icon"></i>
+                    <h3>Performance Optimizations</h3>
+                    <ul>
+                        <li><strong>Frustum Culling:</strong> Skip rendering objects outside camera view</li>
+                        <li><strong>Octree Spatial Partitioning:</strong> Accelerates rendering and object selection</li>
+                        <li><strong>Debug Visualizations:</strong> Toggle AABBs, octree nodes, and frustum</li>
+                        <li><strong>Optimized Rendering:</strong> Significant performance improvements</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-camera-retro feature-icon"></i>
+                    <h3>Camera System</h3>
+                    <ul>
+                        <li>Configurable camera component with adjustable parameters</li>
+                        <li>Object selection using raycasting with octree</li>
+                        <li>Visual feedback for selection operations</li>
+                        <li>Active frustum culling for cameras</li>
+                        <li>Multiple camera support</li>
                     </ul>
                 </div>
             </div>
@@ -928,22 +1058,30 @@
                     <div class="ui-card-content">
                         <h4>Menu Options</h4>
                         <ul>
-                            <li><strong>File:</strong> Exit the program</li>
-                            <li><strong>View:</strong> Show/hide editor windows</li>
-                            <li><strong>Help:</strong> Access documentation, report bugs, download latest version</li>
-                            <li><strong>About:</strong> Engine information, version, authors, libraries, and license</li>
+                            <li><strong>File:</strong> Save/Load scenes, Exit program</li>
+                            <li><strong>View:</strong> Show/hide editor windows, Save/load layouts</li>
+                            <li><strong>Cameras:</strong> Create new cameras</li>
+                            <li><strong>Gameobjects:</strong> Create primitives, add components</li>
+                            <li><strong>Help:</strong> Access documentation, report bugs, download releases</li>
+                            <li><strong>About:</strong> Engine information, authors, libraries, license</li>
                         </ul>
                     </div>
                 </div>
                 <div class="ui-card">
-                    <div class="ui-card-header">Hierarchy</div>
+                    <div class="ui-card-header">Assets Window</div>
                     <div class="ui-card-content">
-                        <h4>Scene Organization</h4>
-                        <p>Displays all loaded GameObjects in the current scene, allowing easy selection and organization of scene elements.</p>
+                        <h4>Resource Management</h4>
+                        <ul>
+                            <li>Browse assets organized by type</li>
+                            <li>Import new assets via drag-and-drop</li>
+                            <li>Delete assets with automatic Library cleanup</li>
+                            <li>Visualize references and import settings</li>
+                            <li>Asset icons for better visualization</li>
+                        </ul>
                         <div class="tabs">
-                            <span class="tab">Scene Root</span>
                             <span class="tab">Models</span>
-                            <span class="tab">Lights</span>
+                            <span class="tab">Textures</span>
+                            <span class="tab">Scenes</span>
                         </div>
                     </div>
                 </div>
@@ -951,14 +1089,28 @@
                     <div class="ui-card-header">Inspector</div>
                     <div class="ui-card-content">
                         <h4>Object Properties</h4>
-                        <p>Provides detailed information and transformation options for the selected GameObject:</p>
+                        <p>Provides detailed information and transformation options:</p>
                         <ul>
-                            <li><strong>Transform:</strong> Modify position, rotation, and scale directly</li>
-                            <li><strong>Mesh:</strong> Displays mesh data and normal visualization options</li>
-                            <li><strong>Material:</strong> Shows texture path and dimensions</li>
+                            <li><strong>GameObject:</strong> Set active camera, reparenting, create/delete</li>
+                            <li><strong>Gizmo:</strong> Change mode (World/Local)</li>
+                            <li><strong>Transform:</strong> Modify position, rotation, scale</li>
+                            <li><strong>Mesh:</strong> Select from Assets window, normal visualization</li>
+                            <li><strong>Material:</strong> Select textures from Assets, preview options</li>
+                            <li><strong>Camera Component:</strong> Frustum culling, debug visualization</li>
                         </ul>
                     </div>
                 </div>
+            </div>
+            
+            <div class="core-feature">
+                <h3 style="color: var(--accent); margin-top: 2rem;">New Core Features in v2.0</h3>
+                <p><strong>Custom File Formats:</strong> Proprietary formats for models, textures and scenes with metadata files storing import settings and dependencies.</p>
+                <p><strong>Import Settings:</strong> Basic implementation for different asset types:</p>
+                <ul>
+                    <li>Textures: Control filtering modes, max texture size, flip options</li>
+                    <li>Meshes: Configure global scaling, axis configuration, post-processing options</li>
+                </ul>
+                <p><strong>Metadata:</strong> All import settings saved in .meta files to ensure proper regeneration of the Library folder.</p>
             </div>
         </div>
     </section>
@@ -974,7 +1126,7 @@
                         <i class="fab fa-github"></i> GitHub Repository
                     </a>
                     <a href="#features">
-                        <i class="fas fa-features"></i> Features
+                        <i class="fas fa-star"></i> Features
                     </a>
                     <a href="#team">
                         <i class="fas fa-users"></i> Team
