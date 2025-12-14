@@ -4,9 +4,13 @@
 #include "LibraryManager.h"
 #include "Application.h"
 #include "FileSystem.h"
+#include "TextureImporter.h"
 #include "Log.h"
 #include <imgui.h>
 #include <filesystem>
+#include "ComponentMaterial.h"
+#include "GameObject.h"           
+#include "ModuleScene.h"
 
 ImportSettingsWindow::ImportSettingsWindow()
     : EditorWindow("Import Settings"),
@@ -29,7 +33,6 @@ void ImportSettingsWindow::OpenForAsset(const std::string& assetPath)
 
     currentAssetPath = assetPath;
 
-    // Load or create meta
     std::string metaPath = assetPath + ".meta";
     if (std::filesystem::exists(metaPath))
     {
@@ -40,7 +43,6 @@ void ImportSettingsWindow::OpenForAsset(const std::string& assetPath)
         currentMeta = MetaFileManager::GetOrCreateMeta(assetPath);
     }
 
-    // Copy settings to working copy
     workingSettings = currentMeta.importSettings;
 
     hasUnsavedChanges = false;
@@ -61,7 +63,6 @@ void ImportSettingsWindow::Draw()
     {
         isHovered = ImGui::IsWindowHovered();
 
-        // Asset info header
         ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Asset:");
         ImGui::SameLine();
 
@@ -72,7 +73,6 @@ void ImportSettingsWindow::Draw()
 
         ImGui::Separator();
 
-        // Settings based on asset type
         if (currentMeta.type == AssetType::MODEL_FBX)
         {
             DrawModelSettings();
@@ -92,7 +92,6 @@ void ImportSettingsWindow::Draw()
 
         ImGui::Separator();
 
-        // Action buttons
         ImGui::Spacing();
 
         if (hasUnsavedChanges)
@@ -125,7 +124,7 @@ void ImportSettingsWindow::Draw()
         if (ImGui::IsItemHovered() && canApply)
         {
             ImGui::BeginTooltip();
-            ImGui::Text("Save settings to .meta file");
+            ImGui::Text("Save settings and reimport asset");
             ImGui::EndTooltip();
         }
 
@@ -153,7 +152,6 @@ void ImportSettingsWindow::DrawModelSettings()
 
     bool changed = false;
 
-    // Import Scale
     ImGui::Text("Import Scale");
     ImGui::SetNextItemWidth(200.0f);
     if (ImGui::DragFloat("##importScale", &workingSettings.importScale, 0.01f, 0.001f, 100.0f, "%.3f"))
@@ -171,7 +169,6 @@ void ImportSettingsWindow::DrawModelSettings()
     ImGui::Separator();
     ImGui::Spacing();
 
-    // Axis Configuration
     ImGui::Text("Axis Configuration");
     ImGui::Spacing();
 
@@ -180,42 +177,23 @@ void ImportSettingsWindow::DrawModelSettings()
     {
         changed = true;
     }
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::Text("Y-Up: Standard for most 3D apps (Blender, Maya)\nZ-Up: Standard for CAD apps");
-        ImGui::EndTooltip();
-    }
 
     const char* frontAxisOptions[] = { "Z-Forward", "Y-Forward", "X-Forward" };
     if (ImGui::Combo("Front Axis", &workingSettings.frontAxis, frontAxisOptions, IM_ARRAYSIZE(frontAxisOptions)))
     {
         changed = true;
     }
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::Text("Which axis points forward in the model");
-        ImGui::EndTooltip();
-    }
 
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
 
-    // Post-processing options
     ImGui::Text("Post-Processing");
     ImGui::Spacing();
 
     if (ImGui::Checkbox("Generate Normals", &workingSettings.generateNormals))
     {
         changed = true;
-    }
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::Text("Generate smooth normals if missing");
-        ImGui::EndTooltip();
     }
 
     if (ImGui::Checkbox("Flip UVs", &workingSettings.flipUVs))
@@ -225,7 +203,7 @@ void ImportSettingsWindow::DrawModelSettings()
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
-        ImGui::Text("Flip texture coordinates vertically");
+        ImGui::Text("Flip texture coordinates vertically (for models)");
         ImGui::EndTooltip();
     }
 
@@ -233,18 +211,11 @@ void ImportSettingsWindow::DrawModelSettings()
     {
         changed = true;
     }
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::Text("Merge meshes and optimize vertex cache");
-        ImGui::EndTooltip();
-    }
 
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
 
-    // Info box
     ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Note:");
     ImGui::TextWrapped("Changes will be saved to .meta file and applied on next import.");
 
@@ -273,13 +244,12 @@ void ImportSettingsWindow::DrawTextureSettings()
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
-        ImGui::Text("Point: Sharp, pixelated (retro games)\nBilinear: Smooth, slightly blurry\nTrilinear: Smooth with mipmaps (best quality)");
+        ImGui::Text("Point: Sharp, pixelated\nBilinear: Smooth\nTrilinear: Smooth with mipmaps");
         ImGui::EndTooltip();
     }
 
     ImGui::Spacing();
 
-    // Mipmaps
     if (ImGui::Checkbox("Generate Mipmaps", &workingSettings.generateMipmaps))
     {
         changed = true;
@@ -288,30 +258,6 @@ void ImportSettingsWindow::DrawTextureSettings()
     {
         ImGui::BeginTooltip();
         ImGui::Text("Generate mipmap levels for better quality at distance\nRequired for Trilinear filtering");
-        ImGui::EndTooltip();
-    }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    // Wrapping
-    ImGui::Text("Wrapping Mode");
-    ImGui::Spacing();
-
-    const char* wrapModes[] = { "Repeat", "Clamp to Edge", "Mirrored Repeat", "Clamp to Border" };
-    if (ImGui::Combo("Wrap Mode", &workingSettings.wrapMode, wrapModes, IM_ARRAYSIZE(wrapModes)))
-    {
-        changed = true;
-    }
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::Text("How texture coordinates outside [0,1] are handled:\n"
-            "Repeat: Tile the texture (default)\n"
-            "Clamp: Stretch edge pixels\n"
-            "Mirrored: Tile with mirror effect\n"
-            "Border: Use border color");
         ImGui::EndTooltip();
     }
 
@@ -330,7 +276,7 @@ void ImportSettingsWindow::DrawTextureSettings()
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
-        ImGui::Text("Flip texture vertically on load\nUseful for correcting upside-down textures");
+        ImGui::Text("Flip texture image data vertically");
         ImGui::EndTooltip();
     }
 
@@ -341,31 +287,7 @@ void ImportSettingsWindow::DrawTextureSettings()
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
-        ImGui::Text("Flip texture horizontally on load\nUseful for mirrored textures");
-        ImGui::EndTooltip();
-    }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    // Compression
-    ImGui::Text("Compression");
-    ImGui::Spacing();
-
-    const char* compressionOptions[] = { "None", "DXT1 (RGB)", "DXT5 (RGBA)", "BC7 (High Quality)" };
-    if (ImGui::Combo("Compression", &workingSettings.compressionFormat, compressionOptions, IM_ARRAYSIZE(compressionOptions)))
-    {
-        changed = true;
-    }
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::Text("Texture compression format:\n"
-            "None: No compression (high quality, large size)\n"
-            "DXT1: 6:1 compression, no alpha\n"
-            "DXT5: 4:1 compression, with alpha\n"
-            "BC7: Best quality, slower compression");
+        ImGui::Text("Flip texture image data horizontally");
         ImGui::EndTooltip();
     }
 
@@ -395,7 +317,7 @@ void ImportSettingsWindow::DrawTextureSettings()
 
     // Info box
     ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Note:");
-    ImGui::TextWrapped("Changes will be saved to .meta file and applied on next import.");
+    ImGui::TextWrapped("Changes will be applied immediately after clicking Apply.");
 
     if (changed && !hasUnsavedChanges)
     {
@@ -408,79 +330,90 @@ void ImportSettingsWindow::ApplyChanges()
     if (!hasUnsavedChanges)
         return;
 
+    LOG_CONSOLE("[ImportSettings] Applying changes to: %s", currentAssetPath.c_str());
+
+    // Save settings to meta
     currentMeta.importSettings = workingSettings;
 
     std::string metaPath = currentAssetPath + ".meta";
-    if (currentMeta.Save(metaPath)) {
-        LOG_CONSOLE("[ImportSettings] Settings saved to .meta: %s", currentAssetPath.c_str());
+    if (!currentMeta.Save(metaPath)) {
+        LOG_CONSOLE("[ImportSettings] ERROR: Failed to save .meta file");
+        return;
+    }
 
+    LOG_CONSOLE("[ImportSettings] Settings saved to .meta");
+
+    ModuleResources* resources = Application::GetInstance().resources.get();
+    if (!resources || currentMeta.uid == 0) {
+        LOG_CONSOLE("[ImportSettings] ERROR: ModuleResources unavailable or invalid UID");
+        return;
+    }
+
+    // TEXTURES
+    if (currentMeta.type == AssetType::TEXTURE_PNG ||
+        currentMeta.type == AssetType::TEXTURE_JPG ||
+        currentMeta.type == AssetType::TEXTURE_DDS ||
+        currentMeta.type == AssetType::TEXTURE_TGA)
+    {
+        Resource* resource = const_cast<Resource*>(resources->GetResource(currentMeta.uid));
+        if (resource && resource->IsLoadedToMemory()) {
+            LOG_CONSOLE("[ImportSettings] Force unloading texture (refs: %d)",
+                resource->GetReferenceCount());
+            resource->ForceUnload();
+        }
+
+        // Reimport with new settings
         if (LibraryManager::ReimportAsset(currentAssetPath)) {
-            LOG_CONSOLE("[ImportSettings] Asset reimported with new settings!");
+            LOG_CONSOLE("[ImportSettings] Texture reimported successfully!");
 
-            ModuleResources* resources = Application::GetInstance().resources.get();
-            if (resources && currentMeta.uid != 0) {
+            // Reload texture in all materials that use it
+            ReloadTextureInScene(currentMeta.uid);
 
-                if (currentMeta.type == AssetType::TEXTURE_PNG ||
-                    currentMeta.type == AssetType::TEXTURE_JPG ||
-                    currentMeta.type == AssetType::TEXTURE_DDS ||
-                    currentMeta.type == AssetType::TEXTURE_TGA)
-                {
-                    Resource* resource = const_cast<Resource*>(resources->GetResource(currentMeta.uid));
-                    if (resource && resource->IsLoadedToMemory()) {
-                        LOG_CONSOLE("[ImportSettings] Force unloading texture (refs: %d)",
-                            resource->GetReferenceCount());
-
-                        resource->ForceUnload();
-
-                        LOG_CONSOLE("[ImportSettings] Texture unloaded - will reload on next use");
-                    }
-                }
-                else if (currentMeta.type == AssetType::MODEL_FBX)
-                {
-                    // Para FBX, descargar todas las meshes
-                    int unloadedCount = 0;
-                    for (int i = 0; i < 100; i++) {
-                        unsigned long long meshUID = currentMeta.uid + i;
-                        Resource* resource = const_cast<Resource*>(resources->GetResource(meshUID));
-
-                        if (!resource) break;
-
-                        if (resource->IsLoadedToMemory()) {
-                            resource->ForceUnload();
-                            unloadedCount++;
-                        }
-                    }
-                    LOG_CONSOLE("[ImportSettings] %d meshes unloaded - will reload on next use", unloadedCount);
-                }
-            }
+            hasUnsavedChanges = false;
         }
         else {
-            LOG_CONSOLE("[ImportSettings] ERROR: Failed to reimport asset");
+            LOG_CONSOLE("[ImportSettings] ERROR: Failed to reimport texture");
         }
-
-        hasUnsavedChanges = false;
     }
-    else {
-        LOG_CONSOLE("[ImportSettings] ERROR: Failed to save settings");
+    // FBX MODELS
+    else if (currentMeta.type == AssetType::MODEL_FBX)
+    {
+        int unloadedCount = 0;
+        for (int i = 0; i < 100; i++) {
+            unsigned long long meshUID = currentMeta.uid + i;
+            Resource* resource = const_cast<Resource*>(resources->GetResource(meshUID));
+
+            if (!resource) break;
+
+            if (resource->IsLoadedToMemory()) {
+                resource->ForceUnload();
+                unloadedCount++;
+            }
+        }
+        LOG_CONSOLE("[ImportSettings] Unloaded %d meshes", unloadedCount);
+
+        // Reimport
+        if (LibraryManager::ReimportAsset(currentAssetPath)) {
+            LOG_CONSOLE("[ImportSettings] FBX reimported successfully!");
+            hasUnsavedChanges = false;
+        }
+        else {
+            LOG_CONSOLE("[ImportSettings] ERROR: Failed to reimport FBX");
+        }
     }
 }
 void ImportSettingsWindow::ResetToDefaults()
 {
-    // Reset to default values
     workingSettings.importScale = 1.0f;
     workingSettings.generateNormals = true;
     workingSettings.flipUVs = true;
     workingSettings.optimizeMeshes = true;
     workingSettings.generateMipmaps = true;
-    workingSettings.wrapMode = 0;  // Repeat
-
-    // Nuevos valores
-    workingSettings.upAxis = 0;  // Y-Up
-    workingSettings.frontAxis = 0;  // Z-Forward
-    workingSettings.filterMode = 2;  // Trilinear
+    workingSettings.upAxis = 0;
+    workingSettings.frontAxis = 0;
+    workingSettings.filterMode = 2;
     workingSettings.flipHorizontal = false;
-    workingSettings.compressionFormat = 0;  // None
-    workingSettings.maxTextureSize = 6;  // 2048 (index en el combo)
+    workingSettings.maxTextureSize = 6;  // 2048
 
     hasUnsavedChanges = true;
 
@@ -491,14 +424,49 @@ void ImportSettingsWindow::CancelChanges()
 {
     if (hasUnsavedChanges)
     {
-        // Restore original settings
         workingSettings = currentMeta.importSettings;
         hasUnsavedChanges = false;
     }
 
-    // Close window
     isOpen = false;
     currentAssetPath.clear();
 
     LOG_CONSOLE("[ImportSettings] Cancelled changes");
+}
+
+void ImportSettingsWindow::ReloadTextureInScene(UID textureUID)
+{
+    LOG_CONSOLE("[ImportSettings] Reloading texture in all scene materials...");
+
+    GameObject* root = Application::GetInstance().scene->GetRoot();
+    if (!root) {
+        LOG_CONSOLE("[ImportSettings] ERROR: No scene root");
+        return;
+    }
+
+    int reloadedCount = 0;
+    ReloadTextureRecursive(root, textureUID, reloadedCount);
+
+    LOG_CONSOLE("[ImportSettings] Reloaded texture in %d materials", reloadedCount);
+}
+
+void ImportSettingsWindow::ReloadTextureRecursive(GameObject* obj, UID textureUID, int& count)
+{
+    if (!obj) return;
+
+    // Check if this object has a material component with this texture
+    ComponentMaterial* material = static_cast<ComponentMaterial*>(
+        obj->GetComponent(ComponentType::MATERIAL)
+        );
+
+    if (material && material->GetTextureUID() == textureUID) {
+        LOG_DEBUG("[ImportSettings] Reloading texture for: %s", obj->GetName().c_str());
+        material->ReloadTexture();
+        count++;
+    }
+
+    // Process children recursively
+    for (GameObject* child : obj->GetChildren()) {
+        ReloadTextureRecursive(child, textureUID, count);
+    }
 }

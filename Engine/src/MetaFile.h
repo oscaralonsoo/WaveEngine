@@ -18,33 +18,17 @@ enum class AssetType {
 };
 
 struct ImportSettings {
-    // Mesh/Model settings
+    // Mesh/Model settings (SOLO LO QUE FUNCIONA)
     float importScale = 1.0f;
     bool generateNormals = true;
     bool flipUVs = true;
     bool optimizeMeshes = true;
 
-    // Axis configuration
-    int upAxis = 0;        // 0=Y-Up, 1=Z-Up
-    int frontAxis = 0;     // 0=Z-Forward, 1=Y-Forward, 2=X-Forward
-
-    // Texture settings
+    // Texture settings (SOLO LO QUE FUNCIONA)
     bool generateMipmaps = true;
-    int wrapMode = 0;      // 0=Repeat, 1=Clamp, 2=Mirrored, 3=Border
     int filterMode = 2;    // 0=Point, 1=Bilinear, 2=Trilinear
     bool flipHorizontal = false;
-    int compressionFormat = 0;  // 0=None, 1=DXT1, 2=DXT5, 3=BC7
     int maxTextureSize = 6;     // Index: 0=32, 1=64, 2=128, 3=256, 4=512, 5=1024, 6=2048, 7=4096, 8=8192
-
-    // Helper para obtener el modo OpenGL de wrap
-    unsigned int GetGLWrapMode() const {
-        switch (wrapMode) {
-        case 1: return 0x812F;  // GL_CLAMP_TO_EDGE
-        case 2: return 0x8370;  // GL_MIRRORED_REPEAT
-        case 3: return 0x812D;  // GL_CLAMP_TO_BORDER
-        default: return 0x2901; // GL_REPEAT
-        }
-    }
 
     // Helper para obtener el modo OpenGL de filtrado
     unsigned int GetGLFilterMode(bool mipmap = false) const {
@@ -77,11 +61,10 @@ struct ImportSettings {
 };
 
 struct MetaFile {
-    UID uid = 0;                                // Unique ID of the resource
+    UID uid = 0;
     AssetType type = AssetType::UNKNOWN;
-    std::string originalPath;                   // Path to original asset file
-
-    long long lastModified = 0;                 // Timestamp of last modification
+    std::string originalPath;
+    long long lastModified = 0;
     ImportSettings importSettings;
 
     static UID GenerateUID();
@@ -92,12 +75,10 @@ struct MetaFile {
 
     bool NeedsReimport(const std::string& assetPath) const;
 
-    // Helpers for relative paths
     static std::string MakeRelativeToProject(const std::string& absolutePath);
     static std::string MakeAbsoluteFromProject(const std::string& relativePath);
 };
 
-// Manager for .meta files
 class MetaFileManager {
 public:
     static void Initialize();
@@ -109,7 +90,6 @@ public:
     static void RegenerateLibrary();
     static bool UpdateMetaIfModified(const std::string& assetPath);
 
-    // Useful queries
     static MetaFile LoadMeta(const std::string& assetPath);
     static UID GetUIDFromAsset(const std::string& assetPath);
     static std::string GetAssetFromUID(UID uid);

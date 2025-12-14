@@ -4,7 +4,8 @@
 #include "MetaFile.h"
 #include <string>
 
-
+// Forward declarations
+class GameObject;
 
 class ImportSettingsWindow : public EditorWindow
 {
@@ -13,11 +14,7 @@ public:
     ~ImportSettingsWindow();
 
     void Draw() override;
-
-    // Abrir ventana con settings de un asset específico
     void OpenForAsset(const std::string& assetPath);
-
-    // Check if currently editing an asset
     bool IsEditingAsset() const { return !currentAssetPath.empty(); }
 
 private:
@@ -27,11 +24,14 @@ private:
     void ResetToDefaults();
     void CancelChanges();
 
+    // Helper methods for reloading textures in scene
+    void ReloadTextureInScene(UID textureUID);
+    void ReloadTextureRecursive(GameObject* obj, UID textureUID, int& count);
+
 private:
     std::string currentAssetPath;
     MetaFile currentMeta;
-    ImportSettings workingSettings;  // Copia temporal para editar
-
+    ImportSettings workingSettings;
     bool hasUnsavedChanges;
     bool showApplyButton;
 };

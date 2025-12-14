@@ -14,6 +14,7 @@ ResourceTexture::~ResourceTexture() {
 
 bool ResourceTexture::LoadInMemory() {
     if (loadedInMemory) {
+        LOG_DEBUG("[ResourceTexture] Already loaded in memory: %llu", uid);
         return true;
     }
 
@@ -22,12 +23,16 @@ bool ResourceTexture::LoadInMemory() {
         return false;
     }
 
+    // Extract filename from library path
     std::string filename = libraryFile;
     size_t lastSlash = filename.find_last_of("/\\");
     if (lastSlash != std::string::npos) {
         filename = filename.substr(lastSlash + 1);
     }
 
+    LOG_DEBUG("[ResourceTexture] Loading from Library: %s", filename.c_str());
+
+    // Load texture data from custom format
     TextureData textureData = TextureImporter::LoadFromCustomFormat(filename);
 
     if (!textureData.IsValid()) {
@@ -35,51 +40,82 @@ bool ResourceTexture::LoadInMemory() {
         return false;
     }
 
+    LOG_DEBUG("[ResourceTexture] Loaded texture data: %dx%d, %d channels",
+        textureData.width, textureData.height, textureData.channels);
+
+    // Create OpenGL texture
     glGenTextures(1, &gpu_id);
     glBindTexture(GL_TEXTURE_2D, gpu_id);
 
-    // ? Leer .meta y aplicar settings
+    // Load .meta to get import settings
     MetaFile meta = MetaFileManager::LoadMeta(assetsFile);
 
     if (meta.uid != 0) {
-        // Wrap mode
-        GLenum wrapMode = meta.importSettings.GetGLWrapMode();
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMode);
+        LOG_DEBUG("[ResourceTexture] Applying import settings from .meta");
 
-        // ? Filter mode (usar helpers del ImportSettings)
+        // Wrap mode siempre REPEAT (default)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        // Apply filter mode
         if (meta.importSettings.generateMipmaps) {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                meta.importSettings.GetGLFilterMode(true)); // Con mipmaps
+                meta.importSettings.GetGLFilterMode(true));
         }
         else {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                meta.importSettings.GetGLFilterMode(false)); // Sin mipmaps
+                meta.importSettings.GetGLFilterMode(false));
         }
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
             meta.importSettings.GetGLFilterMode(false));
+
+        LOG_DEBUG("[ResourceTexture] Settings: filter=%d, mipmaps=%d",
+            meta.importSettings.filterMode,
+            meta.importSettings.generateMipmaps);
     }
     else {
-        // Defaults
+        LOG_DEBUG("[ResourceTexture] No .meta found, using defaults");
+
+        // Default settings
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
+    // Upload texture data to GPU
     GLenum format = (textureData.channels == 4) ? GL_RGBA : GL_RGB;
     glTexImage2D(GL_TEXTURE_2D, 0, format,
         textureData.width, textureData.height,
         0, format, GL_UNSIGNED_BYTE, textureData.pixels);
 
-    // ? Generar mipmaps según settings
+    // Check for OpenGL errors
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        LOG_DEBUG("[ResourceTexture] OpenGL ERROR after glTexImage2D: 0x%04X", error);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDeleteTextures(1, &gpu_id);
+        gpu_id = 0;
+        return false;
+    }
+
+    // Generate mipmaps if enabled
     if (meta.uid != 0 && meta.importSettings.generateMipmaps) {
         glGenerateMipmap(GL_TEXTURE_2D);
+
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            LOG_DEBUG("[ResourceTexture] OpenGL ERROR after glGenerateMipmap: 0x%04X", error);
+        }
+        else {
+            LOG_DEBUG("[ResourceTexture] Mipmaps generated successfully");
+        }
     }
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    // Store texture info
     width = textureData.width;
     height = textureData.height;
     depth = textureData.channels;
@@ -88,12 +124,17 @@ bool ResourceTexture::LoadInMemory() {
 
     loadedInMemory = true;
 
+    LOG_DEBUG("[ResourceTexture] Successfully loaded in GPU memory (ID: %u)", gpu_id);
+
     return true;
 }
+
 void ResourceTexture::UnloadFromMemory() {
     if (!loadedInMemory) {
         return;
     }
+
+    LOG_DEBUG("[ResourceTexture] Unloading from memory: UID=%llu, GPU_ID=%u", uid, gpu_id);
 
     if (gpu_id != 0) {
         glDeleteTextures(1, &gpu_id);
@@ -108,3 +149,4 @@ void ResourceTexture::UnloadFromMemory() {
 
     loadedInMemory = false;
 }
+

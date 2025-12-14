@@ -267,3 +267,45 @@ void ComponentMaterial::Deserialize(const nlohmann::json& componentObj)
         }
     }
 }
+
+void ComponentMaterial::ReloadTexture()
+{
+    if (textureUID == 0 || useCheckerboard) {
+        return;
+    }
+
+    ModuleResources* resources = Application::GetInstance().resources.get();
+    if (!resources) {
+        return;
+    }
+
+    LOG_DEBUG("[ComponentMaterial] Reloading texture UID: %llu", textureUID);
+
+    // Release current reference
+    resources->ReleaseResource(textureUID);
+
+    // Request it again - this will load the reimported version
+    ResourceTexture* texResource = dynamic_cast<ResourceTexture*>(
+        resources->RequestResource(textureUID)
+        );
+
+    if (!texResource) {
+        LOG_DEBUG("[ComponentMaterial] ERROR: Failed to reload texture");
+        textureUID = 0;
+        texturePath = "";
+        return;
+    }
+
+    if (!texResource->IsLoadedToMemory()) {
+        LOG_DEBUG("[ComponentMaterial] ERROR: Reloaded texture not in memory");
+        resources->ReleaseResource(textureUID);
+        textureUID = 0;
+        texturePath = "";
+        return;
+    }
+
+    // Texture is now reloaded with new settings
+    texturePath = texResource->GetAssetFile();
+    LOG_DEBUG("[ComponentMaterial] Texture reloaded successfully (GPU_ID: %u)",
+        texResource->GetGPU_ID());
+}

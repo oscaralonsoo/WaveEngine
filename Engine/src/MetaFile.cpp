@@ -55,10 +55,8 @@ bool MetaFile::Save(const std::string& metaFilePath) const {
 
     // Texture settings
     file << "generateMipmaps: " << (importSettings.generateMipmaps ? "1" : "0") << "\n";
-    file << "wrapMode: " << importSettings.wrapMode << "\n";
     file << "filterMode: " << importSettings.filterMode << "\n";
     file << "flipHorizontal: " << (importSettings.flipHorizontal ? "1" : "0") << "\n";
-    file << "compressionFormat: " << importSettings.compressionFormat << "\n";
     file << "maxTextureSize: " << importSettings.maxTextureSize << "\n";
 
     file.close();
@@ -117,17 +115,11 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
         else if (key == "generateMipmaps") {
             meta.importSettings.generateMipmaps = (value == "1");
         }
-        else if (key == "wrapMode") {
-            meta.importSettings.wrapMode = std::stoi(value);
-        }
         else if (key == "filterMode") {
             meta.importSettings.filterMode = std::stoi(value);
         }
         else if (key == "flipHorizontal") {
             meta.importSettings.flipHorizontal = (value == "1");
-        }
-        else if (key == "compressionFormat") {
-            meta.importSettings.compressionFormat = std::stoi(value);
         }
         else if (key == "maxTextureSize") {
             meta.importSettings.maxTextureSize = std::stoi(value);

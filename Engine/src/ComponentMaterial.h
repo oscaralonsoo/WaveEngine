@@ -61,6 +61,8 @@ public:
 
     bool HasMaterialProperties() const { return hasMaterialProperties; }
 
+    void ReloadTexture();
+
 private:
     void ReleaseCurrentTexture();
 
