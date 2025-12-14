@@ -96,7 +96,6 @@ private:
 template<typename TYPE>
 void OctreeNode::CollectIntersections(std::vector<GameObject*>& objects_out, const TYPE& primitive) const
 {
-    // Default implementation - override with specializations
 }
 
 // Specialization for Frustum

@@ -26,26 +26,23 @@
 
 namespace fs = std::filesystem;
 
-// Helper function (fuera de la clase)
+// Helper function (outside the class)
 static aiNode* FindNodeWithMeshIndex(aiNode* node, int meshIndex)
 {
     if (!node) return nullptr;
-
-    // Verificar si este nodo tiene la mesh que buscamos
+    // Check if this node has the mesh we're looking for
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
         if (static_cast<int>(node->mMeshes[i]) == meshIndex) {
             return node;
         }
     }
-
-    // Buscar recursivamente en los hijos
+    // Search recursively in children
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
         aiNode* found = FindNodeWithMeshIndex(node->mChildren[i], meshIndex);
         if (found) {
             return found;
         }
     }
-
     return nullptr;
 }
 
@@ -183,7 +180,7 @@ void SceneWindow::HandleAssetDropTarget()
 
                 if (targetObject)
                 {
-                    // Aplicar textura al objeto específico bajo el mouse
+                    // Apply texture to the specific object under the mouse
                     ComponentMaterial* material = static_cast<ComponentMaterial*>(
                         targetObject->GetComponent(ComponentType::MATERIAL)
                         );
@@ -206,7 +203,7 @@ void SceneWindow::HandleAssetDropTarget()
                 }
                 else
                 {
-                    // Fallback: aplicar a objetos seleccionados 
+                    // Fallback 
                     std::vector<GameObject*> selectedObjects =
                         Application::GetInstance().selectionManager->GetSelectedObjects();
 
@@ -296,7 +293,7 @@ void SceneWindow::HandleGizmoInput()
 
 void SceneWindow::DrawGizmo()
 {
-    // Primero verificar si el gizmo estaba siendo usado en el frame anterior
+    // First check if the gizmo was being used in the previous frame
     bool wasUsingGizmo = isGizmoActive;
 
     GameObject* selectedObject = Application::GetInstance().selectionManager->GetSelectedObject();
@@ -304,7 +301,7 @@ void SceneWindow::DrawGizmo()
     {
         isGizmoActive = false;
 
-        // Si acabamos de soltar el gizmo, marcar que necesita rebuild
+        // If we have just released the gizmo, mark it as needing rebuilding.
         if (wasUsingGizmo)
         {
             Application::GetInstance().scene->MarkOctreeForRebuild();
@@ -375,7 +372,7 @@ void SceneWindow::DrawGizmo()
         glm::value_ptr(transformMatrix)
     );
 
-    // Actualizar el flag de si el gizmo está siendo usado
+    // Update the flag indicating whether the gizmo is being used
     isGizmoActive = ImGuizmo::IsUsing();
 
     if (ImGuizmo::IsUsing())
@@ -404,7 +401,7 @@ void SceneWindow::DrawGizmo()
     }
     else if (wasUsingGizmo)
     {
-        // Acabamos de soltar el gizmo, marcar para rebuild del octree
+        // We just released the gizmo, mark for octree rebuild
         Application::GetInstance().scene->MarkOctreeForRebuild();
     }
 }
@@ -412,77 +409,58 @@ void SceneWindow::DrawGizmo()
 unsigned long long SceneWindow::FindTextureForDroppedMesh(unsigned long long meshUID)
 {
     std::string assetsPath = LibraryManager::GetAssetsRoot();
-
-    // 1. Buscar el FBX que contiene esta mesh
+    // 1. Search for the FBX that contains this mesh
     for (const auto& entry : fs::recursive_directory_iterator(assetsPath)) {
         if (!entry.is_regular_file()) continue;
-
         std::string path = entry.path().string();
         if (entry.path().extension() != ".meta") continue;
-
         MetaFile meta = MetaFile::Load(path);
         if (meta.type != AssetType::MODEL_FBX) continue;
-
         unsigned long long fbxUID = meta.uid;
-
-        // Verificar si este FBX contiene la mesh (UIDs secuenciales)
+        // Check if this FBX contains the mesh (sequential UIDs)
         if (meshUID >= fbxUID && meshUID < fbxUID + 100) {
-            std::string fbxPath = path.substr(0, path.length() - 5); // Quitar ".meta"
-
+            std::string fbxPath = path.substr(0, path.length() - 5); // Remove ".meta"
             if (!fs::exists(fbxPath)) continue;
-
-            // 2. Calcular índice de la mesh dentro del FBX
+            // 2. Calculate mesh index within the FBX
             int meshIndex = static_cast<int>(meshUID - fbxUID);
-
             LOG_CONSOLE("[FindTexture] Found parent FBX: %s (mesh index: %d)", fbxPath.c_str(), meshIndex);
-
-            // 3. Cargar FBX con Assimp para extraer info de materiales
+            // 3. Load FBX with Assimp to extract material info
             Assimp::Importer importer;
             const aiScene* scene = importer.ReadFile(
                 fbxPath,
                 aiProcess_Triangulate | aiProcess_FlipUVs
             );
-
             if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) {
                 LOG_CONSOLE("[FindTexture] Failed to load FBX with Assimp");
                 continue;
             }
-
             if (meshIndex >= static_cast<int>(scene->mNumMeshes)) {
                 LOG_CONSOLE("[FindTexture] Mesh index out of range");
                 continue;
             }
-
-            // 4. Obtener la mesh específica
+            // 4. Get the specific mesh
             aiMesh* mesh = scene->mMeshes[meshIndex];
-
-            // 5. Obtener el material de esta mesh
+            // 5. Get the material for this mesh
             if (mesh->mMaterialIndex >= scene->mNumMaterials) {
                 LOG_CONSOLE("[FindTexture] Invalid material index");
                 continue;
             }
-
             aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-            // 6. Extraer la textura difusa
+            // 6. Extract the diffuse texture
             if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
                 aiString texPath;
                 material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath);
-
                 std::string textureName = texPath.C_Str();
                 LOG_CONSOLE("[FindTexture] Texture name from FBX: %s", textureName.c_str());
-
-                // 7. Buscar la textura en Assets/
+                // 7. Search for the texture in Assets/
                 for (const auto& texEntry : fs::recursive_directory_iterator(assetsPath)) {
                     if (!texEntry.is_regular_file()) continue;
-
                     std::string filename = texEntry.path().filename().string();
                     std::string filenameNoExt = texEntry.path().stem().string();
                     std::string textureNoExt = fs::path(textureName).stem().string();
-
-                    // Comparar nombre con y sin extensión
+                    // Compare name with and without extension
                     if (filename == textureName || filenameNoExt == textureNoExt) {
-                        // 8. Obtener el UID de la textura desde su .meta
+                        // 8. Get the texture UID from its .meta
                         std::string texMetaPath = texEntry.path().string() + ".meta";
                         if (fs::exists(texMetaPath)) {
                             MetaFile texMeta = MetaFile::Load(texMetaPath);
@@ -491,17 +469,14 @@ unsigned long long SceneWindow::FindTextureForDroppedMesh(unsigned long long mes
                         }
                     }
                 }
-
                 LOG_CONSOLE("[FindTexture] Texture not found in Assets: %s", textureName.c_str());
             }
             else {
                 LOG_CONSOLE("[FindTexture] No diffuse texture in material");
             }
-
-            break; // FBX encontrado, salir del loop
+            break; // FBX found, exit loop
         }
     }
-
     LOG_CONSOLE("[FindTexture] Could not find parent FBX or texture");
     return 0;
 }
@@ -509,97 +484,76 @@ unsigned long long SceneWindow::FindTextureForDroppedMesh(unsigned long long mes
 void SceneWindow::ApplyMeshTransformFromFBX(GameObject* meshObject, unsigned long long meshUID)
 {
     std::string assetsPath = LibraryManager::GetAssetsRoot();
-
-    // 1. Buscar el FBX que contiene esta mesh
+    // 1. Search for the FBX that contains this mesh
     for (const auto& entry : fs::recursive_directory_iterator(assetsPath)) {
         if (!entry.is_regular_file()) continue;
-
         std::string path = entry.path().string();
         if (entry.path().extension() != ".meta") continue;
-
         MetaFile meta = MetaFile::Load(path);
         if (meta.type != AssetType::MODEL_FBX) continue;
-
         unsigned long long fbxUID = meta.uid;
-
-        // Verificar si este FBX contiene la mesh
+        // Check if this FBX contains the mesh
         if (meshUID >= fbxUID && meshUID < fbxUID + 100) {
             std::string fbxPath = path.substr(0, path.length() - 5);
-
             if (!fs::exists(fbxPath)) continue;
-
-            // 2. Calcular índice de la mesh
+            // 2. Calculate mesh index
             int meshIndex = static_cast<int>(meshUID - fbxUID);
-
-            // 3. Cargar FBX con Assimp
+            // 3. Load FBX with Assimp
             Assimp::Importer importer;
             const aiScene* scene = importer.ReadFile(
                 fbxPath,
                 aiProcess_Triangulate | aiProcess_FlipUVs
             );
-
             if (!scene || meshIndex >= static_cast<int>(scene->mNumMeshes)) {
                 continue;
             }
-
-            // 4. Buscar el nodo que contiene esta mesh en la jerarquía
+            // 4. Search for the node that contains this mesh in the hierarchy
             aiNode* meshNode = FindNodeWithMeshIndex(scene->mRootNode, meshIndex);
-
             if (!meshNode) {
                 LOG_CONSOLE("[ApplyTransform] Could not find node for mesh index %d", meshIndex);
                 continue;
             }
-
-            // 5. Acumular SOLO rotaciones y escalas, NO posiciones
-            // Para esto, extraemos solo la parte de rotación/escala de cada transformación
+            // 5. Accumulate ONLY rotations and scales, NOT positions
+            // To do this, we extract only the rotation/scale part of each transformation
             aiMatrix4x4 accumulatedTransform;
             aiNode* currentNode = meshNode;
-
             while (currentNode) {
-                // Extraer la transformación del nodo
+                // Extract node transformation
                 aiMatrix4x4 nodeTransform = currentNode->mTransformation;
-
-                // Remover la traslación (mantener solo rotación y escala)
+                // Remove translation (keep only rotation and scale)
                 nodeTransform.a4 = 0.0f;
                 nodeTransform.b4 = 0.0f;
                 nodeTransform.c4 = 0.0f;
-
-                // Acumular
+                // Accumulate
                 accumulatedTransform = nodeTransform * accumulatedTransform;
                 currentNode = currentNode->mParent;
             }
-
-            // 6. Convertir aiMatrix4x4 a glm::mat4
+            // 6. Convert aiMatrix4x4 to glm::mat4
             glm::mat4 glmTransform;
             for (int i = 0; i < 4; i++) {
                 for (int j = 0; j < 4; j++) {
                     glmTransform[j][i] = accumulatedTransform[i][j];
                 }
             }
-
-            // 7. Descomponer la matriz en rotation y scale (sin position)
+            // 7. Decompose matrix into rotation and scale (without position)
             glm::vec3 scale, skew;
             glm::vec4 perspective;
             glm::quat rotation;
-            glm::vec3 translation; // Esto lo ignoramos
+            glm::vec3 translation; // We ignore this
             glm::decompose(glmTransform, scale, rotation, translation, skew, perspective);
-
-            // 8. Aplicar SOLO rotación y escala al Transform del GameObject
-            // La posición se deja en (0, 0, 0)
+            // 8. Apply ONLY rotation and scale to GameObject's Transform
+            // Position is left at (0, 0, 0)
             Transform* transform = static_cast<Transform*>(
                 meshObject->GetComponent(ComponentType::TRANSFORM)
                 );
-
             if (transform) {
-                transform->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f)); // Forzar a origen
+                transform->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f)); // Force to origin
                 transform->SetRotationQuat(rotation);
                 transform->SetScale(scale);
-
                 LOG_CONSOLE("[ApplyTransform] Applied transform - Pos: (0, 0, 0), Rot: (%.2f, %.2f, %.2f, %.2f), Scale: (%.2f, %.2f, %.2f)",
                     rotation.x, rotation.y, rotation.z, rotation.w,
                     scale.x, scale.y, scale.z);
             }
-
             break;
         }
     }
@@ -607,27 +561,23 @@ void SceneWindow::ApplyMeshTransformFromFBX(GameObject* meshObject, unsigned lon
 
 GameObject* SceneWindow::GetGameObjectUnderMouse()
 {
-    // Obtener posición del mouse relativa al viewport de scene
+    // Get mouse position relative to scene viewport
     ImVec2 mousePos = ImGui::GetMousePos();
-
     float relativeX = mousePos.x - sceneViewportPos.x;
     float relativeY = mousePos.y - sceneViewportPos.y;
-
-    // Verificar que el mouse está dentro del viewport
+    // Verify that the mouse is inside the viewport
     if (relativeX < 0 || relativeX > sceneViewportSize.x ||
         relativeY < 0 || relativeY > sceneViewportSize.y)
     {
         return nullptr;
     }
-
-    // Obtener la cámara activa
+    // Get the active camera
     ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
     if (!camera)
     {
         return nullptr;
     }
-
-    // Generar rayo desde la cámara
+    // Generate ray from the camera
     glm::vec3 rayOrigin = camera->GetPosition();
     glm::vec3 rayDir = camera->ScreenToWorldRay(
         static_cast<int>(relativeX),
@@ -635,11 +585,9 @@ GameObject* SceneWindow::GetGameObjectUnderMouse()
         static_cast<int>(sceneViewportSize.x),
         static_cast<int>(sceneViewportSize.y)
     );
-
-    // Hacer ray picking
+    // Perform ray picking
     GameObject* root = Application::GetInstance().scene->GetRoot();
     float minDist = std::numeric_limits<float>::max();
     GameObject* hitObject = FindClosestObjectToRayOptimized(root, rayOrigin, rayDir, minDist);
-
     return hitObject;
 }

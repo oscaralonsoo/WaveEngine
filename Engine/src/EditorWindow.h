@@ -12,7 +12,7 @@ public:
 
     virtual ~EditorWindow() = default;
 
-    // Pure virtual function - must be implemented by derived classes
+    // Pure virtual function 
     virtual void Draw() = 0;
 
     // Window state management

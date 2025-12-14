@@ -190,10 +190,6 @@ bool ModuleEditor::Update()
         metaFileCheckTimer = 0.0f;
     }
 
-    // For debug // Delete before release
-    //LOG_CONSOLE("%d", isMouseOverSceneViewport);
-    //LOG_CONSOLE("%s",EditorWindowTypeToString(lastHoveredWindow));
-
     return true;
 }
 

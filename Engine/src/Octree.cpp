@@ -635,7 +635,6 @@ void OctreeNode::DebugDraw() const
             glUniform3fv(colorLoc, 1, glm::value_ptr(color));
         }
 
-        // Deshabilitar depth test temporalmente para que siempre se vea
         glDisable(GL_DEPTH_TEST);
 
         float lineWidth = !objects.empty() ? 2.0f : 1.0f;
@@ -643,7 +642,6 @@ void OctreeNode::DebugDraw() const
         glDrawArrays(GL_LINES, 0, lineVertices.size() / 3);
         glLineWidth(1.0f);
 
-        // Re-habilitar depth test
         glEnable(GL_DEPTH_TEST);
     }
 
@@ -652,7 +650,6 @@ void OctreeNode::DebugDraw() const
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
 
-    // Dibujar recursivamente los hijos
     if (!IsLeaf())
     {
         for (int i = 0; i < 8; ++i)

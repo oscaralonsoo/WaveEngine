@@ -67,7 +67,7 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
 {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-    // Si hay preview texture Y está activado show3DPreviews, mostrarla
+    // If there's a preview texture AND show3DPreviews is enabled, display it
     if (show3DPreviews && asset.previewTextureID != 0)
     {
         ImVec2 topLeft = pos;
@@ -76,7 +76,7 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
         ImTextureID texID = (ImTextureID)(uintptr_t)asset.previewTextureID;
         drawList->AddImage(texID, topLeft, bottomRight, ImVec2(0, 1), ImVec2(1, 0));
 
-        // Borde alrededor del preview
+        // Border around the preview
         ImU32 borderColor = asset.inMemory ?
             ImGui::ColorConvertFloat4ToU32(ImVec4(0.3f, 0.8f, 0.3f, 1.0f)) :
             ImGui::ColorConvertFloat4ToU32(ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
@@ -85,7 +85,7 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
         return;
     }
 
-    // Si no hay preview o está desactivado show3DPreviews, usar los iconos dibujados originales
+    // If there's no preview or show3DPreviews is disabled, use the original drawn icons
     ImVec4 buttonColor;
 
     if (asset.isDirectory) {
@@ -152,7 +152,7 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
     }
     else if (asset.extension == ".mesh")
     {
-        // Icono de mesh individual (triángulo simple)
+        // Individual mesh icon (simple triangle)
         float meshSize = (size.x - padding * 2) * 0.5f;
         ImVec2 p1(center.x, center.y - meshSize * 0.6f);
         ImVec2 p2(center.x - meshSize * 0.5f, center.y + meshSize * 0.4f);
@@ -200,12 +200,12 @@ void AssetsWindow::Draw()
     if (!isOpen) return;
 
     static bool firstDraw = true;
-    static bool previousShow3DPreviews = true; // Variable static para detectar cambios
+    static bool previousShow3DPreviews = true; // Static variable to detect changes
 
     if (firstDraw) {
         RefreshAssets();
         firstDraw = false;
-        previousShow3DPreviews = show3DPreviews; // Sincronizar después del primer refresh
+        previousShow3DPreviews = show3DPreviews; // Synchronize after first refresh
     }
 
     if (showDeleteConfirmation) {
@@ -259,7 +259,7 @@ void AssetsWindow::Draw()
         ImGui::Checkbox("In Memory Only", &showInMemoryOnly);
 
         ImGui::SameLine();
-        // previousShow3DPreviews ya está declarado arriba como static
+        // previousShow3DPreviews is already declared above as static
         ImGui::Checkbox("3D Previews", &show3DPreviews);
         if (ImGui::IsItemHovered())
         {
@@ -268,28 +268,28 @@ void AssetsWindow::Draw()
             ImGui::EndTooltip();
         }
 
-        // Si cambió el estado del checkbox, recargar o descargar los previews
+        // If the checkbox state changed, reload or unload the previews
         if (previousShow3DPreviews != show3DPreviews)
         {
             for (auto& asset : currentAssets)
             {
-                // Solo afecta a FBX y MESH
+                // Only affects FBX and MESH
                 if (asset.extension == ".fbx" || asset.extension == ".mesh")
                 {
                     if (show3DPreviews)
                     {
-                        // Activado: marcar para recargar
+                        // Enabled: mark for reload
                         asset.previewLoaded = false;
                         asset.previewTextureID = 0;
                     }
                     else
                     {
-                        // Desactivado: descargar preview 3D
+                        // Disabled: unload 3D preview
                         UnloadPreviewForAsset(asset);
                     }
                 }
 
-                // Procesar submeshes de FBX
+                // Process FBX submeshes
                 if (asset.isFBX)
                 {
                     for (auto& subMesh : asset.subMeshes)
@@ -307,7 +307,7 @@ void AssetsWindow::Draw()
                 }
             }
 
-            // Actualizar el valor previo después de procesar el cambio
+            // Update the previous value after processing the change
             previousShow3DPreviews = show3DPreviews;
         }
 
@@ -407,6 +407,7 @@ void AssetsWindow::Draw()
 
     ImGui::End();
 }
+
 void AssetsWindow::DrawFolderTree(const fs::path& path, const std::string& label)
 {
     if (!fs::exists(path) || !fs::is_directory(path))
@@ -684,7 +685,7 @@ void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathP
             auto& subMesh = asset.subMeshes[i];
 
             // Load preview if it has not yet been loaded
-            // Solo cargar si show3DPreviews está activado
+            // Solo cargar si show3DPreviews est activado
             if (!subMesh.previewLoaded && show3DPreviews)
             {
                 LoadPreviewForAsset(subMesh);
@@ -1495,10 +1496,8 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
     // Individual meshes
     else if (asset.extension == ".mesh")
     {
-        // Solo cargar preview 3D si está activado
         if (!show3DPreviews)
         {
-            // No hacer nada, pero ya está marcado como previewLoaded = true arriba
             return;
         }
 
@@ -1530,10 +1529,8 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
     // FBX (render ALL meshes together)
     else if (asset.extension == ".fbx")
     {
-        // Solo cargar preview 3D si está activado
         if (!show3DPreviews)
         {
-            // No hacer nada, pero ya está marcado como previewLoaded = true arriba
             return;
         }
 
@@ -1553,7 +1550,7 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
 
                     if (!LibraryManager::FileExists(meshLibPath))
                     {
-                        break; // No más meshes
+                        break; 
                     }
 
                     ResourceMesh* meshResource = dynamic_cast<ResourceMesh*>(
