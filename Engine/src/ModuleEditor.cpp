@@ -47,9 +47,12 @@ bool ModuleEditor::Start()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
+    std::filesystem::create_directories(layoutDirectory);
+    std::filesystem::create_directories("../Scene");
+
     // Setup layout file path
     std::string layoutPath = layoutDirectory + currentLayoutFile;
-    static std::string layoutPathStatic = layoutPath; 
+    static std::string layoutPathStatic = layoutPath;
     io.IniFilename = autoSaveLayout ? layoutPathStatic.c_str() : nullptr;
 
     ImGui_ImplSDL3_InitForOpenGL(

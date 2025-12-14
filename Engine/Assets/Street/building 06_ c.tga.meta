@@ -1,6 +1,6 @@
 uid: 2356646492431978539
 type: 5
-lastModified: 134101026429195171
+lastModified: 134092591383273796
 importScale: 1
 generateNormals: 1
 flipUVs: 1
@@ -8,8 +8,6 @@ optimizeMeshes: 1
 upAxis: 0
 frontAxis: 0
 generateMipmaps: 1
-wrapMode: 0
 filterMode: 2
 flipHorizontal: 0
-compressionFormat: 0
 maxTextureSize: 6
