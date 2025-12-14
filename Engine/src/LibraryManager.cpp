@@ -62,21 +62,41 @@ void LibraryManager::Initialize() {
 
     LOG_CONSOLE("[LibraryManager] Initializing library structure...");
 
+    namespace fs = std::filesystem;
+
+    // Obtener ejecutable
     char buffer[MAX_PATH];
     GetModuleFileNameA(NULL, buffer, MAX_PATH);
     fs::path execPath(buffer);
 
-    fs::path currentDir = execPath.parent_path();
-    currentDir = currentDir.parent_path().parent_path();
+    // Directorio del ejecutable
+    fs::path currentSearchPath = execPath.parent_path();
 
-    fs::path assetsPath = currentDir / "Assets";
-    bool assetsFound = fs::exists(assetsPath) && fs::is_directory(assetsPath);
+    // Buscar Assets subiendo niveles
+    bool assetsFound = false;
+    int maxLevels = 5;
 
-    if (assetsFound) {
-        s_projectRoot = currentDir;
+    for (int i = 0; i < maxLevels; ++i) {
+        fs::path candidatePath = currentSearchPath / "Assets";
+
+        if (fs::exists(candidatePath) && fs::is_directory(candidatePath)) {
+            s_projectRoot = currentSearchPath;
+            assetsFound = true;
+            LOG_CONSOLE("[LibraryManager] Assets folder found at: %s", candidatePath.string().c_str());
+            break;
+        }
+
+        // Subir un nivel
+        currentSearchPath = currentSearchPath.parent_path();
+
+        // Verificar si llegamos a la raíz
+        if (currentSearchPath == currentSearchPath.parent_path()) {
+            break;
+        }
     }
-    else {
-        LOG_CONSOLE("[LibraryManager] ERROR: Could not find Assets folder at: %s", assetsPath.string().c_str());
+
+    if (!assetsFound) {
+        LOG_CONSOLE("[LibraryManager] ERROR: Could not find Assets folder");
         return;
     }
 

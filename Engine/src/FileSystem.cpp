@@ -31,31 +31,20 @@ bool FileSystem::Awake()
 
 bool FileSystem::Start()
 {
-    // Get executable directory
-    char buffer[MAX_PATH];
-    GetModuleFileNameA(NULL, buffer, MAX_PATH);
-    std::string execPath(buffer);
+    namespace fs = std::filesystem;
 
-    size_t pos = execPath.find_last_of("\\/");
-    std::string currentDir = execPath.substr(0, pos);
-
-    // Go up 2 levels from executable (build/Debug/ -> build/ -> ProjectRoot/)
-    pos = currentDir.find_last_of("\\/");
-    if (pos != std::string::npos) {
-        currentDir = currentDir.substr(0, pos);
-        pos = currentDir.find_last_of("\\/");
-        if (pos != std::string::npos) {
-            currentDir = currentDir.substr(0, pos);
-        }
+    // Verificar que LibraryManager esté inicializado
+    if (!LibraryManager::IsInitialized()) {
+        LOG_CONSOLE("[FileSystem] ERROR: LibraryManager not initialized");
+        return false;
     }
 
-    // Check if Assets folder exists
-    std::string assetsPath = currentDir + "\\Assets\\Street";
-    DWORD attribs = GetFileAttributesA(assetsPath.c_str());
-    bool assetsFound = (attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY));
+    // Usar las rutas de LibraryManager
+    fs::path assetsPath = LibraryManager::GetAssetsRoot();
 
-    if (!assetsFound)
-    {
+    if (!fs::exists(assetsPath) || !fs::is_directory(assetsPath)) {
+        LOG_CONSOLE("[FileSystem] WARNING: Assets folder not accessible");
+
         // Fallback geometry
         GameObject* pyramidObject = new GameObject("Pyramid");
         ComponentMesh* meshComp = static_cast<ComponentMesh*>(pyramidObject->CreateComponent(ComponentType::MESH));
@@ -69,18 +58,40 @@ bool FileSystem::Start()
         return true;
     }
 
-    std::string housePath = assetsPath + "\\street2.fbx";
+    // Buscar el modelo
+    fs::path streetPath = assetsPath / "Street";
+    fs::path housePath = streetPath / "street2.fbx";
 
-    GameObject* houseModel = LoadFBXAsGameObject(housePath);
+    if (!fs::exists(housePath)) {
+        LOG_CONSOLE("[FileSystem] WARNING: street2.fbx not found at: %s", housePath.string().c_str());
+        LOG_CONSOLE("[FileSystem] Using fallback geometry.");
+
+        GameObject* pyramidObject = new GameObject("Pyramid");
+        ComponentMesh* meshComp = static_cast<ComponentMesh*>(pyramidObject->CreateComponent(ComponentType::MESH));
+        Mesh pyramidMesh = Primitives::CreatePyramid();
+        meshComp->SetMesh(pyramidMesh);
+
+        GameObject* root = Application::GetInstance().scene->GetRoot();
+        root->AddChild(pyramidObject);
+        Application::GetInstance().scene->RebuildOctree();
+
+        return true;
+    }
+
+    // Cargar el modelo
+    GameObject* houseModel = LoadFBXAsGameObject(housePath.string());
 
     if (houseModel != nullptr)
     {
         GameObject* root = Application::GetInstance().scene->GetRoot();
         root->AddChild(houseModel);
         Application::GetInstance().scene->RebuildOctree();
+        LOG_CONSOLE("[FileSystem] Model loaded successfully: %s", housePath.filename().string().c_str());
     }
     else
     {
+        LOG_CONSOLE("[FileSystem] Failed to load model, using fallback geometry.");
+
         GameObject* pyramidObject = new GameObject("Pyramid");
         ComponentMesh* meshComp = static_cast<ComponentMesh*>(pyramidObject->CreateComponent(ComponentType::MESH));
         Mesh pyramidMesh = Primitives::CreatePyramid();
@@ -91,6 +102,7 @@ bool FileSystem::Start()
         Application::GetInstance().scene->RebuildOctree();
     }
 
+    // Crear cámara de escena
     Application& app = Application::GetInstance();
     GameObject* cameraGO = app.scene->CreateGameObject("Camera");
 
