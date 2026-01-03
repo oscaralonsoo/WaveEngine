@@ -30,12 +30,10 @@ bool ModuleScripting::Awake()
 }
 int  Lua_SetPosition(lua_State* L)
 {
-    // args: x, y, z
     float x = luaL_checknumber(L, 1);
     float y = luaL_checknumber(L, 2);
     float z = luaL_checknumber(L, 3);
 
-    // Aquí obtienes el GameObject actual
     GameObject* go = Application::GetInstance().script.get()->owner;
     Transform* transform = static_cast<Transform*>(go->GetComponent(ComponentType::TRANSFORM));
     transform->SetPosition({ x, y, z });
@@ -47,7 +45,7 @@ bool ModuleScripting::Start()
     LOG_DEBUG("Initializing ModuleScripting");
     owner = Application::GetInstance().scene.get()->GetRoot();
 
-    L = luaL_newstate(); // Crear estado
+    L = luaL_newstate();
     luaL_openlibs(L);
     lua_register(L, "SetPosition", Lua_SetPosition);
 
@@ -92,19 +90,6 @@ bool ModuleScripting::LoadScript(const char* path)
 
     return true;
 }
-
-
-//int Lua_Translate(lua_State* L)
-//{
-//    float x = luaL_checknumber(L, 1);
-//    float y = luaL_checknumber(L, 2);
-//    float z = luaL_checknumber(L, 3);
-//
-//    GameObject* go = ModuleScripting::currentGameObject;
-//    go->transform->Translate({ x, y, z });
-//
-//    return 0;
-//}
 
 bool ModuleScripting::PostUpdate()
 {
