@@ -2131,7 +2131,8 @@ bool AssetsWindow::ImportAssetToLibrary(const std::string& assetPath)
     }
     else
     {
-        LOG_CONSOLE("[AssetsWindow] ERROR: Unsupported file type: %s", extension.c_str());
+        // TODO this is just a temporal solution
+        if(extension != ".lua")LOG_CONSOLE("[AssetsWindow] ERROR: Unsupported file type: %s", extension.c_str());
         return false;
     }
 

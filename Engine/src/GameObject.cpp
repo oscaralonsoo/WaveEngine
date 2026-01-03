@@ -5,7 +5,10 @@
 #include "ComponentMaterial.h"
 #include "ComponentCamera.h"
 #include "ComponentRotate.h"
+#include "ModuleScripting.h"
+
 #include <nlohmann/json.hpp>
+#include "Application.h"
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
     CreateComponent(ComponentType::TRANSFORM);
@@ -150,6 +153,11 @@ void GameObject::Update() {
     for (auto* child : children) {
         child->Update();
     }
+
+    for (auto* script : scripts) {
+        script->Update();
+    }
+    
 }
 
 void GameObject::Serialize(nlohmann::json& gameObjectArray) const {
@@ -170,9 +178,10 @@ void GameObject::Serialize(nlohmann::json& gameObjectArray) const {
         component->Serialize(componentObj);
         componentsArray.push_back(componentObj);
     }
-
     gameObjectObj["components"] = componentsArray;
-
+    for (auto* script : scripts) {
+        gameObjectObj["script"] = script->fileName;
+    }
     // Children
     nlohmann::json childrenArray = nlohmann::json::array();
     for (const auto* child : children) {
@@ -232,6 +241,14 @@ GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObj
             Deserialize(childObj, newObject);
         }
     }
+    if (gameObjectObj.contains("script"))
+    {
+        ModuleScripting* newScript = new ModuleScripting;
+        newScript->owner = newObject;
 
+        newScript->Start();
+        newScript->LoadScript(gameObjectObj["script"].get<std::string>().c_str());
+        newObject->scripts.push_back(newScript);
+    }
     return newObject;
 }

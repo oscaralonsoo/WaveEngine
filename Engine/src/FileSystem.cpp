@@ -20,6 +20,7 @@
 #include "ResourceMesh.h"     
 #include "ResourceTexture.h"   
 #include "AssetsWindow.h"
+#include "ModuleScripting.h"
 
 FileSystem::FileSystem() : Module() {}
 FileSystem::~FileSystem() {}
@@ -187,6 +188,31 @@ bool FileSystem::Update()
                 {
                     Application::GetInstance().renderer->LoadTexture(filePath);
                     LOG_CONSOLE("[FileSystem] Texture loaded: %s", filePath.c_str());
+                }
+            }
+            else if (fileType == DROPPED_SCRIPT)
+            {
+                std::vector<GameObject*> selectedObjects =
+                    Application::GetInstance().selectionManager->GetSelectedObjects();
+                if (!selectedObjects.empty())
+                {
+                    int successCount = 0;
+                    for (GameObject* obj : selectedObjects)
+                    {
+                        ModuleScripting* newScript = new ModuleScripting;
+                        newScript->owner = obj;
+
+                        newScript->Start();
+                        newScript->LoadScript(filePath.c_str());
+
+                        obj->scripts.push_back(newScript);
+                        successCount++;
+                    }
+                    LOG_CONSOLE("[FileSystem] Script applied to %d objects", successCount);
+                }
+                else
+                {
+                    LOG_CONSOLE("[FileSystem] Script not applied: %s", filePath.c_str());
                 }
             }
         }

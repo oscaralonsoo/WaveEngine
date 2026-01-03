@@ -28,7 +28,8 @@ enum DroppedFileType
 {
 	DROPPED_NONE = 0,
 	DROPPED_FBX,
-	DROPPED_TEXTURE
+	DROPPED_TEXTURE,
+	DROPPED_SCRIPT
 };
 
 GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& minDist);

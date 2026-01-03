@@ -13,20 +13,14 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 
-ModuleScripting::ModuleScripting() : Module()
+GameObject* own = NULL;
+
+ModuleScripting::ModuleScripting()
 {
-    name = "ModuleScripting";
 }
 
 ModuleScripting::~ModuleScripting()
 {
-}
-
-bool ModuleScripting::Awake()
-{
-
-
-    return true;
 }
 int  Lua_SetPosition(lua_State* L)
 {
@@ -34,7 +28,7 @@ int  Lua_SetPosition(lua_State* L)
     float y = luaL_checknumber(L, 2);
     float z = luaL_checknumber(L, 3);
 
-    GameObject* go = Application::GetInstance().script.get()->owner;
+    GameObject* go = own;
     Transform* transform = static_cast<Transform*>(go->GetComponent(ComponentType::TRANSFORM));
     transform->SetPosition({ x, y, z });
 
@@ -43,8 +37,7 @@ int  Lua_SetPosition(lua_State* L)
 bool ModuleScripting::Start()
 {
     LOG_DEBUG("Initializing ModuleScripting");
-    owner = Application::GetInstance().scene.get()->GetRoot();
-
+    own = owner;
     L = luaL_newstate();
     luaL_openlibs(L);
     lua_register(L, "SetPosition", Lua_SetPosition);
@@ -58,7 +51,7 @@ bool ModuleScripting::Update()
 {
     if (init) {
         
-        LoadScript("../Library/Scripts/test.lua");
+        //LoadScript("../Library/Scripts/test.lua");
         lua_getglobal(L, "Start");
         if (lua_isfunction(L, -1))
             lua_pcall(L, 0, 0, 0);
@@ -87,12 +80,7 @@ bool ModuleScripting::LoadScript(const char* path)
         lua_pop(L, 1);
         return false;
     }
-
-    return true;
-}
-
-bool ModuleScripting::PostUpdate()
-{
+    fileName = path;
     return true;
 }
 

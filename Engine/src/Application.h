@@ -66,7 +66,7 @@ public:
     std::shared_ptr<ModuleEditor> editor;
     std::shared_ptr<Grid> grid;
     std::shared_ptr<ModuleResources> resources;
-    std::shared_ptr<ModuleScripting> script;
+    //std::shared_ptr<ModuleScripting> script;
 
     SelectionManager* selectionManager;
 

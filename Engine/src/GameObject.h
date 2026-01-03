@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 
 class Component;
+class ModuleScripting;
 enum class ComponentType;
 
 class GameObject {
@@ -44,6 +45,7 @@ public:
 public:
     std::string name;
     bool active = true;
+    std::vector<ModuleScripting*> scripts;
 
 private:
     GameObject* parent = nullptr;

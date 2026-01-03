@@ -10,23 +10,21 @@ class Renderer;
 class ComponentCamera;
 class SceneWindow;
 
-class ModuleScripting : public Module
+class ModuleScripting
 {
 public:
     ModuleScripting();
     virtual ~ModuleScripting();
 
-    bool Awake() override;
-    bool Start() override;
-    bool Update() override;
-    bool PostUpdate() override;
-    bool CleanUp() override;
+    virtual bool Start();
+    virtual bool Update();
+    virtual bool CleanUp();
 
     bool LoadScript(const char* path);
     //int Lua_SetPosition(lua_State* L);
 
     GameObject* owner = NULL;
-
+    std::string fileName;
 private:
     lua_State* L;
     bool init = true;
