@@ -180,7 +180,7 @@ void GameObject::Serialize(nlohmann::json& gameObjectArray) const {
     }
     gameObjectObj["components"] = componentsArray;
     for (auto* script : scripts) {
-        gameObjectObj["script"] = script->fileName;
+        gameObjectObj["script"] = script->filePath;
     }
     // Children
     nlohmann::json childrenArray = nlohmann::json::array();

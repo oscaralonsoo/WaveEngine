@@ -81,6 +81,14 @@ void InspectorWindow::Draw()
     DrawMaterialComponent(selectedObject);
     DrawRotateComponent(selectedObject);
 
+    if (ImGui::CollapsingHeader("Scripts", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        for (auto* script : selectedObject->scripts)
+        {
+            ImGui::Text("Script: %s", script->name.c_str());
+        }
+    }
+
     ImGui::End();
 }
 

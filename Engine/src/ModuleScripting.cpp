@@ -80,7 +80,8 @@ bool ModuleScripting::LoadScript(const char* path)
         lua_pop(L, 1);
         return false;
     }
-    fileName = path;
+    filePath = path;
+    name = filePath.substr( filePath.find_last_of("/\\")+1);
     return true;
 }
 
