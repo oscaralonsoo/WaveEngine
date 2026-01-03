@@ -12,6 +12,7 @@ find_package(glm CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(DevIL REQUIRED)
 find_package(imgui REQUIRED)
+find_package(lua CONFIG REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Tracy CONFIG REQUIRED)
@@ -63,6 +64,8 @@ set(GAMEOBJECTS_SRC
     src/GameObject.h 
     src/ModuleScene.cpp 
     src/ModuleScene.h 
+    src/ModuleScripting.cpp 
+    src/ModuleScripting.h 
 )
 
 set(COMPONENTS_SRC
@@ -147,5 +150,6 @@ target_link_libraries(Engine PRIVATE DevIL::IL)
 target_link_libraries(Engine PRIVATE DevIL::ILU)
 target_link_libraries(Engine PRIVATE imgui::imgui)
 target_link_libraries(Engine PRIVATE imguizmo::imguizmo)
+target_link_libraries(Engine PRIVATE lua)
 target_link_libraries(Engine PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(Engine PRIVATE Tracy::TracyClient)
