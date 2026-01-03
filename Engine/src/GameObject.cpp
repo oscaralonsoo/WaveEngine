@@ -5,6 +5,7 @@
 #include "ComponentMaterial.h"
 #include "ComponentCamera.h"
 #include "ComponentRotate.h"
+#include "ComponentParticleSystem.h"
 #include <nlohmann/json.hpp>
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
@@ -51,6 +52,10 @@ Component* GameObject::CreateComponent(ComponentType type) {
 
     case ComponentType::ROTATE:
         newComponent = new ComponentRotate(this);
+        break;
+
+    case ComponentType::PARTICLE_SYSTEM:
+        newComponent = new ComponentParticleSystem(this);
         break;
 
     default:

@@ -78,6 +78,8 @@ set(COMPONENTS_SRC
     src/ComponentCamera.h
     src/ComponentRotate.cpp
     src/ComponentRotate.h
+    src/ComponentParticleSystem.cpp
+    src/ComponentParticleSystem.h
 )
 
 set(LOADERS_SRC 

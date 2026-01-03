@@ -5,6 +5,8 @@
 #include "ComponentMesh.h"
 #include "ComponentMaterial.h"
 #include "ModuleEditor.h"
+#include "ComponentParticleSystem.h"
+#include "ResourceTexture.h"
 
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -86,6 +88,22 @@ bool Renderer::Start()
         LOG_CONSOLE("ERROR: Failed to compile depth shader");
         return false;
     }
+
+	// Crreate particle shader
+    particleShader = make_unique<Shader>();
+    if (!particleShader->CreateParticle())
+    {
+        LOG_DEBUG("ERROR: Failed to create particle shader");
+        LOG_CONSOLE("ERROR: Failed to compile particle shader");
+        return false;
+    }
+    else
+    {
+        LOG_DEBUG("Particle shader created successfully - Program ID: %d", particleShader->GetProgramID());
+        LOG_CONSOLE("Particle shader compiled successfully");
+    }
+
+    InitializeParticleBuffers();
 
     // Generate default checkerboard texture for untextured objects
     defaultTexture = make_unique<Texture>();
@@ -433,6 +451,18 @@ bool Renderer::CleanUp()
     {
         glDeleteFramebuffers(1, &gameFbo);
         gameFbo = 0;
+    }
+
+    // Cleanup particle buffers
+    if (particleVAO != 0) {
+        glDeleteVertexArrays(1, &particleVAO);
+        glDeleteBuffers(1, &particleVBO);
+        particleVAO = 0;
+        particleVBO = 0;
+    }
+
+    if (particleShader) {
+        particleShader->Delete();
     }
 
     LOG_DEBUG("Renderer cleaned up successfully");
@@ -994,6 +1024,13 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
             }
         }
 
+        ComponentParticleSystem* particleSys = static_cast<ComponentParticleSystem*>(
+            currentObj->GetComponent(ComponentType::PARTICLE_SYSTEM));
+
+        if (particleSys && particleSys->IsActive()) {
+            DrawParticleSystem(particleSys);
+        }
+
         if (!renderTransparentOnly)
         {
             ComponentCamera* cam = static_cast<ComponentCamera*>(
@@ -1534,4 +1571,140 @@ void Renderer::BindGameFramebuffer()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, gameFbo);
     glViewport(0, 0, gameFramebufferWidth, gameFramebufferHeight);
+}
+
+void Renderer::InitializeParticleBuffers()
+{
+    // Crear un quad para cada partícula (billboard)
+    float quadVertices[] = {
+        // positions        // texcoords
+        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f,
+         0.5f, -0.5f, 0.0f,  1.0f, 0.0f,
+         0.5f,  0.5f, 0.0f,  1.0f, 1.0f,
+        -0.5f,  0.5f, 0.0f,  0.0f, 1.0f
+    };
+
+    glGenVertexArrays(1, &particleVAO);
+    glGenBuffers(1, &particleVBO);
+
+    glBindVertexArray(particleVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+    // Position
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+
+    // TexCoord
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    glBindVertexArray(0);
+
+    LOG_DEBUG("Particle buffers initialized");
+}
+
+void Renderer::DrawParticleSystem(ComponentParticleSystem* particleSystem)
+{
+    if (!particleSystem || !particleSystem->IsActive()) return;
+
+    ComponentCamera* camera = GetCamera();
+    if (!camera) return;
+
+    const auto& particles = particleSystem->GetParticles();
+    const auto& config = particleSystem->GetConfig();
+
+    // Get texture
+    unsigned int textureID = 0;
+    if (config.textureUID != 0) {
+        const Resource* resource = Application::GetInstance().resources->GetResource(config.textureUID);
+        if (resource && resource->IsLoadedToMemory()) {
+            const ResourceTexture* texResource = dynamic_cast<const ResourceTexture*>(resource);
+            if (texResource) {
+                textureID = texResource->GetGPU_ID();
+            }
+        }
+    }
+
+    // Si no hay textura, usar la textura por defecto
+    if (textureID == 0 && defaultTexture) {
+        textureID = defaultTexture->GetID();
+    }
+
+    DrawParticles(particles, textureID, config.useAdditiveBlending,
+        camera->GetViewMatrix(), camera->GetProjectionMatrix());
+}
+
+void Renderer::DrawParticles(const std::vector<Particle>& particles,
+    unsigned int textureID,
+    bool useAdditiveBlending,
+    const glm::mat4& view,
+    const glm::mat4& projection)
+{
+    if (particles.empty()) return;
+
+    // Configurar blending
+    glEnable(GL_BLEND);
+    if (useAdditiveBlending) {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);  // Additive
+    }
+    else {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Alpha blend
+    }
+
+    glDepthMask(GL_FALSE);  // No escribir en depth buffer
+
+    particleShader->Use();
+
+    // Set uniforms
+    glUniformMatrix4fv(glGetUniformLocation(particleShader->GetProgramID(), "projection"),
+        1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(glGetUniformLocation(particleShader->GetProgramID(), "view"),
+        1, GL_FALSE, glm::value_ptr(view));
+
+    // Bind texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glUniform1i(glGetUniformLocation(particleShader->GetProgramID(), "particleTexture"), 0);
+
+    glBindVertexArray(particleVAO);
+
+    // Dibujar cada partícula
+    for (const auto& particle : particles) {
+        if (!particle.active) continue;
+
+        // Crear matriz de modelo para la partícula
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, particle.position);
+
+        // Billboard: hacer que mire a la cámara (Screen-aligned)
+        // Extraer solo la rotación de la view matrix
+        glm::mat4 billboard = glm::mat4(1.0f);
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                billboard[i][j] = view[j][i];  // Transponer
+            }
+        }
+        model = model * billboard;
+
+        // Aplicar rotación de la partícula
+        model = glm::rotate(model, glm::radians(particle.rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        // Aplicar escala
+        model = glm::scale(model, glm::vec3(particle.size));
+
+        glUniformMatrix4fv(glGetUniformLocation(particleShader->GetProgramID(), "model"),
+            1, GL_FALSE, glm::value_ptr(model));
+        glUniform4fv(glGetUniformLocation(particleShader->GetProgramID(), "particleColor"),
+            1, glm::value_ptr(particle.color));
+
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    }
+
+    glBindVertexArray(0);
+    glDepthMask(GL_TRUE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Restaurar blending normal
+
+    // Restaurar shader por defecto
+    defaultShader->Use();
 }

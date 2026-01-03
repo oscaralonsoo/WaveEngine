@@ -614,3 +614,96 @@ void Shader::SetBool(const std::string& name, bool value) const
 {
     glUniform1i(glGetUniformLocation(shaderProgram, name.c_str()), (int)value);
 }
+
+bool Shader::CreateParticle()
+{
+    const char* vertexShaderSource = R"(
+        #version 330 core
+        layout (location = 0) in vec3 aPos;
+        layout (location = 1) in vec2 aTexCoord;
+        
+        out vec2 TexCoord;
+        
+        uniform mat4 model;
+        uniform mat4 view;
+        uniform mat4 projection;
+        
+        void main()
+        {
+            gl_Position = projection * view * model * vec4(aPos, 1.0);
+            TexCoord = aTexCoord;
+        }
+    )";
+
+    const char* fragmentShaderSource = R"(
+        #version 330 core
+        out vec4 FragColor;
+        
+        in vec2 TexCoord;
+        
+        uniform sampler2D particleTexture;
+        uniform vec4 particleColor;
+        
+        void main()
+        {
+            vec4 texColor = texture(particleTexture, TexCoord);
+            FragColor = texColor * particleColor;
+            
+            // Descartar píxeles completamente transparentes
+            if (FragColor.a < 0.01)
+                discard;
+        }
+    )";
+
+    return Compile(vertexShaderSource, fragmentShaderSource);
+}
+
+bool Shader::Compile(const char* vertexShaderSource, const char* fragmentShaderSource)
+{
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cerr << "ERROR: Vertex Shader Compilation Failed\n" << infoLog << std::endl;
+        return false;
+    }
+
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cerr << "ERROR: Fragment Shader Compilation Failed\n" << infoLog << std::endl;
+        glDeleteShader(vertexShader);
+        return false;
+    }
+
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cerr << "ERROR: Shader Program Linking Failed\n" << infoLog << std::endl;
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+        return false;
+    }
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    return true;
+}

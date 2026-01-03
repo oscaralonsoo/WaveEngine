@@ -4,11 +4,14 @@
 #include "Shaders.h"
 #include "Texture.h"
 #include "Frustum.h"
+#include "ComponentParticleSystem.h"
 #include <memory>
 #include "Primitives.h"
 #include "ComponentCamera.h"
 
 class GameObject;
+class ComponentParticleSystem;
+struct Particle;
 
 // Transparent objects must be sorted and rendered back-to-front
 struct TransparentObject
@@ -98,6 +101,9 @@ public:
     bool IsShowingZBuffer() const { return showZBuffer; }
     void SetShowZBuffer(bool show) { showZBuffer = show; }
 
+    // Particle System
+    void DrawParticleSystem(ComponentParticleSystem* particleSystem);
+
 private:
     // Internal rendering methods
     void DrawGameObjectIterative(GameObject* gameObject,
@@ -164,4 +170,16 @@ private:
     void DrawAABB(const glm::vec3& min, const glm::vec3& max,
         const glm::vec3& color);
     void DrawAllAABBs(GameObject* gameObject);
+
+    // Particle System
+    void InitializeParticleBuffers();
+    void DrawParticles(const std::vector<Particle>& particles,
+        unsigned int textureID,
+        bool useAdditiveBlending,
+        const glm::mat4& view,
+        const glm::mat4& projection);
+
+    GLuint particleVAO = 0;
+    GLuint particleVBO = 0;
+    std::unique_ptr<Shader> particleShader;
 };

@@ -29,6 +29,8 @@ public:
     void SetVec4(const std::string& name, const glm::vec4& value) const;
     void SetBool(const std::string& name, bool value) const;
 
+    bool CreateParticle();
+
 private:
     unsigned int shaderProgram;
 };
