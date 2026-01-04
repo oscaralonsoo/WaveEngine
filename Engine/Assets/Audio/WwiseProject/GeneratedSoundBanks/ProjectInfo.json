@@ -1,0 +1,29 @@
+{
+ "ProjectInfo": {
+  "Project": {
+   "Name": "WwiseProject",
+   "GUID": "{1B4D1065-7CB9-4B9C-AD70-878FED582E38}",
+   "Generator": "2025.1.4.9062"
+  },
+  "CacheRoot": "../.cache",
+  "Platforms": [
+   {
+    "Name": "Windows",
+    "GUID": "{842910BA-C82C-4041-9B9C-D00A968B2438}",
+    "BasePlatform": "Windows",
+    "BasePlatformGUID": "{6E0CB257-C6C8-4C5C-8366-2740DFC441EB}",
+    "Path": "../../GeneratedSoundBanks"
+   }
+  ],
+  "Languages": [
+   {
+    "Name": "English(US)",
+    "Id": "684519430",
+    "GUID": "{C14995D4-15F0-43ED-A069-2A1732771634}",
+    "Default": "true",
+    "UseAsStandIn": "true"
+   }
+  ],
+  "FileHash": "{5C25122A-E5F8-4639-8622-295C610ECCDD}"
+ }
+}

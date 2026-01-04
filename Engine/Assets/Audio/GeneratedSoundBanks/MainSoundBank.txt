@@ -1,0 +1,15 @@
+Event	ID	Name			Wwise Object Path	Notes
+	111646406	Play_LookinFresh			\Default Work Unit\Play_LookinFresh	
+
+State Group	ID	Name			Wwise Object Path	Notes
+	1714298281	LookinFresh_State			\Default Work Unit\LookinFresh_State	
+
+State	ID	Name	State Group			Notes
+	748895195	None	LookinFresh_State			
+	1220000209	Hotlantis	LookinFresh_State			
+	2048228345	ShrimpKicks	LookinFresh_State			
+
+In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
+	750106936	Lookin' Fresh (Hotlantis)_stereo	.cache\32\{32EC0120-CD79-3D90-2C8D-16E7DE4CE51D}.wem		\Containers\Default Work Unit\LookinFresh\Lookin' Fresh (Hotlantis)\Lookin' Fresh (Hotlantis)_stereo		1501204
+	861748085	Lookin' Fresh (Shrimp Kicks)_stereo	.cache\6F\{6FFED91B-85CF-803A-A473-161055E2E976}.wem		\Containers\Default Work Unit\LookinFresh\Lookin' Fresh (Shrimp Kicks)\Lookin' Fresh (Shrimp Kicks)_stereo		1488450
+

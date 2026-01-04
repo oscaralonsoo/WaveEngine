@@ -1,0 +1,104 @@
+{
+ "SoundBanksInfo": {
+  "Platform": "Windows",
+  "BasePlatform": "Windows",
+  "SchemaVersion": "16",
+  "SoundBankVersion": "172",
+  "SoundBanks": [
+   {
+    "Id": "534561221",
+    "Type": "User",
+    "GUID": "{9006B65F-2C52-495D-A697-456FEE8B961E}",
+    "Language": "SFX",
+    "Hash": "{FD8B9A86-4948-FEDA-AEA4-A98563B54907}",
+    "ObjectPath": "\\SoundBanks\\Default Work Unit\\MainSoundBank",
+    "ShortName": "MainSoundBank",
+    "Path": "MainSoundBank.bnk",
+    "Media": [
+     {
+      "Id": "750106936",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "Lookin' Fresh (Hotlantis)_stereo.wav",
+      "CachePath": "32/{32EC0120-CD79-3D90-2C8D-16E7DE4CE51D}.wem"
+     },
+     {
+      "Id": "861748085",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "Lookin' Fresh (Shrimp Kicks)_stereo.wav",
+      "CachePath": "6F/{6FFED91B-85CF-803A-A473-161055E2E976}.wem"
+     }
+    ],
+    "Events": [
+     {
+      "Id": "111646406",
+      "Name": "Play_LookinFresh",
+      "ObjectPath": "\\Events\\Default Work Unit\\Play_LookinFresh",
+      "GUID": "{7DA0D8E2-15B8-4801-B729-28E28E5081EE}",
+      "DurationType": "Infinite",
+      "SwitchContainers": [
+       {
+        "SwitchValue": {
+         "GroupType": "State",
+         "GroupId": "1714298281",
+         "Id": "2048228345",
+         "GUID": "{C3764799-AAFF-471D-8B13-D62BB792A681}"
+        },
+        "MediaRefs": [
+         {
+          "Id": "861748085"
+         }
+        ]
+       },
+       {
+        "SwitchValue": {
+         "GroupType": "State",
+         "GroupId": "1714298281",
+         "Id": "1220000209",
+         "GUID": "{0C638819-98D6-4870-8304-59E01A7F2649}"
+        },
+        "MediaRefs": [
+         {
+          "Id": "750106936"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "StateGroups": [
+     {
+      "Id": "1714298281",
+      "Name": "LookinFresh_State",
+      "ObjectPath": "\\States\\Default Work Unit\\LookinFresh_State",
+      "GUID": "{797E1F6F-2122-4956-965E-FDCB75EE9EF2}",
+      "States": [
+       {
+        "Id": "748895195",
+        "Name": "None",
+        "ObjectPath": "\\States\\Default Work Unit\\LookinFresh_State\\None",
+        "GUID": "{3D0D98FF-DEA5-459D-A117-749CF0723FCE}"
+       },
+       {
+        "Id": "1220000209",
+        "Name": "Hotlantis",
+        "ObjectPath": "\\States\\Default Work Unit\\LookinFresh_State\\Hotlantis",
+        "GUID": "{0C638819-98D6-4870-8304-59E01A7F2649}"
+       },
+       {
+        "Id": "2048228345",
+        "Name": "ShrimpKicks",
+        "ObjectPath": "\\States\\Default Work Unit\\LookinFresh_State\\ShrimpKicks",
+        "GUID": "{C3764799-AAFF-471D-8B13-D62BB792A681}"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "FileHash": "{068D8661-1ACA-EA99-A628-C20EA7BAFE45}"
+ }
+}

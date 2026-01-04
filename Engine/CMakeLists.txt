@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+add_definitions(-DNOMINMAX)
+
 find_package(SDL3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -58,9 +60,10 @@ set(UTILS_SRC
     src/SelectionManager.cpp
     src/Octree.h
     src/Octree.cpp
+    src/AudioSystem.h
+    src/AudioSystem.cpp
     src/AudioUtility.h
-    src/AudioCore.h
-    src/AudioCore.cpp
+    src/AudioUtility.cpp
 )
 
 set(GAMEOBJECTS_SRC 
@@ -159,7 +162,17 @@ target_link_libraries(Engine PRIVATE Tracy::TracyClient)
 
 set(WWISE_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/External/Wwise/SDK")
 
+target_include_directories(Engine PRIVATE "${WWISE_SDK_DIR}/include")
+#set(WWISE_LIB_DIR_RELEASE "${WWISE_SDK_DIR}/Release(StaticCRT)/lib")
 
-set(WWISE_LIB_DIR_DEBUG "${WWISE_SDK_DIR}/Debug/lib")
-set(WWISE_LIB_DIR_RELEASE "${WWISE_SDK_DIR}/Release/lib")
+
+target_link_libraries(Engine PRIVATE 
+    "${WWISE_LIB_DIR_RELEASE}/AkSoundEngine.lib"
+    "${WWISE_LIB_DIR_RELEASE}/AkMemoryMgr.lib"
+    "${WWISE_LIB_DIR_RELEASE}/AkStreamMgr.lib"
+    "${WWISE_LIB_DIR_RELEASE}/AkSpatialAudio.lib"
+)
+
+
+
 

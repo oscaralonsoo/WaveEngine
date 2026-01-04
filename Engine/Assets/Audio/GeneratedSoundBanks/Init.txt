@@ -1,0 +1,15 @@
+State Group	ID	Name			Wwise Object Path	Notes
+	1714298281	LookinFresh_State			\Default Work Unit\LookinFresh_State	
+
+State	ID	Name	State Group			Notes
+	748895195	None	LookinFresh_State			
+	1220000209	Hotlantis	LookinFresh_State			
+	2048228345	ShrimpKicks	LookinFresh_State			
+
+Audio Bus	ID	Name			Wwise Object Path	Notes
+	2246998526	Main Audio Bus			\Default Work Unit\Main Audio Bus	
+
+Audio Devices	ID	Name	Type				Notes
+	2317455096	No_Output	No Output			
+	3859886410	System	System			
+

@@ -4,3 +4,6 @@ Engine/CMakeUserPresets.json
 
 
 Engine/External/Wwise/SDK/samples/
+
+#will temporarily ignore the Release(StaticCRT) folder in order to push without GitLFS
+Engine/External/Wwise/SDK/Release(StaticCRT)/

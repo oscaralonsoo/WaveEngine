@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WwiseDocument Type="WorkUnit" ID="{F86B93A4-BE9E-4ABB-A939-D659263ED83C}" SchemaVersion="133">
+	<States>
+		<WorkUnit Name="Default Work Unit" ID="{F86B93A4-BE9E-4ABB-A939-D659263ED83C}" PersistMode="Standalone">
+			<ChildrenList>
+				<StateGroup Name="LookinFresh_State" ID="{797E1F6F-2122-4956-965E-FDCB75EE9EF2}">
+					<ChildrenList>
+						<State Name="None" ID="{3D0D98FF-DEA5-459D-A117-749CF0723FCE}"/>
+						<State Name="ShrimpKicks" ID="{C3764799-AAFF-471D-8B13-D62BB792A681}"/>
+						<State Name="Hotlantis" ID="{0C638819-98D6-4870-8304-59E01A7F2649}"/>
+					</ChildrenList>
+				</StateGroup>
+			</ChildrenList>
+		</WorkUnit>
+	</States>
+</WwiseDocument>

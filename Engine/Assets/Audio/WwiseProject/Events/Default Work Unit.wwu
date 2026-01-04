@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WwiseDocument Type="WorkUnit" ID="{75DDDEBA-B514-4863-AE17-886D86899AF9}" SchemaVersion="133">
+	<Events>
+		<WorkUnit Name="Default Work Unit" ID="{75DDDEBA-B514-4863-AE17-886D86899AF9}" PersistMode="Standalone">
+			<ChildrenList>
+				<Event Name="Play_LookinFresh" ID="{7DA0D8E2-15B8-4801-B729-28E28E5081EE}">
+					<ChildrenList>
+						<Action Name="" ID="{3314D994-1D8A-4719-AF49-7A6F331C820C}" ShortID="218819846">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="LookinFresh" ID="{30724E46-E33B-4B4D-A220-0EEAC0CD28D4}" WorkUnitID="{F09A94A2-0B71-4415-844A-A5A54F1DB976}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+			</ChildrenList>
+		</WorkUnit>
+	</Events>
+</WwiseDocument>
