@@ -247,6 +247,28 @@ void SceneWindow::HandleAssetDropTarget()
                 }
                 break;
             }
+            case DragDropAssetType::SCRIPT:
+            {
+
+                std::vector<GameObject*> selectedObjects =
+                    Application::GetInstance().selectionManager->GetSelectedObjects();
+                if (!selectedObjects.empty())
+                {
+                    int successCount = 0;
+                    for (GameObject* obj : selectedObjects)
+                    {
+                        ModuleScripting* newScript = new ModuleScripting;
+                        newScript->owner = obj;
+                        
+                        newScript->Start();
+                        newScript->LoadScript(dropData->assetPath.c_str());
+
+                        obj->scripts.push_back(newScript);
+                        successCount++;
+                    }
+                }
+                break;
+            }
 
             default:
                 LOG_CONSOLE("Unknown asset type dropped");

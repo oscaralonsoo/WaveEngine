@@ -42,6 +42,7 @@ enum class DragDropAssetType
     FBX_MODEL,      // FBX completo (todas las meshes)
     MESH,           // Mesh individual
     TEXTURE,        // Texture (PNG, JPG, DDS, etc)
+    SCRIPT,         // Script (lua)
 };
 
 // Payload para drag & drop interno

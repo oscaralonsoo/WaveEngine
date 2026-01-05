@@ -85,8 +85,20 @@ void InspectorWindow::Draw()
     {
         for (auto* script : selectedObject->scripts)
         {
-            ImGui::Text("Script: %s", script->name.c_str());
+            ImGui::Text("%s", script->name.c_str());
+            ImGui::PushID(script);
+            if (ImGui::Button("Delete Script", ImVec2(-1, 0)))
+            {
+                auto it = std::find(selectedObject->scripts.begin(),selectedObject->scripts.end(),script);
+
+                if (it != selectedObject->scripts.end())
+                {
+                    selectedObject->scripts.erase(it);
+                }
+            }
+            ImGui::PopID();
         }
+
     }
 
     ImGui::End();

@@ -869,6 +869,11 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
             payload.assetType = DragDropAssetType::MESH;
             ImGui::Text("Mesh: %s", asset.name.c_str());
         }
+        else if (asset.extension == ".lua")
+        {
+            payload.assetType = DragDropAssetType::SCRIPT;
+            ImGui::Text("Script: %s", asset.name.c_str());
+        }
         else
         {
             payload.assetType = DragDropAssetType::UNKNOWN;
@@ -1312,6 +1317,14 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                                             totalRefs += resources->GetResourceReferenceCount(subMeta.uid);
                                         }
                                     }
+                                    else if (subExt == ".lua")//TODO INIT SCRIPT 
+                                    {
+                                        if (resources->IsResourceLoaded(subMeta.uid))
+                                        {
+                                            anyLoaded = true;
+                                            totalRefs += resources->GetResourceReferenceCount(subMeta.uid);
+                                        }
+                                    }
                                     else
                                     {
                                         // For other types of assets
@@ -1385,6 +1398,11 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                         asset.inMemory = resources->IsResourceLoaded(asset.uid);
                         asset.references = resources->GetResourceReferenceCount(asset.uid);
                     }
+                    else if (extension == ".lua")//TODO INIT SCRIPT 
+                    {
+                        asset.inMemory = resources->IsResourceLoaded(asset.uid);
+                        asset.references = resources->GetResourceReferenceCount(asset.uid);
+                    }
                     else
                     {
                         asset.inMemory = resources->IsResourceLoaded(asset.uid);
@@ -1429,6 +1447,8 @@ bool AssetsWindow::IsAssetFile(const std::string& extension) const
         extension == ".texture" ||
         extension == ".wav" ||
         extension == ".ogg" ||
+        extension == ".lua" ||
+
         extension == ".json";
 }
 

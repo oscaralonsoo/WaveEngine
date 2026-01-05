@@ -180,7 +180,8 @@ void GameObject::Serialize(nlohmann::json& gameObjectArray) const {
     }
     gameObjectObj["components"] = componentsArray;
     for (auto* script : scripts) {
-        gameObjectObj["script"] = script->filePath;
+        gameObjectObj["script"].push_back(script->filePath);
+        gameObjectObj["script"].push_back(script->filePath);
     }
     // Children
     nlohmann::json childrenArray = nlohmann::json::array();
@@ -243,12 +244,16 @@ GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObj
     }
     if (gameObjectObj.contains("script"))
     {
-        ModuleScripting* newScript = new ModuleScripting;
-        newScript->owner = newObject;
+        const nlohmann::json& sciptArray = gameObjectObj["script"];
+        for (const auto& scriptObj : sciptArray) {
 
-        newScript->Start();
-        newScript->LoadScript(gameObjectObj["script"].get<std::string>().c_str());
-        newObject->scripts.push_back(newScript);
+            ModuleScripting* newScript = new ModuleScripting;
+            newScript->owner = newObject;
+
+            newScript->Start();
+            newScript->LoadScript(scriptObj.get<std::string>().c_str());
+            newObject->scripts.push_back(newScript);
+        }
     }
     return newObject;
 }
