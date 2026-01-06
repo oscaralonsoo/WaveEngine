@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(WWISE_SDK_PATH $ENV{WWISEROOT})
+
+if (NOT WWISE_SDK_PATH)
+    message(FATAL_ERROR "WWISEROOT environment variable is not set")
+endif()
+
 find_package(SDL3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -149,3 +155,21 @@ target_link_libraries(Engine PRIVATE imgui::imgui)
 target_link_libraries(Engine PRIVATE imguizmo::imguizmo)
 target_link_libraries(Engine PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(Engine PRIVATE Tracy::TracyClient)
+
+target_include_directories(Engine PRIVATE
+    ${WWISE_SDK_PATH}/SDK/include
+)
+
+if (WIN32)
+    target_link_directories(Engine PRIVATE
+        $<$<CONFIG:Debug>:${WWISE_SDK_PATH}/SDK/x64_vc170/Debug/lib>
+        $<$<CONFIG:Release>:${WWISE_SDK_PATH}/SDK/x64_vc170/Release/lib>
+    )
+
+    target_link_libraries(Engine PRIVATE
+        AkSoundEngine
+        AkMemoryMgr
+        AkStreamMgr
+        ws2_32
+    )
+endif()
