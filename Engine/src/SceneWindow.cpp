@@ -93,12 +93,6 @@ void SceneWindow::HandleAssetDropTarget()
         {
             DragDropPayload* dropData = (DragDropPayload*)payload->Data;
 
-            if (dropData->assetType == DragDropAssetType::SCRIPT)
-            {
-                ImGui::EndDragDropTarget();
-                return;
-            }
-
             LOG_CONSOLE("[DROP RECEIVED] Asset: %s, Type: %d, UID: %llu",
 
                 dropData->assetPath,
