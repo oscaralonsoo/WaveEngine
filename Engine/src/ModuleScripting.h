@@ -21,6 +21,7 @@ public:
     virtual bool CleanUp();
 
     bool LoadScript(const char* path);
+    void PushInput();
     //int Lua_SetPosition(lua_State* L);
 
     GameObject* owner = NULL;
