@@ -28,6 +28,7 @@
 #include "AssetsWindow.h"
 #include "MetaFile.h"
 
+#include "ScriptEditorWindow.h"
 ModuleEditor::ModuleEditor() : Module()
 {
     name = "ModuleEditor";
@@ -79,6 +80,7 @@ bool ModuleEditor::Start()
     sceneWindow = std::make_unique<SceneWindow>(inspectorWindow.get());
     gameWindow = std::make_unique<GameWindow>();
     assetsWindow = std::make_unique<AssetsWindow>();
+    scriptEditorWindow = std::make_unique<ScriptEditorWindow>();
 
     LOG_CONSOLE("Editor initialized");
 
@@ -149,6 +151,10 @@ bool ModuleEditor::Update()
     hierarchyWindow->Draw();
     inspectorWindow->Draw();
     assetsWindow->Draw();
+
+    if (scriptEditorWindow) {
+        scriptEditorWindow->Draw();
+    }
 
     if (showAbout) {
         DrawAboutWindow();
@@ -290,6 +296,12 @@ void ModuleEditor::ShowMenuBar()
             if (ImGui::MenuItem("Assets", NULL, &assetsOpen))
             {
                 assetsWindow->SetOpen(assetsOpen);
+            }
+
+            bool scriptEditorOpen = scriptEditorWindow->IsOpen();
+            if (ImGui::MenuItem("Script Editor", NULL, &scriptEditorOpen))
+            {
+                scriptEditorWindow->SetOpen(scriptEditorOpen);
             }
 
             ImGui::Separator();
@@ -791,6 +803,12 @@ void ModuleEditor::UpdateCurrentWindow()
         lastHoveredWindow = EditorWindowType::ASSETS;
     }
 
+    if (scriptEditorWindow && scriptEditorWindow->IsHovered())
+    {
+        lastHoveredWindow = EditorWindowType::SCRIPT_EDITOR;
+
+    }
+
     if (lastHoveredWindow != EditorWindowType::NONE) {
         currentWindow = lastHoveredWindow;
     }
@@ -823,6 +841,7 @@ const char* ModuleEditor::EditorWindowTypeToString(EditorWindowType type)
     case EditorWindowType::HIERARCHY:      return "HIERARCHY";
     case EditorWindowType::INSPECTOR:      return "INSPECTOR";
     case EditorWindowType::CONSOLE:        return "CONSOLE";
+    case EditorWindowType::SCRIPT_EDITOR:        return "SCRIPT_EDITOR";
     case EditorWindowType::ABOUT:          return "ABOUT";
     default:                               return "UNKNOWN";
     }

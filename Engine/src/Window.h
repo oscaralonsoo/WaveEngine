@@ -29,7 +29,6 @@ public:
     int GetScale() const;
 
     SDL_Window* GetWindow() const { return window; }
-
 private:
     SDL_Window* window;
     //SDL_Renderer* renderer;

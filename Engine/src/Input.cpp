@@ -83,6 +83,8 @@ bool Input::PreUpdate()
 			mouseButtons[i] = KEY_IDLE;
 	}
 
+	SDL_StartTextInput(Application::GetInstance().window->GetWindow());
+
 	while (SDL_PollEvent(&event))
 	{
 		ImGui_ImplSDL3_ProcessEvent(&event);

@@ -912,6 +912,15 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
         {
             pathPendingToLoad = asset.path;
         }
+
+        else if (asset.extension == ".lua")
+        {
+            auto editor = Application::GetInstance().editor.get();
+            if (editor && editor->scriptEditorWindow)
+            {
+                editor->scriptEditorWindow->LoadScript(asset.path);
+            }
+        }
     }
 
     std::string displayName = asset.name;

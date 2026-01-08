@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "ScriptEditorWindow.h"
 
 class ConfigurationWindow;
 class HierarchyWindow;
@@ -26,6 +27,7 @@ enum class EditorWindowType
     INSPECTOR,
     CONSOLE,
     ASSETS,  
+    SCRIPT_EDITOR,
     ABOUT
 };
 
@@ -67,6 +69,8 @@ public:
     bool IsMouseOverScene() const;
 
     void CreatePrimitiveGameObject(const std::string& name, Mesh mesh);
+
+    std::unique_ptr<ScriptEditorWindow> scriptEditorWindow;
 
 private:
     void ShowMenuBar();
