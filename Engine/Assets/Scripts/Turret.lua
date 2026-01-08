@@ -1,43 +1,12 @@
 
-x = 0.0;
-y = 0.0;
-rot = 0.0;
-speed = 0.001;
+speed = 0.01;
 bullets = {}
 
 function Start()
     obj = FindGameObject("this")
-    turret = FindGameObject("TankTurret")
-
-    if obj == nil then
-        print("ERROR: No se ha encontrado el objeto!")
-    else
-        print("Objeto encontrado correctamente")
-    end	
-
-    print("Hello from Lua Start")   
 end
 
 function Update()
-
-    if Input.W then
-        SetPosition(obj,0, 0, y)
-        y = y - speed
-    end
-
-    if Input.S then
-        SetPosition(obj,0, 0, y)
-        y = y + speed
-    end
-
-    if Input.D then
-        SetRotation(obj,0, x, 0)
-        x = x + 1
-    end 
-    if Input.A then 
-        SetRotation(obj,0, x, 0)
-        x = x - 1
-    end
 
     if Input.MouseRight  and not lastMouseLeft  then    
         bullet = CreatePrimitive("Cube", "bullet")
@@ -47,12 +16,12 @@ function Update()
 
     lastMouseLeft = Input.MouseRight        
 
-    pos = GetPosition(turret) 
+    pos = GetPosition(obj) 
     dx = Input.MouseX - (pos.x * 100)
     dy = Input.MouseY - (pos.y * 100)
-    angle  = atan2(dy,dx) * -1
+    angle  = atan2(dy/dx) * -1
     angleDeg = math.deg(angle)
-    SetRotation(turret,0,angleDeg,0)
+    SetRotation(obj,0,angleDeg,0)
 
 end
 
