@@ -60,6 +60,10 @@ public:
     // Apply texture to a GameObject and its children
     bool ApplyTextureToGameObject(GameObject* obj, const std::string& texturePath);
 
+
+    std::string LoadFileToString(const char* filePath);
+    bool SaveStringToFile(const char* filePath, const std::string& content);
+
 private:
     // Recursively process scene nodes
     GameObject* ProcessNode(aiNode* node, const aiScene* scene, const std::string& directory, UID baseUID, int& meshCounter);

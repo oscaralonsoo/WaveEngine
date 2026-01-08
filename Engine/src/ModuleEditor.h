@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "ScriptEditorWindow.h"
 
 class ConfigurationWindow;
 class HierarchyWindow;
@@ -26,6 +27,7 @@ enum class EditorWindowType
     INSPECTOR,
     CONSOLE,
     ASSETS,  
+    SCRIPT_EDITOR,
     ABOUT
 };
 
@@ -66,6 +68,7 @@ public:
     bool IsSceneWindowActive() const { return currentWindow == EditorWindowType::SCENE;  }
     bool IsMouseOverScene() const;
 
+    std::unique_ptr<ScriptEditorWindow> scriptEditorWindow;
 private:
     void ShowMenuBar();
     void ShowPlayToolbar();

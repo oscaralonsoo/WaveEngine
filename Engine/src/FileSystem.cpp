@@ -22,6 +22,9 @@
 #include "AssetsWindow.h"
 #include "ModuleScripting.h"
 
+#include <fstream>
+#include <sstream>
+
 FileSystem::FileSystem() : Module() {}
 FileSystem::~FileSystem() {}
 
@@ -687,4 +690,26 @@ bool FileSystem::ApplyTextureToGameObject(GameObject* obj, const std::string& te
     }
 
     return applied;
+}
+
+std::string FileSystem::LoadFileToString(const char* filePath) {
+    std::ifstream t(filePath);
+    if (!t.is_open()) {
+        LOG_CONSOLE("[FileSystem] Error: Could not open file for reading: %s", filePath);
+        return "";
+    }
+    std::stringstream buffer;
+    buffer << t.rdbuf();
+    return buffer.str();
+}
+
+bool FileSystem::SaveStringToFile(const char* filePath, const std::string& content) {
+    std::ofstream out(filePath);
+    if (!out.is_open()) {
+        LOG_CONSOLE("[FileSystem] Error: Could not open file for writing: %s", filePath);
+        return false;
+    }
+    out << content;
+    out.close();
+    return true;
 }
