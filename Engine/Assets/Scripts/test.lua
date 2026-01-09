@@ -47,8 +47,8 @@ function Update()
 
     lastMouseLeft = Input.MouseRight        
 
-    local pos = GetPosition(turret) 
-    local dx = (Input.MouseX * 10) + pos.x
+    local pos = GetPosition(obj) 
+    local dx = (Input.MouseX * 10) - pos.x
     local dy = (Input.MouseY * 10) + pos.z
     local angle  = atan2(dy,dx)
     angleDeg = math.deg(angle)
