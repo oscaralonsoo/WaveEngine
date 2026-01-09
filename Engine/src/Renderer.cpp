@@ -11,6 +11,7 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <stack>
+#include <algorithm>
 
 #include "tracy/Tracy.hpp"
 
@@ -225,8 +226,31 @@ bool Renderer::PreUpdate()
 
 bool Renderer::Update()
 {
-
     ZoneScopedN("RendererUpdate");
+
+    Application::PlayState playState = Application::GetInstance().GetPlayState();
+    if (playState == Application::PlayState::EDITING) {
+        // Función helper para actualizar partículas recursivamente
+        std::function<void(GameObject*)> updateParticleSystems = [&](GameObject* obj) {
+            if (!obj || !obj->IsActive()) return;
+
+            ComponentParticleSystem* ps = static_cast<ComponentParticleSystem*>(
+                obj->GetComponent(ComponentType::PARTICLE_SYSTEM));
+
+            if (ps && ps->IsActive()) {
+                ps->Update();
+            }
+
+            for (GameObject* child : obj->GetChildren()) {
+                updateParticleSystems(child);
+            }
+            };
+
+        GameObject* root = Application::GetInstance().scene->GetRoot();
+        if (root) {
+            updateParticleSystems(root);
+        }
+    }
 
     ModuleEditor* editor = Application::GetInstance().editor.get();
     ImVec2 viewportSize = editor->sceneViewportSize;
@@ -672,20 +696,17 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
         cullingCamera = renderCamera;
     }
 
-    // FIRST PASS: Render opaque objects and mark stencil for selected objects =====
+    // ========== FIRST PASS: Objetos OPACOS con stencil ==========
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-
-    // Clear stencil buffer
     glClear(GL_STENCIL_BUFFER_BIT);
 
-    // Draw all opaque objects, marking selected ones in stencil
+    // Dibujar objetos opacos
     DrawGameObjectIterative(root, false, renderCamera, cullingCamera);
 
-    // Only process selection highlighting if editor features are enabled
+    // Marcar objetos seleccionados en stencil
     if (drawEditorFeatures)
     {
-        // Mark selected objects in stencil buffer
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glStencilMask(0xFF);
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -725,35 +746,58 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
             }
         }
 
-        // Restore color and depth writing
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         glDepthMask(GL_TRUE);
         glStencilMask(0x00);
     }
 
-    //  SECOND PASS: Render transparent objects back-to-front =====
+    // ========== SECOND PASS: Objetos TRANSPARENTES + PARTÍCULAS ==========
+    // Recolectar objetos transparentes
     std::vector<TransparentObject> transparentObjects;
     CollectTransparentObjects(root, transparentObjects);
 
+    // Recolectar sistemas de partículas
+    std::vector<TransparentObject> particleSystems;
+    CollectParticleSystems(root, particleSystems, renderCamera);
+
+    // Combinar ambas listas
+    transparentObjects.insert(transparentObjects.end(),
+        particleSystems.begin(),
+        particleSystems.end());
+
+    // Ordenar TODOS los objetos transparentes (incluyendo partículas) back-to-front
     std::sort(transparentObjects.begin(), transparentObjects.end(),
         [](const TransparentObject& a, const TransparentObject& b) {
             return a.distanceToCamera > b.distanceToCamera;
         });
 
+    // Renderizar objetos transparentes y partículas en orden
     for (const auto& transparentObj : transparentObjects)
     {
-        DrawGameObjectIterative(transparentObj.gameObject, true, renderCamera, cullingCamera);
+        // Check si es un sistema de partículas
+        ComponentParticleSystem* ps = static_cast<ComponentParticleSystem*>(
+            transparentObj.gameObject->GetComponent(ComponentType::PARTICLE_SYSTEM));
+
+        if (ps && ps->IsActive())
+        {
+            // IMPORTANTE: Renderizar con la cámara de renderizado, no la activa
+            DrawParticleSystemWithCamera(ps, renderCamera);
+        }
+        else
+        {
+            // Renderizar objeto transparente normal
+            DrawGameObjectIterative(transparentObj.gameObject, true, renderCamera, cullingCamera);
+        }
     }
-    //  THIRD PASS: Draw outlines for selected objects =====
+
+    // ========== THIRD PASS: Outlines para objetos seleccionados ==========
     if (drawEditorFeatures)
     {
-        // Draw outline where stencil != 1 (around the selected object)
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
         glStencilMask(0x00);
-
         glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);  
-        glDepthMask(GL_FALSE);   
+        glDepthFunc(GL_LEQUAL);
+        glDepthMask(GL_FALSE);
 
         outlineShader->Use();
         glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE,
@@ -795,11 +839,11 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
         }
     }
 
-    // Restore render state
+    // Restaurar estado
     glStencilMask(0xFF);
     glStencilFunc(GL_ALWAYS, 0, 0xFF);
-    glDepthMask(GL_TRUE);      
-    glDepthFunc(GL_LESS);      
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_STENCIL_TEST);
 
@@ -1022,13 +1066,6 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
                     if (showFace) DrawFaceNormals(mesh, modelMatrix);
                 }
             }
-        }
-
-        ComponentParticleSystem* particleSys = static_cast<ComponentParticleSystem*>(
-            currentObj->GetComponent(ComponentType::PARTICLE_SYSTEM));
-
-        if (particleSys && particleSys->IsActive()) {
-            DrawParticleSystem(particleSys);
         }
 
         if (!renderTransparentOnly)
@@ -1610,22 +1647,25 @@ void Renderer::InitializeParticleBuffers()
 
 void Renderer::DrawParticleSystem(ComponentParticleSystem* ps)
 {
-    if (!ps || ps->GetActiveParticleCount() == 0)
-        return;
-
     ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-    if (!camera)
+    if (!camera) return;
+
+    DrawParticleSystemWithCamera(ps, camera);
+}
+
+void Renderer::DrawParticleSystemWithCamera(ComponentParticleSystem* ps, ComponentCamera* camera)
+{
+    if (!ps || ps->GetActiveParticleCount() == 0 || !camera)
         return;
 
-    // Usar shader de partículas
     particleShader->Use();
-
-    // Vincular VAO PRIMERO
     glBindVertexArray(particleVAO);
 
-    // Habilitar blending
-    glEnable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     glDepthMask(GL_FALSE);
+
+    glEnable(GL_BLEND);
 
     // Configurar modo de blending
     switch (ps->GetMainConfig().blendMode)
@@ -1648,33 +1688,43 @@ void Renderer::DrawParticleSystem(ComponentParticleSystem* ps)
     bool hasTexture = false;
     if (ps->GetMainConfig().textureUID != 0)
     {
-        Resource* resource = Application::GetInstance().resources->GetResourceDirect(ps->GetMainConfig().textureUID);
+        ModuleResources* resources = Application::GetInstance().resources.get();
+
+        // Use RequestResource to ensure it's loaded in memory
+        const Resource* resource = resources->RequestResource(ps->GetMainConfig().textureUID);
 
         if (resource && resource->GetType() == Resource::TEXTURE)
         {
-            ResourceTexture* texResource = static_cast<ResourceTexture*>(resource);
-            if (texResource && texResource->IsLoadedToMemory())
+            const ResourceTexture* texResource = static_cast<const ResourceTexture*>(resource);
+
+            if (texResource->IsLoadedToMemory() && texResource->GetGPU_ID() != 0)
             {
                 glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, texResource->gpu_id);
+                glBindTexture(GL_TEXTURE_2D, texResource->GetGPU_ID());
                 particleShader->SetInt("particleTexture", 0);
                 hasTexture = true;
             }
+        }
+
+        // Release the resource after use (decrement reference count)
+        if (resource) {
+            resources->ReleaseResource(ps->GetMainConfig().textureUID);
         }
     }
 
     if (!hasTexture)
     {
+        // No texture - render without texture
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     particleShader->SetInt("hasTexture", hasTexture ? 1 : 0);
 
-    // Configurar matrices UNA VEZ (no por partícula)
+    // Set camera matrices
     particleShader->SetMat4("view", camera->GetViewMatrix());
     particleShader->SetMat4("projection", camera->GetProjectionMatrix());
 
-    // Extraer vectores right y up UNA VEZ (no por partícula)
     glm::mat4 view = camera->GetViewMatrix();
     glm::vec3 camRight = glm::vec3(view[0][0], view[1][0], view[2][0]);
     glm::vec3 camUp = glm::vec3(view[0][1], view[1][1], view[2][1]);
@@ -1682,31 +1732,47 @@ void Renderer::DrawParticleSystem(ComponentParticleSystem* ps)
     particleShader->SetVec3("cameraRight", camRight);
     particleShader->SetVec3("cameraUp", camUp);
 
-    // Obtener las partículas
     const std::vector<Particle>& particles = ps->GetParticles();
 
-    // Renderizar cada partícula activa
-    for (const Particle& p : particles)
+    // Sort particles back-to-front
+    std::vector<std::pair<float, size_t>> particleDistances;
+    particleDistances.reserve(particles.size());
+
+    glm::vec3 cameraPos = camera->GetPosition();
+
+    for (size_t i = 0; i < particles.size(); ++i)
     {
-        if (!p.active)
+        if (!particles[i].active)
             continue;
 
-        // Configurar uniforms específicos de esta partícula
+        float distance = glm::length(cameraPos - particles[i].position);
+        particleDistances.push_back(std::make_pair(distance, i));
+    }
+
+    std::sort(particleDistances.begin(), particleDistances.end(),
+        [](const std::pair<float, size_t>& a, const std::pair<float, size_t>& b) {
+            return a.first > b.first;
+        });
+
+    // Draw each particle
+    for (const auto& pair : particleDistances)
+    {
+        const Particle& p = particles[pair.second];
+
         particleShader->SetVec3("particlePosition", p.position);
         particleShader->SetFloat("particleSize", p.size);
         particleShader->SetFloat("particleRotation", glm::radians(p.rotation));
         particleShader->SetVec4("particleColor", p.color);
 
-        // Renderizar el quad (6 vértices = 2 triángulos)
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
-    // Limpiar estado
+    // Cleanup
     glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 
-    // Volver al shader por defecto
     defaultShader->Use();
 }
 
@@ -1782,4 +1848,35 @@ void Renderer::DrawParticles(const std::vector<Particle>& particles,
 
     // Restaurar shader por defecto
     defaultShader->Use();
+}
+
+void Renderer::CollectParticleSystems(GameObject* gameObject,
+    std::vector<TransparentObject>& particleSystems,
+    ComponentCamera* camera)
+{
+    if (!gameObject->IsActive())
+        return;
+
+    ComponentParticleSystem* ps = static_cast<ComponentParticleSystem*>(
+        gameObject->GetComponent(ComponentType::PARTICLE_SYSTEM));
+
+    if (ps && ps->IsActive() && ps->GetActiveParticleCount() > 0)
+    {
+        Transform* transform = static_cast<Transform*>(
+            gameObject->GetComponent(ComponentType::TRANSFORM));
+
+        if (transform != nullptr && camera)
+        {
+            glm::vec3 objectPos = glm::vec3(transform->GetGlobalMatrix()[3]);
+            float distance = glm::length(camera->GetPosition() - objectPos);
+
+            particleSystems.emplace_back(gameObject, distance);
+        }
+    }
+
+    // Recursivamente buscar en los hijos
+    for (GameObject* child : gameObject->GetChildren())
+    {
+        CollectParticleSystems(child, particleSystems, camera);
+    }
 }

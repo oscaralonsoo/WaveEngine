@@ -52,6 +52,9 @@ public:
     void Stop();
     void Step();
     PlayState GetPlayState() const { return playState; }
+    bool IsPlaying() const { return playState == PlayState::PLAYING; }
+    bool IsPaused() const { return playState == PlayState::PAUSED; }
+    bool IsStopped() const { return playState == PlayState::EDITING; }
 
     // Modules
     std::shared_ptr<Window> window;

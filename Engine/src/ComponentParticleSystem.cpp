@@ -19,6 +19,10 @@ ComponentParticleSystem::ComponentParticleSystem(GameObject* owner)
     name = "Particle System";
     particles.reserve(mainConfig.maxParticles);
     lastPosition = glm::vec3(0.0f);
+
+    if (mainConfig.playOnAwake) {
+        Play();
+    }
 }
 
 ComponentParticleSystem::~ComponentParticleSystem() {
@@ -28,14 +32,40 @@ ComponentParticleSystem::~ComponentParticleSystem() {
 }
 
 void ComponentParticleSystem::Update() {
-    if (!isPlaying || isPaused) return;
+    if (!IsActive()) return;
 
-    float deltaTime = Application::GetInstance().time->GetDeltaTime();
+    // IMPORTANTE: Actualizar SIEMPRE que isPlaying esté activo
+    // Ya sea en modo editor o en modo play
+    if (!isPlaying) return;
+
+    if (isPaused) return;
+
+    // Determinar el delta time apropiado
+    float deltaTime;
+    Application::PlayState playState = Application::GetInstance().GetPlayState();
+
+    if (playState == Application::PlayState::EDITING) {
+        // En modo editor, usar delta time real para preview suave
+        deltaTime = Application::GetInstance().time->GetRealDeltaTime();
+
+        // En editor, asegurar un mínimo para evitar frames muy largos
+        if (deltaTime > 0.033f) deltaTime = 0.033f; // Cap a ~30 FPS
+    }
+    else {
+        // En modo play, usar delta time del juego (respeta time scale)
+        deltaTime = Application::GetInstance().time->GetDeltaTime();
+    }
 
     systemTime += deltaTime;
 
+    // Manejar fin de duración
     if (!mainConfig.looping && systemTime >= mainConfig.duration) {
-        Stop();
+        // Si no hace loop, detener la emisión pero mantener las partículas vivas
+        if (GetActiveParticleCount() == 0) {
+            Stop();
+        }
+        // No emitir más, pero seguir actualizando partículas existentes
+        UpdateParticles(deltaTime);
         return;
     }
 
@@ -68,13 +98,17 @@ void ComponentParticleSystem::Update() {
         // Bursts
         for (size_t i = 0; i < emissionModule.bursts.size(); ++i) {
             if (i >= burstStates.size()) {
-                burstStates.push_back({ (int)i, 0, emissionModule.bursts[i].time });
+                BurstState newState;
+                newState.burstIndex = (int)i;
+                newState.cyclesCompleted = 0;
+                newState.nextBurstTime = emissionModule.bursts[i].time;
+                burstStates.push_back(newState);
             }
 
             BurstState& state = burstStates[i];
             const EmissionModule::Burst& burst = emissionModule.bursts[i];
 
-            if (systemTime >= state.nextBurstTime) {
+            if (systemTime >= state.nextBurstTime && state.cyclesCompleted < burst.cycles) {
                 for (int j = 0; j < burst.count; ++j) {
                     EmitParticle();
                 }
@@ -95,11 +129,18 @@ void ComponentParticleSystem::Update() {
 
     UpdateParticles(deltaTime);
 
+    // Manejar loop
     if (mainConfig.looping && systemTime >= mainConfig.duration) {
-        systemTime = 0.0f;
+        // Hacer loop del sistema
+        float overflow = systemTime - mainConfig.duration;
+        systemTime = overflow;
+
+        // Resetear estados de burst
         for (auto& state : burstStates) {
-            state.cyclesCompleted = 0;
-            state.nextBurstTime = emissionModule.bursts[state.burstIndex].time;
+            if (state.burstIndex >= 0 && state.burstIndex < (int)emissionModule.bursts.size()) {
+                state.cyclesCompleted = 0;
+                state.nextBurstTime = emissionModule.bursts[state.burstIndex].time;
+            }
         }
     }
 }
@@ -585,9 +626,28 @@ void ComponentParticleSystem::Play() {
         float step = 0.1f;
 
         while (simulationTime < mainConfig.duration) {
-            Update();
+            float oldSystemTime = systemTime;
+            systemTime = simulationTime;
+
+            Transform* transform = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
+            glm::vec3 currentPosition = transform ? glm::vec3(transform->GetGlobalMatrix()[3]) : glm::vec3(0.0f);
+
+            if (emissionModule.enabled && emissionModule.rateOverTime > 0.0f) {
+                accumulatedTime += step;
+                float emitInterval = 1.0f / emissionModule.rateOverTime;
+
+                while (accumulatedTime >= emitInterval) {
+                    EmitParticle();
+                    accumulatedTime -= emitInterval;
+                }
+            }
+
+            UpdateParticles(step);
+
             simulationTime += step;
         }
+
+        systemTime = 0.0f; 
     }
 }
 
@@ -641,25 +701,47 @@ bool ComponentParticleSystem::LoadTexture(const std::string& path) {
     ModuleResources* resources = Application::GetInstance().resources.get();
     if (!resources) return false;
 
+    // Release previous texture
     if (mainConfig.textureUID != 0) {
         resources->ReleaseResource(mainConfig.textureUID);
         mainConfig.textureUID = 0;
     }
 
+    // Find or import the texture
     UID uid = resources->Find(path.c_str());
     if (uid == 0) {
         uid = resources->ImportFile(path.c_str());
     }
 
-    if (uid == 0) return false;
+    if (uid == 0) {
+        LOG_DEBUG("Failed to load particle texture: %s", path.c_str());
+        return false;
+    }
+
+    // Get the resource and ensure it's loaded
+    Resource* resource = resources->GetResourceDirect(uid);
+    if (!resource) {
+        LOG_DEBUG("Failed to get particle texture resource");
+        return false;
+    }
+
+    // Load to memory if not already loaded
+    if (!resource->IsLoadedToMemory()) {
+        if (resources->RequestResource(uid) == 0) {
+            LOG_DEBUG("Failed to load particle texture to memory");
+            return false;
+        }
+    }
 
     mainConfig.textureUID = uid;
     mainConfig.texturePath = path;
+
+    LOG_DEBUG("Particle texture loaded successfully: %s (UID: %llu)", path.c_str(), uid);
     return true;
 }
 
 void ComponentParticleSystem::OnEditor() {
-    // Implementación vacía
+    // empty
 }
 
 // PRESETS

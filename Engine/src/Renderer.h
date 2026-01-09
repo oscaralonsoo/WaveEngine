@@ -52,6 +52,10 @@ public:
     void CollectTransparentObjects(GameObject* gameObject,
         std::vector<TransparentObject>& transparentObjects);
 
+    void CollectParticleSystems(GameObject* gameObject,
+        std::vector<TransparentObject>& particleSystems,
+        ComponentCamera* camera);
+
     // Frustum culling
     bool ShouldCullGameObject(GameObject* gameObject, const Frustum& frustum);
 
@@ -103,6 +107,7 @@ public:
 
     // Particle System
     void DrawParticleSystem(ComponentParticleSystem* particleSystem);
+    void DrawParticleSystemWithCamera(ComponentParticleSystem* particleSystem, ComponentCamera* camera);
 
 private:
     // Internal rendering methods

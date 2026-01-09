@@ -902,7 +902,7 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
 {
     ComponentParticleSystem* ps = static_cast<ComponentParticleSystem*>(selectedObject->GetComponent(ComponentType::PARTICLE_SYSTEM));
 
-    if (!ps) return; 
+    if (!ps) return;
 
     ImGui::PushID(ps);
 
@@ -917,23 +917,46 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
 
         // PLAYBACK CONTROLS
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.7f, 0.2f, 1.0f));
-        if (ImGui::Button("Play")) ps->Play();
+        if (ImGui::Button("Play##PSPlay")) ps->Play();
         ImGui::PopStyleColor();
 
         ImGui::SameLine();
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f, 0.2f, 0.2f, 1.0f));
-        if (ImGui::Button("Stop")) ps->Stop();
+        if (ImGui::Button("Stop##PSStop")) ps->Stop();
         ImGui::PopStyleColor();
 
         ImGui::SameLine();
-        if (ImGui::Button("Pause")) ps->Pause();
+        if (ImGui::Button("Pause##PSPause")) ps->Pause();
 
         ImGui::SameLine();
-        if (ImGui::Button("Restart")) ps->Restart();
+        if (ImGui::Button("Restart##PSRestart")) ps->Restart();
 
-        ImGui::Text("Status: %s | Particles: %d",
-            ps->IsPlaying() ? (ps->IsPaused() ? "Paused" : "Playing") : "Stopped",
-            ps->GetActiveParticleCount());
+        ImGui::SameLine();
+        if (ImGui::Button("Clear##PSClear")) ps->Clear();
+
+        // Estado del sistema con más información
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Text("System Info:");
+
+        const char* statusText = ps->IsPlaying() ? (ps->IsPaused() ? "Paused" : "Playing") : "Stopped";
+        ImVec4 statusColor = ps->IsPlaying() ?
+            (ps->IsPaused() ? ImVec4(1.0f, 1.0f, 0.0f, 1.0f) : ImVec4(0.0f, 1.0f, 0.0f, 1.0f)) :
+            ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+
+        ImGui::Text("Status:");
+        ImGui::SameLine();
+        ImGui::TextColored(statusColor, "%s", statusText);
+
+        // Indicador visual si hay partículas activas
+        if (ps->GetActiveParticleCount() > 0) {
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Active");
+        }
+        else {
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Inactive");
+        }
 
         ImGui::Separator();
 
@@ -942,60 +965,60 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
         // MAIN MODULE
         if (ImGui::CollapsingHeader("Main Module", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            ImGui::DragFloat("Duration", &main.duration, 0.1f, 0.1f, 1000.0f);
-            ImGui::Checkbox("Looping", &main.looping);
-            ImGui::Checkbox("Prewarm", &main.prewarm);
+            ImGui::DragFloat("Duration##MainDuration", &main.duration, 0.1f, 0.1f, 1000.0f);
+            ImGui::Checkbox("Looping##MainLooping", &main.looping);
+            ImGui::Checkbox("Prewarm##MainPrewarm", &main.prewarm);
             if (main.prewarm) ImGui::TextDisabled("(Only works with Looping)");
 
-            ImGui::DragFloat("Start Delay", &main.startDelay, 0.1f, 0.0f, 100.0f);
+            ImGui::DragFloat("Start Delay##MainDelay", &main.startDelay, 0.1f, 0.0f, 100.0f);
 
             ImGui::Spacing();
             ImGui::Text("Start Lifetime");
-            ImGui::DragFloat("##StartLifetime", &main.startLifetime, 0.1f, 0.1f, 100.0f);
-            ImGui::DragFloat("Variance##Lifetime", &main.startLifetimeVariance, 0.05f, 0.0f, 50.0f);
+            ImGui::DragFloat("##MainStartLifetime", &main.startLifetime, 0.1f, 0.1f, 100.0f);
+            ImGui::DragFloat("Variance##MainLifetimeVar", &main.startLifetimeVariance, 0.05f, 0.0f, 50.0f);
 
             ImGui::Spacing();
             ImGui::Text("Start Speed");
-            ImGui::DragFloat("##StartSpeed", &main.startSpeed, 0.1f, 0.0f, 100.0f);
-            ImGui::DragFloat("Variance##Speed", &main.startSpeedVariance, 0.05f, 0.0f, 50.0f);
+            ImGui::DragFloat("##MainStartSpeed", &main.startSpeed, 0.1f, 0.0f, 100.0f);
+            ImGui::DragFloat("Variance##MainSpeedVar", &main.startSpeedVariance, 0.05f, 0.0f, 50.0f);
 
             ImGui::Spacing();
             ImGui::Text("Start Size");
-            ImGui::DragFloat("##StartSize", &main.startSize, 0.01f, 0.01f, 100.0f);
-            ImGui::DragFloat("Variance##Size", &main.startSizeVariance, 0.01f, 0.0f, 50.0f);
+            ImGui::DragFloat("##MainStartSize", &main.startSize, 0.01f, 0.01f, 100.0f);
+            ImGui::DragFloat("Variance##MainSizeVar", &main.startSizeVariance, 0.01f, 0.0f, 50.0f);
 
             ImGui::Spacing();
             ImGui::Text("Start Rotation");
-            ImGui::SliderFloat("##StartRotation", &main.startRotation, 0.0f, 360.0f);
-            ImGui::SliderFloat("Variance##Rotation", &main.startRotationVariance, 0.0f, 360.0f);
+            ImGui::SliderFloat("##MainStartRotation", &main.startRotation, 0.0f, 360.0f);
+            ImGui::SliderFloat("Variance##MainRotationVar", &main.startRotationVariance, 0.0f, 360.0f);
 
             ImGui::Spacing();
-            ImGui::ColorEdit4("Start Color", &main.startColor[0]);
+            ImGui::ColorEdit4("Start Color##MainColor", &main.startColor[0]);
 
             ImGui::Spacing();
-            ImGui::DragFloat("Gravity Modifier", &main.gravityModifier, 0.01f, -10.0f, 10.0f);
+            ImGui::DragFloat("Gravity Modifier##MainGravity", &main.gravityModifier, 0.01f, -10.0f, 10.0f);
 
             ImGui::Spacing();
             const char* simSpaceItems[] = { "Local", "World" };
             int simSpace = (int)main.simulationSpace;
-            if (ImGui::Combo("Simulation Space", &simSpace, simSpaceItems, 2)) {
+            if (ImGui::Combo("Simulation Space##MainSimSpace", &simSpace, simSpaceItems, 2)) {
                 main.simulationSpace = (ParticleSystemConfig::SimulationSpace)simSpace;
             }
 
-            ImGui::DragInt("Max Particles", &main.maxParticles, 10, 1, 100000);
+            ImGui::DragInt("Max Particles##MainMaxParticles", &main.maxParticles, 10, 1, 100000);
         }
 
         // EMISSION MODULE
         EmissionModule& emission = ps->GetEmissionModule();
 
-        if (ImGui::CollapsingHeader("Emission"))
+        if (ImGui::CollapsingHeader("Emission##EmissionHeader"))
         {
-            ImGui::Checkbox("Enabled##Emission", &emission.enabled);
+            ImGui::Checkbox("Enabled##EmissionEnabled", &emission.enabled);
 
             if (emission.enabled)
             {
-                ImGui::DragFloat("Rate over Time", &emission.rateOverTime, 0.5f, 0.0f, 10000.0f);
-                ImGui::DragFloat("Rate over Distance", &emission.rateOverDistance, 0.1f, 0.0f, 1000.0f);
+                ImGui::DragFloat("Rate over Time##EmissionRateTime", &emission.rateOverTime, 0.5f, 0.0f, 10000.0f);
+                ImGui::DragFloat("Rate over Distance##EmissionRateDist", &emission.rateOverDistance, 0.1f, 0.0f, 1000.0f);
 
                 ImGui::Spacing();
                 ImGui::Text("Bursts:");
@@ -1006,12 +1029,12 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
                     auto& burst = emission.bursts[i];
 
                     ImGui::Text("Burst %d:", (int)i);
-                    ImGui::DragFloat("Time", &burst.time, 0.1f, 0.0f, main.duration);
-                    ImGui::DragInt("Count", &burst.count, 1, 1, 10000);
-                    ImGui::DragInt("Cycles", &burst.cycles, 1, 1, 100);
-                    ImGui::DragFloat("Repeat Interval", &burst.repeatInterval, 0.1f, 0.1f, 100.0f);
+                    ImGui::DragFloat("Time##BurstTime", &burst.time, 0.1f, 0.0f, main.duration);
+                    ImGui::DragInt("Count##BurstCount", &burst.count, 1, 1, 10000);
+                    ImGui::DragInt("Cycles##BurstCycles", &burst.cycles, 1, 1, 100);
+                    ImGui::DragFloat("Repeat Interval##BurstInterval", &burst.repeatInterval, 0.1f, 0.1f, 100.0f);
 
-                    if (ImGui::Button("Remove Burst")) {
+                    if (ImGui::Button("Remove Burst##BurstRemove")) {
                         emission.bursts.erase(emission.bursts.begin() + i);
                         ImGui::PopID();
                         break;
@@ -1021,7 +1044,7 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
                     ImGui::Separator();
                 }
 
-                if (ImGui::Button("Add Burst"))
+                if (ImGui::Button("Add Burst##BurstAdd"))
                 {
                     EmissionModule::Burst newBurst;
                     emission.bursts.push_back(newBurst);
@@ -1032,15 +1055,15 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
         // SHAPE MODULE
         ShapeModule& shape = ps->GetShapeModule();
 
-        if (ImGui::CollapsingHeader("Shape"))
+        if (ImGui::CollapsingHeader("Shape##ShapeHeader"))
         {
-            ImGui::Checkbox("Enabled##Shape", &shape.enabled);
+            ImGui::Checkbox("Enabled##ShapeEnabled", &shape.enabled);
 
             if (shape.enabled)
             {
                 const char* shapeItems[] = { "Cone", "Sphere", "Hemisphere", "Circle", "Box", "Edge" };
                 int shapeType = (int)shape.shape;
-                if (ImGui::Combo("Shape", &shapeType, shapeItems, 6)) {
+                if (ImGui::Combo("Shape##ShapeType", &shapeType, shapeItems, 6)) {
                     shape.shape = (EmitterShape)shapeType;
                 }
 
@@ -1050,120 +1073,120 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
                 {
                 case EmitterShape::CONE:
                 {
-                    ImGui::SliderFloat("Angle", &shape.coneAngle, 0.0f, 90.0f);
-                    ImGui::DragFloat("Radius", &shape.coneRadius, 0.1f, 0.0f, 100.0f);
-                    ImGui::DragFloat("Length", &shape.coneLength, 0.1f, 0.0f, 100.0f);
-                    ImGui::Checkbox("Emit from Base", &shape.emitFromBase);
+                    ImGui::SliderFloat("Angle##ConeAngle", &shape.coneAngle, 0.0f, 90.0f);
+                    ImGui::DragFloat("Radius##ConeRadius", &shape.coneRadius, 0.1f, 0.0f, 100.0f);
+                    ImGui::DragFloat("Length##ConeLength", &shape.coneLength, 0.1f, 0.0f, 100.0f);
+                    ImGui::Checkbox("Emit from Base##ConeBase", &shape.emitFromBase);
                     break;
                 }
                 case EmitterShape::SPHERE:
                 case EmitterShape::HEMISPHERE:
                 {
-                    ImGui::DragFloat("Radius", &shape.sphereRadius, 0.1f, 0.1f, 100.0f);
-                    ImGui::SliderFloat("Radius Thickness", &shape.sphereRadiusThickness, 0.0f, 1.0f);
+                    ImGui::DragFloat("Radius##SphereRadius", &shape.sphereRadius, 0.1f, 0.1f, 100.0f);
+                    ImGui::SliderFloat("Radius Thickness##SphereThickness", &shape.sphereRadiusThickness, 0.0f, 1.0f);
                     ImGui::TextDisabled("0 = Surface, 1 = Volume");
                     break;
                 }
                 case EmitterShape::CIRCLE:
                 {
-                    ImGui::DragFloat("Radius", &shape.circleRadius, 0.1f, 0.1f, 100.0f);
-                    ImGui::SliderFloat("Arc", &shape.circleArc, 0.0f, 360.0f);
+                    ImGui::DragFloat("Radius##CircleRadius", &shape.circleRadius, 0.1f, 0.1f, 100.0f);
+                    ImGui::SliderFloat("Arc##CircleArc", &shape.circleArc, 0.0f, 360.0f);
 
                     const char* modeItems[] = { "Random", "Loop", "Ping Pong" };
                     int mode = (int)shape.circleMode;
-                    if (ImGui::Combo("Mode", &mode, modeItems, 3)) {
+                    if (ImGui::Combo("Mode##CircleMode", &mode, modeItems, 3)) {
                         shape.circleMode = (EmissionMode)mode;
                     }
 
-                    ImGui::DragFloat("Speed", &shape.circleSpeed, 0.1f, 0.0f, 10.0f);
-                    ImGui::DragFloat("Spread", &shape.circleSpread, 0.1f, 0.0f, 10.0f);
+                    ImGui::DragFloat("Speed##CircleSpeed", &shape.circleSpeed, 0.1f, 0.0f, 10.0f);
+                    ImGui::DragFloat("Spread##CircleSpread", &shape.circleSpread, 0.1f, 0.0f, 10.0f);
                     break;
                 }
                 case EmitterShape::BOX:
                 {
-                    ImGui::DragFloat3("Size", &shape.boxSize[0], 0.1f, 0.1f, 100.0f);
-                    ImGui::Checkbox("Emit from Volume", &shape.emitFromVolume);
+                    ImGui::DragFloat3("Size##BoxSize", &shape.boxSize[0], 0.1f, 0.1f, 100.0f);
+                    ImGui::Checkbox("Emit from Volume##BoxVolume", &shape.emitFromVolume);
                     break;
                 }
                 case EmitterShape::EDGE:
                 {
-                    ImGui::DragFloat("Radius", &shape.edgeRadius, 0.1f, 0.1f, 100.0f);
+                    ImGui::DragFloat("Radius##EdgeRadius", &shape.edgeRadius, 0.1f, 0.1f, 100.0f);
                     break;
                 }
                 }
 
                 ImGui::Spacing();
-                ImGui::SliderFloat("Random Direction", &shape.randomDirectionAmount, 0.0f, 1.0f);
-                ImGui::SliderFloat("Spherical Direction", &shape.sphericalDirectionAmount, 0.0f, 1.0f);
+                ImGui::SliderFloat("Random Direction##ShapeRandDir", &shape.randomDirectionAmount, 0.0f, 1.0f);
+                ImGui::SliderFloat("Spherical Direction##ShapeSphDir", &shape.sphericalDirectionAmount, 0.0f, 1.0f);
             }
         }
 
         // VELOCITY OVER LIFETIME
         VelocityOverLifetimeModule& vel = ps->GetVelocityOverLifetime();
 
-        if (ImGui::CollapsingHeader("Velocity over Lifetime"))
+        if (ImGui::CollapsingHeader("Velocity over Lifetime##VelHeader"))
         {
-            ImGui::Checkbox("Enabled##Velocity", &vel.enabled);
+            ImGui::Checkbox("Enabled##VelEnabled", &vel.enabled);
 
             if (vel.enabled)
             {
-                ImGui::DragFloat3("Velocity", &vel.velocity[0], 0.1f, -100.0f, 100.0f);
-                ImGui::Checkbox("Local Space", &vel.isLocal);
+                ImGui::DragFloat3("Velocity##VelVelocity", &vel.velocity[0], 0.1f, -100.0f, 100.0f);
+                ImGui::Checkbox("Local Space##VelLocal", &vel.isLocal);
             }
         }
 
         // LIMIT VELOCITY OVER LIFETIME
         LimitVelocityOverLifetimeModule& limitVel = ps->GetLimitVelocityOverLifetime();
 
-        if (ImGui::CollapsingHeader("Limit Velocity over Lifetime"))
+        if (ImGui::CollapsingHeader("Limit Velocity over Lifetime##LimitVelHeader"))
         {
-            ImGui::Checkbox("Enabled##LimitVel", &limitVel.enabled);
+            ImGui::Checkbox("Enabled##LimitVelEnabled", &limitVel.enabled);
 
             if (limitVel.enabled)
             {
-                ImGui::DragFloat("Speed", &limitVel.speed, 0.1f, 0.0f, 100.0f);
-                ImGui::SliderFloat("Dampen", &limitVel.dampen, 0.0f, 1.0f);
+                ImGui::DragFloat("Speed##LimitVelSpeed", &limitVel.speed, 0.1f, 0.0f, 100.0f);
+                ImGui::SliderFloat("Dampen##LimitVelDampen", &limitVel.dampen, 0.0f, 1.0f);
             }
         }
 
         // FORCE OVER LIFETIME
         ForceOverLifetimeModule& force = ps->GetForceOverLifetime();
 
-        if (ImGui::CollapsingHeader("Force over Lifetime"))
+        if (ImGui::CollapsingHeader("Force over Lifetime##ForceHeader"))
         {
-            ImGui::Checkbox("Enabled##Force", &force.enabled);
+            ImGui::Checkbox("Enabled##ForceEnabled", &force.enabled);
 
             if (force.enabled)
             {
-                ImGui::DragFloat3("Force", &force.force[0], 0.1f, -100.0f, 100.0f);
-                ImGui::Checkbox("Local Space##Force", &force.isLocal);
+                ImGui::DragFloat3("Force##ForceValue", &force.force[0], 0.1f, -100.0f, 100.0f);
+                ImGui::Checkbox("Local Space##ForceLocal", &force.isLocal);
             }
         }
 
         // COLOR OVER LIFETIME
         ColorOverLifetimeModule& col = ps->GetColorOverLifetime();
 
-        if (ImGui::CollapsingHeader("Color over Lifetime"))
+        if (ImGui::CollapsingHeader("Color over Lifetime##ColorHeader"))
         {
-            ImGui::Checkbox("Enabled##Color", &col.enabled);
+            ImGui::Checkbox("Enabled##ColorEnabled", &col.enabled);
 
             if (col.enabled)
             {
-                ImGui::ColorEdit4("Start Color", &col.startColor[0]);
-                ImGui::ColorEdit4("End Color", &col.endColor[0]);
+                ImGui::ColorEdit4("Start Color##ColorStart", &col.startColor[0]);
+                ImGui::ColorEdit4("End Color##ColorEnd", &col.endColor[0]);
 
                 ImGui::Spacing();
                 ImGui::Text("Gradient Keys:");
 
                 for (size_t i = 0; i < col.gradient.size(); ++i)
                 {
-                    ImGui::PushID((int)i);
+                    ImGui::PushID((int)(1000 + i)); // Unique ID range for gradient keys
                     auto& key = col.gradient[i];
 
-                    ImGui::SliderFloat("Time", &key.time, 0.0f, 1.0f);
-                    ImGui::ColorEdit4("Color", &key.color[0]);
+                    ImGui::SliderFloat("Time##GradTime", &key.time, 0.0f, 1.0f);
+                    ImGui::ColorEdit4("Color##GradColor", &key.color[0]);
 
-                    if (ImGui::Button("Remove Key")) {
+                    if (ImGui::Button("Remove Key##GradRemove")) {
                         col.gradient.erase(col.gradient.begin() + i);
                         ImGui::PopID();
                         break;
@@ -1172,7 +1195,7 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
                     ImGui::PopID();
                 }
 
-                if (ImGui::Button("Add Gradient Key"))
+                if (ImGui::Button("Add Gradient Key##GradAdd"))
                 {
                     ColorOverLifetimeModule::ColorKey newKey;
                     newKey.time = 0.5f;
@@ -1185,43 +1208,43 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
         // COLOR BY SPEED
         ColorBySpeedModule& colSpeed = ps->GetColorBySpeed();
 
-        if (ImGui::CollapsingHeader("Color by Speed"))
+        if (ImGui::CollapsingHeader("Color by Speed##ColorSpeedHeader"))
         {
-            ImGui::Checkbox("Enabled##ColorSpeed", &colSpeed.enabled);
+            ImGui::Checkbox("Enabled##ColorSpeedEnabled", &colSpeed.enabled);
 
             if (colSpeed.enabled)
             {
-                ImGui::ColorEdit4("Min Color", &colSpeed.minColor[0]);
-                ImGui::ColorEdit4("Max Color", &colSpeed.maxColor[0]);
-                ImGui::DragFloat("Min Speed", &colSpeed.minSpeed, 0.1f, 0.0f, 1000.0f);
-                ImGui::DragFloat("Max Speed", &colSpeed.maxSpeed, 0.1f, 0.0f, 1000.0f);
+                ImGui::ColorEdit4("Min Color##ColorSpeedMin", &colSpeed.minColor[0]);
+                ImGui::ColorEdit4("Max Color##ColorSpeedMax", &colSpeed.maxColor[0]);
+                ImGui::DragFloat("Min Speed##ColorSpeedMinVal", &colSpeed.minSpeed, 0.1f, 0.0f, 1000.0f);
+                ImGui::DragFloat("Max Speed##ColorSpeedMaxVal", &colSpeed.maxSpeed, 0.1f, 0.0f, 1000.0f);
             }
         }
 
         // SIZE OVER LIFETIME
         SizeOverLifetimeModule& size = ps->GetSizeOverLifetime();
 
-        if (ImGui::CollapsingHeader("Size over Lifetime"))
+        if (ImGui::CollapsingHeader("Size over Lifetime##SizeHeader"))
         {
-            ImGui::Checkbox("Enabled##Size", &size.enabled);
+            ImGui::Checkbox("Enabled##SizeEnabled", &size.enabled);
 
             if (size.enabled)
             {
-                ImGui::DragFloat("Start Size", &size.startSize, 0.01f, 0.0f, 10.0f);
-                ImGui::DragFloat("End Size", &size.endSize, 0.01f, 0.0f, 10.0f);
+                ImGui::DragFloat("Start Size##SizeStart", &size.startSize, 0.01f, 0.0f, 10.0f);
+                ImGui::DragFloat("End Size##SizeEnd", &size.endSize, 0.01f, 0.0f, 10.0f);
 
                 ImGui::Spacing();
                 ImGui::Text("Size Curve:");
 
                 for (size_t i = 0; i < size.sizeCurve.size(); ++i)
                 {
-                    ImGui::PushID((int)i);
+                    ImGui::PushID((int)(2000 + i)); // Unique ID range for size keys
                     auto& key = size.sizeCurve[i];
 
-                    ImGui::SliderFloat("Time", &key.time, 0.0f, 1.0f);
-                    ImGui::DragFloat("Size", &key.size, 0.01f, 0.0f, 10.0f);
+                    ImGui::SliderFloat("Time##SizeCurveTime", &key.time, 0.0f, 1.0f);
+                    ImGui::DragFloat("Size##SizeCurveSize", &key.size, 0.01f, 0.0f, 10.0f);
 
-                    if (ImGui::Button("Remove Key")) {
+                    if (ImGui::Button("Remove Key##SizeCurveRemove")) {
                         size.sizeCurve.erase(size.sizeCurve.begin() + i);
                         ImGui::PopID();
                         break;
@@ -1230,7 +1253,7 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
                     ImGui::PopID();
                 }
 
-                if (ImGui::Button("Add Size Key"))
+                if (ImGui::Button("Add Size Key##SizeCurveAdd"))
                 {
                     SizeOverLifetimeModule::SizeKey newKey;
                     newKey.time = 0.5f;
@@ -1243,99 +1266,249 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
         // SIZE BY SPEED
         SizeBySpeedModule& sizeSpeed = ps->GetSizeBySpeed();
 
-        if (ImGui::CollapsingHeader("Size by Speed"))
+        if (ImGui::CollapsingHeader("Size by Speed##SizeSpeedHeader"))
         {
-            ImGui::Checkbox("Enabled##SizeSpeed", &sizeSpeed.enabled);
+            ImGui::Checkbox("Enabled##SizeSpeedEnabled", &sizeSpeed.enabled);
 
             if (sizeSpeed.enabled)
             {
-                ImGui::DragFloat("Min Size", &sizeSpeed.minSize, 0.01f, 0.0f, 10.0f);
-                ImGui::DragFloat("Max Size", &sizeSpeed.maxSize, 0.01f, 0.0f, 10.0f);
-                ImGui::DragFloat("Min Speed", &sizeSpeed.minSpeed, 0.1f, 0.0f, 1000.0f);
-                ImGui::DragFloat("Max Speed", &sizeSpeed.maxSpeed, 0.1f, 0.0f, 1000.0f);
+                ImGui::DragFloat("Min Size##SizeSpeedMin", &sizeSpeed.minSize, 0.01f, 0.0f, 10.0f);
+                ImGui::DragFloat("Max Size##SizeSpeedMax", &sizeSpeed.maxSize, 0.01f, 0.0f, 10.0f);
+                ImGui::DragFloat("Min Speed##SizeSpeedMinVal", &sizeSpeed.minSpeed, 0.1f, 0.0f, 1000.0f);
+                ImGui::DragFloat("Max Speed##SizeSpeedMaxVal", &sizeSpeed.maxSpeed, 0.1f, 0.0f, 1000.0f);
             }
         }
 
         // ROTATION OVER LIFETIME
         RotationOverLifetimeModule& rot = ps->GetRotationOverLifetime();
 
-        if (ImGui::CollapsingHeader("Rotation over Lifetime"))
+        if (ImGui::CollapsingHeader("Rotation over Lifetime##RotHeader"))
         {
-            ImGui::Checkbox("Enabled##Rotation", &rot.enabled);
+            ImGui::Checkbox("Enabled##RotEnabled", &rot.enabled);
 
             if (rot.enabled)
             {
-                ImGui::DragFloat("Angular Velocity", &rot.angularVelocity, 1.0f, -1000.0f, 1000.0f);
-                ImGui::DragFloat("Variance##AngularVel", &rot.angularVelocityVariance, 1.0f, 0.0f, 1000.0f);
+                ImGui::DragFloat("Angular Velocity##RotAngVel", &rot.angularVelocity, 1.0f, -1000.0f, 1000.0f);
+                ImGui::DragFloat("Variance##RotAngVelVar", &rot.angularVelocityVariance, 1.0f, 0.0f, 1000.0f);
             }
         }
 
         // ROTATION BY SPEED
         RotationBySpeedModule& rotSpeed = ps->GetRotationBySpeed();
 
-        if (ImGui::CollapsingHeader("Rotation by Speed"))
+        if (ImGui::CollapsingHeader("Rotation by Speed##RotSpeedHeader"))
         {
-            ImGui::Checkbox("Enabled##RotSpeed", &rotSpeed.enabled);
+            ImGui::Checkbox("Enabled##RotSpeedEnabled", &rotSpeed.enabled);
 
             if (rotSpeed.enabled)
             {
-                ImGui::DragFloat("Min Angular Velocity", &rotSpeed.minAngularVelocity, 1.0f, -1000.0f, 1000.0f);
-                ImGui::DragFloat("Max Angular Velocity", &rotSpeed.maxAngularVelocity, 1.0f, -1000.0f, 1000.0f);
-                ImGui::DragFloat("Min Speed##RotSpeed", &rotSpeed.minSpeed, 0.1f, 0.0f, 1000.0f);
-                ImGui::DragFloat("Max Speed##RotSpeed", &rotSpeed.maxSpeed, 0.1f, 0.0f, 1000.0f);
+                ImGui::DragFloat("Min Angular Velocity##RotSpeedMin", &rotSpeed.minAngularVelocity, 1.0f, -1000.0f, 1000.0f);
+                ImGui::DragFloat("Max Angular Velocity##RotSpeedMax", &rotSpeed.maxAngularVelocity, 1.0f, -1000.0f, 1000.0f);
+                ImGui::DragFloat("Min Speed##RotSpeedMinVal", &rotSpeed.minSpeed, 0.1f, 0.0f, 1000.0f);
+                ImGui::DragFloat("Max Speed##RotSpeedMaxVal", &rotSpeed.maxSpeed, 0.1f, 0.0f, 1000.0f);
             }
         }
 
         // NOISE
         NoiseModule& noise = ps->GetNoise();
 
-        if (ImGui::CollapsingHeader("Noise"))
+        if (ImGui::CollapsingHeader("Noise##NoiseHeader"))
         {
-            ImGui::Checkbox("Enabled##Noise", &noise.enabled);
+            ImGui::Checkbox("Enabled##NoiseEnabled", &noise.enabled);
 
             if (noise.enabled)
             {
-                ImGui::DragFloat("Strength", &noise.strength, 0.1f, 0.0f, 10.0f);
-                ImGui::DragFloat("Frequency", &noise.frequency, 0.01f, 0.0f, 10.0f);
-                ImGui::DragFloat("Scroll Speed", &noise.scrollSpeed, 0.1f, 0.0f, 10.0f);
-                ImGui::Checkbox("Damping", &noise.damping);
+                ImGui::DragFloat("Strength##NoiseStrength", &noise.strength, 0.1f, 0.0f, 10.0f);
+                ImGui::DragFloat("Frequency##NoiseFreq", &noise.frequency, 0.01f, 0.0f, 10.0f);
+                ImGui::DragFloat("Scroll Speed##NoiseScroll", &noise.scrollSpeed, 0.1f, 0.0f, 10.0f);
+                ImGui::Checkbox("Damping##NoiseDamp", &noise.damping);
             }
         }
 
         // RENDERING
-        if (ImGui::CollapsingHeader("Renderer"))
+        if (ImGui::CollapsingHeader("Renderer##RendererHeader"))
         {
             const char* renderModeNames[] = { "Billboard", "Stretched Billboard", "Horizontal Billboard", "Vertical Billboard", "Mesh" };
             int currentRenderMode = (int)main.renderMode;
-            if (ImGui::Combo("Render Mode", &currentRenderMode, renderModeNames, 5)) {
+            if (ImGui::Combo("Render Mode##RenderMode", &currentRenderMode, renderModeNames, 5)) {
                 main.renderMode = (ParticleSystemConfig::RenderMode)currentRenderMode;
             }
 
             const char* blendModeNames[] = { "Alpha Blend", "Additive", "Subtractive", "Multiply" };
             int currentBlendMode = (int)main.blendMode;
-            if (ImGui::Combo("Blend Mode", &currentBlendMode, blendModeNames, 4)) {
+            if (ImGui::Combo("Blend Mode##BlendMode", &currentBlendMode, blendModeNames, 4)) {
                 main.blendMode = (ParticleSystemConfig::BlendMode)currentBlendMode;
             }
 
             ImGui::Spacing();
-            ImGui::Text("Texture: %s", main.texturePath.empty() ? "None" : main.texturePath.c_str());
+            ImGui::Separator();
+            ImGui::Spacing();
 
-            if (ImGui::Button("Load Texture..."))
-            {
-                std::string path = "../Assets/Textures/particle.png";
-                if (ps->LoadTexture(path))
-                {
-                    LOG_CONSOLE("Particle texture loaded");
-                }
-            }
+            // NUEVA SECCIÓN: Selector de textura como en Material
+            ImGui::Text("Texture:");
+            ImGui::SameLine();
+
+            std::string currentTextureName = "None";
 
             if (main.textureUID != 0)
             {
-                ImGui::SameLine();
-                if (ImGui::Button("Clear Texture"))
+                ModuleResources* resources = Application::GetInstance().resources.get();
+                const Resource* res = resources->GetResourceDirect(main.textureUID);
+                if (res)
+                {
+                    currentTextureName = std::string(res->GetAssetFile());
+                    size_t lastSlash = currentTextureName.find_last_of("/\\");
+                    if (lastSlash != std::string::npos)
+                        currentTextureName = currentTextureName.substr(lastSlash + 1);
+                }
+                else
+                {
+                    currentTextureName = "UID " + std::to_string(main.textureUID);
+                }
+            }
+
+            ImGui::SetNextItemWidth(-1);
+            if (ImGui::BeginCombo("##ParticleTextureSelector", currentTextureName.c_str()))
+            {
+                // Opción "None"
+                bool isNoneSelected = (main.textureUID == 0);
+                if (ImGui::Selectable("[None]", isNoneSelected))
                 {
                     main.textureUID = 0;
                     main.texturePath = "";
+                    LOG_CONSOLE("Particle texture cleared");
+                }
+
+                if (isNoneSelected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+
+                ImGui::Separator();
+
+                // Lista de texturas disponibles
+                ModuleResources* resources = Application::GetInstance().resources.get();
+                const std::map<UID, Resource*>& allResources = resources->GetAllResources();
+
+                for (const auto& pair : allResources)
+                {
+                    const Resource* res = pair.second;
+                    if (res->GetType() == Resource::TEXTURE)
+                    {
+                        std::string textureName = res->GetAssetFile();
+
+                        size_t lastSlash = textureName.find_last_of("/\\");
+                        if (lastSlash != std::string::npos)
+                            textureName = textureName.substr(lastSlash + 1);
+
+                        UID textureUID = res->GetUID();
+                        bool isSelected = (main.textureUID == textureUID);
+
+                        std::string displayName = textureName;
+                        if (res->IsLoadedToMemory())
+                        {
+                            displayName += " [Loaded]";
+                        }
+
+                        const ResourceTexture* texRes = static_cast<const ResourceTexture*>(res);
+                        unsigned int gpuID = texRes->GetGPU_ID();
+
+                        if (ImGui::Selectable(displayName.c_str(), isSelected))
+                        {
+                            if (ps->LoadTexture(res->GetAssetFile()))
+                            {
+                                LOG_DEBUG("Assigned particle texture '%s' (UID %llu)",
+                                    textureName.c_str(), textureUID);
+                                LOG_CONSOLE("Particle texture '%s' assigned", textureName.c_str());
+                            }
+                            else
+                            {
+                                LOG_CONSOLE("Failed to load particle texture '%s'", textureName.c_str());
+                            }
+                        }
+
+                        if (isSelected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+
+                        // Tooltip con preview
+                        if (ImGui::IsItemHovered())
+                        {
+                            ImGui::BeginTooltip();
+
+                            if (gpuID != 0)
+                            {
+                                float tooltipPreviewSize = 128.0f;
+                                float width = (float)texRes->GetWidth();
+                                float height = (float)texRes->GetHeight();
+                                float scale = tooltipPreviewSize / std::max(width, height);
+                                ImVec2 tooltipSize(width * scale, height * scale);
+
+                                ImGui::Image((ImTextureID)(intptr_t)gpuID, tooltipSize);
+                                ImGui::Separator();
+                            }
+
+                            ImGui::Text("%s", textureName.c_str());
+                            ImGui::Text("UID: %llu", textureUID);
+                            ImGui::Text("Size: %d x %d", texRes->GetWidth(), texRes->GetHeight());
+                            ImGui::Text("Path: %s", res->GetAssetFile());
+                            if (res->IsLoadedToMemory())
+                            {
+                                ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "Loaded in memory");
+                            }
+                            else
+                            {
+                                ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Not loaded");
+                            }
+                            ImGui::EndTooltip();
+                        }
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            // Preview de la textura actual
+            if (main.textureUID != 0)
+            {
+                ModuleResources* resources = Application::GetInstance().resources.get();
+                const Resource* res = resources->GetResourceDirect(main.textureUID);
+
+                if (res && res->GetType() == Resource::TEXTURE)
+                {
+                    const ResourceTexture* texRes = static_cast<const ResourceTexture*>(res);
+                    unsigned int gpuID = texRes->GetGPU_ID();
+                    int texWidth = texRes->GetWidth();
+                    int texHeight = texRes->GetHeight();
+
+                    if (gpuID != 0)
+                    {
+                        ImGui::Text("Texture Preview:");
+
+                        float previewMaxSize = 256.0f;
+                        float width = (float)texWidth;
+                        float height = (float)texHeight;
+
+                        float scale = previewMaxSize / std::max(width, height);
+                        ImVec2 previewSize(width * scale, height * scale);
+
+                        float windowWidth = ImGui::GetContentRegionAvail().x;
+                        float offsetX = (windowWidth - previewSize.x) * 0.5f;
+                        if (offsetX > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+
+                        ImGui::Image((ImTextureID)(intptr_t)gpuID, previewSize);
+
+                        ImGui::Spacing();
+                        ImGui::Separator();
+                        ImGui::Spacing();
+                    }
+
+                    ImGui::Text("Size: %d x %d pixels", texWidth, texHeight);
                 }
             }
         }
@@ -1343,25 +1516,25 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
         ImGui::Separator();
 
         // PRESETS
-        if (ImGui::CollapsingHeader("Presets"))
+        if (ImGui::CollapsingHeader("Presets##PresetsHeader"))
         {
-            if (ImGui::Button("Smoke")) { ps->LoadSmokePreset(); ps->Play(); }
+            if (ImGui::Button("Smoke##PresetSmoke")) { ps->LoadSmokePreset(); ps->Play(); }
             ImGui::SameLine();
-            if (ImGui::Button("Fire")) { ps->LoadFirePreset(); ps->Play(); }
+            if (ImGui::Button("Fire##PresetFire")) { ps->LoadFirePreset(); ps->Play(); }
             ImGui::SameLine();
-            if (ImGui::Button("Explosion")) { ps->LoadExplosionPreset(); ps->Play(); }
+            if (ImGui::Button("Explosion##PresetExplosion")) { ps->LoadExplosionPreset(); ps->Play(); }
 
-            if (ImGui::Button("Sparkles")) { ps->LoadSparklesPreset(); ps->Play(); }
+            if (ImGui::Button("Sparkles##PresetSparkles")) { ps->LoadSparklesPreset(); ps->Play(); }
             ImGui::SameLine();
-            if (ImGui::Button("Rain")) { ps->LoadRainPreset(); ps->Play(); }
+            if (ImGui::Button("Rain##PresetRain")) { ps->LoadRainPreset(); ps->Play(); }
             ImGui::SameLine();
-            if (ImGui::Button("Snow")) { ps->LoadSnowPreset(); ps->Play(); }
+            if (ImGui::Button("Snow##PresetSnow")) { ps->LoadSnowPreset(); ps->Play(); }
         }
 
         ImGui::Separator();
 
         // SAVE/LOAD
-        if (ImGui::Button("Save Config..."))
+        if (ImGui::Button("Save Config...##SaveConfig"))
         {
             std::string filename = "../Assets/ParticleConfigs/config.json";
             if (ps->SaveConfig(filename))
@@ -1370,7 +1543,7 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
             }
         }
         ImGui::SameLine();
-        if (ImGui::Button("Load Config..."))
+        if (ImGui::Button("Load Config...##LoadConfig"))
         {
             std::string filename = "../Assets/ParticleConfigs/config.json";
             if (ps->LoadConfig(filename))
