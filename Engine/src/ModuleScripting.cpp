@@ -82,6 +82,26 @@ int Lua_GetPosition(lua_State* L)
 
     return 1;
 }
+int Lua_GetRotation(lua_State* L)
+{
+    GameObject* go = (GameObject*)lua_touserdata(L, 1);
+    if (go == NULL)return 0;
+
+    Transform* transform = static_cast<Transform*>(go->GetComponent(ComponentType::TRANSFORM));
+    glm::vec3 pos = transform->GetRotation();
+    lua_newtable(L);
+
+    lua_pushnumber(L, pos.x);
+    lua_setfield(L, -2, "x");
+
+    lua_pushnumber(L, pos.y);
+    lua_setfield(L, -2, "y");
+
+    lua_pushnumber(L, pos.z);
+    lua_setfield(L, -2, "z");
+
+    return 1;
+}
 void GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects)
 {
     if (root == nullptr)
@@ -157,11 +177,8 @@ int Lua_CreatePrimitiveGameObject(lua_State* L)
         );
     materialComp->CreateCheckerboardTexture();
     Object->name = Objname;
-    //GameObject* root = Application::GetInstance().scene->GetRoot();
-    //root->AddChild(Object);
-    self->owner->AddChild(Object);
-   
-    Application::GetInstance().scene->RebuildOctree();
+
+    Application::GetInstance().scene.get()->newObject.push_back(Object);
 
     lua_pushlightuserdata(L, Object);
     return 1;
@@ -187,10 +204,15 @@ bool ModuleScripting::Start()
     lua_pushcclosure(L, Lua_GetPosition, 1);
     lua_setglobal(L, "GetPosition");
 
+    // GetRotation
+    lua_pushlightuserdata(L, this);
+    lua_pushcclosure(L, Lua_GetPosition, 1);
+    lua_setglobal(L, "GetPosition");
+
     // SetScale
     lua_pushlightuserdata(L, this);
-    lua_pushcclosure(L, Lua_SetScale, 1);
-    lua_setglobal(L, "SetScale");
+    lua_pushcclosure(L, Lua_GetRotation, 1);
+    lua_setglobal(L, "GetRotation");
 
     // FindGameObject
     lua_pushlightuserdata(L, this);
@@ -215,24 +237,16 @@ bool ModuleScripting::Update()
 
     if (init) {
         lua_getglobal(L, "Start");
-        if (lua_isfunction(L, -1)) {
-            if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
-                LOG_CONSOLE("ERROR [Lua Start] %s", lua_tostring(L, -1));
-                scriptError = true;
-                return true;
-            }
-        }
+        if (lua_isfunction(L, -1))
+            lua_pcall(L, 0, 0, 0);
 
         init = false;
     }
     PushInput();
 
     lua_getglobal(L, "Update");
-    if (lua_isfunction(L, -1)) {
-        LOG_CONSOLE("ERROR [Lua Update] %s", lua_tostring(L, -1));
-        scriptError = true;
-        lua_pop(L, 1);
-    }
+    if (lua_isfunction(L, -1))
+        lua_pcall(L, 0, 0, 0);
 
     return true;
 }
@@ -265,10 +279,10 @@ void ModuleScripting::PushInput()
     
     glm::vec3 rayDir = MouseWorldPos();
 
-    lua_pushnumber(L, rayDir.x );
+    lua_pushnumber(L, rayDir.x * 10 );
     lua_setfield(L, -2, "MouseX");
             
-    lua_pushnumber(L,rayDir.y);
+    lua_pushnumber(L,rayDir.y * 10);
     lua_setfield(L, -2, "MouseY");
 
     lua_setglobal(L, "Input");
@@ -276,7 +290,7 @@ void ModuleScripting::PushInput()
 glm::vec3 ModuleScripting::MouseWorldPos()
 {
     float mouseXf, mouseYf;
-    ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
+    ComponentCamera* camera = Application::GetInstance().camera.get()->GetActiveCamera();
 
     SDL_GetMouseState(&mouseXf, &mouseYf);
     int scale = Application::GetInstance().window.get()->GetScale();

@@ -42,8 +42,12 @@ public:
     glm::vec3 lastRayDirection = glm::vec3(0.0f);
     float lastRayLength = 0.0f;
 
+    std::vector<GameObject*> newObject;
+
 private:
     std::unique_ptr<Octree> octree;
+
+
     bool needsOctreeRebuild = false;
     GameObject* root = nullptr;
 

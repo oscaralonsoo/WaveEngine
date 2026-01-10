@@ -4,6 +4,7 @@ y = 0.0;
 rot = 0.0;
 speed = 0.005;
 bullets = {}
+angles = {}
 
 function Start()
     obj = FindGameObject("this")
@@ -19,7 +20,7 @@ function Start()
 end
 
 function Update()
-hdhdhd
+
     if Input.W then
         MoveForward(obj, x, speed)
     end
@@ -36,26 +37,35 @@ hdhdhd
         SetRotation(obj,0, x, 0)
         x = x - 1
     end
-    if Input.MouseLeft  then    
-        print(Input.MouseX)
+    if Input.MouseLeft  then
+        print("CLick")
+            
+        print(angleDeg)
+
     end   
 
     if Input.MouseRight  and not lastMouseLeft  then    
         bullet = CreatePrimitive("Cube", "bullet")
         table.insert(bullets, bullet)
+        TempPos = GetPosition(obj)
+        SetPosition(bullet,TempPos.x,0,TempPos.z)
+        local tempA = GetRotation(turret)
+        table.insert(angles, tempA.y)
+        print(angles[#angles])
     end   
 
-    lastMouseLeft = Input.MouseRight        
+    lastMouseLeft = Input.MouseRight            
 
-    local pos = GetPosition(obj) 
-    local dx = (Input.MouseX * 10) - pos.x
-    local dy = (Input.MouseY * 10) + pos.z
+    local dx = Input.MouseX  
+    local dy = Input.MouseY 
     local angle  = atan2(dy,dx)
     angleDeg = math.deg(angle)
     SetRotation(turret,0,angleDeg,0)
 
+    cnt = 1
     for _, bullet in ipairs(bullets) do
-    shoot(bullet, angleDeg)
+    shoot(bullet, angles[cnt])
+    cnt = cnt +1
     end
 
 
@@ -106,19 +116,4 @@ function MoveBackward(object, angl, speed)
 
     SetPosition(object, pos.x - dirX * speed, pos.y, pos.z - dirZ * speed)
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

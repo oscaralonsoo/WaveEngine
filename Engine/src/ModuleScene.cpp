@@ -140,7 +140,17 @@ void ModuleScene::RebuildOctree()
 
 bool ModuleScene::Update()
 {
+    bool Insert = false;
     // Update all GameObjects
+    for (auto& obj : newObject)
+    {
+        root->AddChild(obj);
+        Insert = true;
+    }
+    if (Insert) {
+       /// RebuildOctree();
+        newObject.clear();
+    }
     if (root)
     {
         root->Update();
