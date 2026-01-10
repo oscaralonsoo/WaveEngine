@@ -157,10 +157,29 @@ void InspectorWindow::Draw()
         for (int i = 0; i < selectedObject->scripts.size(); ++i)
         {
             ModuleScripting* script = selectedObject->scripts[i];
+            if (!script) continue;
+
             ImGui::PushID(i);
 
-            if (ImGui::TreeNodeEx(script->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+
+            if (script->scriptError) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+            }
+            bool open = ImGui::TreeNodeEx(script->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+
+            if (script->scriptError) ImGui::PopStyleColor();
+
+            // Botón Editar
+            ImGui::SameLine(ImGui::GetWindowWidth() - 70);
+            if (ImGui::Button("Edit")) {
+                auto editor = Application::GetInstance().editor;
+                if (editor) editor->OpenScriptInEditor(script->GetFilePath(), script);
+            }
+
+            if (open)
             {
+            /*if (ImGui::TreeNodeEx(script->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+            {*/
                 lua_State* L = script->GetLuaState();
                 if (L)
                 {

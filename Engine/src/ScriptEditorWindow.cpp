@@ -20,21 +20,21 @@ ScriptEditorWindow::ScriptEditorWindow() : EditorWindow("Script Editor") {
 
 ScriptEditorWindow::~ScriptEditorWindow() {}
 
-void ScriptEditorWindow::LoadScript(const std::string& path) {
+void ScriptEditorWindow::LoadScript(const std::string& path, ModuleScripting* target) {
     currentPath = path;
-    currentName = path.substr(path.find_last_of("/\\") + 1);
+    currentName = std::filesystem::path(path).filename().string();
+    scripting = target;
 
     std::string content = Application::GetInstance().filesystem->LoadFileToString(path.c_str());
 
-    if (!content.empty() || content == "") {
-        editor.SetText(content);
-        editor.SetReadOnly(false);
+    editor.SetText(content);
+    editor.SetReadOnly(false);
 
-        isOpen = true; 
-        ImGui::SetWindowFocus("Script Editor");
-    }
+    isOpen = true; 
+    ImGui::SetWindowFocus("Script Editor");
+    
+
 }
-
 void ScriptEditorWindow::SaveScript() {
     if (currentPath.empty()) return;
 
@@ -42,6 +42,18 @@ void ScriptEditorWindow::SaveScript() {
 
     if (Application::GetInstance().filesystem->SaveStringToFile(currentPath.c_str(), textToSave)) {
         LOG_CONSOLE("[Editor] Script saved: %s", currentName.c_str());
+
+        if (scripting) {
+            if (!scripting->ReloadScript(currentPath)) {
+                errorMessage = scripting->GetLastError();
+                showErrorPopup = true;
+                LOG_CONSOLE("ERROR [Script Hot-Reload] %s", errorMessage.c_str());
+            }
+            else {
+                showErrorPopup = false; 
+            }
+        }
+
     }
 }
 
@@ -67,18 +79,16 @@ void ScriptEditorWindow::Draw() {
             }
             ImGui::EndMenuBar();
         }
+        if(showErrorPopup) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+            ImGui::TextWrapped("LUA ERROR: %s", errorMessage.c_str());
+            ImGui::PopStyleColor();
+
+            if (ImGui::Button("Clear Error")) showErrorPopup = false;
+            ImGui::Separator();
+        }
+
         editor.Render("TextEditorInstance");
     }
     ImGui::End();
-}
-void ScriptEditorWindow::OpenScript(const std::string& path) {
-    std::ifstream t(path);
-    if (t.good()) {
-        std::string str((std::istreambuf_iterator<char>(t)),
-            std::istreambuf_iterator<char>());
-
-        editor.SetText(str);
-        this->currentFilePath = path; // Guarda la ruta para poder guardar luego (Ctrl+S)
-        this->name = "Script Editor - " + std::filesystem::path(path).filename().string();
-    }
 }

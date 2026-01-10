@@ -4,6 +4,7 @@
 #include "EditorWindow.h"
 #include "TextEditor.h" 
 #include <string>
+#include "ModuleScripting.h"
 
 class ScriptEditorWindow : public EditorWindow {
 public:
@@ -11,10 +12,8 @@ public:
     virtual ~ScriptEditorWindow();
 
     void Draw() override;
-    void LoadScript(const std::string& path);
+    void LoadScript(const std::string& path, ModuleScripting* target);
     void SaveScript();
-
-    void OpenScript(const std::string& path);
 
     bool IsOpen() const { return isOpen; }
     void SetOpen(bool open) { isOpen = open; }
@@ -24,6 +23,10 @@ public:
     std::string currentPath;
     std::string currentName;
     std::string currentFilePath;
+
+    ModuleScripting* scripting = nullptr;
+    bool showErrorPopup = false; 
+    std::string errorMessage;
 };
 
 #endif

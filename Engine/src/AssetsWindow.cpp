@@ -918,7 +918,7 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
             auto editor = Application::GetInstance().editor.get();
             if (editor && editor->scriptEditorWindow)
             {
-                editor->scriptEditorWindow->LoadScript(asset.path);
+                editor->scriptEditorWindow->LoadScript(asset.path, nullptr);
             }
         }
     }

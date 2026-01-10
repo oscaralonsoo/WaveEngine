@@ -13,6 +13,7 @@
 #include "ComponentCamera.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include "Log.h"
 
 ModuleScripting::ModuleScripting()
 {
@@ -111,8 +112,8 @@ int Lua_FindGameObject(lua_State* L)
 
         if (!go)
         {
-            LOG_CONSOLE("[Script] %s error: GameObject %s not found",self->name.c_str(), ObjName.c_str());
-
+            //LOG_CONSOLE("[Script] %s error: GameObject %s not found",self->name.c_str(), ObjName.c_str());
+            LOG_CONSOLE("ERROR [Script] %s: GameObject %s not found", self->name.c_str(), ObjName.c_str());
             lua_pushnil(L);
             return 0;
         }
@@ -210,18 +211,28 @@ bool ModuleScripting::Start()
 
 bool ModuleScripting::Update()
 {
+    if (scriptError) return true;
+
     if (init) {
         lua_getglobal(L, "Start");
-        if (lua_isfunction(L, -1))
-            lua_pcall(L, 0, 0, 0);
+        if (lua_isfunction(L, -1)) {
+            if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
+                LOG_CONSOLE("ERROR [Lua Start] %s", lua_tostring(L, -1));
+                scriptError = true;
+                return true;
+            }
+        }
 
         init = false;
     }
     PushInput();
 
     lua_getglobal(L, "Update");
-    if (lua_isfunction(L, -1))
-        lua_pcall(L, 0, 0, 0);
+    if (lua_isfunction(L, -1)) {
+        LOG_CONSOLE("ERROR [Lua Update] %s", lua_tostring(L, -1));
+        scriptError = true;
+        lua_pop(L, 1);
+    }
 
     return true;
 }
@@ -288,16 +299,22 @@ glm::vec3 ModuleScripting::MouseWorldPos()
 }
 bool ModuleScripting::LoadScript(const char* path)
 {
+    scriptError = false;
+    lastError.clear();
+
     if (luaL_loadfile(L, path) != LUA_OK)
     {
-        LOG_CONSOLE("Lua load error: %s", lua_tostring(L, -1));
+        lastError = lua_tostring(L, -1);
+        LOG_CONSOLE("ERROR [Lua Load] %s", lastError.c_str());
+        //LOG_CONSOLE("Lua load error: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return false;
     }
 
     if (lua_pcall(L, 0, 0, 0) != LUA_OK)
     {
-        LOG_CONSOLE("Lua runtime error: %s", lua_tostring(L, -1));
+        //LOG_CONSOLE("Lua runtime error: %s", lua_tostring(L, -1));
+        LOG_CONSOLE("ERROR [Lua Runtime] %s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return false;
     }
@@ -306,6 +323,40 @@ bool ModuleScripting::LoadScript(const char* path)
 
     return true;
 }
+
+bool ModuleScripting::ReloadScript(const std::string& path)
+{
+    lastError.clear();
+    scriptError = false;
+
+    if (luaL_loadfile(L, path.c_str()) != LUA_OK)
+    {
+        lastError = lua_tostring(L, -1);
+        LOG_CONSOLE("ERROR [Lua Reload] %s", lastError.c_str());
+        //LOG_CONSOLE("[Lua Error] %s", lastError.c_str());
+        scriptError = true;
+        lua_pop(L, 1);
+        return false;
+    }
+
+    if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+    {
+        lastError = lua_tostring(L, -1);
+        LOG_CONSOLE("ERROR [Lua Runtime] %s", lastError.c_str());
+       //LOG_CONSOLE("[Lua Runtime Error] %s", lastError.c_str());
+        lastError = lua_tostring(L, -1);
+        LOG_CONSOLE("ERROR %s", lastError.c_str());
+        scriptError = true;
+        lua_pop(L, 1);
+        return false;
+    }
+
+    init = true;
+
+    LOG_CONSOLE("[Lua] Hot-Reloaded successfully: %s", path.c_str());
+    return true;
+}
+
 
 bool ModuleScripting::CleanUp()
 {

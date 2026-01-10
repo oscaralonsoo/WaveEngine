@@ -31,7 +31,17 @@ public:
     std::string name;
 
     lua_State* GetLuaState() { return L; }
+    const std::string& GetFilePath() const { return filePath; }
+
+
+    bool ReloadScript(const std::string& path); 
+    std::string GetLastError() const { return lastError; }
+    std::string lastError;
+    bool scriptError = false;
+
 private:
     lua_State* L;
     bool init = true;
+
+
 };

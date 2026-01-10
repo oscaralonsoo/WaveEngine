@@ -954,3 +954,10 @@ std::string ModuleEditor::OpenLoadFile(const std::string& defaultPath)
 
     return ""; // User cancelled
 }
+
+void ModuleEditor::OpenScriptInEditor(const std::string& path, ModuleScripting* scriptingPtr) {
+    if (scriptEditorWindow) {
+        scriptEditorWindow->LoadScript(path, scriptingPtr);
+        scriptEditorWindow->SetOpen(true);
+    }
+}

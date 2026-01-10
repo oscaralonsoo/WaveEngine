@@ -19,7 +19,7 @@ function Start()
 end
 
 function Update()
-
+hdhdhd
     if Input.W then
         MoveForward(obj, x, speed)
     end
@@ -106,4 +106,19 @@ function MoveBackward(object, angl, speed)
 
     SetPosition(object, pos.x - dirX * speed, pos.y, pos.z - dirZ * speed)
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

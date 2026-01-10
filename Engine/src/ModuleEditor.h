@@ -72,6 +72,8 @@ public:
 
     std::unique_ptr<ScriptEditorWindow> scriptEditorWindow;
 
+    void OpenScriptInEditor(const std::string& path, ModuleScripting* scriptingPtr);
+
 private:
     void ShowMenuBar();
     void ShowPlayToolbar();
@@ -117,4 +119,6 @@ private:
     float metaFileCheckTimer = 0.0f;
     const float metaFileCheckInterval = 2.0f;
 
+    std::string scriptPath = "";
+    ModuleScripting* scripting = nullptr;
 };
