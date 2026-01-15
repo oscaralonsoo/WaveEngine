@@ -121,4 +121,8 @@ private:
 
     std::string scriptPath = "";
     ModuleScripting* scripting = nullptr;
+
+    bool showCreateScriptPopup = false;
+    char scriptNameBuffer[64] = "NewScript";
+    void DrawCreateScriptPopup();
 };

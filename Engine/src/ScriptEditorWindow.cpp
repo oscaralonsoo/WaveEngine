@@ -49,9 +49,23 @@ void ScriptEditorWindow::SaveScript() {
     if (currentPath.empty()) return;
 
     std::string textToSave = editor.GetText();
-
     if (Application::GetInstance().filesystem->SaveStringToFile(currentPath.c_str(), textToSave)) {
         LOG_CONSOLE("[Editor] Script saved to disk: %s", currentName.c_str());
+
+        std::string syntaxError = scripting->CheckSyntax(currentPath);
+
+        if (!syntaxError.empty())
+        {
+            errorMessage = syntaxError;
+            showErrorPopup = true;
+            return; 
+        }
+        else
+        {
+            showErrorPopup = false;
+            errorMessage.clear();
+        }
+
 
         bool errorFound = false;
         std::string lastErrorMsg = "";

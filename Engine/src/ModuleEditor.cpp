@@ -137,6 +137,7 @@ bool ModuleEditor::Update()
     ImGui::PopStyleVar(3);
 
     ShowMenuBar();
+    DrawCreateScriptPopup();
     ShowPlayToolbar();
 
     ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
@@ -228,6 +229,40 @@ bool ModuleEditor::CleanUp()
 
     return true;
 }
+void ModuleEditor::DrawCreateScriptPopup() 
+{
+    if (showCreateScriptPopup) {
+        ImGui::OpenPopup("Create Script");
+    }
+
+    if (ImGui::BeginPopupModal("Create Script", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Enter script name:");
+
+        if (ImGui::IsWindowAppearing())
+            ImGui::SetKeyboardFocusHere();
+
+        bool enterPressed = ImGui::InputText("##scriptname", scriptNameBuffer, 64, ImGuiInputTextFlags_EnterReturnsTrue);
+
+        if (ImGui::Button("Create", ImVec2(120, 0)) || enterPressed)
+        {
+            if (strlen(scriptNameBuffer) > 0) {
+                scripting->CreateScript(scriptNameBuffer);
+                showCreateScriptPopup = false; 
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            showCreateScriptPopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
 
 void ModuleEditor::ShowMenuBar()
 {
@@ -296,6 +331,12 @@ void ModuleEditor::ShowMenuBar()
             if (ImGui::MenuItem("Assets", NULL, &assetsOpen))
             {
                 assetsWindow->SetOpen(assetsOpen);
+            }
+
+            if (ImGui::MenuItem("Create Script"))
+            {
+                showCreateScriptPopup = true;
+                sprintf_s(scriptNameBuffer, "NewScript");
             }
 
             bool scriptEditorOpen = scriptEditorWindow->IsOpen();

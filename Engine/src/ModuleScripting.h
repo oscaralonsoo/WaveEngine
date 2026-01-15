@@ -39,6 +39,8 @@ public:
     std::string lastError;
     bool scriptError = false;
 
+    bool CreateScript(const std::string& name);
+    std::string CheckSyntax(const std::string& path);
 private:
     lua_State* L;
     bool init = true;

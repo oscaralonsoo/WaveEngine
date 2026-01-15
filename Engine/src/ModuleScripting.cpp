@@ -377,6 +377,68 @@ bool ModuleScripting::ReloadScript(const std::string& path)
     return true;
 }
 
+bool ModuleScripting::CreateScript(const std::string& name)
+{
+    std::string filename = name;
+    if (filename.find(".lua") == std::string::npos)
+        filename += ".lua";
+
+    std::string folder = "../Assets/Scripts/";
+    if (!std::filesystem::exists(folder)) {
+        std::filesystem::create_directories(folder);
+    }
+
+    std::string path = folder + filename;
+
+    std::string content =
+        "-- Script: " + name + "\n"
+        "function Start()\n"
+        "    -- Log('Start called from " + name + "')\n"
+        "end\n\n"
+        "function Update()\n"
+        "    -- Code here runs every frame\n"
+        "end\n";
+
+    // 4. Escribir archivo
+    std::ofstream file(path);
+    if (file.is_open()) {
+        file << content;
+        file.close();
+        LOG_CONSOLE("Script created successfully: %s", path.c_str());
+        return true;
+    }
+    else {
+        LOG_CONSOLE("Error: Could not create script at %s", path.c_str());
+        return false;
+    }
+}
+
+std::string ModuleScripting::CheckSyntax(const std::string& path)
+{
+    if (this == nullptr) return "CRITICAL ERROR: ModuleScripting is null";
+    if (L == nullptr) return "CRITICAL ERROR: Lua State (L) is null. Did you call Start()?";
+
+    std::string cleanPath = path;
+    for (char& c : cleanPath) {
+        if (c == '\\') c = '/';
+    }
+
+    if (luaL_loadfile(L, cleanPath.c_str()) != LUA_OK)
+    {
+        const char* error = lua_tostring(L, -1);
+        std::string errString = error ? error : "Unknown Lua Error";
+
+        lua_pop(L, 1);
+
+        LOG_CONSOLE("SYNTAX ERROR: %s", errString.c_str());
+        return errString;
+    }
+    else
+    {
+        lua_pop(L, 1);
+        return "";
+    }
+}
 
 bool ModuleScripting::CleanUp()
 {
