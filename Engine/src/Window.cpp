@@ -116,3 +116,10 @@ int Window::GetScale() const
 {
     return scale;
 }
+
+void Window::SetVsync(bool enabled)
+{
+    // 1 para activar vsync, 0 para desactivar
+    SDL_GL_SetSwapInterval(enabled ? 1 : 0);
+    LOG_CONSOLE("VSync set to: %s", enabled ? "ON" : "OFF");
+}

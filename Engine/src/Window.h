@@ -28,6 +28,8 @@ public:
     void GetWindowSize(int& width, int& height) const;
     int GetScale() const;
 
+    void SetVsync(bool enabled);
+
     SDL_Window* GetWindow() const { return window; }
 
 private:

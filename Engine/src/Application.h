@@ -15,6 +15,7 @@
 #include "SelectionManager.h"
 #include "ModuleCamera.h" 
 #include "ModuleResources.h" 
+#include "ModuleUI.h"
 
 class Module;
 
@@ -53,7 +54,10 @@ public:
     void Step();
     PlayState GetPlayState() const { return playState; }
 
+
+
     // Modules
+    std::shared_ptr<ModuleUI> ui;
     std::shared_ptr<Window> window;
     std::shared_ptr<Input> input;
     std::shared_ptr<RenderContext> renderContext;
