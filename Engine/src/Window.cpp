@@ -44,6 +44,8 @@ bool Window::Start()
     int patch = SDL_VERSIONNUM_MICRO(sdlVersion);
     LOG_CONSOLE("SDL3 initialized - Version: %d.%d.%d", major, minor, patch);
 
+	SetVsync(true);
+
     // Create window WITH OpenGL flag
     window = SDL_CreateWindow(
         "Wave Engine",
