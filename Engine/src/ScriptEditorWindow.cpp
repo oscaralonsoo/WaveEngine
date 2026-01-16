@@ -49,51 +49,75 @@ void ScriptEditorWindow::SaveScript() {
     if (currentPath.empty()) return;
 
     std::string textToSave = editor.GetText();
-
     lua_State* tempL = luaL_newstate();
-    if (luaL_loadfile(tempL, currentPath.c_str()) != LUA_OK)
+
+  if (luaL_loadstring(tempL, textToSave.c_str()) != LUA_OK)
     {
-        // Error
         const char* err = lua_tostring(tempL, -1);
-        errorMessage = err ? err : "Error desconocido de sintaxis";
+        errorMessage = err ? err : "Unknown syntax error";
         showErrorPopup = true;
 
-        LOG_CONSOLE("ERROR DE SINTAXIS LUA: %s", errorMessage.c_str());
+        LOG_CONSOLE("[LUA SYNTAX ERROR] %s", errorMessage.c_str());
+
+        int reportLine = ExtractLineFromError(errorMessage);
+        if (reportLine != -1) {
+            TextEditor::ErrorMarkers markers;
+            
+            auto allLines = editor.GetTextLines();
+            int realErrorLine = reportLine; 
+            int check = reportLine - 2; 
+            while (check >= 0) {
+                std::string content = allLines[check];
+                content.erase(std::remove_if(content.begin(), content.end(), isspace), content.end());
+                
+                if (!content.empty()) {
+                    realErrorLine = check + 1; 
+                    break;
+                }
+                check--;
+            }
+
+            markers.insert(std::make_pair(realErrorLine, errorMessage));
+            editor.SetErrorMarkers(markers);
+        }
 
         lua_close(tempL);
         return;
     }
-
     lua_close(tempL);
-    //Clean errors
+
     showErrorPopup = false;
     errorMessage.clear();
+    editor.SetErrorMarkers(TextEditor::ErrorMarkers()); // Limpiar marcadores previos
+
     if (Application::GetInstance().filesystem->SaveStringToFile(currentPath.c_str(), textToSave)) {
         LOG_CONSOLE("[Editor] Script saved to disk: %s", currentName.c_str());
 
         bool errorFound = false;
         std::string lastErrorMsg = "";
-
         GameObject* root = Application::GetInstance().scene->GetRoot();
 
+        // 3. Hot-Reload: Actualizar scripts en la escena
         ReloadScriptInScene(root, currentPath, errorFound, lastErrorMsg);
 
-        //Errors
         if (errorFound) {
             errorMessage = lastErrorMsg;
             showErrorPopup = true;
-            LOG_CONSOLE("ERROR [Script Hot-Reload] Falló la compilación en al menos un objeto.");
-        }
-        else {
-            showErrorPopup = false;
-            errorMessage.clear();
-        }
 
+            int runLine = ExtractLineFromError(errorMessage);
+            if (runLine != -1) {
+                TextEditor::ErrorMarkers markers;
+                markers.insert(std::make_pair(runLine, "Runtime Error: " + errorMessage));
+                editor.SetErrorMarkers(markers);
+            }
+            LOG_CONSOLE("ERROR [Script Hot-Reload] Falló en al menos un objeto.");
+        }
     }
     else {
         LOG_CONSOLE("ERROR: Could not save script file to %s", currentPath.c_str());
     }
 }
+
 void ScriptEditorWindow::ReloadScriptInScene(GameObject* root, const std::string& filePath, bool& errorFound, std::string& errorMsg)
 {
     if (!root) return;
@@ -107,12 +131,9 @@ void ScriptEditorWindow::ReloadScriptInScene(GameObject* root, const std::string
             {
                 errorFound = true;
                 errorMsg = script->GetLastError();
-                LOG_CONSOLE("ERROR [Hot-Reload] en objeto '%s': %s", root->GetName().c_str(), errorMsg.c_str());
+                LOG_CONSOLE("[SCRIPT ERROR] Object: '%s' | File: '%s' | Error: %s", root->GetName().c_str(), currentName.c_str(), errorMsg.c_str());
             }
-            else
-            {
-                LOG_CONSOLE("[Hot-Reload] Script actualizado en: %s", root->GetName().c_str());
-            }
+          
         }
     }
 
@@ -151,16 +172,48 @@ void ScriptEditorWindow::Draw() {
 
             ImGui::EndMenuBar();
         }
-        if(showErrorPopup) {
+       /* if(showErrorPopup) {
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
             ImGui::TextWrapped("LUA ERROR: %s", errorMessage.c_str());
             ImGui::PopStyleColor();
 
             if (ImGui::Button("Clear Error")) showErrorPopup = false;
             ImGui::Separator();
+        }*/
+
+        if (showErrorPopup) {
+            ImGui::BeginChild("ErrorConsole", ImVec2(0, 60), true);
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+
+            ImGui::BulletText("LUA ERROR:");
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Clear")) {
+                showErrorPopup = false;
+                editor.SetErrorMarkers(TextEditor::ErrorMarkers());
+            }
+
+            ImGui::TextWrapped("%s", errorMessage.c_str());
+
+            ImGui::PopStyleColor();
+            ImGui::EndChild();
+            ImGui::Separator();
         }
 
         editor.Render("TextEditorInstance");
     }
     ImGui::End();
+}
+
+int ScriptEditorWindow::ExtractLineFromError(const std::string& error) {
+    size_t firstColon = error.find(':');
+    if (firstColon != std::string::npos) {
+        size_t secondColon = error.find(':', firstColon + 1);
+        if (secondColon != std::string::npos) {
+            std::string lineStr = error.substr(firstColon + 1, secondColon - firstColon - 1);
+            try {
+                return std::stoi(lineStr);
+            } catch (...) { return -1; }
+        }
+    }
+    return -1;
 }

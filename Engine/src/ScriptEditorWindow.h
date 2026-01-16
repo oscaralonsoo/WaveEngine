@@ -18,6 +18,9 @@ public:
     bool IsOpen() const { return isOpen; }
     void SetOpen(bool open) { isOpen = open; }
     void ReloadScriptInScene(GameObject* root, const std::string& filePath, bool& errorFound, std::string& errorMsg);
+
+    int ExtractLineFromError(const std::string& error);
+
 public:
     TextEditor editor;
     std::string currentPath;

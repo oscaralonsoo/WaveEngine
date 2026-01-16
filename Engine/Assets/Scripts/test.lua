@@ -9,13 +9,12 @@ angles = {}
 function Start()
     obj = FindGameObject("this")
     turret = FindGameObject("TankTurret")
-
     if obj == nil then
         print("ERROR: No se ha encontrado el objeto!")
     else
         print("Objeto encontrado correctamente")
-    end	
-
+    end
+    ddd
     print("Hello from Lua Start")   
 end
 
@@ -116,6 +115,10 @@ function MoveBackward(object, angl, speed)
 
     SetPosition(object, pos.x - dirX * speed, pos.y, pos.z - dirZ * speed)
 end
+
+
+
+
 
 
 
