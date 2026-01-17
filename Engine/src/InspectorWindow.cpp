@@ -918,7 +918,6 @@ void InspectorWindow::DrawScriptComponent(GameObject* selectedObject)
     {
         ImGui::Indent();
 
-        // Mostrar información del script actual
         if (scriptComp->HasScript()) {
             ModuleResources* resources = Application::GetInstance().resources.get();
             const Resource* res = resources->GetResourceDirect(scriptComp->GetScriptUID());
@@ -934,7 +933,6 @@ void InspectorWindow::DrawScriptComponent(GameObject* selectedObject)
 
                 ImGui::Spacing();
 
-                // Botones de acción
                 if (ImGui::Button("Change Script", ImVec2(120, 0))) {
                     ImGui::OpenPopup("SelectScript");
                 }
@@ -955,6 +953,90 @@ void InspectorWindow::DrawScriptComponent(GameObject* selectedObject)
 
                 if (ImGui::IsItemHovered()) {
                     ImGui::SetTooltip("Hot reload the script");
+                }
+
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Spacing();
+
+                const auto& publicVars = scriptComp->GetPublicVariables();
+
+                if (!publicVars.empty()) {
+                    ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Public Variables");
+                    ImGui::Spacing();
+
+                    for (size_t i = 0; i < publicVars.size(); ++i) {
+                        const ScriptVariable& var = publicVars[i];
+
+                        ImGui::PushID(i);
+
+                        switch (var.type) {
+                        case ScriptVarType::NUMBER: {
+                            float value = std::get<float>(var.value);
+                            if (ImGui::DragFloat(var.name.c_str(), &value, 0.1f)) {
+                                ScriptVariable newVar(var.name, value);
+                                scriptComp->UpdatePublicVariable(i, newVar);
+                            }
+                            break;
+                        }
+
+                        case ScriptVarType::STRING: {
+                            static char buffer[256];
+                            std::string value = std::get<std::string>(var.value);
+                            strncpy(buffer, value.c_str(), sizeof(buffer) - 1);
+
+                            if (ImGui::InputText(var.name.c_str(), buffer, sizeof(buffer))) {
+                                ScriptVariable newVar(var.name, std::string(buffer));
+                                scriptComp->UpdatePublicVariable(i, newVar);
+                            }
+                            break;
+                        }
+
+                        case ScriptVarType::BOOLEAN: {
+                            bool value = std::get<bool>(var.value);
+                            if (ImGui::Checkbox(var.name.c_str(), &value)) {
+                                ScriptVariable newVar(var.name, value);
+                                scriptComp->UpdatePublicVariable(i, newVar);
+                            }
+                            break;
+                        }
+
+                        case ScriptVarType::VEC3: {
+                            glm::vec3 value = std::get<glm::vec3>(var.value);
+
+                            ImGui::Text("%s", var.name.c_str());
+                            ImGui::PushItemWidth(80);
+
+                            bool changed = false;
+                            ImGui::Text("X"); ImGui::SameLine(20);
+                            if (ImGui::DragFloat("##X", &value.x, 0.1f)) changed = true;
+
+                            ImGui::SameLine(120);
+                            ImGui::Text("Y"); ImGui::SameLine(130);
+                            if (ImGui::DragFloat("##Y", &value.y, 0.1f)) changed = true;
+
+                            ImGui::SameLine(230);
+                            ImGui::Text("Z"); ImGui::SameLine(240);
+                            if (ImGui::DragFloat("##Z", &value.z, 0.1f)) changed = true;
+
+                            ImGui::PopItemWidth();
+
+                            if (changed) {
+                                ScriptVariable newVar(var.name, value);
+                                scriptComp->UpdatePublicVariable(i, newVar);
+                            }
+                            break;
+                        }
+                        }
+
+                        ImGui::PopID();
+                    }
+                }
+                else {
+                    ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
+                        "No public variables defined");
+                    ImGui::Spacing();
+                    ImGui::TextWrapped("Define variables in a 'public' table in your Lua script");
                 }
             }
         }
@@ -1000,7 +1082,6 @@ void InspectorWindow::DrawScriptComponent(GameObject* selectedObject)
                         ImGui::SetItemDefaultFocus();
                     }
 
-                    // Tooltip con info del script
                     if (ImGui::IsItemHovered()) {
                         ImGui::BeginTooltip();
                         ImGui::Text("UID: %llu", uid);
@@ -1017,19 +1098,6 @@ void InspectorWindow::DrawScriptComponent(GameObject* selectedObject)
             }
 
             ImGui::EndPopup();
-        }
-
-        if (scriptComp->HasScript()) {
-            ImGui::Spacing();
-            ImGui::Separator();
-            ImGui::Spacing();
-
-            if (ImGui::TreeNode("Debug Info")) {
-                ImGui::Text("Lua Table: %s", scriptComp->GetLuaTableName().c_str());
-                ImGui::Text("Active: %s", scriptComp->IsActive() ? "Yes" : "No");
-
-                ImGui::TreePop();
-            }
         }
 
         ImGui::Unindent();

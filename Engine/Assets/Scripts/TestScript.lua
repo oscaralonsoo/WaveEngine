@@ -1,11 +1,14 @@
 -- TestScript.lua - Mover GameObject con WASD
 
-local speed = 5.0
+public = {
+	speed = 5.0
+}
 
 function Start(self)
     Engine.Log("Script started on: " .. self.gameObject.name)
     local pos = self.transform.position
     Engine.Log("Initial position: " .. pos.x .. ", " .. pos.y .. ", " .. pos.z)
+    Engine.Log("My speed: " .. self.public.speed)
 end
 
 function Update(self, dt)
@@ -17,28 +20,28 @@ function Update(self, dt)
     
     -- Mover con WASD
     if Input.GetKey("W") then
-        newZ = newZ - speed * dt
+        newZ = newZ - self.public.speed * dt
         moved = true
     end
     
     if Input.GetKey("S") then
-        newZ = newZ + speed * dt
+        newZ = newZ + self.public.speed * dt
         moved = true
     end
     
     if Input.GetKey("A") then
-        newX = newX - speed * dt
+        newX = newX - self.public.speed * dt
         moved = true
     end
     
     if Input.GetKey("D") then
-        newX = newX + speed * dt
+        newX = newX + self.public.speed * dt
         moved = true
-		print("Hola mundo")
+        Engine.Log("Moving right at speed: " .. self.public.speed)
     end
     
     -- Aplicar nueva posición si se movió
     if moved then
-        selftransform:SetPosition(newX, newY, newZ)
+        self.transform:SetPosition(newX, newY, newZ)
     end
 end

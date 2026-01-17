@@ -3,6 +3,8 @@
 #include "Component.h"
 #include "ModuleResources.h"
 #include <string>
+#include <vector>
+#include <variant>
 
 extern "C" {
 #include <lua.h>
@@ -10,7 +12,38 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-class Transform;  
+class Transform;
+
+// Tipos de variables que podemos exponer
+enum class ScriptVarType {
+    NUMBER,
+    STRING,
+    BOOLEAN,
+    VEC3
+};
+
+// Estructura para almacenar una variable expuesta
+struct ScriptVariable {
+    std::string name;
+    ScriptVarType type;
+    std::variant<float, std::string, bool, glm::vec3> value;
+
+    ScriptVariable(const std::string& n, float v)
+        : name(n), type(ScriptVarType::NUMBER), value(v) {
+    }
+
+    ScriptVariable(const std::string& n, const std::string& v)
+        : name(n), type(ScriptVarType::STRING), value(v) {
+    }
+
+    ScriptVariable(const std::string& n, bool v)
+        : name(n), type(ScriptVarType::BOOLEAN), value(v) {
+    }
+
+    ScriptVariable(const std::string& n, const glm::vec3& v)
+        : name(n), type(ScriptVarType::VEC3), value(v) {
+    }
+};
 
 class ComponentScript : public Component {
 public:
@@ -41,6 +74,10 @@ public:
     bool HasScript() const { return scriptUID != 0; }
     const std::string& GetLuaTableName() const { return luaTableName; }
 
+    // Variables públicas
+    const std::vector<ScriptVariable>& GetPublicVariables() const { return publicVariables; }
+    void UpdatePublicVariable(size_t index, const ScriptVariable& var);
+
 private:
     void CreateLuaTable();
     void DestroyLuaTable();
@@ -50,7 +87,14 @@ private:
     void SetupScriptEnvironment(lua_State* L);
     void CreateTransformUserdata(lua_State* L, Transform* transform);
 
+    // Sistema de variables públicas
+    void ExtractPublicVariables();
+    void SyncPublicVariablesToLua();
+    void PushVariableToLua(lua_State* L, const ScriptVariable& var);
+
     UID scriptUID = 0;
-    std::string luaTableName;  
+    std::string luaTableName;
     bool startCalled = false;
+
+    std::vector<ScriptVariable> publicVariables;
 };

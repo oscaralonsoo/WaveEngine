@@ -254,12 +254,14 @@ void ComponentScript::CallStart()
 {
     if (!HasScript() || startCalled) return;
 
+    // Sincronizar variables públicas antes de Start
+    SyncPublicVariablesToLua();
+
     ScriptManager* scriptManager = Application::GetInstance().scripts.get();
     lua_State* L = scriptManager->GetState();
 
     if (!L) return;
 
-    // Obtener la tabla del script
     lua_getglobal(L, luaTableName.c_str());
 
     if (!lua_istable(L, -1)) {
@@ -267,12 +269,10 @@ void ComponentScript::CallStart()
         return;
     }
 
-    // Obtener la función Start
     lua_getfield(L, -1, "Start");
 
     if (lua_isfunction(L, -1)) {
-        // Llamar con la tabla como self
-        lua_pushvalue(L, -2);  // Push table as first argument (self)
+        lua_pushvalue(L, -2);
 
         if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
             const char* error = lua_tostring(L, -1);
@@ -284,10 +284,10 @@ void ComponentScript::CallStart()
         }
     }
     else {
-        lua_pop(L, 1);  // Pop non-function
+        lua_pop(L, 1);
     }
 
-    lua_pop(L, 1);  // Pop table
+    lua_pop(L, 1);
 }
 
 void ComponentScript::CallUpdate(float deltaTime)
@@ -376,7 +376,6 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
 
     if (!L) return false;
 
-    // ELIMINAR BOM UTF-8 SI EXISTE
     std::string cleanContent = scriptContent;
     if (cleanContent.size() >= 3 &&
         (unsigned char)cleanContent[0] == 0xEF &&
@@ -386,7 +385,6 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
         LOG_DEBUG("[ComponentScript] Removed UTF-8 BOM from script");
     }
 
-    // Cargar el script como chunk
     int loadResult = luaL_loadstring(L, cleanContent.c_str());
 
     if (loadResult != LUA_OK) {
@@ -396,7 +394,6 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
         return false;
     }
 
-    // Ejecutar el chunk para definir las funciones
     if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
         const char* error = lua_tostring(L, -1);
         LOG_CONSOLE("[ComponentScript] ERROR executing script: %s", error);
@@ -404,7 +401,6 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
         return false;
     }
 
-    // Copiar las funciones globales Start/Update a nuestra tabla
     lua_getglobal(L, luaTableName.c_str());
 
     if (lua_istable(L, -1)) {
@@ -426,10 +422,23 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
             lua_pop(L, 1);
         }
 
+        // Copiar tabla "public" global si existe
+        lua_getglobal(L, "public");
+        if (lua_istable(L, -1)) {
+            lua_setfield(L, -2, "public");
+            LOG_DEBUG("[ComponentScript] Copied 'public' table to script instance");
+        }
+        else {
+            lua_pop(L, 1);
+        }
+
         SetupScriptEnvironment(L);
     }
 
     lua_pop(L, 1);
+
+    // Extraer variables públicas
+    ExtractPublicVariables();
 
     return true;
 }
@@ -557,4 +566,188 @@ void ComponentScript::CreateTransformUserdata(lua_State* L, Transform* transform
     lua_setfield(L, -2, "__index");
 
     lua_setmetatable(L, -2);
+}
+
+void ComponentScript::ExtractPublicVariables()
+{
+    publicVariables.clear();
+
+    if (!HasScript()) return;
+
+    ScriptManager* scriptManager = Application::GetInstance().scripts.get();
+    lua_State* L = scriptManager->GetState();
+
+    if (!L) return;
+
+    // 2. Dentro de la tabla del script: script.public = {...}
+
+    bool foundPublic = false;
+
+    lua_getglobal(L, "public");
+
+    if (lua_istable(L, -1)) {
+        foundPublic = true;
+        LOG_DEBUG("[ComponentScript] Found global 'public' table");
+    }
+    else {
+        // Si no existe global, buscar en la tabla del script
+        lua_pop(L, 1);
+        lua_getglobal(L, luaTableName.c_str());
+
+        if (lua_istable(L, -1)) {
+            lua_getfield(L, -1, "public");
+
+            if (lua_istable(L, -1)) {
+                foundPublic = true;
+                LOG_DEBUG("[ComponentScript] Found 'public' table inside script table");
+                // Intercambiar para que "public" esté en top
+                lua_remove(L, -2);
+            }
+            else {
+                lua_pop(L, 2);
+            }
+        }
+        else {
+            lua_pop(L, 1);
+        }
+    }
+
+    if (!foundPublic) {
+        LOG_DEBUG("[ComponentScript] No 'public' table found in script");
+        return;
+    }
+
+    // Ahora tenemos la tabla "public" en el top del stack
+    // Iterar sobre todas sus variables
+    lua_pushnil(L);
+
+    while (lua_next(L, -2) != 0) {
+        if (lua_isstring(L, -2)) {
+            const char* varName = lua_tostring(L, -2);
+
+            if (lua_isnumber(L, -1)) {
+                float value = (float)lua_tonumber(L, -1);
+                publicVariables.emplace_back(varName, value);
+                LOG_DEBUG("[ComponentScript]   - %s = %.2f (number)", varName, value);
+            }
+            else if (lua_isstring(L, -1)) {
+                const char* value = lua_tostring(L, -1);
+                publicVariables.emplace_back(varName, std::string(value));
+                LOG_DEBUG("[ComponentScript]   - %s = \"%s\" (string)", varName, value);
+            }
+            else if (lua_isboolean(L, -1)) {
+                bool value = lua_toboolean(L, -1);
+                publicVariables.emplace_back(varName, value);
+                LOG_DEBUG("[ComponentScript]   - %s = %s (boolean)", varName, value ? "true" : "false");
+            }
+            else if (lua_istable(L, -1)) {
+                // Verificar si es un vec3 (tabla con x, y, z)
+                lua_getfield(L, -1, "x");
+                lua_getfield(L, -2, "y");
+                lua_getfield(L, -3, "z");
+
+                if (lua_isnumber(L, -3) && lua_isnumber(L, -2) && lua_isnumber(L, -1)) {
+                    float x = (float)lua_tonumber(L, -3);
+                    float y = (float)lua_tonumber(L, -2);
+                    float z = (float)lua_tonumber(L, -1);
+                    publicVariables.emplace_back(varName, glm::vec3(x, y, z));
+                    LOG_DEBUG("[ComponentScript]   - %s = {%.2f, %.2f, %.2f} (vec3)",
+                        varName, x, y, z);
+                }
+
+                lua_pop(L, 3);
+            }
+        }
+
+        lua_pop(L, 1);
+    }
+
+    lua_pop(L, 1);  // Pop tabla "public"
+
+    LOG_CONSOLE("[ComponentScript] Extracted %zu public variables from script", publicVariables.size());
+}
+
+void ComponentScript::SyncPublicVariablesToLua()
+{
+    if (!HasScript() || publicVariables.empty()) return;
+
+    ScriptManager* scriptManager = Application::GetInstance().scripts.get();
+    lua_State* L = scriptManager->GetState();
+
+    if (!L) return;
+
+    // Sincronizar en la tabla global "public" si existe
+    lua_getglobal(L, "public");
+    bool hasGlobalPublic = lua_istable(L, -1);
+
+    if (hasGlobalPublic) {
+        // Actualizar variables en tabla global
+        for (const auto& var : publicVariables) {
+            PushVariableToLua(L, var);
+            lua_setfield(L, -2, var.name.c_str());
+        }
+    }
+    lua_pop(L, 1);
+
+    // Sincronizar en la tabla del script
+    lua_getglobal(L, luaTableName.c_str());
+
+    if (lua_istable(L, -1)) {
+        // Obtener o crear tabla "public" dentro del script
+        lua_getfield(L, -1, "public");
+
+        if (!lua_istable(L, -1)) {
+            lua_pop(L, 1);
+            lua_newtable(L);
+            lua_pushvalue(L, -1);
+            lua_setfield(L, -3, "public");
+        }
+
+        // Actualizar variables en tabla del script
+        for (const auto& var : publicVariables) {
+            PushVariableToLua(L, var);
+            lua_setfield(L, -2, var.name.c_str());
+        }
+
+        lua_pop(L, 1);  // Pop tabla "public"
+    }
+
+    lua_pop(L, 1);  // Pop tabla del script
+}
+
+void ComponentScript::PushVariableToLua(lua_State* L, const ScriptVariable& var)
+{
+    switch (var.type) {
+    case ScriptVarType::NUMBER:
+        lua_pushnumber(L, std::get<float>(var.value));
+        break;
+
+    case ScriptVarType::STRING:
+        lua_pushstring(L, std::get<std::string>(var.value).c_str());
+        break;
+
+    case ScriptVarType::BOOLEAN:
+        lua_pushboolean(L, std::get<bool>(var.value));
+        break;
+
+    case ScriptVarType::VEC3: {
+        const glm::vec3& vec = std::get<glm::vec3>(var.value);
+        lua_newtable(L);
+        lua_pushnumber(L, vec.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, vec.y);
+        lua_setfield(L, -2, "y");
+        lua_pushnumber(L, vec.z);
+        lua_setfield(L, -2, "z");
+        break;
+    }
+    }
+}
+
+void ComponentScript::UpdatePublicVariable(size_t index, const ScriptVariable& var)
+{
+    if (index >= publicVariables.size()) return;
+
+    publicVariables[index] = var;
+    SyncPublicVariablesToLua();
 }
