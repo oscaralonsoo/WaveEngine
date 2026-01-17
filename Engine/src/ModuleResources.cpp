@@ -6,6 +6,7 @@
 #include "TextureImporter.h"
 #include "MeshImporter.h"
 #include "Log.h"
+#include "ResourceScript.h"
 #include <filesystem>
 #include <random>
 
@@ -137,7 +138,17 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
                 registered++;
             }
             break;
-
+        case AssetType::SCRIPT_LUA:
+            resourceType = Resource::SCRIPT;
+            resource = new ResourceScript(meta.uid);
+            if (resource) {
+                resource->SetAssetFile(assetPath);
+                // Scripts NO van a Library, permanecen en Assets
+                resource->SetLibraryFile(assetPath);
+                resources[meta.uid] = resource;
+                registered++;
+            }
+            break;
         default:
             continue;
         }
@@ -200,6 +211,10 @@ UID ModuleResources::ImportFile(const char* newFileInAssets) {
         importSuccess = ImportModel(resource, newFileInAssets);
         break;
     }
+    case Resource::SCRIPT: {
+        importSuccess = ImportScript(resource, newFileInAssets);
+        break;
+    }
     default:
         LOG_CONSOLE("ERROR: Import not implemented for this type");
         break;
@@ -235,6 +250,10 @@ Resource* ModuleResources::CreateNewResourceWithUID(const char* assetsFile, Reso
         resource = new ResourceMesh(uid);
         break;
 
+    case Resource::SCRIPT:  // ← AÑADIR
+        resource = new ResourceScript(uid);
+        break;
+
     default:
         LOG_CONSOLE("ERROR: Unsupported resource type");
         return nullptr;
@@ -243,18 +262,23 @@ Resource* ModuleResources::CreateNewResourceWithUID(const char* assetsFile, Reso
     if (resource) {
         resource->SetAssetFile(assetsFile);
 
-        // Generate library path from UID based on type
-        if (type == Resource::TEXTURE) {
+        // Scripts NO van a Library
+        if (type == Resource::SCRIPT) {
+            resource->SetLibraryFile(assetsFile);
+        }
+        else if (type == Resource::TEXTURE) {
             resource->SetLibraryFile(LibraryManager::GetTexturePathFromUID(uid));
         }
         else if (type == Resource::MESH) {
             resource->SetLibraryFile(LibraryManager::GetMeshPathFromUID(uid));
         }
+
         resources[uid] = resource;
     }
 
     return resource;
 }
+
 UID ModuleResources::GenerateNewUID() {
     random_device rd;
     mt19937_64 gen(rd());
@@ -336,9 +360,12 @@ Resource::Type ModuleResources::GetResourceTypeFromExtension(const std::string& 
         return Resource::MESH;
     }
 
+    if (ext == ".lua") {  // ← AÑADIR
+        return Resource::SCRIPT;
+    }
+
     return Resource::UNKNOWN;
 }
-
 Resource* ModuleResources::CreateNewResource(const char* assetsFile, Resource::Type type) {
     UID uid = GenerateNewUID();
     return CreateNewResourceWithUID(assetsFile, type, uid);
@@ -515,4 +542,21 @@ const Resource* ModuleResources::GetResource(UID uid) const {
     }
 
     return it->second;
+}
+
+bool ModuleResources::ImportScript(Resource* resource, const std::string& assetPath) {
+    // Scripts don't need importing - they stay in Assets/
+    // Just verify the file exists
+    if (!std::filesystem::exists(assetPath)) {
+        LOG_CONSOLE("ERROR: Script file not found: %s", assetPath.c_str());
+        return false;
+    }
+
+    resource->SetAssetFile(assetPath);
+    resource->SetLibraryFile(assetPath);  // Scripts reference themselves
+
+    LOG_CONSOLE("[ModuleResources] Script registered: %s (UID: %llu)",
+        assetPath.c_str(), resource->GetUID());
+
+    return true;
 }

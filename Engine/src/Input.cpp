@@ -9,19 +9,25 @@
 #include "Transform.h"
 #include "ComponentMesh.h"
 #include <limits>
+#include <SDL3/SDL_scancode.h>
 
 #define MAX_KEYS 300
+
+Input* Input::instance = nullptr;
 
 Input::Input() : Module(), droppedFile(false), droppedFilePath(""), droppedFileType(DROPPED_NONE)
 {
 	keyboard = new KeyState[MAX_KEYS];
 	memset(keyboard, KEY_IDLE, sizeof(KeyState) * MAX_KEYS);
 	memset(mouseButtons, KEY_IDLE, sizeof(KeyState) * NUM_MOUSE_BUTTONS);
+
+	instance = this;
 }
 
 Input::~Input()
 {
 	delete[] keyboard;
+	instance = this;
 }
 
 bool Input::Awake()
@@ -537,4 +543,27 @@ GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin,
 	}
 
 	return closest;
+}
+
+bool Input::IsKeyPressed(int scancode)
+{
+	if (!instance) return false;
+	return instance->GetKey(scancode) == KEY_REPEAT || instance->GetKey(scancode) == KEY_DOWN;
+}
+
+bool Input::IsKeyDown(int scancode)
+{
+	if (!instance) return false;
+	return instance->GetKey(scancode) == KEY_DOWN;
+}
+
+void Input::GetMousePosition(int& x, int& y)
+{
+	if (!instance) {
+		x = 0;
+		y = 0;
+		return;
+	}
+	x = instance->mouseX;
+	y = instance->mouseY;
 }

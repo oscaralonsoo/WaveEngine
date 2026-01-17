@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Module.h"
 
 class Time : public Module
@@ -25,6 +25,10 @@ public:
 
 	bool IsPaused() const { return isPaused; }
 
+	static float GetDeltaTimeStatic();
+	static float GetRealDeltaTimeStatic();
+	static float GetTotalTimeStatic();
+
 private:
 	float deltaTime;
 	float gameDeltaTime;
@@ -34,4 +38,7 @@ private:
 	bool isPaused;
 	float timeScale;
 	bool shouldStepFrame;
+
+	static Time* instance;
+	friend class Application;
 };

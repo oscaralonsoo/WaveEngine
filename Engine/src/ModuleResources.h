@@ -16,7 +16,8 @@ public:
         MESH,
         MODEL,
         MATERIAL,
-        ANIMATION
+        ANIMATION,
+        SCRIPT
     };
 
     Resource(UID uid, Type type);
@@ -149,6 +150,7 @@ public:
             uid, resource->GetType());
     }
 
+    bool ImportScript(Resource* resource, const std::string& assetPath);
 private:
     // Create new resource by type
     Resource* CreateNewResource(const char* assetsFile, Resource::Type type);

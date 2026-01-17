@@ -18,6 +18,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     time = std::make_shared<Time>();
     grid = std::make_shared<Grid>();
     resources = std::make_shared<ModuleResources>();
+    scripts = std::make_shared<ScriptManager>();  
 
     AddModule(std::static_pointer_cast<Module>(window));
     AddModule(std::static_pointer_cast<Module>(input));
@@ -26,6 +27,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     AddModule(std::static_pointer_cast<Module>(camera));
     AddModule(std::static_pointer_cast<Module>(editor));
     AddModule(std::static_pointer_cast<Module>(resources));
+    AddModule(std::static_pointer_cast<Module>(scripts));  
     AddModule(std::static_pointer_cast<Module>(filesystem));
     AddModule(std::static_pointer_cast<Module>(time));
     AddModule(std::static_pointer_cast<Module>(grid));
@@ -33,7 +35,6 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
 
     selectionManager = new SelectionManager();
 }
-
 Application& Application::GetInstance()
 {
     static Application instance;
@@ -240,6 +241,7 @@ bool Application::CleanUp()
     grid.reset();
     time.reset();
     filesystem.reset();
+    scripts.reset();  
     input.reset();
     window.reset();
     resources.reset();

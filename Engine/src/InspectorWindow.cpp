@@ -1,4 +1,4 @@
-#include "InspectorWindow.h"
+﻿#include "InspectorWindow.h"
 #include <imgui.h>
 #include "Application.h"
 #include "GameObject.h"
@@ -10,6 +10,8 @@
 #include "ComponentRotate.h"
 #include "ResourceTexture.h"
 #include "Log.h"
+#include "ComponentScript.h"
+#include <filesystem>
 
 InspectorWindow::InspectorWindow()
     : EditorWindow("Inspector")
@@ -80,6 +82,14 @@ void InspectorWindow::Draw()
     DrawMeshComponent(selectedObject);
     DrawMaterialComponent(selectedObject);
     DrawRotateComponent(selectedObject);
+    DrawScriptComponent(selectedObject); 
+
+ 
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    DrawAddComponentButton(selectedObject);  
 
     ImGui::End();
 }
@@ -252,7 +262,7 @@ void InspectorWindow::DrawTransformComponent(GameObject* selectedObject)
             transform->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
             transform->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 
-            // Rebuild despu�s de reset
+            // Rebuild después de reset
             Application::GetInstance().scene->MarkOctreeForRebuild();
 
             LOG_DEBUG("Transform reset for: %s", selectedObject->GetName().c_str());
@@ -894,4 +904,303 @@ bool InspectorWindow::IsDescendantOf(GameObject* potentialDescendant, GameObject
     }
 
     return false;
+}
+
+void InspectorWindow::DrawScriptComponent(GameObject* selectedObject)
+{
+    ComponentScript* scriptComp = static_cast<ComponentScript*>(
+        selectedObject->GetComponent(ComponentType::SCRIPT)
+        );
+
+    if (scriptComp == nullptr) return;
+
+    if (ImGui::CollapsingHeader("Script", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Indent();
+
+        // Mostrar información del script actual
+        if (scriptComp->HasScript()) {
+            ModuleResources* resources = Application::GetInstance().resources.get();
+            const Resource* res = resources->GetResourceDirect(scriptComp->GetScriptUID());
+
+            if (res) {
+                std::string filename = std::filesystem::path(res->GetAssetFile()).filename().string();
+
+                ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "Current Script:");
+                ImGui::SameLine();
+                ImGui::Text("%s", filename.c_str());
+
+                ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "UID: %llu", scriptComp->GetScriptUID());
+
+                ImGui::Spacing();
+
+                // Botones de acción
+                if (ImGui::Button("Change Script", ImVec2(120, 0))) {
+                    ImGui::OpenPopup("SelectScript");
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Remove Script", ImVec2(120, 0))) {
+                    scriptComp->UnloadScript();
+                    LOG_CONSOLE("[Inspector] Script removed from: %s", selectedObject->GetName().c_str());
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Reload", ImVec2(80, 0))) {
+                    scriptComp->ReloadScript();
+                    LOG_CONSOLE("[Inspector] Script reloaded for: %s", selectedObject->GetName().c_str());
+                }
+
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Hot reload the script");
+                }
+            }
+        }
+        else {
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "No script assigned");
+
+            if (ImGui::Button("Assign Script", ImVec2(150, 0))) {
+                ImGui::OpenPopup("SelectScript");
+            }
+        }
+
+        // Popup para seleccionar script
+        if (ImGui::BeginPopup("SelectScript")) {
+            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Select Lua Script");
+            ImGui::Separator();
+
+            ModuleResources* resources = Application::GetInstance().resources.get();
+            const auto& allResources = resources->GetAllResources();
+
+            bool foundScripts = false;
+
+            for (const auto& [uid, resource] : allResources) {
+                if (resource->GetType() == Resource::SCRIPT) {
+                    foundScripts = true;
+
+                    std::string filepath = resource->GetAssetFile();
+                    std::string filename = std::filesystem::path(filepath).filename().string();
+
+                    bool isSelected = (scriptComp->HasScript() && scriptComp->GetScriptUID() == uid);
+
+                    if (ImGui::Selectable(filename.c_str(), isSelected)) {
+                        if (scriptComp->LoadScriptByUID(uid)) {
+                            LOG_CONSOLE("[Inspector] Script '%s' assigned to '%s'",
+                                filename.c_str(), selectedObject->GetName().c_str());
+                        }
+                        else {
+                            LOG_CONSOLE("[Inspector] Failed to load script '%s'", filename.c_str());
+                        }
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    if (isSelected) {
+                        ImGui::SetItemDefaultFocus();
+                    }
+
+                    // Tooltip con info del script
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::BeginTooltip();
+                        ImGui::Text("UID: %llu", uid);
+                        ImGui::Text("Path: %s", filepath.c_str());
+                        ImGui::EndTooltip();
+                    }
+                }
+            }
+
+            if (!foundScripts) {
+                ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "No .lua scripts found");
+                ImGui::Spacing();
+                ImGui::TextWrapped("Create a .lua file in Assets/Scripts/");
+            }
+
+            ImGui::EndPopup();
+        }
+
+        if (scriptComp->HasScript()) {
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            if (ImGui::TreeNode("Debug Info")) {
+                ImGui::Text("Lua Table: %s", scriptComp->GetLuaTableName().c_str());
+                ImGui::Text("Active: %s", scriptComp->IsActive() ? "Yes" : "No");
+
+                ImGui::TreePop();
+            }
+        }
+
+        ImGui::Unindent();
+    }
+}
+
+void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
+{
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.8f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.6f, 0.9f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.4f, 0.7f, 1.0f));
+
+    if (ImGui::Button("Add Component", ImVec2(-1, 30)))
+    {
+        ImGui::OpenPopup("AddComponentPopup");
+    }
+
+    ImGui::PopStyleColor(3);
+
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Add Component");
+        ImGui::Separator();
+        ImGui::Text("Add a new component to this GameObject");
+        ImGui::EndTooltip();
+    }
+
+    // Popup con lista de componentes
+    if (ImGui::BeginPopup("AddComponentPopup"))
+    {
+        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Select Component Type");
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // Script Component
+        bool hasScript = (selectedObject->GetComponent(ComponentType::SCRIPT) != nullptr);
+
+        if (hasScript)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+        }
+
+        if (ImGui::Selectable("Script", false, hasScript ? ImGuiSelectableFlags_Disabled : 0))
+        {
+            selectedObject->CreateComponent(ComponentType::SCRIPT);  
+
+            LOG_CONSOLE("[Inspector] Script component added to: %s", selectedObject->GetName().c_str());
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (hasScript)
+        {
+            ImGui::PopStyleColor();
+        }
+
+        if (ImGui::IsItemHovered() && !hasScript)
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("Add a Lua script to this GameObject");
+            ImGui::EndTooltip();
+        }
+        else if (ImGui::IsItemHovered() && hasScript)
+        {
+            ImGui::BeginTooltip();
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Already has a Script component");
+            ImGui::EndTooltip();
+        }
+
+        // Camera Component
+        bool hasCamera = (selectedObject->GetComponent(ComponentType::CAMERA) != nullptr);
+
+        if (hasCamera)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+        }
+
+        if (ImGui::Selectable("Camera", false, hasCamera ? ImGuiSelectableFlags_Disabled : 0))
+        {
+            selectedObject->CreateComponent(ComponentType::CAMERA);  
+
+            LOG_CONSOLE("[Inspector] Camera component added to: %s", selectedObject->GetName().c_str());
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (hasCamera)
+        {
+            ImGui::PopStyleColor();
+        }
+
+        if (ImGui::IsItemHovered() && !hasCamera)
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("Add a Camera to this GameObject");
+            ImGui::EndTooltip();
+        }
+        else if (ImGui::IsItemHovered() && hasCamera)
+        {
+            ImGui::BeginTooltip();
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Already has a Camera component");
+            ImGui::EndTooltip();
+        }
+
+        // Mesh Component
+        bool hasMesh = (selectedObject->GetComponent(ComponentType::MESH) != nullptr);
+
+        if (hasMesh)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+        }
+
+        if (ImGui::Selectable("Mesh Renderer", false, hasMesh ? ImGuiSelectableFlags_Disabled : 0))
+        {
+            selectedObject->CreateComponent(ComponentType::MESH);  
+
+            LOG_CONSOLE("[Inspector] Mesh component added to: %s", selectedObject->GetName().c_str());
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (hasMesh)
+        {
+            ImGui::PopStyleColor();
+        }
+
+        if (ImGui::IsItemHovered() && !hasMesh)
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("Add a Mesh Renderer to this GameObject");
+            ImGui::EndTooltip();
+        }
+        else if (ImGui::IsItemHovered() && hasMesh)
+        {
+            ImGui::BeginTooltip();
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Already has a Mesh component");
+            ImGui::EndTooltip();
+        }
+
+        // Material Component
+        bool hasMaterial = (selectedObject->GetComponent(ComponentType::MATERIAL) != nullptr);
+
+        if (hasMaterial)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+        }
+
+        if (ImGui::Selectable("Material", false, hasMaterial ? ImGuiSelectableFlags_Disabled : 0))
+        {
+            selectedObject->CreateComponent(ComponentType::MATERIAL); 
+
+            LOG_CONSOLE("[Inspector] Material component added to: %s", selectedObject->GetName().c_str());
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (hasMaterial)
+        {
+            ImGui::PopStyleColor();
+        }
+
+        if (ImGui::IsItemHovered() && !hasMaterial)
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("Add a Material to this GameObject");
+            ImGui::EndTooltip();
+        }
+        else if (ImGui::IsItemHovered() && hasMaterial)
+        {
+            ImGui::BeginTooltip();
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Already has a Material component");
+            ImGui::EndTooltip();
+        }
+
+        ImGui::EndPopup();
+    }
 }

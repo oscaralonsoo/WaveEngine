@@ -20,6 +20,7 @@
     "imguizmo",
     "nlohmann-json",
     "sdl3",
-    "tracy"
+    "tracy",
+    "lua"
   ]
 }

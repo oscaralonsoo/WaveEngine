@@ -5,6 +5,7 @@
 #include "ComponentMaterial.h"
 #include "ComponentCamera.h"
 #include "ComponentRotate.h"
+#include "ComponentScript.h"
 #include <nlohmann/json.hpp>
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
@@ -52,7 +53,9 @@ Component* GameObject::CreateComponent(ComponentType type) {
     case ComponentType::ROTATE:
         newComponent = new ComponentRotate(this);
         break;
-
+    case ComponentType::SCRIPT:
+        newComponent = new ComponentScript(this);
+        break;
     default:
         LOG_DEBUG("ERROR: Unknown component type requested for GameObject '%s'", name.c_str());
         LOG_CONSOLE("Failed to create component");
