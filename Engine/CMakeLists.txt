@@ -138,6 +138,10 @@ set(SCRIPTING_SRC
     src/ScriptEditorWindow.cpp
     src/EditorPreferences.h
     src/EditorPreferences.cpp
+    src/Prefab.h
+    src/Prefab.cpp
+    src/PrefabManager.h
+    src/PrefabManager.cpp
 )
 
 source_group("Source\\Core" FILES ${CORE_SRC})

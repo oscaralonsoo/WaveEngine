@@ -28,6 +28,7 @@ AssetType MetaFile::GetAssetType(const std::string& extension) {
     if (ext == ".dds") return AssetType::TEXTURE_DDS;
     if (ext == ".tga") return AssetType::TEXTURE_TGA;
     if (ext == ".lua") return AssetType::SCRIPT_LUA;
+    if (ext == ".prefab") return AssetType::PREFAB; 
 
     return AssetType::UNKNOWN;
 }

@@ -7,6 +7,7 @@
 #include "MeshImporter.h"
 #include "Log.h"
 #include "ResourceScript.h"
+#include "ResourcePrefab.h"
 #include <filesystem>
 #include <random>
 
@@ -149,6 +150,16 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
                 registered++;
             }
             break;
+        case AssetType::PREFAB:  
+            resourceType = Resource::PREFAB;
+            resource = new ResourcePrefab(meta.uid);
+            if (resource) {
+                resource->SetAssetFile(assetPath);
+                resource->SetLibraryFile(assetPath);  
+                resources[meta.uid] = resource;
+                registered++;
+            }
+            break;
         default:
             continue;
         }
@@ -215,6 +226,10 @@ UID ModuleResources::ImportFile(const char* newFileInAssets) {
         importSuccess = ImportScript(resource, newFileInAssets);
         break;
     }
+    case Resource::PREFAB: {
+        importSuccess = ImportPrefab(resource, newFileInAssets);
+        break;
+    }
     default:
         LOG_CONSOLE("ERROR: Import not implemented for this type");
         break;
@@ -250,10 +265,12 @@ Resource* ModuleResources::CreateNewResourceWithUID(const char* assetsFile, Reso
         resource = new ResourceMesh(uid);
         break;
 
-    case Resource::SCRIPT:  // ← AÑADIR
+    case Resource::SCRIPT:  
         resource = new ResourceScript(uid);
         break;
-
+    case Resource::PREFAB:
+        resource = new ResourceScript(uid);
+        break;
     default:
         LOG_CONSOLE("ERROR: Unsupported resource type");
         return nullptr;
@@ -263,7 +280,7 @@ Resource* ModuleResources::CreateNewResourceWithUID(const char* assetsFile, Reso
         resource->SetAssetFile(assetsFile);
 
         // Scripts NO van a Library
-        if (type == Resource::SCRIPT) {
+        if (type == Resource::SCRIPT || type == Resource::PREFAB) {
             resource->SetLibraryFile(assetsFile);
         }
         else if (type == Resource::TEXTURE) {
@@ -360,8 +377,12 @@ Resource::Type ModuleResources::GetResourceTypeFromExtension(const std::string& 
         return Resource::MESH;
     }
 
-    if (ext == ".lua") {  // ← AÑADIR
+    if (ext == ".lua") {  
         return Resource::SCRIPT;
+    }
+
+    if (ext == ".prefab") { 
+        return Resource::PREFAB;
     }
 
     return Resource::UNKNOWN;
@@ -556,6 +577,39 @@ bool ModuleResources::ImportScript(Resource* resource, const std::string& assetP
     resource->SetLibraryFile(assetPath);  // Scripts reference themselves
 
     LOG_CONSOLE("[ModuleResources] Script registered: %s (UID: %llu)",
+        assetPath.c_str(), resource->GetUID());
+
+    return true;
+}
+
+bool ModuleResources::ImportPrefab(Resource* resource, const std::string& assetPath) {
+    if (!std::filesystem::exists(assetPath)) {
+        LOG_CONSOLE("ERROR: Prefab file not found: %s", assetPath.c_str());
+        return false;
+    }
+
+    // Try to parse JSON to verify it's valid
+    std::ifstream file(assetPath);
+    if (!file.is_open()) {
+        LOG_CONSOLE("ERROR: Cannot open prefab file: %s", assetPath.c_str());
+        return false;
+    }
+
+    try {
+        nlohmann::json testParse;
+        file >> testParse;
+        file.close();
+    }
+    catch (const std::exception& e) {
+        LOG_CONSOLE("ERROR: Invalid prefab JSON: %s - %s", assetPath.c_str(), e.what());
+        file.close();
+        return false;
+    }
+
+    resource->SetAssetFile(assetPath);
+    resource->SetLibraryFile(assetPath);  // Prefabs reference themselves
+
+    LOG_CONSOLE("[ModuleResources] Prefab registered: %s (UID: %llu)",
         assetPath.c_str(), resource->GetUID());
 
     return true;

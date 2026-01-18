@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <imgui.h>
 #include "MetaFile.h"
+#include "GameObject.h"
 
 class MetaFile;
 class ScriptEditorWindow;  // Forward declaration
@@ -44,6 +45,7 @@ enum class DragDropAssetType
     MESH,           // Mesh individual
     TEXTURE,        // Texture (PNG, JPG, DDS, etc)
     SCRIPT,         // Lua script
+    PREFAB
 };
 
 // Payload para drag & drop interno
@@ -104,6 +106,9 @@ private:
 
     // Test function (temporal)
     bool TestImportSystem();
+
+    void HandlePrefabCreationDrop(const std::string& prefabName);
+    bool CreatePrefabFromGameObject(GameObject* obj, const std::string& prefabPath);
 
     std::string assetsRootPath;
     std::string currentPath;

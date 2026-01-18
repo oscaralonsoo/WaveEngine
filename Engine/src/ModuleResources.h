@@ -17,6 +17,7 @@ public:
         MODEL,
         MATERIAL,
         ANIMATION,
+        PREFAB,
         SCRIPT
     };
 
@@ -171,7 +172,7 @@ private:
     bool ImportTexture(Resource* resource, const std::string& assetPath);
     bool ImportMesh(Resource* resource, const std::string& assetPath);
     bool ImportModel(Resource* resource, const std::string& assetPath);
-
+    bool ImportPrefab(Resource* resource, const std::string& assetPath);
 private:
     std::map<UID, Resource*> resources;  // UID -> Resource* map
     UID nextUID = 1;                     // UID counter
