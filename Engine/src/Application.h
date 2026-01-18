@@ -1,5 +1,4 @@
 #pragma once
-
 #include <memory>
 #include <list>
 #include "Window.h"
@@ -14,7 +13,8 @@
 #include "ModuleEditor.h"
 #include "SelectionManager.h"
 #include "ModuleCamera.h" 
-#include "ModuleResources.h" 
+#include "ModuleResources.h"
+#include "ModuleAudio.h"  // NUEVO: Incluir ModuleAudio
 
 class Module;
 
@@ -51,6 +51,7 @@ public:
     void Pause();
     void Stop();
     void Step();
+
     PlayState GetPlayState() const { return playState; }
 
     // Modules
@@ -65,6 +66,7 @@ public:
     std::shared_ptr<ModuleEditor> editor;
     std::shared_ptr<Grid> grid;
     std::shared_ptr<ModuleResources> resources;
+    std::shared_ptr<ModuleAudio> audio;  // NUEVO: Agregar ModuleAudio
 
     SelectionManager* selectionManager;
 
@@ -78,8 +80,8 @@ private:
     Application& operator=(const Application&) = delete;
 
     void AddModule(std::shared_ptr<Module> module);
-    std::list<std::shared_ptr<Module>> moduleList;
 
+    std::list<std::shared_ptr<Module>> moduleList;
     bool isRunning;
     PlayState playState;
 
@@ -93,7 +95,6 @@ private:
     bool PostUpdate();
 
 public:
-
     enum EngineState
     {
         CREATE = 1,
@@ -104,5 +105,4 @@ public:
         FAIL,
         EXIT
     };
-
 };

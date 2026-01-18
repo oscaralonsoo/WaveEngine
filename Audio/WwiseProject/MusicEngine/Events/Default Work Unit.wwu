@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WwiseDocument Type="WorkUnit" ID="{3B1F18A4-9726-4789-8142-EE149ED90508}" SchemaVersion="133">
+	<Events>
+		<WorkUnit Name="Default Work Unit" ID="{3B1F18A4-9726-4789-8142-EE149ED90508}" PersistMode="Standalone">
+			<ChildrenList>
+				<Event Name="MusicStartA" ID="{6977ED35-7EF7-4214-9064-56C29B8660AC}">
+					<ChildrenList>
+						<Action Name="" ID="{44489F5B-1B38-453B-ACAF-98D85158261A}" ShortID="521912416">
+							<PropertyList>
+								<Property Name="FadeTime" Type="Real64" Value="2"/>
+							</PropertyList>
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="MusicLoop" ID="{85E88E66-B2C3-4CCC-A1CC-4D55DA3288D5}" WorkUnitID="{20C91D69-4A44-4F80-8F3A-CF9885E88373}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="MusicStopA" ID="{B01C45FA-BD11-4B96-B328-BEEF78072AA3}">
+					<ChildrenList>
+						<Action Name="" ID="{B628FE6F-62D3-45DD-AD6C-9DB8DFC994AA}" ShortID="847815269">
+							<PropertyList>
+								<Property Name="ActionType" Type="int16" Value="2"/>
+								<Property Name="FadeTime" Type="Real64" Value="2"/>
+							</PropertyList>
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="best-background-music-no-copyright-182154" ID="{367CBF3B-896C-4A16-B1A2-49C9B879CDEC}" WorkUnitID="{20C91D69-4A44-4F80-8F3A-CF9885E88373}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="MusicStopB" ID="{3CE9947F-3755-45FA-B855-E03ADAAFE497}">
+					<ChildrenList>
+						<Action Name="" ID="{2CD15630-7162-4984-9E5D-DEA5F241A87E}" ShortID="1058840369">
+							<PropertyList>
+								<Property Name="ActionType" Type="int16" Value="2"/>
+								<Property Name="FadeTime" Type="Real64" Value="2"/>
+							</PropertyList>
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="village-background-music-village-music-no-copyright-203060" ID="{500B2348-A0F3-4175-9B41-F84D5348E8E3}" WorkUnitID="{20C91D69-4A44-4F80-8F3A-CF9885E88373}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="MusicStartB" ID="{9CFC05BA-E4F9-4456-8552-BEA746E36CF9}">
+					<ChildrenList>
+						<Action Name="" ID="{6D3747DE-0AEB-4B6D-A14B-4D123812C2FF}" ShortID="929286919">
+							<PropertyList>
+								<Property Name="FadeTime" Type="Real64" Value="2"/>
+							</PropertyList>
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="village-background-music-village-music-no-copyright-203060" ID="{500B2348-A0F3-4175-9B41-F84D5348E8E3}" WorkUnitID="{20C91D69-4A44-4F80-8F3A-CF9885E88373}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+			</ChildrenList>
+		</WorkUnit>
+	</Events>
+</WwiseDocument>

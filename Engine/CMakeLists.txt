@@ -7,9 +7,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(WWISE_SDK_PATH $ENV{WWISEROOT})
+set(WWISE_GENERATED_SOUNDBANKS_PATH "${CMAKE_SOURCE_DIR}/../Audio/WwiseProject/MusicEngine/GeneratedSoundBanks")
 
 if (NOT WWISE_SDK_PATH)
     message(FATAL_ERROR "WWISEROOT environment variable is not set")
+endif()
+
+if (NOT EXISTS ${WWISE_GENERATED_SOUNDBANKS_PATH})
+    message(WARNING "Wwise GeneratedSoundBanks path not found: ${WWISE_GENERATED_SOUNDBANKS_PATH}")
 endif()
 
 find_package(SDL3 CONFIG REQUIRED)
@@ -62,6 +67,8 @@ set(UTILS_SRC
     src/SelectionManager.cpp
     src/Octree.h
     src/Octree.cpp
+    src/ModuleAudio.h
+    src/ModuleAudio.cpp
 )
 
 set(GAMEOBJECTS_SRC 
@@ -158,18 +165,41 @@ target_link_libraries(Engine PRIVATE Tracy::TracyClient)
 
 target_include_directories(Engine PRIVATE
     ${WWISE_SDK_PATH}/SDK/include
+    ${WWISE_GENERATED_SOUNDBANKS_PATH}
+
+    
+    
 )
 
+
+
 if (WIN32)
+    # Prevenir conflictos de macros de Windows con código estándar
+    add_compile_definitions(
+        NOMINMAX           # Evita macros min/max de Windows
+        WIN32_LEAN_AND_MEAN # Reduce headers de Windows
+        _HAS_STD_BYTE=0    # Evita conflicto std::byte
+    )
+    
     target_link_directories(Engine PRIVATE
         $<$<CONFIG:Debug>:${WWISE_SDK_PATH}/SDK/x64_vc170/Debug/lib>
         $<$<CONFIG:Release>:${WWISE_SDK_PATH}/SDK/x64_vc170/Release/lib>
     )
 
-    target_link_libraries(Engine PRIVATE
-        AkSoundEngine
-        AkMemoryMgr
-        AkStreamMgr
-        ws2_32
-    )
+   target_link_libraries(Engine PRIVATE
+    AkSoundEngine
+    AkMemoryMgr
+    AkStreamMgr
+    AkSpatialAudio
+    AkAudioInputSource
+    AkCommunicationCentral
+    AkVorbisDecoder
+    ws2_32
+    dinput8
+    dxguid
+    dsound
+)
+
+
+
 endif()

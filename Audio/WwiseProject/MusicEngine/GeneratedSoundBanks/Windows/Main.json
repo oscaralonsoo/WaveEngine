@@ -1,0 +1,100 @@
+{
+ "SoundBanksInfo": {
+  "Platform": "Windows",
+  "BasePlatform": "Windows",
+  "SchemaVersion": "16",
+  "SoundBankVersion": "172",
+  "SoundBanks": [
+   {
+    "Id": "3161908922",
+    "Type": "User",
+    "GUID": "{3EB4423E-CDBE-48EF-B3A6-2E491FE970E5}",
+    "Language": "SFX",
+    "Hash": "{1453A887-7D6D-C939-6C6D-4A463649378B}",
+    "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
+    "ShortName": "Main",
+    "Path": "Main.bnk",
+    "Media": [
+     {
+      "Id": "104047693",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "best-background-music-no-copyright-182154.wav",
+      "CachePath": "C6/{C65BFA5B-D73F-2ADE-7037-13DF749C8793}.wem"
+     },
+     {
+      "Id": "448292676",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "village-background-music-village-music-no-copyright-203060.wav",
+      "CachePath": "B8/{B8DC3BC5-3D6B-C50F-60EA-EB18FFD8889D}.wem"
+     }
+    ],
+    "Events": [
+     {
+      "Id": "2885891739",
+      "Name": "MusicStartA",
+      "ObjectPath": "\\Events\\Default Work Unit\\MusicStartA",
+      "GUID": "{6977ED35-7EF7-4214-9064-56C29B8660AC}",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "104047693"
+       },
+       {
+        "Id": "448292676"
+       }
+      ]
+     },
+     {
+      "Id": "2885891736",
+      "Name": "MusicStartB",
+      "ObjectPath": "\\Events\\Default Work Unit\\MusicStartB",
+      "GUID": "{9CFC05BA-E4F9-4456-8552-BEA746E36CF9}",
+      "DurationType": "OneShot",
+      "DurationMin": "31.2",
+      "DurationMax": "31.2",
+      "MediaRefs": [
+       {
+        "Id": "448292676"
+       }
+      ]
+     },
+     {
+      "Id": "1156824763",
+      "Name": "MusicStopA",
+      "ObjectPath": "\\Events\\Default Work Unit\\MusicStopA",
+      "GUID": "{B01C45FA-BD11-4B96-B328-BEEF78072AA3}",
+      "MaxAttenuation": "0",
+      "DurationType": "OneShot",
+      "DurationMin": "0",
+      "DurationMax": "0",
+      "MediaRefs": [
+       {
+        "Id": "104047693"
+       }
+      ]
+     },
+     {
+      "Id": "1156824760",
+      "Name": "MusicStopB",
+      "ObjectPath": "\\Events\\Default Work Unit\\MusicStopB",
+      "GUID": "{3CE9947F-3755-45FA-B855-E03ADAAFE497}",
+      "MaxAttenuation": "0",
+      "DurationType": "OneShot",
+      "DurationMin": "0",
+      "DurationMax": "0",
+      "MediaRefs": [
+       {
+        "Id": "448292676"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "FileHash": "{8483D238-5651-E721-A93E-DB5610435EBF}"
+ }
+}

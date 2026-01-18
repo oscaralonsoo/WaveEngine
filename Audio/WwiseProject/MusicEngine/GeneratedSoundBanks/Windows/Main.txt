@@ -1,0 +1,10 @@
+Event	ID	Name			Wwise Object Path	Notes
+	1156824760	MusicStopB			\Default Work Unit\MusicStopB	
+	1156824763	MusicStopA			\Default Work Unit\MusicStopA	
+	2885891736	MusicStartB			\Default Work Unit\MusicStartB	
+	2885891739	MusicStartA			\Default Work Unit\MusicStartA	
+
+In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
+	104047693	best-background-music-no-copyright-182154	.cache\C6\{C65BFA5B-D73F-2ADE-7037-13DF749C8793}.wem		\Containers\Default Work Unit\MusicLoop\best-background-music-no-copyright-182154		4709472
+	448292676	village-background-music-village-music-no-copyright-203060	.cache\B8\{B8DC3BC5-3D6B-C50F-60EA-EB18FFD8889D}.wem		\Containers\Default Work Unit\MusicLoop\village-background-music-village-music-no-copyright-203060		5990496
+

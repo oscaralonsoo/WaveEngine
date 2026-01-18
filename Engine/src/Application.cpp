@@ -18,6 +18,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     time = std::make_shared<Time>();
     grid = std::make_shared<Grid>();
     resources = std::make_shared<ModuleResources>();
+    audio = std::make_shared<ModuleAudio>();  // NUEVO: Crear ModuleAudio
 
     AddModule(std::static_pointer_cast<Module>(window));
     AddModule(std::static_pointer_cast<Module>(input));
@@ -30,6 +31,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     AddModule(std::static_pointer_cast<Module>(time));
     AddModule(std::static_pointer_cast<Module>(grid));
     AddModule(std::static_pointer_cast<Module>(renderer));
+    AddModule(std::static_pointer_cast<Module>(audio));  // NUEVO: Agregar ModuleAudio a la lista
 
     selectionManager = new SelectionManager();
 }
@@ -189,12 +191,22 @@ void Application::Play()
 
     playState = PlayState::PLAYING;
     time->Resume();
+
+    // NUEVO: Iniciar audio cuando se presiona Play
+    if (audio) {
+        audio->OnPlay();
+    }
 }
 
 void Application::Pause()
 {
     playState = PlayState::PAUSED;
     time->Pause();
+
+    // NUEVO: Pausar audio
+    if (audio) {
+        audio->OnPause();
+    }
 }
 
 void Application::Stop()
@@ -208,6 +220,11 @@ void Application::Stop()
     playState = PlayState::EDITING;
     time->Reset();
     time->Pause();
+
+    // NUEVO: Detener audio
+    if (audio) {
+        audio->OnStop();
+    }
 }
 
 void Application::Step()
@@ -243,6 +260,7 @@ bool Application::CleanUp()
     input.reset();
     window.reset();
     resources.reset();
+    audio.reset();  // NUEVO: Limpiar ModuleAudio
 
     delete selectionManager;
     selectionManager = nullptr;
