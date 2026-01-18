@@ -39,24 +39,24 @@ bool ModuleUI::Update()
 		break;
 
 	case UIState::FADING_OUT:
+
+		
+		//fade a todo transparente
+		fadeAlpha -= fadeSpeed * Application::GetInstance().time->GetRealDeltaTime();
+		if (fadeAlpha < 0.0f) fadeAlpha = 0.0f;
+
+		
+		
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, (float)fadeAlpha);
+
 		RenderMainMenu();
 
-		fadeAlpha += fadeSpeed * Application::GetInstance().time->GetRealDeltaTime();
+		ImGui::PopStyleVar(); 
 
-
-		ImGui::SetNextWindowPos(ImVec2(0, 0));
-		ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-		ImGui::SetNextWindowBgAlpha(fadeAlpha);
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 1));
-		ImGui::Begin("FadeOverlay", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
-		ImGui::End();
-		ImGui::PopStyleColor();
-
-
-		if (fadeAlpha >= 1.0f)
+		if (fadeAlpha <= 0.0f)
 		{
 			uiState = UIState::IN_GAME;
-			fadeAlpha = 0.0f;
+			fadeAlpha = 0.0f; 
 		}
 		break;
 
@@ -116,7 +116,7 @@ void ModuleUI::RenderMainMenu()
 void ModuleUI::StartGame()
 {
 	uiState = UIState::FADING_OUT;
-	fadeAlpha = 0.0f;
+	fadeAlpha = 1.0f;
 	LOG_CONSOLE("Juego iniciado para: %s", playerNameInput);
 }
 

@@ -40,6 +40,8 @@ set(RENDERING_SRC
     src/Shaders.cpp 
     src/Frustum.h 
     src/Frustum.cpp 
+    src/ModuleUI.cpp 
+    src/ModuleUI.h 
 )
 
 set(UTILS_SRC 
