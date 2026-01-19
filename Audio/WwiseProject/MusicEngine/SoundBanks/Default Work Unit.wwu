@@ -6,6 +6,8 @@
 				<SoundBank Name="Main" ID="{3EB4423E-CDBE-48EF-B3A6-2E491FE970E5}">
 					<ObjectInclusionList>
 						<ObjectRef Name="village-background-music-village-music-no-copyright-203060" ID="{500B2348-A0F3-4175-9B41-F84D5348E8E3}" WorkUnitID="{20C91D69-4A44-4F80-8F3A-CF9885E88373}" Origin="Manual" Filter="7"/>
+						<ObjectRef Name="SFX_STATIC_PLAY" ID="{2479D594-2724-41DE-8667-DAEC74AB02BF}" WorkUnitID="{3B1F18A4-9726-4789-8142-EE149ED90508}" Origin="Manual" Filter="7"/>
+						<ObjectRef Name="SFX_DYNAMIC_PLAY" ID="{0BE9871F-F6B6-41E3-BD4D-A47605B47695}" WorkUnitID="{3B1F18A4-9726-4789-8142-EE149ED90508}" Origin="Manual" Filter="7"/>
 						<ObjectRef Name="MusicStartA" ID="{6977ED35-7EF7-4214-9064-56C29B8660AC}" WorkUnitID="{3B1F18A4-9726-4789-8142-EE149ED90508}" Origin="Manual" Filter="7"/>
 						<ObjectRef Name="MusicStartB" ID="{9CFC05BA-E4F9-4456-8552-BEA746E36CF9}" WorkUnitID="{3B1F18A4-9726-4789-8142-EE149ED90508}" Origin="Manual" Filter="7"/>
 						<ObjectRef Name="MusicStopB" ID="{3CE9947F-3755-45FA-B855-E03ADAAFE497}" WorkUnitID="{3B1F18A4-9726-4789-8142-EE149ED90508}" Origin="Manual" Filter="7"/>

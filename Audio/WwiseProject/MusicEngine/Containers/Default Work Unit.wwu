@@ -63,6 +63,80 @@
 						</Sound>
 					</ChildrenList>
 				</RandomSequenceContainer>
+				<Sound Name="powerful-cinematic-hit-454852" ID="{4FC5D8D4-E405-48FB-9369-46189B5DB720}" ShortID="564568212">
+					<PropertyList>
+						<Property Name="3DSpatialization" Type="int16" Value="1"/>
+						<Property Name="AttenuationDistanceScaling" Type="Real32" Value="0.5"/>
+						<Property Name="IsLoopingEnabled" Type="bool" Value="True"/>
+					</PropertyList>
+					<ReferenceList>
+						<Reference Name="Attenuation">
+							<ObjectRef Name="New Attenuation_01" ID="{7C124361-8D70-4B1D-B695-600151EA9DB2}" WorkUnitID="{CADA5293-7B34-4176-A9BF-24512B38D0F8}"/>
+						</Reference>
+						<Reference Name="Conversion">
+							<ObjectRef Name="Default Conversion Settings" ID="{6D1B890C-9826-4384-BF07-C15223E9FB56}" WorkUnitID="{0D8D82A3-FAC8-460D-8E51-BE717A1F98D7}"/>
+						</Reference>
+						<Reference Name="OutputBus">
+							<ObjectRef Name="Main Audio Bus" ID="{1514A4D8-1DA6-412A-A17E-75CA0C2149F3}" WorkUnitID="{C0D3C527-ABEE-423D-89B7-F5B077E489DF}"/>
+						</Reference>
+					</ReferenceList>
+					<ChildrenList>
+						<AudioFileSource Name="powerful-cinematic-hit-454852" ID="{53B690E5-3F55-4030-8573-F26F2C97D39E}">
+							<Language>SFX</Language>
+							<AudioFile>powerful-cinematic-hit-454852.wav</AudioFile>
+							<MediaIDList>
+								<MediaID ID="582256795"/>
+							</MediaIDList>
+						</AudioFileSource>
+						<AudioFileSource Name="powerful-cinematic-hit-454852" ID="{CAAB172A-6BF4-4EF2-BBC2-CF8855654AA8}">
+							<Language>SFX</Language>
+							<AudioFile>powerful-cinematic-hit-454852.wav</AudioFile>
+							<MediaIDList>
+								<MediaID ID="582256795"/>
+							</MediaIDList>
+						</AudioFileSource>
+					</ChildrenList>
+					<ActiveSourceList>
+						<ActiveSource Name="powerful-cinematic-hit-454852" ID="{CAAB172A-6BF4-4EF2-BBC2-CF8855654AA8}" Platform="Linked"/>
+					</ActiveSourceList>
+				</Sound>
+				<Sound Name="cinematic-impact-464937" ID="{B6D5A6BF-0297-4EA1-8D40-412CA8FFB036}" ShortID="14336685">
+					<PropertyList>
+						<Property Name="3DSpatialization" Type="int16" Value="1"/>
+						<Property Name="AttenuationDistanceScaling" Type="Real32" Value="0.5"/>
+						<Property Name="IsLoopingEnabled" Type="bool" Value="True"/>
+					</PropertyList>
+					<ReferenceList>
+						<Reference Name="Attenuation">
+							<ObjectRef Name="New Attenuation" ID="{96AB80E2-2824-48A0-866C-6D81B9C22EAF}" WorkUnitID="{CADA5293-7B34-4176-A9BF-24512B38D0F8}"/>
+						</Reference>
+						<Reference Name="Conversion">
+							<ObjectRef Name="Default Conversion Settings" ID="{6D1B890C-9826-4384-BF07-C15223E9FB56}" WorkUnitID="{0D8D82A3-FAC8-460D-8E51-BE717A1F98D7}"/>
+						</Reference>
+						<Reference Name="OutputBus">
+							<ObjectRef Name="Main Audio Bus" ID="{1514A4D8-1DA6-412A-A17E-75CA0C2149F3}" WorkUnitID="{C0D3C527-ABEE-423D-89B7-F5B077E489DF}"/>
+						</Reference>
+					</ReferenceList>
+					<ChildrenList>
+						<AudioFileSource Name="cinematic-impact-464937" ID="{DE45FC15-7399-4574-85C3-2205BF2A6630}">
+							<Language>SFX</Language>
+							<AudioFile>cinematic-impact-464937.wav</AudioFile>
+							<MediaIDList>
+								<MediaID ID="296033464"/>
+							</MediaIDList>
+						</AudioFileSource>
+						<AudioFileSource Name="cinematic-impact-464937" ID="{C3062387-8AC0-4DF2-B071-D67C0C392D48}">
+							<Language>SFX</Language>
+							<AudioFile>cinematic-impact-464937.wav</AudioFile>
+							<MediaIDList>
+								<MediaID ID="296033464"/>
+							</MediaIDList>
+						</AudioFileSource>
+					</ChildrenList>
+					<ActiveSourceList>
+						<ActiveSource Name="cinematic-impact-464937" ID="{C3062387-8AC0-4DF2-B071-D67C0C392D48}" Platform="Linked"/>
+					</ActiveSourceList>
+				</Sound>
 			</ChildrenList>
 		</WorkUnit>
 	</Containers>

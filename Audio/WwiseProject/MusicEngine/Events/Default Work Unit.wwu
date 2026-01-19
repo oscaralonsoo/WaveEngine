@@ -61,6 +61,28 @@
 						</Action>
 					</ChildrenList>
 				</Event>
+				<Event Name="SFX_STATIC_PLAY" ID="{2479D594-2724-41DE-8667-DAEC74AB02BF}">
+					<ChildrenList>
+						<Action Name="" ID="{C6B5A23D-D8FA-47D5-A8DC-ADFE2C5B6276}" ShortID="460034113">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="powerful-cinematic-hit-454852" ID="{4FC5D8D4-E405-48FB-9369-46189B5DB720}" WorkUnitID="{20C91D69-4A44-4F80-8F3A-CF9885E88373}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="SFX_DYNAMIC_PLAY" ID="{0BE9871F-F6B6-41E3-BD4D-A47605B47695}">
+					<ChildrenList>
+						<Action Name="" ID="{A8BBE102-E9B6-4CA4-AA8D-09D5385862A2}" ShortID="14234083">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="cinematic-impact-464937" ID="{B6D5A6BF-0297-4EA1-8D40-412CA8FFB036}" WorkUnitID="{20C91D69-4A44-4F80-8F3A-CF9885E88373}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
 			</ChildrenList>
 		</WorkUnit>
 	</Events>
