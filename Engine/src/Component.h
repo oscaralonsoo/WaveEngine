@@ -10,8 +10,11 @@ enum class ComponentType {
     MATERIAL,
     CAMERA,
     ROTATE,
+    AUDIO_SOURCE,     
+    AUDIO_LISTENER,   
     UNKNOWN
 };
+
 
 class Component {
 public:

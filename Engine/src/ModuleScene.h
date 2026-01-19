@@ -23,9 +23,7 @@ public:
     bool CleanUp() override;
 
     GameObject* CreateGameObject(const std::string& name);
-
     GameObject* GetRoot() const { return root; }
-
     void CleanupMarkedObjects(GameObject* parent);
 
     Octree* GetOctree() { return octree.get(); }
@@ -45,10 +43,19 @@ public:
 private:
     std::unique_ptr<Octree> octree;
     bool needsOctreeRebuild = false;
-    GameObject* root = nullptr;
 
+    GameObject* root = nullptr;
     Renderer* renderer = nullptr;
     FileSystem* filesystem = nullptr;
 
     ComponentCamera* FindCameraInHierarchy(GameObject* obj);
+
+    
+    GameObject* listenerObject = nullptr;
+    GameObject* staticAudioObject = nullptr;
+    GameObject* dynamicAudioObject = nullptr;
+
+    bool sfxEnabled = true;              // SFX activos por defecto
+    unsigned int staticPlayingID = 0;    // ID del sonido estático
+    unsigned int dynamicPlayingID = 0;   // ID del sonido dinámico
 };

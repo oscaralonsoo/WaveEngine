@@ -17,6 +17,8 @@ namespace AK
         static const AkUniqueID MUSICSTARTB = 2885891736U;
         static const AkUniqueID MUSICSTOPA = 1156824763U;
         static const AkUniqueID MUSICSTOPB = 1156824760U;
+        static const AkUniqueID SFX_DYNAMIC_PLAY = 1809161565U;
+        static const AkUniqueID SFX_STATIC_PLAY = 233341488U;
     } // namespace EVENTS
 
     namespace GAME_PARAMETERS

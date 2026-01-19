@@ -5,6 +5,8 @@
 #include "ComponentMaterial.h"
 #include "ComponentCamera.h"
 #include "ComponentRotate.h"
+#include "ComponentAudioSource.h"      // ← NUEVO
+#include "ComponentAudioListener.h"    // ← NUEVO
 #include <nlohmann/json.hpp>
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
@@ -42,6 +44,7 @@ Component* GameObject::CreateComponent(ComponentType type) {
         }
         newComponent = new ComponentMaterial(this);
         break;
+
     case ComponentType::CAMERA:
         if (GetComponent(ComponentType::CAMERA) != nullptr) {
             return GetComponent(ComponentType::CAMERA);
@@ -52,6 +55,22 @@ Component* GameObject::CreateComponent(ComponentType type) {
     case ComponentType::ROTATE:
         newComponent = new ComponentRotate(this);
         break;
+
+        // ========================================
+        // NUEVO: COMPONENTES DE AUDIO
+        // ========================================
+    case ComponentType::AUDIO_SOURCE:
+        // Por defecto, sin evento (se configurará después)
+        newComponent = new ComponentAudioSource(this, 0, false);
+        break;
+
+    case ComponentType::AUDIO_LISTENER:
+        if (GetComponent(ComponentType::AUDIO_LISTENER) != nullptr) {
+            return GetComponent(ComponentType::AUDIO_LISTENER);
+        }
+        newComponent = new ComponentAudioListener(this);
+        break;
+        // ========================================
 
     default:
         LOG_DEBUG("ERROR: Unknown component type requested for GameObject '%s'", name.c_str());
@@ -125,7 +144,6 @@ void GameObject::InsertChildAt(GameObject* child, int index) {
         if (index < 0) index = 0;
         if (index > static_cast<int>(children.size())) index = static_cast<int>(children.size());
 
-        // Insert child
         children.insert(children.begin() + index, child);
     }
 }
@@ -153,14 +171,11 @@ void GameObject::Update() {
 }
 
 void GameObject::Serialize(nlohmann::json& gameObjectArray) const {
-    // Create a JSON object
     nlohmann::json gameObjectObj;
 
-    // Set the name and active state
     gameObjectObj["name"] = name;
     gameObjectObj["active"] = active;
 
-    // Components
     nlohmann::json componentsArray = nlohmann::json::array();
 
     for (const auto* component : components) {
@@ -173,7 +188,6 @@ void GameObject::Serialize(nlohmann::json& gameObjectArray) const {
 
     gameObjectObj["components"] = componentsArray;
 
-    // Children
     nlohmann::json childrenArray = nlohmann::json::array();
     for (const auto* child : children) {
         child->Serialize(childrenArray);
@@ -188,7 +202,6 @@ GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObj
         return nullptr;
     }
 
-    // Create gameobject
     std::string objName = gameObjectObj.contains("name") ? gameObjectObj["name"].get<std::string>() : "GameObject";
     GameObject* newObject = new GameObject(objName);
 
@@ -200,7 +213,6 @@ GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObj
         parent->AddChild(newObject);
     }
 
-    // Components
     if (gameObjectObj.contains("components") && gameObjectObj["components"].is_array()) {
         const nlohmann::json& componentsArray = gameObjectObj["components"];
 
@@ -212,7 +224,8 @@ GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObj
             Component* component = nullptr;
             if (type == ComponentType::TRANSFORM) {
                 component = newObject->GetComponent(ComponentType::TRANSFORM);
-            } else {
+            }
+            else {
                 component = newObject->CreateComponent(type);
             }
 
@@ -225,7 +238,6 @@ GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObj
         }
     }
 
-    // Children
     if (gameObjectObj.contains("children") && gameObjectObj["children"].is_array()) {
         const nlohmann::json& childrenArray = gameObjectObj["children"];
         for (const auto& childObj : childrenArray) {

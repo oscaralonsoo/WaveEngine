@@ -12,6 +12,15 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 
+// Audio includes
+#include "ComponentAudioSource.h"
+#include "ComponentAudioListener.h"
+#include "Wwise_IDs.h"
+#include "ModuleAudio.h"
+#include <cmath>
+#include <SDL3/SDL.h>
+#include <AK/SoundEngine/Common/AkSoundEngine.h>
+
 ModuleScene::ModuleScene() : Module()
 {
     name = "ModuleScene";
@@ -41,6 +50,134 @@ bool ModuleScene::Start()
     root = new GameObject("Root");
     LOG_CONSOLE("Scene ready");
 
+    // ========================================
+    // DEBUG: Verificar ModuleAudio
+    // ========================================
+    ModuleAudio* audio = ModuleAudio::Get();
+    if (!audio) {
+        LOG_CONSOLE("[ERROR] ModuleAudio::Get() returned NULL!");
+        return true; // Salir sin crear audio
+    }
+    LOG_CONSOLE("[DEBUG] ModuleAudio is available");
+
+    // ========================================
+    // CREAR GAMEOBJECTS DE AUDIO 3D
+    // ========================================
+
+    // 1. LISTENER
+    listenerObject = new GameObject("AudioListener");
+
+    Transform* listenerTransform = static_cast<Transform*>(
+        listenerObject->GetComponent(ComponentType::TRANSFORM)
+        );
+    listenerTransform->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+
+    ComponentAudioListener* listener = static_cast<ComponentAudioListener*>(
+        listenerObject->CreateComponent(ComponentType::AUDIO_LISTENER)
+        );
+
+    root->AddChild(listenerObject);
+    listenerObject->SetActive(true);
+
+    if (listener) {
+        LOG_CONSOLE("[DEBUG] Calling listener->Enable()...");
+        listener->Enable();
+    }
+
+    LOG_CONSOLE("AudioListener created at (0, 0, 0)");
+
+
+    // 2. OBJETO ESTÁTICO
+    staticAudioObject = new GameObject("StaticSFX");
+
+    Transform* staticTransform = static_cast<Transform*>(
+        staticAudioObject->GetComponent(ComponentType::TRANSFORM)
+        );
+    staticTransform->SetPosition(glm::vec3(5.0f, 0.0f, 0.0f));
+
+    ComponentAudioSource* staticSource = static_cast<ComponentAudioSource*>(
+        staticAudioObject->CreateComponent(ComponentType::AUDIO_SOURCE)
+        );
+
+    root->AddChild(staticAudioObject);
+    staticAudioObject->SetActive(true);
+
+    if (staticSource) {
+        LOG_CONSOLE("[DEBUG] Configuring static source...");
+        staticSource->SetEvent(AK::EVENTS::SFX_STATIC_PLAY);
+
+        LOG_CONSOLE("[DEBUG] Calling staticSource->Enable()...");
+        staticSource->Enable();
+
+        // WORKAROUND DIRECTO
+        LOG_CONSOLE("[DEBUG] Starting manual workaround for static...");
+
+        AkGameObjectID staticId = (AkGameObjectID)(uintptr_t)staticAudioObject;
+        LOG_CONSOLE("[DEBUG] Static ID: %llu", (unsigned long long)staticId);
+
+        bool registered = audio->RegisterAudioGameObject(staticId, "StaticSFX");
+        LOG_CONSOLE("[DEBUG] Registration result: %s", registered ? "SUCCESS" : "FAILED");
+
+        audio->SetGameObjectTransform(staticId,
+            5.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f
+        );
+        LOG_CONSOLE("[DEBUG] Transform set");
+
+        unsigned int playingId = audio->PostEvent(AK::EVENTS::SFX_STATIC_PLAY, staticId);
+        LOG_CONSOLE("[DEBUG] PostEvent returned: %u", playingId);
+    }
+
+    LOG_CONSOLE("Static Audio Object created at (5, 0, 0)");
+
+
+    // 3. OBJETO DINÁMICO
+    dynamicAudioObject = new GameObject("DynamicSFX");
+
+    Transform* dynamicTransform = static_cast<Transform*>(
+        dynamicAudioObject->GetComponent(ComponentType::TRANSFORM)
+        );
+    dynamicTransform->SetPosition(glm::vec3(0.0f, 0.0f, 4.0f));
+
+    ComponentAudioSource* dynamicSource = static_cast<ComponentAudioSource*>(
+        dynamicAudioObject->CreateComponent(ComponentType::AUDIO_SOURCE)
+        );
+
+    root->AddChild(dynamicAudioObject);
+    dynamicAudioObject->SetActive(true);
+
+    if (dynamicSource) {
+        LOG_CONSOLE("[DEBUG] Configuring dynamic source...");
+        dynamicSource->SetEvent(AK::EVENTS::SFX_DYNAMIC_PLAY);
+
+        LOG_CONSOLE("[DEBUG] Calling dynamicSource->Enable()...");
+        dynamicSource->Enable();
+
+        // WORKAROUND DIRECTO
+        LOG_CONSOLE("[DEBUG] Starting manual workaround for dynamic...");
+
+        AkGameObjectID dynamicId = (AkGameObjectID)(uintptr_t)dynamicAudioObject;
+        LOG_CONSOLE("[DEBUG] Dynamic ID: %llu", (unsigned long long)dynamicId);
+
+        bool registered = audio->RegisterAudioGameObject(dynamicId, "DynamicSFX");
+        LOG_CONSOLE("[DEBUG] Registration result: %s", registered ? "SUCCESS" : "FAILED");
+
+        audio->SetGameObjectTransform(dynamicId,
+            0.0f, 0.0f, 4.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f
+        );
+        LOG_CONSOLE("[DEBUG] Transform set");
+
+        unsigned int playingId = audio->PostEvent(AK::EVENTS::SFX_DYNAMIC_PLAY, dynamicId);
+        LOG_CONSOLE("[DEBUG] PostEvent returned: %u", playingId);
+    }
+
+    LOG_CONSOLE("Dynamic Audio Object created at (0, 0, 4)");
+
+    LOG_CONSOLE("Audio 3D GameObjects initialized successfully!");
+
     return true;
 }
 
@@ -53,7 +190,6 @@ void ModuleScene::RebuildOctree()
 
     bool hasObjects = false;
 
-    // Calculate bounds of all objects
     std::function<void(GameObject*)> calculateBounds = [&](GameObject* obj) {
         if (!obj || !obj->IsActive()) return;
 
@@ -79,7 +215,6 @@ void ModuleScene::RebuildOctree()
         calculateBounds(root);
     }
 
-    // If no objects with mesh, use default bounds
     if (!hasObjects)
     {
         sceneMin = glm::vec3(-10.0f, -10.0f, -10.0f);
@@ -87,7 +222,6 @@ void ModuleScene::RebuildOctree()
     }
     else
     {
-        // Expand bounds significantly (50% margin)
         glm::vec3 size = sceneMax - sceneMin;
         glm::vec3 margin = size * 0.5f;
         sceneMin -= margin;
@@ -104,7 +238,6 @@ void ModuleScene::RebuildOctree()
         octree->Create(sceneMin, sceneMax, 4, 5);
     }
 
-    // Insert all game objects
     int insertedCount = 0;
 
     std::function<void(GameObject*)> insertRecursive = [&](GameObject* obj) {
@@ -131,7 +264,6 @@ void ModuleScene::RebuildOctree()
         insertRecursive(root);
     }
 
-    // Reset flag after rebuild
     needsOctreeRebuild = false;
 
     LOG_DEBUG("[ModuleScene] Octree rebuilt with %d objects", insertedCount);
@@ -140,13 +272,67 @@ void ModuleScene::RebuildOctree()
 
 bool ModuleScene::Update()
 {
-    // Update all GameObjects
     if (root)
     {
         root->Update();
     }
+    const bool* keys = SDL_GetKeyboardState(nullptr);
+    static bool mKeyPressed = false;
 
-    // Full rebuild only if explicitly requested
+    if (keys[SDL_SCANCODE_M] && !mKeyPressed)
+    {
+        mKeyPressed = true;
+        sfxEnabled = !sfxEnabled;
+
+        ModuleAudio* audio = ModuleAudio::Get();
+        if (audio && staticAudioObject && dynamicAudioObject)
+        {
+            AkGameObjectID staticId = (AkGameObjectID)(uintptr_t)staticAudioObject;
+            AkGameObjectID dynamicId = (AkGameObjectID)(uintptr_t)dynamicAudioObject;
+
+            if (sfxEnabled)
+            {
+                // Reanudar
+                LOG_CONSOLE("[AUDIO] 3D SFX enabled");
+
+                staticPlayingID = audio->PostEvent(AK::EVENTS::SFX_STATIC_PLAY, staticId);
+                dynamicPlayingID = audio->PostEvent(AK::EVENTS::SFX_DYNAMIC_PLAY, dynamicId);
+            }
+            else
+            {
+                // Parar
+                LOG_CONSOLE("[AUDIO] 3D SFX disabled");
+
+                AK::SoundEngine::StopAll(staticId);
+                AK::SoundEngine::StopAll(dynamicId);
+            }
+        }
+    }
+
+    if (!keys[SDL_SCANCODE_M])
+    {
+        mKeyPressed = false;
+    }
+
+    // Mover objeto dinámico
+    if (dynamicAudioObject != nullptr && dynamicAudioObject->IsActive())
+    {
+        static float t = 0.0f;
+        t += 0.02f;
+
+        Transform* trans = static_cast<Transform*>(
+            dynamicAudioObject->GetComponent(ComponentType::TRANSFORM)
+            );
+
+        if (trans != nullptr)
+        {
+            float x = std::sinf(t) * 6.0f;
+            float z = 4.0f + std::cosf(t) * 2.0f;
+
+            trans->SetPosition(glm::vec3(x, 0.0f, z));
+        }
+    }
+
     if (needsOctreeRebuild)
     {
         LOG_DEBUG("[ModuleScene] Full octree rebuild requested");
@@ -158,14 +344,12 @@ bool ModuleScene::Update()
 
 bool ModuleScene::PostUpdate()
 {
-    // Full rebuild only if explicitly requested
     if (needsOctreeRebuild)
     {
         LOG_DEBUG("[ModuleScene] Full octree rebuild requested");
         RebuildOctree();
     }
 
-    // Cleanup marked objects
     if (root)
     {
         CleanupMarkedObjects(root);
@@ -177,6 +361,10 @@ bool ModuleScene::PostUpdate()
 bool ModuleScene::CleanUp()
 {
     LOG_DEBUG("Cleaning up Scene");
+
+    listenerObject = nullptr;
+    staticAudioObject = nullptr;
+    dynamicAudioObject = nullptr;
 
     if (root)
     {
@@ -215,7 +403,6 @@ void ModuleScene::CleanupMarkedObjects(GameObject* parent)
     {
         if (child->IsMarkedForDeletion())
         {
-            // Scene Camera
             ComponentCamera* cam = static_cast<ComponentCamera*>(child->GetComponent(ComponentType::CAMERA));
             if (cam && cam == Application::GetInstance().camera->GetSceneCamera())
             {
@@ -225,7 +412,6 @@ void ModuleScene::CleanupMarkedObjects(GameObject* parent)
             parent->RemoveChild(child);
             delete child;
 
-            // Mark octree for rebuild after deletion
             needsOctreeRebuild = true;
         }
         else
@@ -243,7 +429,6 @@ bool ModuleScene::SaveScene(const std::string& filepath)
 
     document["version"] = 1;
 
-    // Serialize gameobjects
     nlohmann::json gameObjectsArray = nlohmann::json::array();
 
     if (root) {
@@ -254,7 +439,6 @@ bool ModuleScene::SaveScene(const std::string& filepath)
 
     document["gameObjects"] = gameObjectsArray;
 
-    // Write to file
     std::ofstream file(filepath);
     if (!file.is_open()) {
         LOG_CONSOLE("ERROR: Failed to open file for writing: %s", filepath.c_str());
@@ -272,7 +456,6 @@ bool ModuleScene::LoadScene(const std::string& filepath)
 {
     LOG_CONSOLE("Loading scene from: %s", filepath.c_str());
 
-    // Read file
     std::ifstream file(filepath);
     if (!file.is_open()) {
         LOG_CONSOLE("ERROR: Failed to open file for reading: %s", filepath.c_str());
@@ -283,7 +466,8 @@ bool ModuleScene::LoadScene(const std::string& filepath)
 
     try {
         file >> document;
-    } catch (const nlohmann::json::parse_error& e) {
+    }
+    catch (const nlohmann::json::parse_error& e) {
         LOG_CONSOLE("ERROR: Failed to parse JSON file: %s", e.what());
         file.close();
         return false;
@@ -291,13 +475,10 @@ bool ModuleScene::LoadScene(const std::string& filepath)
 
     file.close();
 
-    // Clear selection to avoid bugs
     Application::GetInstance().selectionManager->ClearSelection();
 
-    // Clear current scene
     ClearScene();
 
-    // Deserialize GameObjects
     if (document.contains("gameObjects") && document["gameObjects"].is_array()) {
         const nlohmann::json& gameObjectsArray = document["gameObjects"];
 
@@ -309,7 +490,6 @@ bool ModuleScene::LoadScene(const std::string& filepath)
         }
     }
 
-    // Relink Scene Camera
     if (root) {
         ComponentCamera* foundCamera = FindCameraInHierarchy(root);
         if (foundCamera) {
@@ -317,7 +497,6 @@ bool ModuleScene::LoadScene(const std::string& filepath)
         }
     }
 
-    // Force full rebuild after loading scene
     needsOctreeRebuild = true;
 
     LOG_CONSOLE("Scene loaded successfully");
@@ -330,20 +509,20 @@ void ModuleScene::ClearScene()
 
     if (!root) return;
 
-    // Selection
     Application::GetInstance().selectionManager->ClearSelection();
 
-    // Scene Camera
     Application::GetInstance().camera->SetSceneCamera(nullptr);
 
-    // Childrens
+    listenerObject = nullptr;
+    staticAudioObject = nullptr;
+    dynamicAudioObject = nullptr;
+
     std::vector<GameObject*> children = root->GetChildren();
     for (GameObject* child : children) {
         root->RemoveChild(child);
         delete child;
     }
 
-    // Octree
     if (octree) {
         octree->Clear();
     }

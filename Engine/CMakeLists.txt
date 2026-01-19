@@ -91,6 +91,10 @@ set(COMPONENTS_SRC
     src/ComponentCamera.h
     src/ComponentRotate.cpp
     src/ComponentRotate.h
+    src/ComponentAudioListener.h
+    src/ComponentAudioListener.cpp 
+    src/ComponentAudioSource.cpp
+    src/ComponentAudioSource.h
 )
 
 set(LOADERS_SRC 

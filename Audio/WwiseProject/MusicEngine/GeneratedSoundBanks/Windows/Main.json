@@ -10,7 +10,7 @@
     "Type": "User",
     "GUID": "{3EB4423E-CDBE-48EF-B3A6-2E491FE970E5}",
     "Language": "SFX",
-    "Hash": "{1453A887-7D6D-C939-6C6D-4A463649378B}",
+    "Hash": "{B46C22A4-9D0F-2857-CA21-C69DCF0757B2}",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
     "ShortName": "Main",
     "Path": "Main.bnk",
@@ -24,12 +24,28 @@
       "CachePath": "C6/{C65BFA5B-D73F-2ADE-7037-13DF749C8793}.wem"
      },
      {
+      "Id": "296033464",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "cinematic-impact-464937.wav",
+      "CachePath": "61/{617A90ED-8386-EC25-51EF-266B93D9F1D1}.wem"
+     },
+     {
       "Id": "448292676",
       "Language": "SFX",
       "Streaming": "false",
       "Location": "Memory",
       "ShortName": "village-background-music-village-music-no-copyright-203060.wav",
       "CachePath": "B8/{B8DC3BC5-3D6B-C50F-60EA-EB18FFD8889D}.wem"
+     },
+     {
+      "Id": "582256795",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "powerful-cinematic-hit-454852.wav",
+      "CachePath": "93/{936F25BA-2A01-8D09-2881-4612567A76BD}.wem"
      }
     ],
     "Events": [
@@ -91,10 +107,36 @@
         "Id": "448292676"
        }
       ]
+     },
+     {
+      "Id": "1809161565",
+      "Name": "SFX_DYNAMIC_PLAY",
+      "ObjectPath": "\\Events\\Default Work Unit\\SFX_DYNAMIC_PLAY",
+      "GUID": "{0BE9871F-F6B6-41E3-BD4D-A47605B47695}",
+      "MaxAttenuation": "50",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "296033464"
+       }
+      ]
+     },
+     {
+      "Id": "233341488",
+      "Name": "SFX_STATIC_PLAY",
+      "ObjectPath": "\\Events\\Default Work Unit\\SFX_STATIC_PLAY",
+      "GUID": "{2479D594-2724-41DE-8667-DAEC74AB02BF}",
+      "MaxAttenuation": "50",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "582256795"
+       }
+      ]
      }
     ]
    }
   ],
-  "FileHash": "{8483D238-5651-E721-A93E-DB5610435EBF}"
+  "FileHash": "{FF00E86C-C48F-3C9B-6C22-34A76BD03942}"
  }
 }
