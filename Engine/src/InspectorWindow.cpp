@@ -252,7 +252,7 @@ void InspectorWindow::DrawTransformComponent(GameObject* selectedObject)
             transform->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
             transform->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 
-            // Rebuild después de reset
+            // Rebuild despuï¿½s de reset
             Application::GetInstance().scene->MarkOctreeForRebuild();
 
             LOG_DEBUG("Transform reset for: %s", selectedObject->GetName().c_str());
@@ -542,6 +542,44 @@ void InspectorWindow::DrawMaterialComponent(GameObject* selectedObject)
 
     if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
     {
+        // Water Shader Checkbox
+        bool isWater = (materialComp->GetMaterialType() == MaterialType::WATER);
+        if (ImGui::Checkbox("Use Water Shader", &isWater))
+        {
+            materialComp->SetMaterialType(isWater ? MaterialType::WATER : MaterialType::STANDARD);
+            LOG_DEBUG("Material type changed to %s for %s", 
+                isWater ? "WATER" : "STANDARD", 
+                selectedObject->GetName().c_str());
+        }
+
+        // Water Configuration Section
+        if (isWater)
+        {
+            ImGui::Spacing();
+            if (ImGui::CollapsingHeader("Water Settings", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                float speed = materialComp->GetWaveSpeed();
+                if (ImGui::DragFloat("Wave Speed", &speed, 0.1f, 0.0f, 20.0f))
+                {
+                    materialComp->SetWaveSpeed(speed);
+                }
+
+                float amplitude = materialComp->GetWaveAmplitude();
+                if (ImGui::DragFloat("Wave Amplitude", &amplitude, 0.01f, 0.0f, 5.0f))
+                {
+                    materialComp->SetWaveAmplitude(amplitude);
+                }
+
+                float frequency = materialComp->GetWaveFrequency();
+                if (ImGui::DragFloat("Wave Frequency", &frequency, 0.01f, 0.0f, 10.0f))
+                {
+                    materialComp->SetWaveFrequency(frequency);
+                }
+            }
+            ImGui::Spacing();
+            ImGui::Separator();
+        }
+
         ImGui::Text("Texture:");
         ImGui::SameLine();
 

@@ -1,4 +1,4 @@
-﻿﻿#include "Renderer.h"
+#include "Renderer.h"
 #include "Application.h"
 #include "GameObject.h"
 #include "Transform.h"

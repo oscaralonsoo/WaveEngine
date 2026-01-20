@@ -18,7 +18,7 @@ struct TransparentObject
 
     TransparentObject(GameObject* obj, float dist)
         : gameObject(obj), distanceToCamera(dist) {
-    }
+    };
 };
 
 class Renderer : public Module

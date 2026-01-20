@@ -1,5 +1,4 @@
-﻿﻿#pragma once
-
+#pragma once
 #include "Component.h"
 #include "ModuleResources.h"  
 #include <string>

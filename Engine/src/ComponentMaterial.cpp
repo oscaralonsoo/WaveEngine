@@ -1,4 +1,4 @@
-﻿#include "ComponentMaterial.h"
+#include "ComponentMaterial.h"
 #include "GameObject.h"
 #include "Application.h"
 #include "ModuleResources.h"
