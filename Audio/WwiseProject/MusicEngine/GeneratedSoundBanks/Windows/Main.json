@@ -10,7 +10,7 @@
     "Type": "User",
     "GUID": "{3EB4423E-CDBE-48EF-B3A6-2E491FE970E5}",
     "Language": "SFX",
-    "Hash": "{B46C22A4-9D0F-2857-CA21-C69DCF0757B2}",
+    "Hash": "{D406CFBD-5CAF-4653-83EB-AFFDBED13F5D}",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
     "ShortName": "Main",
     "Path": "Main.bnk",
@@ -48,6 +48,26 @@
       "CachePath": "93/{936F25BA-2A01-8D09-2881-4612567A76BD}.wem"
      }
     ],
+    "Plugins": {
+     "ShareSets": [
+      {
+       "Id": "1572913279",
+       "Name": "RoomVerb",
+       "ObjectPath": "\\Effects\\Default Work Unit\\RoomVerb",
+       "GUID": "{035EDA02-5916-4913-BBDE-72069D6BCFAA}",
+       "LibName": "Wwise RoomVerb",
+       "LibId": "7733251"
+      },
+      {
+       "Id": "2141574376",
+       "Name": "Parametric_EQ",
+       "ObjectPath": "\\Effects\\Default Work Unit\\Parametric_EQ",
+       "GUID": "{04311708-9144-47EE-931A-845E1BA59D20}",
+       "LibName": "Wwise Parametric EQ",
+       "LibId": "6881283"
+      }
+     ]
+    },
     "Events": [
      {
       "Id": "2885891739",
@@ -134,9 +154,41 @@
        }
       ]
      }
+    ],
+    "Busses": [
+     {
+      "Id": "393239870",
+      "Name": "SFX",
+      "ObjectPath": "\\Busses\\Default Work Unit\\Main Audio Bus\\SFX",
+      "GUID": "{697B869C-8521-4EB7-8D9B-908050287E8C}",
+      "PluginRefs": {
+       "ShareSets": [
+        {
+         "Id": "1572913279"
+        },
+        {
+         "Id": "2141574376"
+        }
+       ]
+      }
+     },
+     {
+      "Id": "2246998526",
+      "Name": "Main Audio Bus",
+      "ObjectPath": "\\Busses\\Default Work Unit\\Main Audio Bus",
+      "GUID": "{1514A4D8-1DA6-412A-A17E-75CA0C2149F3}"
+     }
+    ],
+    "GameParameters": [
+     {
+      "Id": "867503",
+      "Name": "TunnelAmount",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\TunnelAmount",
+      "GUID": "{5389D694-24F5-4C22-B928-8FE0DD148234}"
+     }
     ]
    }
   ],
-  "FileHash": "{FF00E86C-C48F-3C9B-6C22-34A76BD03942}"
+  "FileHash": "{E42F6A79-1FBA-8A35-BC67-0383103D6768}"
  }
 }

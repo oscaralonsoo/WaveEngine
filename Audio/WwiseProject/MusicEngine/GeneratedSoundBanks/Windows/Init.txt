@@ -1,5 +1,13 @@
+Game Parameter	ID	Name			Wwise Object Path	Notes
+	867503	TunnelAmount			\Default Work Unit\TunnelAmount	
+
 Audio Bus	ID	Name			Wwise Object Path	Notes
+	393239870	SFX			\Default Work Unit\Main Audio Bus\SFX	
 	2246998526	Main Audio Bus			\Default Work Unit\Main Audio Bus	
+
+Effect plug-ins	ID	Name	Type				Notes
+	1572913279	RoomVerb	Wwise RoomVerb			
+	2141574376	Parametric_EQ	Wwise Parametric EQ			
 
 Audio Devices	ID	Name	Type				Notes
 	2317455096	No_Output	No Output			

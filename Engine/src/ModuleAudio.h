@@ -4,11 +4,12 @@
 #include <vector>
 #include <filesystem>
 #include <unordered_set>
+#include <unordered_map>
+#include <string>
+#include <glm/glm.hpp>
 
-// Forward declaration (sin headers Wwise aquí)
 namespace AK { class IAkStreamMgr; }
 
-// Tipos mínimos para no depender de includes Wwise en el header
 using AkBankID = unsigned int;
 using AkGameObjectID = unsigned long long;
 using AkUInt8 = unsigned char;
@@ -26,15 +27,12 @@ public:
     bool Update() override;
     bool CleanUp() override;
 
-    // Tu control de música (no tocar flujo)
     void OnPlay();
     void OnPause();
     void OnStop();
 
-    // --------- NUEVO: acceso global para componentes (sin App) ----------
     static ModuleAudio* Get() { return instance; }
 
-    // --------- NUEVO: API para GameObjects con audio 3D ----------
     bool RegisterAudioGameObject(AkGameObjectID id, const char* debugName);
     void UnregisterAudioGameObject(AkGameObjectID id);
 
@@ -48,6 +46,16 @@ public:
     void SetListener(AkGameObjectID listenerId);
 
     unsigned int PostEvent(unsigned int eventId, AkGameObjectID gameObjectId);
+
+    // RTPC (write)
+    void SetRTPC(unsigned int rtpcId, float value, AkGameObjectID gameObjectId = 0);
+    void SetRTPCByName(const char* rtpcName, float value, AkGameObjectID gameObjectId = 0);
+
+    // RTPC (debug readback SIN Query API) -> lee lo último que tú has seteado
+    float GetRTPCCached(unsigned int rtpcId) const;
+    float GetRTPCCachedByName(const char* rtpcName) const;
+
+    AkGameObjectID GetMusicGameObjectId() const { return MUSIC_GO; }
 
 private:
     bool InitWwise();
@@ -69,23 +77,19 @@ private:
 
     AK::IAkStreamMgr* streamMgr = nullptr;
 
-    // GO de música (tu sistema)
     static constexpr AkGameObjectID MUSIC_GO = 1;
-
-    // GO listener por defecto para 3D
-  
-
     static constexpr AkGameObjectID DEFAULT_LISTENER_GO = 100;
     static constexpr AkGameObjectID STATIC_SFX_GO = 200;
     static constexpr AkGameObjectID DYNAMIC_SFX_GO = 201;
 
-
-    // Listener actual
     AkGameObjectID currentListener = DEFAULT_LISTENER_GO;
 
-    // Para saber qué GOs hemos registrado
     std::unordered_set<AkGameObjectID> registeredGOs;
 
     bool isPlaying = false;
     bool isPaused = false;
+
+    // Debug cache de RTPCs (sin Query API)
+    std::unordered_map<unsigned int, float> rtpcCacheById;
+    mutable std::unordered_map<std::string, unsigned int> rtpcNameToIdCache;
 };

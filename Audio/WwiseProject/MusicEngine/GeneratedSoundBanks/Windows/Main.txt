@@ -6,6 +6,17 @@ Event	ID	Name			Wwise Object Path	Notes
 	2885891736	MusicStartB			\Default Work Unit\MusicStartB	
 	2885891739	MusicStartA			\Default Work Unit\MusicStartA	
 
+Game Parameter	ID	Name			Wwise Object Path	Notes
+	867503	TunnelAmount			\Default Work Unit\TunnelAmount	
+
+Audio Bus	ID	Name			Wwise Object Path	Notes
+	393239870	SFX			\Default Work Unit\Main Audio Bus\SFX	
+	2246998526	Main Audio Bus			\Default Work Unit\Main Audio Bus	
+
+Effect plug-ins	ID	Name	Type				Notes
+	1572913279	RoomVerb	Wwise RoomVerb			
+	2141574376	Parametric_EQ	Wwise Parametric EQ			
+
 In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
 	104047693	best-background-music-no-copyright-182154	.cache\C6\{C65BFA5B-D73F-2ADE-7037-13DF749C8793}.wem		\Containers\Default Work Unit\MusicLoop\best-background-music-no-copyright-182154		4709472
 	296033464	cinematic-impact-464937	.cache\61\{617A90ED-8386-EC25-51EF-266B93D9F1D1}.wem		\Containers\Default Work Unit\cinematic-impact-464937		852576

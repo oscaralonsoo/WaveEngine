@@ -12,7 +12,6 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 
-// Audio includes
 #include "ComponentAudioSource.h"
 #include "ComponentAudioListener.h"
 #include "Wwise_IDs.h"
@@ -43,6 +42,8 @@ bool ModuleScene::Awake()
     return true;
 }
 
+// Al final de ModuleScene::Start(), reemplaza la inicialización del RTPC:
+
 bool ModuleScene::Start()
 {
     LOG_DEBUG("Initializing Scene");
@@ -50,23 +51,16 @@ bool ModuleScene::Start()
     root = new GameObject("Root");
     LOG_CONSOLE("Scene ready");
 
-    // ========================================
-    // DEBUG: Verificar ModuleAudio
-    // ========================================
     ModuleAudio* audio = ModuleAudio::Get();
     if (!audio) {
         LOG_CONSOLE("[ERROR] ModuleAudio::Get() returned NULL!");
-        return true; // Salir sin crear audio
+        return true;
     }
     LOG_CONSOLE("[DEBUG] ModuleAudio is available");
 
-    // ========================================
-    // CREAR GAMEOBJECTS DE AUDIO 3D
-    // ========================================
+    // ... (código del listener) ...
 
-    // 1. LISTENER
     listenerObject = new GameObject("AudioListener");
-
     Transform* listenerTransform = static_cast<Transform*>(
         listenerObject->GetComponent(ComponentType::TRANSFORM)
         );
@@ -80,16 +74,13 @@ bool ModuleScene::Start()
     listenerObject->SetActive(true);
 
     if (listener) {
-        LOG_CONSOLE("[DEBUG] Calling listener->Enable()...");
         listener->Enable();
     }
 
     LOG_CONSOLE("AudioListener created at (0, 0, 0)");
 
-
-    // 2. OBJETO ESTÁTICO
+    // Static Audio Object
     staticAudioObject = new GameObject("StaticSFX");
-
     Transform* staticTransform = static_cast<Transform*>(
         staticAudioObject->GetComponent(ComponentType::TRANSFORM)
         );
@@ -103,38 +94,23 @@ bool ModuleScene::Start()
     staticAudioObject->SetActive(true);
 
     if (staticSource) {
-        LOG_CONSOLE("[DEBUG] Configuring static source...");
         staticSource->SetEvent(AK::EVENTS::SFX_STATIC_PLAY);
-
-        LOG_CONSOLE("[DEBUG] Calling staticSource->Enable()...");
         staticSource->Enable();
 
-        // WORKAROUND DIRECTO
-        LOG_CONSOLE("[DEBUG] Starting manual workaround for static...");
-
         AkGameObjectID staticId = (AkGameObjectID)(uintptr_t)staticAudioObject;
-        LOG_CONSOLE("[DEBUG] Static ID: %llu", (unsigned long long)staticId);
-
-        bool registered = audio->RegisterAudioGameObject(staticId, "StaticSFX");
-        LOG_CONSOLE("[DEBUG] Registration result: %s", registered ? "SUCCESS" : "FAILED");
+        audio->RegisterAudioGameObject(staticId, "StaticSFX");
 
         audio->SetGameObjectTransform(staticId,
             5.0f, 0.0f, 0.0f,
             0.0f, 0.0f, 1.0f,
             0.0f, 1.0f, 0.0f
         );
-        LOG_CONSOLE("[DEBUG] Transform set");
-
-        unsigned int playingId = audio->PostEvent(AK::EVENTS::SFX_STATIC_PLAY, staticId);
-        LOG_CONSOLE("[DEBUG] PostEvent returned: %u", playingId);
     }
 
     LOG_CONSOLE("Static Audio Object created at (5, 0, 0)");
 
-
-    // 3. OBJETO DINÁMICO
+    // Dynamic Audio Object
     dynamicAudioObject = new GameObject("DynamicSFX");
-
     Transform* dynamicTransform = static_cast<Transform*>(
         dynamicAudioObject->GetComponent(ComponentType::TRANSFORM)
         );
@@ -148,35 +124,42 @@ bool ModuleScene::Start()
     dynamicAudioObject->SetActive(true);
 
     if (dynamicSource) {
-        LOG_CONSOLE("[DEBUG] Configuring dynamic source...");
         dynamicSource->SetEvent(AK::EVENTS::SFX_DYNAMIC_PLAY);
-
-        LOG_CONSOLE("[DEBUG] Calling dynamicSource->Enable()...");
         dynamicSource->Enable();
 
-        // WORKAROUND DIRECTO
-        LOG_CONSOLE("[DEBUG] Starting manual workaround for dynamic...");
-
         AkGameObjectID dynamicId = (AkGameObjectID)(uintptr_t)dynamicAudioObject;
-        LOG_CONSOLE("[DEBUG] Dynamic ID: %llu", (unsigned long long)dynamicId);
-
-        bool registered = audio->RegisterAudioGameObject(dynamicId, "DynamicSFX");
-        LOG_CONSOLE("[DEBUG] Registration result: %s", registered ? "SUCCESS" : "FAILED");
+        audio->RegisterAudioGameObject(dynamicId, "DynamicSFX");
 
         audio->SetGameObjectTransform(dynamicId,
             0.0f, 0.0f, 4.0f,
             0.0f, 0.0f, 1.0f,
             0.0f, 1.0f, 0.0f
         );
-        LOG_CONSOLE("[DEBUG] Transform set");
-
-        unsigned int playingId = audio->PostEvent(AK::EVENTS::SFX_DYNAMIC_PLAY, dynamicId);
-        LOG_CONSOLE("[DEBUG] PostEvent returned: %u", playingId);
     }
 
     LOG_CONSOLE("Dynamic Audio Object created at (0, 0, 4)");
 
+    // CORREGIDO: Inicializar RTPC en todos los lugares necesarios
+    AkGameObjectID staticId = staticAudioObject ? (AkGameObjectID)(uintptr_t)staticAudioObject : 0;
+    AkGameObjectID dynamicId = dynamicAudioObject ? (AkGameObjectID)(uintptr_t)dynamicAudioObject : 0;
+
+    // Establecer RTPC inicial a 0 (sin efecto de túnel)
+    audio->SetRTPCByName("TunnelAmount", 0.0f, 0);  // Global
+    if (staticId)  audio->SetRTPCByName("TunnelAmount", 0.0f, staticId);
+    if (dynamicId) audio->SetRTPCByName("TunnelAmount", 0.0f, dynamicId);
+
+    tunnelAmount = 0.0f;
+    tunnelTarget = 0.0f;
+    tunnelInside = false;
+    tunnelForce = false;
+    tunnelForceValue = 0.0f;
+
     LOG_CONSOLE("Audio 3D GameObjects initialized successfully!");
+    LOG_CONSOLE("Press PLAY to start 3D audio");
+    LOG_CONSOLE("Press 'M' to toggle 3D audio on/off (only when playing)");
+    LOG_CONSOLE("Press 'T' to toggle Tunnel FORCE test");
+    LOG_CONSOLE("Press '1' to set Tunnel to 0 (normal)");
+    LOG_CONSOLE("Press '2' to set Tunnel to 100 (full effect)");
 
     return true;
 }
@@ -270,65 +253,164 @@ void ModuleScene::RebuildOctree()
     LOG_CONSOLE("Octree rebuilt: %d objects", insertedCount);
 }
 
+// En ModuleScene::Update(), reemplaza la sección del tunnel effect con esto:
+
+// En ModuleScene::Update(), reemplaza la sección del tunnel effect con esto:
+
 bool ModuleScene::Update()
 {
     if (root)
     {
         root->Update();
     }
+
     const bool* keys = SDL_GetKeyboardState(nullptr);
-    static bool mKeyPressed = false;
 
-    if (keys[SDL_SCANCODE_M] && !mKeyPressed)
+    static bool tKeyPressed = false;
+    static bool key1Pressed = false;
+    static bool key2Pressed = false;
+
+    if (keys[SDL_SCANCODE_T] && !tKeyPressed)
     {
-        mKeyPressed = true;
-        sfxEnabled = !sfxEnabled;
+        tKeyPressed = true;
+        tunnelForce = !tunnelForce;
+        LOG_CONSOLE("[AUDIO] Tunnel FORCE = %s", tunnelForce ? "ON" : "OFF");
+    }
+    if (!keys[SDL_SCANCODE_T]) tKeyPressed = false;
 
-        ModuleAudio* audio = ModuleAudio::Get();
-        if (audio && staticAudioObject && dynamicAudioObject)
+    if (keys[SDL_SCANCODE_1] && !key1Pressed)
+    {
+        key1Pressed = true;
+        tunnelForceValue = 0.0f;
+        LOG_CONSOLE("[AUDIO] Tunnel FORCE value = 0");
+    }
+    if (!keys[SDL_SCANCODE_1]) key1Pressed = false;
+
+    if (keys[SDL_SCANCODE_2] && !key2Pressed)
+    {
+        key2Pressed = true;
+        tunnelForceValue = 100.0f;
+        LOG_CONSOLE("[AUDIO] Tunnel FORCE value = 100");
+    }
+    if (!keys[SDL_SCANCODE_2]) key2Pressed = false;
+
+    // SECCIÓN CORREGIDA DEL TUNNEL EFFECT
+    if (listenerObject)
+    {
+        Transform* lt = static_cast<Transform*>(listenerObject->GetComponent(ComponentType::TRANSFORM));
+        if (lt)
         {
-            AkGameObjectID staticId = (AkGameObjectID)(uintptr_t)staticAudioObject;
-            AkGameObjectID dynamicId = (AkGameObjectID)(uintptr_t)dynamicAudioObject;
+            glm::vec3 p = lt->GetPosition();
 
-            if (sfxEnabled)
+            glm::vec3 tunnelMin = tunnelCenter - tunnelHalfSize;
+            glm::vec3 tunnelMax = tunnelCenter + tunnelHalfSize;
+
+            bool inside =
+                (p.x >= tunnelMin.x && p.x <= tunnelMax.x) &&
+                (p.y >= tunnelMin.y && p.y <= tunnelMax.y) &&
+                (p.z >= tunnelMin.z && p.z <= tunnelMax.z);
+
+            if (inside != tunnelInside)
             {
-                // Reanudar
-                LOG_CONSOLE("[AUDIO] 3D SFX enabled");
-
-                staticPlayingID = audio->PostEvent(AK::EVENTS::SFX_STATIC_PLAY, staticId);
-                dynamicPlayingID = audio->PostEvent(AK::EVENTS::SFX_DYNAMIC_PLAY, dynamicId);
+                tunnelInside = inside;
+                tunnelTarget = tunnelInside ? 100.0f : 0.0f;
+                LOG_CONSOLE("[AUDIO] Tunnel zone: %s (target: %.2f)",
+                    tunnelInside ? "ENTER" : "EXIT", tunnelTarget);
             }
-            else
-            {
-                // Parar
-                LOG_CONSOLE("[AUDIO] 3D SFX disabled");
 
-                AK::SoundEngine::StopAll(staticId);
-                AK::SoundEngine::StopAll(dynamicId);
+            // Interpolación suave
+            const float smooth = 0.10f;
+            tunnelAmount = tunnelAmount + (tunnelTarget - tunnelAmount) * smooth;
+
+            // Valor final
+            float finalTunnel = tunnelForce ? tunnelForceValue : tunnelAmount;
+
+            ModuleAudio* audioMod = ModuleAudio::Get();
+            if (audioMod)
+            {
+                audioMod->SetRTPCByName("TunnelAmount", finalTunnel, 0);
+                static float lastPrinted = -9999.0f;
+                
+                audioMod->SetRTPCByName("TunnelAmount", tunnelAmount, 0);
+
+                // justo debajo:
+                float v = audioMod->GetRTPCCachedByName("TunnelAmount");
+               
+
+
+                if (staticAudioObject)
+                {
+                    AkGameObjectID staticId = (AkGameObjectID)(uintptr_t)staticAudioObject;
+                    audioMod->SetRTPCByName("TunnelAmount", finalTunnel, staticId);
+                }
+
+                if (dynamicAudioObject)
+                {
+                    AkGameObjectID dynamicId = (AkGameObjectID)(uintptr_t)dynamicAudioObject;
+                    audioMod->SetRTPCByName("TunnelAmount", finalTunnel, dynamicId);
+                }
+                audioMod->SetRTPC(AK::GAME_PARAMETERS::TUNNELAMOUNT, finalTunnel, audioMod->GetMusicGameObjectId());
+
+                // Log solo cuando hay cambios significativos
+                static float lastLoggedValue = -1.0f;
+                if (std::abs(finalTunnel - lastLoggedValue) > 5.0f)
+                {
+                    LOG_CONSOLE("[AUDIO] TunnelAmount RTPC set to: %.2f (force: %s)",
+                        finalTunnel, tunnelForce ? "YES" : "NO");
+                    lastLoggedValue = finalTunnel;
+                }
             }
         }
     }
 
-    if (!keys[SDL_SCANCODE_M])
+    // Resto del código de SFX toggle...
+    if (sfxStarted)
     {
-        mKeyPressed = false;
+        static bool mKeyPressed = false;
+
+        if (keys[SDL_SCANCODE_M] && !mKeyPressed)
+        {
+            mKeyPressed = true;
+            sfxEnabled = !sfxEnabled;
+
+            ModuleAudio* audioMod = ModuleAudio::Get();
+            if (audioMod && staticAudioObject && dynamicAudioObject)
+            {
+                AkGameObjectID staticId = (AkGameObjectID)(uintptr_t)staticAudioObject;
+                AkGameObjectID dynamicId = (AkGameObjectID)(uintptr_t)dynamicAudioObject;
+
+                if (sfxEnabled)
+                {
+                    LOG_CONSOLE("[AUDIO] 3D SFX enabled");
+                    staticPlayingID = audioMod->PostEvent(AK::EVENTS::SFX_STATIC_PLAY, staticId);
+                    dynamicPlayingID = audioMod->PostEvent(AK::EVENTS::SFX_DYNAMIC_PLAY, dynamicId);
+                }
+                else
+                {
+                    LOG_CONSOLE("[AUDIO] 3D SFX disabled");
+                    AK::SoundEngine::StopAll(staticId);
+                    AK::SoundEngine::StopAll(dynamicId);
+                }
+            }
+        }
+
+        if (!keys[SDL_SCANCODE_M])
+        {
+            mKeyPressed = false;
+        }
     }
 
-    // Mover objeto dinámico
+    // Movimiento del objeto dinámico
     if (dynamicAudioObject != nullptr && dynamicAudioObject->IsActive())
     {
         static float t = 0.0f;
         t += 0.02f;
 
-        Transform* trans = static_cast<Transform*>(
-            dynamicAudioObject->GetComponent(ComponentType::TRANSFORM)
-            );
-
+        Transform* trans = static_cast<Transform*>(dynamicAudioObject->GetComponent(ComponentType::TRANSFORM));
         if (trans != nullptr)
         {
             float x = std::sinf(t) * 6.0f;
             float z = 4.0f + std::cosf(t) * 2.0f;
-
             trans->SetPosition(glm::vec3(x, 0.0f, z));
         }
     }
@@ -341,6 +423,7 @@ bool ModuleScene::Update()
 
     return true;
 }
+
 
 bool ModuleScene::PostUpdate()
 {
@@ -419,6 +502,42 @@ void ModuleScene::CleanupMarkedObjects(GameObject* parent)
             CleanupMarkedObjects(child);
         }
     }
+}
+
+void ModuleScene::StartAudio3D()
+{
+    ModuleAudio* audio = ModuleAudio::Get();
+    if (!audio || !staticAudioObject || !dynamicAudioObject) return;
+
+    if (sfxEnabled)
+    {
+        AkGameObjectID staticId = (AkGameObjectID)(uintptr_t)staticAudioObject;
+        AkGameObjectID dynamicId = (AkGameObjectID)(uintptr_t)dynamicAudioObject;
+
+        LOG_CONSOLE("[AUDIO] Starting 3D SFX");
+
+        staticPlayingID = audio->PostEvent(AK::EVENTS::SFX_STATIC_PLAY, staticId);
+        dynamicPlayingID = audio->PostEvent(AK::EVENTS::SFX_DYNAMIC_PLAY, dynamicId);
+
+        sfxStarted = true;
+    }
+}
+
+void ModuleScene::StopAudio3D()
+{
+    if (!staticAudioObject || !dynamicAudioObject) return;
+
+    AkGameObjectID staticId = (AkGameObjectID)(uintptr_t)staticAudioObject;
+    AkGameObjectID dynamicId = (AkGameObjectID)(uintptr_t)dynamicAudioObject;
+
+    LOG_CONSOLE("[AUDIO] Stopping 3D SFX");
+
+    AK::SoundEngine::StopAll(staticId);
+    AK::SoundEngine::StopAll(dynamicId);
+
+    staticPlayingID = 0;
+    dynamicPlayingID = 0;
+    sfxStarted = false;
 }
 
 bool ModuleScene::SaveScene(const std::string& filepath)

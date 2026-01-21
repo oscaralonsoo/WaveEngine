@@ -3,6 +3,7 @@
 #include "Octree.h"
 #include <memory>
 #include <vector>
+#include <glm/glm.hpp>
 
 class GameObject;
 class FileSystem;
@@ -30,12 +31,13 @@ public:
     void RebuildOctree();
     void MarkOctreeForRebuild() { needsOctreeRebuild = true; }
 
-    // Scene serialization
     bool SaveScene(const std::string& filepath);
     bool LoadScene(const std::string& filepath);
     void ClearScene();
 
-    // for raycast visualization
+    void StartAudio3D();
+    void StopAudio3D();
+
     glm::vec3 lastRayOrigin = glm::vec3(0.0f);
     glm::vec3 lastRayDirection = glm::vec3(0.0f);
     float lastRayLength = 0.0f;
@@ -50,12 +52,22 @@ private:
 
     ComponentCamera* FindCameraInHierarchy(GameObject* obj);
 
-    
     GameObject* listenerObject = nullptr;
     GameObject* staticAudioObject = nullptr;
     GameObject* dynamicAudioObject = nullptr;
 
-    bool sfxEnabled = true;              // SFX activos por defecto
-    unsigned int staticPlayingID = 0;    // ID del sonido estático
-    unsigned int dynamicPlayingID = 0;   // ID del sonido dinámico
+    bool sfxEnabled = true;
+    bool sfxStarted = false;
+    unsigned int staticPlayingID = 0;
+    unsigned int dynamicPlayingID = 0;
+
+    glm::vec3 tunnelCenter = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 tunnelHalfSize = glm::vec3(2.0f, 2.0f, 2.0f);
+
+    float tunnelAmount = 0.0f;
+    float tunnelTarget = 0.0f;
+    bool  tunnelInside = false;
+
+    bool tunnelForce = false;
+    float tunnelForceValue = 0.0f;
 };

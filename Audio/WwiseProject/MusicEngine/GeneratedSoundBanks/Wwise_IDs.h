@@ -33,6 +33,7 @@ namespace AK
         static const AkUniqueID SS_AIR_STORM = 3715662592U;
         static const AkUniqueID SS_AIR_TIMEOFDAY = 3203397129U;
         static const AkUniqueID SS_AIR_TURBULENCE = 4160247818U;
+        static const AkUniqueID TUNNELAMOUNT = 867503U;
     } // namespace GAME_PARAMETERS
 
     namespace BANKS
@@ -44,6 +45,7 @@ namespace AK
     namespace BUSSES
     {
         static const AkUniqueID MAIN_AUDIO_BUS = 2246998526U;
+        static const AkUniqueID SFX = 393239870U;
     } // namespace BUSSES
 
     namespace AUDIO_DEVICES

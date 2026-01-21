@@ -10,11 +10,29 @@
     "Type": "User",
     "GUID": "{701ECBBD-9C7B-4030-8CDB-749EE5D1C7B9}",
     "Language": "SFX",
-    "Hash": "{12D0DF48-666A-3CD8-9281-2B054E6667CE}",
+    "Hash": "{164ACCC6-3B4F-4ECA-7BE8-B97F3E590E6A}",
     "ObjectPath": "Init",
     "ShortName": "Init",
     "Path": "Init.bnk",
     "Plugins": {
+     "ShareSets": [
+      {
+       "Id": "1572913279",
+       "Name": "RoomVerb",
+       "ObjectPath": "\\Effects\\Default Work Unit\\RoomVerb",
+       "GUID": "{035EDA02-5916-4913-BBDE-72069D6BCFAA}",
+       "LibName": "Wwise RoomVerb",
+       "LibId": "7733251"
+      },
+      {
+       "Id": "2141574376",
+       "Name": "Parametric_EQ",
+       "ObjectPath": "\\Effects\\Default Work Unit\\Parametric_EQ",
+       "GUID": "{04311708-9144-47EE-931A-845E1BA59D20}",
+       "LibName": "Wwise Parametric EQ",
+       "LibId": "6881283"
+      }
+     ],
      "AudioDevices": [
       {
        "Id": "2317455096",
@@ -36,6 +54,22 @@
     },
     "Busses": [
      {
+      "Id": "393239870",
+      "Name": "SFX",
+      "ObjectPath": "\\Busses\\Default Work Unit\\Main Audio Bus\\SFX",
+      "GUID": "{697B869C-8521-4EB7-8D9B-908050287E8C}",
+      "PluginRefs": {
+       "ShareSets": [
+        {
+         "Id": "1572913279"
+        },
+        {
+         "Id": "2141574376"
+        }
+       ]
+      }
+     },
+     {
       "Id": "2246998526",
       "Name": "Main Audio Bus",
       "ObjectPath": "\\Busses\\Default Work Unit\\Main Audio Bus",
@@ -43,6 +77,12 @@
      }
     ],
     "GameParameters": [
+     {
+      "Id": "867503",
+      "Name": "TunnelAmount",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\TunnelAmount",
+      "GUID": "{5389D694-24F5-4C22-B928-8FE0DD148234}"
+     },
      {
       "Id": "822163944",
       "Name": "SS_Air_RPM",
@@ -583,6 +623,6 @@
     ]
    }
   ],
-  "FileHash": "{89C6C970-760E-5200-92F7-B16CC4A3C5AB}"
+  "FileHash": "{C099F614-3BF9-DD07-B2D6-9C623AB79B27}"
  }
 }

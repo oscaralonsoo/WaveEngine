@@ -18,7 +18,7 @@
 #include <filesystem>
 #include <vector>
 #include <unordered_set>
-
+#include <chrono>
 
 #define AUDIO_DEMO_30_PERCENT 0
 
@@ -27,7 +27,6 @@ static bool  g_staticPosted = false;
 static bool  g_dynamicPosted = false;
 static float g_t = 0.0f;
 
-// Listener movement
 static float g_lx = 0.0f;
 static float g_ly = 0.0f;
 static float g_lz = 0.0f;
@@ -62,7 +61,6 @@ bool ModuleAudio::Update()
     if (!initialized) return true;
 
 #if AUDIO_DEMO_30_PERCENT
-    // --- Listener movement with WASD (ojo: puede coincidir con tu cámara) ---
     const bool* keys = SDL_GetKeyboardState(nullptr);
     const float speed = 0.10f;
 
@@ -71,15 +69,13 @@ bool ModuleAudio::Update()
     if (keys[SDL_SCANCODE_A]) g_lx -= speed;
     if (keys[SDL_SCANCODE_D]) g_lx += speed;
 
-    // Listener donde "estás tú"
     SetGameObjectTransform(
         DEFAULT_LISTENER_GO,
         g_lx, g_ly, g_lz,
-        0.0f, 0.0f, 1.0f,   // forward
-        0.0f, 1.0f, 0.0f    // up
+        0.0f, 0.0f, 1.0f,
+        0.0f, 1.0f, 0.0f
     );
 
-    // Static: fijo, separado (para oír claro la diferencia)
     SetGameObjectTransform(
         STATIC_SFX_GO,
         5.0f, 0.0f, 0.0f,
@@ -87,7 +83,6 @@ bool ModuleAudio::Update()
         0.0f, 1.0f, 0.0f
     );
 
-    // Dynamic: moviéndose alrededor
     g_t += 0.02f;
     const float x = std::sinf(g_t) * 6.0f;
     const float z = 4.0f + std::cosf(g_t) * 2.0f;
@@ -99,7 +94,6 @@ bool ModuleAudio::Update()
         0.0f, 1.0f, 0.0f
     );
 
-    // Post events once
     if (!g_staticPosted)
     {
         AkPlayingID pid = AK::SoundEngine::PostEvent(AK::EVENTS::SFX_STATIC_PLAY, STATIC_SFX_GO);
@@ -126,13 +120,10 @@ bool ModuleAudio::CleanUp()
     return true;
 }
 
-// ---------------------- MUSIC CONTROLS (TU SISTEMA) ----------------------
-
 void ModuleAudio::OnPlay()
 {
     if (!initialized) return;
 
-    // Resume
     if (isPlaying && isPaused)
     {
         AK::SoundEngine::ExecuteActionOnEvent(
@@ -144,10 +135,8 @@ void ModuleAudio::OnPlay()
         return;
     }
 
-    // Ya suena
     if (isPlaying && !isPaused) return;
 
-    // STOP SOLO MUSICA (NO StopAll, para no matar los SFX)
     AK::SoundEngine::ExecuteActionOnEvent(
         AK::EVENTS::MUSICSTARTA,
         AK::SoundEngine::AkActionOnEventType_Stop,
@@ -184,18 +173,14 @@ void ModuleAudio::OnStop()
 
     std::printf("[AUDIO] Stop\n");
 
-    // Stop SOLO la música
     AK::SoundEngine::ExecuteActionOnEvent(
         AK::EVENTS::MUSICSTARTA,
         AK::SoundEngine::AkActionOnEventType_Stop,
         MUSIC_GO
     );
 
-    // Si quieres que el botón Stop pare todo, deja esto.
-    // Si no, comenta StopAll().
     AK::SoundEngine::StopAll();
 
-    // Y como StopAll mata también SFX, reseteamos para que se reposten.
 #if AUDIO_DEMO_30_PERCENT
     g_staticPosted = false;
     g_dynamicPosted = false;
@@ -205,7 +190,64 @@ void ModuleAudio::OnStop()
     isPaused = false;
 }
 
-// ---------------------- API 3D AUDIO ----------------------
+void ModuleAudio::SetRTPC(unsigned int rtpcId, float value, AkGameObjectID gameObjectId)
+{
+    if (!initialized) return;
+
+    AkGameObjectID target = (gameObjectId == 0) ? AK_INVALID_GAME_OBJECT : gameObjectId;
+
+    AKRESULT r = AK::SoundEngine::SetRTPCValue((AkRtpcID)rtpcId, value, target);
+
+    // cache debug (lo último que seteas tú)
+    rtpcCacheById[rtpcId] = value;
+
+    if (r != AK_Success)
+    {
+        std::printf("[AUDIO] SetRTPCValue failed rtpc=%u value=%.2f go=%llu err=%d\n",
+            rtpcId, value, (unsigned long long)target, (int)r);
+    }
+}
+
+void ModuleAudio::SetRTPCByName(const char* rtpcName, float value, AkGameObjectID gameObjectId)
+{
+    if (!initialized || !rtpcName || !rtpcName[0]) return;
+
+    unsigned int id = 0;
+    auto it = rtpcNameToIdCache.find(rtpcName);
+    if (it != rtpcNameToIdCache.end())
+    {
+        id = it->second;
+    }
+    else
+    {
+        // Esto NO es Query API, es hashing interno (sí está disponible)
+        id = (unsigned int)AK::SoundEngine::GetIDFromString(rtpcName);
+        rtpcNameToIdCache[rtpcName] = id;
+    }
+
+    SetRTPC(id, value, gameObjectId);
+}
+
+float ModuleAudio::GetRTPCCached(unsigned int rtpcId) const
+{
+    auto it = rtpcCacheById.find(rtpcId);
+    if (it == rtpcCacheById.end()) return 0.0f;
+    return it->second;
+}
+
+float ModuleAudio::GetRTPCCachedByName(const char* rtpcName) const
+{
+    if (!rtpcName || !rtpcName[0]) return 0.0f;
+
+    unsigned int id = 0;
+    auto it = rtpcNameToIdCache.find(rtpcName);
+    if (it != rtpcNameToIdCache.end())
+        id = it->second;
+    else
+        id = (unsigned int)AK::SoundEngine::GetIDFromString(rtpcName);
+
+    return GetRTPCCached(id);
+}
 
 bool ModuleAudio::RegisterAudioGameObject(AkGameObjectID id, const char* debugName)
 {
@@ -222,7 +264,6 @@ bool ModuleAudio::RegisterAudioGameObject(AkGameObjectID id, const char* debugNa
         return false;
     }
 
-    // Assign current listener
     AKRESULT lr = AK::SoundEngine::SetListeners(id, &currentListener, 1);
     if (lr != AK_Success)
     {
@@ -295,11 +336,8 @@ unsigned int ModuleAudio::PostEvent(unsigned int eventId, AkGameObjectID gameObj
     return (unsigned int)pid;
 }
 
-// ---------------------- WWISE INIT/TERM ----------------------
-
 bool ModuleAudio::InitWwise()
 {
-    // 1) MemoryMgr
     AkMemSettings memSettings;
     AK::MemoryMgr::GetDefaultSettings(memSettings);
 
@@ -310,7 +348,6 @@ bool ModuleAudio::InitWwise()
     }
     std::printf("OK: MemoryMgr initialized\n");
 
-    // 2) StreamMgr
     AkStreamMgrSettings streamSettings;
     AK::StreamMgr::GetDefaultSettings(streamSettings);
 
@@ -323,7 +360,6 @@ bool ModuleAudio::InitWwise()
     }
     std::printf("OK: StreamMgr created\n");
 
-    // 3) SoundEngine
     AkInitSettings initSettings;
     AkPlatformInitSettings platformSettings;
     AK::SoundEngine::GetDefaultInitSettings(initSettings);
@@ -342,7 +378,6 @@ bool ModuleAudio::InitWwise()
     }
     std::printf("OK: SoundEngine initialized\n");
 
-    // 4) Base game objects (music + listener)
     result = AK::SoundEngine::RegisterGameObj(MUSIC_GO, "MusicGO");
     if (result != AK_Success)
     {
@@ -362,7 +397,6 @@ bool ModuleAudio::InitWwise()
     registeredGOs.insert(MUSIC_GO);
     registeredGOs.insert(DEFAULT_LISTENER_GO);
 
-    // 5) Default listener
     currentListener = DEFAULT_LISTENER_GO;
 
     AKRESULT lr = AK::SoundEngine::SetDefaultListeners(&currentListener, 1);
@@ -382,14 +416,12 @@ bool ModuleAudio::InitWwise()
     }
 
 #if AUDIO_DEMO_30_PERCENT
-    // Register demo emitters
     RegisterAudioGameObject(STATIC_SFX_GO, "StaticSFX_GO");
     RegisterAudioGameObject(DYNAMIC_SFX_GO, "DynamicSFX_GO");
 #endif
 
     std::printf("OK: Listener assigned (DefaultListenerGO)\n");
 
-    // 6) Banks
     const std::filesystem::path bankDir =
         R"(C:\Users\Arnau\OneDrive\Documentos\GitHub\Motor2025\Audio\WwiseProject\MusicEngine\GeneratedSoundBanks\Windows)";
 
@@ -416,6 +448,11 @@ bool ModuleAudio::InitWwise()
         return false;
     }
     std::printf("OK: Main.bnk loaded (ID: %u)\n", mainBankId);
+
+    // Check ID TunnelAmount (hash vs header)
+    unsigned int byName = (unsigned int)AK::SoundEngine::GetIDFromString("TunnelAmount");
+    unsigned int byHeader = (unsigned int)AK::GAME_PARAMETERS::TUNNELAMOUNT;
+    std::printf("[AUDIO] TunnelAmount ID check: byName=%u byHeader=%u\n", byName, byHeader);
 
     std::printf("Wwise initialized successfully!\n");
     return true;
@@ -475,6 +512,17 @@ bool ModuleAudio::LoadBankFromMemory(
 {
     outId = AK_INVALID_BANK_ID_VALUE;
     outData.clear();
+
+    if (!std::filesystem::exists(fullPath))
+        return false;
+
+    // debug: tamaño + timestamp del archivo
+    const auto fsize = std::filesystem::file_size(fullPath);
+    const auto ftime = std::filesystem::last_write_time(fullPath).time_since_epoch().count();
+    std::printf("[AUDIO] Bank file: %ls size=%llu lastWrite=%lld\n",
+        fullPath.wstring().c_str(),
+        (unsigned long long)fsize,
+        (long long)ftime);
 
     std::ifstream f(fullPath, std::ios::binary);
     if (!f.is_open()) return false;
