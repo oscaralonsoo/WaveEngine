@@ -142,6 +142,8 @@ set(SCRIPTING_SRC
     src/Prefab.cpp
     src/PrefabManager.h
     src/PrefabManager.cpp
+    src/ResourcePrefab.h
+    src/ResourcePrefab.cpp
 )
 
 source_group("Source\\Core" FILES ${CORE_SRC})
