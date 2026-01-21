@@ -54,6 +54,27 @@ void main()
     vec3 specular = 0.5 * spec * vec3(1.0);
         
     vec3 color = (ambient + diffuse + specular) * materialDiffuse;
-    // Test: Red color
-    FragColor = vec4(color, 1.0);
+    
+    // --- Current Active Shader: Blinn-Phong ---
+    if (hasTexture == 1) FragColor = vec4(color, 1.0) * texture(texture1, TexCoords);
+    else FragColor = vec4(color, 1.0);
+
+    // --- Alternative Variants (To use: uncomment one and comment the one above) ---
+    
+    // Normals: Shows the orientation of the faces as colors
+    // FragColor = vec4(norm * 0.5 + 0.5, 1.0);
+    
+    // Grayscale: Converts the final image to black and white
+    // float gray = dot(color, vec3(0.299, 0.587, 0.114));
+    // FragColor = vec4(vec3(gray), 1.0);
+    
+    // Inverted: Flips all colors to their opposites
+    // FragColor = vec4(1.0 - color, 1.0);
+    
+    // Unlit: Standard texture display without any shading from lights
+    // if (hasTexture == 1) FragColor = texture(texture1, TexCoords);
+    // else FragColor = vec4(materialDiffuse, 1.0);
+    
+    // Only Diffuse: Shows the base diffuse lighting without specular highlights
+    // FragColor = vec4(diffuse * materialDiffuse, 1.0);
 }
