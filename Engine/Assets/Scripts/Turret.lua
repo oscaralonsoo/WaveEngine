@@ -1,27 +1,30 @@
 -- TURRET CONTROLLER - MOUSE AIMING (HORIZONTAL ONLY)
+-- GameObject structure: Tank > Barrel (this script)
 
 public = {
     fireRate = 0.5,
-    barrelOffset = 3.0,
+    barrelLength = 3.0,
     groundPlaneY = 0.0,
     bulletPrefab = "Bullet.prefab",
-    pitchOffset = -90.0
+    basePitchOffset = -90.0
 }
 
 local fireCooldown = 0
+local currentYaw = 0
 
 function Start(self)
     Engine.Log("=== Turret Controller Started ===")
-    Engine.Log("Turret: " .. self.gameObject.name)
+    Engine.Log("Turret (Barrel): " .. self.gameObject.name)
     Engine.Log("Controls: MOUSE = Aim | SPACE = Shoot")
     
-    -- Asegurar que la torreta empiece en orientación correcta
-    local pitchOffset = self.public and self.public.pitchOffset or 0.0
+    local pitchOffset = self.public and self.public.basePitchOffset or 0.0
     self.transform:SetRotation(pitchOffset, 0, 0)
+    
+    currentYaw = 0
 end
 
 function Update(self, dt)
-    -- === ROTACIÓN CON RATÓN (SOLO HORIZONTAL) ===
+    -- === MOUSE AIMING ===
     local mouseX, mouseY = Input.GetMousePosition()
     
     if mouseX == nil or mouseY == nil then
@@ -35,74 +38,73 @@ function Update(self, dt)
         return
     end
     
-    local pos = self.transform.position
+    local turretPos = self.transform.position
     
-    if pos == nil then
-        Engine.Log("ERROR: self.transform.position is nil")
+    if turretPos == nil then
+        Engine.Log("ERROR: Cannot get turret position")
         return
     end
     
-    -- Calcular dirección hacia el cursor
-    local dx = worldX - pos.x
-    local dz = worldZ - pos.z
+    -- Calculate direction to cursor
+    local dx = worldX - turretPos.x
+    local dz = worldZ - turretPos.z
     
-    -- Verificar que hay movimiento significativo
     local distance = math.sqrt(dx * dx + dz * dz)
     if distance < 0.01 then
         return
     end
     
-    -- Calcular ángulo usando atan2
+    -- Calculate angle using math.atan (Lua 5.1/5.2)
     local angleRadians = math.atan(dx, dz)
-    local angleDegrees = angleRadians * (180 / math.pi)
+    local angleDegrees = angleRadians * (180.0 / math.pi)
     
-    -- Aplicar rotación con offset
-    local pitchOffset = self.public and self.public.pitchOffset or 0.0
-    self.transform:SetRotation(pitchOffset, angleDegrees, 0)
+    currentYaw = angleDegrees
     
-    -- === SISTEMA DE DISPARO ===
+    -- Apply rotation
+    local pitchOffset = self.public and self.public.basePitchOffset or 0.0
+    self.transform:SetRotation(pitchOffset, currentYaw, 0)
+    
+    -- === FIRING SYSTEM ===
     fireCooldown = fireCooldown - dt
     
     if Input.GetKeyDown("Space") and fireCooldown <= 0 then
         FireBullet(self)
         fireCooldown = self.public and self.public.fireRate or 0.5
-        Engine.Log("pium")
     end
 end
 
 function FireBullet(self)
-    local bulletPrefab = self.public and self.public.bulletPrefab or "Bullet.prefab"
-    local bullet = Prefab.Instantiate(bulletPrefab)
-    
-    if bullet == nil then
-        Engine.Log("ERROR: Failed to instantiate bullet prefab: " .. bulletPrefab)
-        return
-    end
-    
     local turretPos = self.transform.position
-    local turretRot = self.transform.rotation
     
-    if turretPos == nil or turretRot == nil then
-        Engine.Log("ERROR: Cannot get turret transform data")
+    if turretPos == nil then
+        Engine.Log("ERROR: Cannot get turret position")
         return
     end
     
-    -- Ignoramos pitchOffset porque es solo visual del modelo
-    local radians = math.rad(turretRot.y)
+    -- Calculate firing direction from currentYaw
+    local radians = math.rad(currentYaw)
     local forwardX = math.sin(radians)
     local forwardZ = math.cos(radians)
     
-    -- Posición de spawn del proyectil
-    local barrelOffset = self.public and self.public.barrelOffset or 3.0
-    local spawnX = turretPos.x + forwardX * barrelOffset
+    -- Calculate spawn position at barrel tip
+    local barrelLength = self.public and self.public.barrelLength or 3.0
+    local spawnX = turretPos.x + forwardX * barrelLength
     local spawnY = turretPos.y + 0.8
-    local spawnZ = turretPos.z + forwardZ * barrelOffset
+    local spawnZ = turretPos.z + forwardZ * barrelLength
     
-    bullet.transform:SetPosition(spawnX, spawnY, spawnZ)
+    -- Store bullet spawn data in global table
+    _G.nextBulletData = {
+        x = spawnX,
+        y = spawnY,
+        z = spawnZ,
+        angle = currentYaw,
+        dirX = forwardX,
+        dirZ = forwardZ
+    }
     
-    -- La bala no necesita el pitchOffset visual
-    bullet.transform:SetRotation(0, turretRot.y, 0)
+    Engine.Log(string.format("💥 Bullet fired | Angle: %.1f° | Dir: (%.3f, 0, %.3f) | Spawn: (%.1f, %.1f, %.1f)", 
+        currentYaw, forwardX, forwardZ, spawnX, spawnY, spawnZ))
     
-    Engine.Log(string.format(" Bullet fired - Angle: %.1f° | Dir: (%.2f, %.2f)", 
-        turretRot.y, forwardX, forwardZ))
+    local bulletPrefab = self.public and self.public.bulletPrefab or "Bullet.prefab"
+    Prefab.Instantiate(bulletPrefab)
 end
