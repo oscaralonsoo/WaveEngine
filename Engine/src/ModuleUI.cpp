@@ -62,6 +62,7 @@ bool ModuleUI::Update()
 
 	case UIState::IN_GAME:
 		RenderHUD();
+		//test ModuleUI::DrawCrosshairInsideWindow();
 		if (showOptions) RenderOptionsWindow();
 		break;
 	}
@@ -163,4 +164,31 @@ void ModuleUI::RenderHUD()
 
 	ImGui::End();
 	ImGui::PopStyleColor();
+}
+void ModuleUI::DrawCrosshairInsideWindow() {
+	//ImGui::Begin("crosstest");
+	ImVec2 center = ImVec2(
+		ImGui::GetWindowPos().x + ImGui::GetWindowSize().x * 0.5f,
+		ImGui::GetWindowPos().y + ImGui::GetWindowSize().y * 0.5f
+	);
+	float lineSize = 10.0f;
+	float gap = 3.0f;       
+	float thickness = 2.0f;
+	ImU32 color = IM_COL32(0, 255, 0, 255);
+
+	
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+	
+	drawList->AddLine(ImVec2(center.x, center.y - gap), ImVec2(center.x, center.y - gap - lineSize), color, thickness);
+	
+	drawList->AddLine(ImVec2(center.x, center.y + gap), ImVec2(center.x, center.y + gap + lineSize), color, thickness);
+	
+	drawList->AddLine(ImVec2(center.x - gap, center.y), ImVec2(center.x - gap - lineSize, center.y), color, thickness);
+	
+	drawList->AddLine(ImVec2(center.x + gap, center.y), ImVec2(center.x + gap + lineSize, center.y), color, thickness);
+	
+	ImGui::GetWindowDrawList()->AddCircleFilled(center, 2.0f, IM_COL32(255, 0, 0, 255));
+
+	//ImGui::End();
 }

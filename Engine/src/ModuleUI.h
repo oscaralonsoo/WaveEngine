@@ -19,6 +19,7 @@ public:
         FADING_OUT,
         IN_GAME
     };
+    static void DrawCrosshairInsideWindow();
 
 private:
     void RenderMainMenu();

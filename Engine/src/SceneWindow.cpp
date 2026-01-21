@@ -80,6 +80,8 @@ void SceneWindow::Draw()
 
     HandleGizmoInput();
     DrawGizmo();
+	//crosshair
+	ModuleUI::DrawCrosshairInsideWindow();
 
     ImGui::End();
     ImGui::PopStyleVar();
