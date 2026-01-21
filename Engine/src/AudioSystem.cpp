@@ -6,7 +6,7 @@
 
 #include <ctime>
 #include <iostream>
-
+#include <cwchar>
 #include "AudioSystem.h"
 #include "AudioUtility.h"
 #include "AudioComponent.h"
@@ -17,6 +17,9 @@
 
 #include <AK/SoundEngine/Common/IAkStreamMgr.h>
 #include <AK/SoundEngine/Common/AkStreamMgrModule.h> 
+#include <AK/Tools/Common/AkPlatformFuncs.h>
+#include <AK/SoundEngine/Common/AkTypes.h>
+#include "AkGeneratedSoundBanksResolver.h"
 
 #include <windows.h>
 
@@ -81,6 +84,10 @@ bool AudioSystem::InitMemoryManager() {
 }
 
 bool AudioSystem::InitStreamingManager() {
+
+    wchar_t cwd[MAX_PATH];
+    _wgetcwd(cwd, MAX_PATH);
+    LOG_CONSOLE("Current Working Directory: %ls", cwd);
     
     AkStreamMgrSettings stmSettings;
     AK::StreamMgr::GetDefaultSettings(stmSettings);
@@ -93,7 +100,10 @@ bool AudioSystem::InitStreamingManager() {
     // Initializing the Deferred hook
     if (g_lowLevelIO.Init(deviceSettings) != AK_Success) return false;
 
-    g_lowLevelIO.SetBasePath(AKTEXT("../Assets/Audio/GeneratedSoundBanks"));
+    g_lowLevelIO.SetBasePath(L"..\\Assets\\Audio\\GeneratedSoundBanks\\Windows\\");
+
+    //const wchar_t* finalPath = L"..\\Assets\\Audio\\GeneratedSoundBanks\\Windows\\";
+    //g_lowLevelIO.SetBasePath(finalPath);
 
     return true;
 }
@@ -163,8 +173,6 @@ bool AudioSystem::Awake() {
 
     LOG_CONSOLE("Header Version: %d", AK_WWISESDK_VERSION_MAJOR);
     LOG_CONSOLE("Build Date: %s", __DATE__);
-
-    g_lowLevelIO.SetBasePath(AKTEXT("../Assets/Audio/GeneratedSoundBanks"));
 
     //load init bank
     LoadBank(BANKNAME_INIT);
@@ -264,36 +272,19 @@ void AudioSystem::SetPosition(AkGameObjectID id, const glm::vec3& pos, const glm
 
 namespace AK
 {
-    class StringBuilder {
-    public:
-        // Precise x64 memory layout for Wwise 2025
-        wchar_t* m_pszString;
-        uint32_t m_uAllocSize;
-        uint32_t m_uStringSize;
-
-        void Set(const wchar_t* in_psz) {
-            if (m_pszString && in_psz) {
-                // We use wcsncpy to safely fill the buffer Wwise already allocated
-                wcsncpy(m_pszString, in_psz, m_uAllocSize - 1);
-                m_pszString[m_uAllocSize - 1] = L'\0';
-                m_uStringSize = (uint32_t)wcslen(m_pszString);
-            }
-        }
-    };
-
-    bool ResolveGeneratedSoundBanksPath(
-        AK::StringBuilder& out_path,
-        wchar_t const* in_osPath,
-        struct AkFileSystemFlags* in_pFlags,
-        bool in_bAddTrailingSeparator)
+    void ConvertFileIdToFilename(AkOSChar* out_pszTitle, AkUInt32 in_pszTitleMaxLen, AkUInt32 in_codecId, AkFileID in_fileID)
     {
-        // Since you are in 'Engine/build', this path points correctly to 'Engine/Assets'
-        out_path.Set(L"../Assets/Audio/GeneratedSoundBanks");
-        return true;
+        // This handles loading by ID (e.g., 1355168291.bnk)
+        swprintf(out_pszTitle, in_pszTitleMaxLen, AKTEXT("%u.bnk"), (unsigned int)in_fileID);
     }
 
-    void ConvertFileIdToFilename(wchar_t* in_psz, unsigned int in_max, unsigned int in_id, unsigned int in_flags)
+    bool ResolveGeneratedSoundBanksPath(StringBuilder& dest, const AkOSChar* in_pszFileName, AkFileSystemFlags* in_pFlags, bool bUseSubfoldering)
     {
-        swprintf(in_psz, in_max, L"%u.bnk", in_id);
+        //append name to the dest (which already contains the BasePath)
+        if (in_pszFileName)
+        {
+            return dest.Append(in_pszFileName);
+        }
+        return true;
     }
 }
