@@ -80,6 +80,8 @@ set(COMPONENTS_SRC
     src/ComponentRotate.h
     src/ComponentParticleSystem.cpp
     src/ComponentParticleSystem.h
+    src/ComponentFirework.cpp
+    src/ComponentFirework.h
 )
 
 set(LOADERS_SRC 

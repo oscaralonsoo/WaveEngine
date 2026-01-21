@@ -8,7 +8,10 @@
 #include "GameObject.h"
 #include "Transform.h"
 #include "ComponentMesh.h"
+#include "ComponentParticleSystem.h"
+#include "ComponentFirework.h"
 #include <limits>
+#include <random>
 
 #define MAX_KEYS 300
 
@@ -417,6 +420,12 @@ bool Input::PreUpdate()
 		}
 	}
 
+	// Firework creation when pressing "1"
+	if (keyboard[SDL_SCANCODE_1] == KEY_DOWN)
+	{
+		CreateFirework();
+	}
+
 	return true;
 }
 
@@ -538,3 +547,110 @@ GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin,
 
 	return closest;
 }
+
+// Firework system implementation
+void Input::CreateFirework()
+{
+	static std::random_device rd;
+	static std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> colorDist(0.0f, 1.0f);
+	std::uniform_real_distribution<float> posXDist(-10.0f, 10.0f);
+	std::uniform_real_distribution<float> posZDist(-10.0f, 10.0f);
+
+	// Create the GameObject for the firework
+	GameObject* fireworkGO = Application::GetInstance().scene->CreateGameObject("Firework Rocket");
+
+	// Set random starting position (at ground level)
+	Transform* transform = static_cast<Transform*>(fireworkGO->GetComponent(ComponentType::TRANSFORM));
+	if (transform)
+	{
+		glm::vec3 startPos(posXDist(gen), 0.0f, posZDist(gen));
+		transform->SetPosition(startPos);
+	}
+
+	// Generate two random bright colors
+	glm::vec4 trailColor(colorDist(gen) * 0.5f + 0.5f, colorDist(gen) * 0.5f + 0.5f, colorDist(gen) * 0.3f, 1.0f);
+	glm::vec4 explosionColor(colorDist(gen), colorDist(gen), colorDist(gen), 1.0f);
+	float maxComponent = glm::max(glm::max(explosionColor.r, explosionColor.g), explosionColor.b);
+	if (maxComponent < 0.6f)
+	{
+		explosionColor = explosionColor / maxComponent * 0.95f;
+	}
+
+	// Create particle system component
+	ComponentParticleSystem* ps = static_cast<ComponentParticleSystem*>(
+		fireworkGO->CreateComponent(ComponentType::PARTICLE_SYSTEM));
+
+	if (ps)
+	{
+		// PHASE 1: TRAIL CONFIGURATION
+		ParticleSystemConfig& config = ps->GetMainConfig();
+		config.duration = 10.0f;
+		config.looping = false;
+		config.maxParticles = 800;
+		config.startLifetime = 0.8f;
+		config.startLifetimeVariance = 0.2f;
+		config.startSpeed = 1.0f;
+		config.startSpeedVariance = 0.5f;
+		config.startSize = 0.3f;
+		config.startSizeVariance = 0.1f;
+		config.gravityModifier = 0.2f;
+		config.simulationSpace = ParticleSystemConfig::SimulationSpace::WORLD;
+		config.blendMode = ParticleSystemConfig::BlendMode::ADDITIVE;
+		config.startColor = trailColor;
+
+		// Emission: continuous trail handled here, explosion handled by preset later
+		EmissionModule& emission = ps->GetEmissionModule();
+		emission.enabled = true;
+		emission.rateOverTime = 50.0f;
+		emission.bursts.clear();
+
+		// Shape: Narrow cone for trail
+		ShapeModule& shape = ps->GetShapeModule();
+		shape.enabled = true;
+		shape.shape = EmitterShape::CONE;
+		shape.coneAngle = 10.0f;
+		shape.coneRadius = 0.1f;
+
+		// Color over lifetime - fade trail
+		ColorOverLifetimeModule& colorOverLife = ps->GetColorOverLifetime();
+		colorOverLife.enabled = true;
+		colorOverLife.startColor = trailColor;
+		colorOverLife.endColor = glm::vec4(trailColor.r, trailColor.g, trailColor.b, 0.0f);
+
+		// Size over lifetime - trail shrinks
+		SizeOverLifetimeModule& sizeOverLife = ps->GetSizeOverLifetime();
+		sizeOverLife.enabled = true;
+		sizeOverLife.startSize = 1.0f;
+		sizeOverLife.endSize = 0.0f;
+
+		// Rotation
+		RotationOverLifetimeModule& rotation = ps->GetRotationOverLifetime();
+		rotation.enabled = true;
+		rotation.angularVelocity = 90.0f;
+		rotation.angularVelocityVariance = 45.0f;
+
+		// Velocity - points down for trail effect
+		VelocityOverLifetimeModule& velocity = ps->GetVelocityOverLifetime();
+		velocity.enabled = true;
+		velocity.velocity = glm::vec3(0.0f, -2.0f, 0.0f);
+		velocity.isLocal = false;
+
+		// Start the particle system
+		ps->Play();
+
+		LOG_CONSOLE("Firework rocket launched!");
+	}
+
+	// Add the firework control component
+	ComponentFirework* fireworkComp = static_cast<ComponentFirework*>(
+		fireworkGO->CreateComponent(ComponentType::FIREWORK));
+	
+	if (fireworkComp)
+	{
+		fireworkComp->SetLaunchParameters(12.0f, 2.0f, 10.0f);
+		fireworkComp->explosionColor = explosionColor;
+	}
+}
+
+

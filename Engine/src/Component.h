@@ -11,6 +11,7 @@ enum class ComponentType {
     CAMERA,
     ROTATE,
     PARTICLE_SYSTEM,
+    FIREWORK,
     UNKNOWN
 };
 

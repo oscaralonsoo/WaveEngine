@@ -5,6 +5,7 @@
 #include "Globals.h"
 
 class GameObject;
+class ComponentParticleSystem;
 
 #define NUM_MOUSE_BUTTONS 5
 
@@ -66,6 +67,9 @@ public:
 
 	int GetMouseX() const { return mouseX; }
 	int GetMouseY() const { return mouseY; }
+
+	// Firework creation
+	void CreateFirework();
 
 private:
 	bool windowEvents[WE_COUNT];

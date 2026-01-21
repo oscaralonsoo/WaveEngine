@@ -6,6 +6,7 @@
 #include "ComponentCamera.h"
 #include "ComponentRotate.h"
 #include "ComponentParticleSystem.h"
+#include "ComponentFirework.h"
 #include <nlohmann/json.hpp>
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
@@ -56,6 +57,10 @@ Component* GameObject::CreateComponent(ComponentType type) {
 
     case ComponentType::PARTICLE_SYSTEM:
         newComponent = new ComponentParticleSystem(this);
+        break;
+
+    case ComponentType::FIREWORK:
+        newComponent = new ComponentFirework(this);
         break;
 
     default:
