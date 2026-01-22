@@ -541,7 +541,7 @@ bool Renderer::HasTransparency(GameObject* gameObject)
 
     if (material && material->IsActive())
     {
-        return true;
+        return material->GetOpacity() < 1.0f || material->GetMaterialType() == MaterialType::WATER;
     }
 
     return false;
@@ -730,10 +730,18 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
             return a.distanceToCamera > b.distanceToCamera;
         });
 
+    // Enable blending for transparent objects
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE); // Disable depth writing for transparency
+
     for (const auto& transparentObj : transparentObjects)
     {
         DrawGameObjectIterative(transparentObj.gameObject, true, renderCamera, cullingCamera);
     }
+
+    glDepthMask(GL_TRUE); // Re-enable depth writing
+    glDisable(GL_BLEND);
     //  THIRD PASS: Draw outlines for selected objects =====
     if (drawEditorFeatures)
     {
@@ -984,18 +992,20 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
 
             // Configure light direction
             currentShader->SetVec3("lightDir", lightDir);
+            currentShader->SetVec3("viewPos", renderCamera->GetPosition());
+            currentShader->SetFloat("opacity", material ? material->GetOpacity() : 1.0f);
 
             if (hasTexture)
             {
                 material->Use();  // Bind the material's texture
                 materialBound = true;
-                currentShader->SetVec3("materialDiffuse", glm::vec3(1.0f));
+                currentShader->SetVec3("materialDiffuse", material->HasMaterialProperties() ? 
+                    glm::vec3(material->GetDiffuseColor()) : glm::vec3(1.0f));
             }
             else
             {
                 glBindTexture(GL_TEXTURE_2D, 0); // No texture
 
-                // Send diffuse colour of the material to the shader
                 if (material && material->HasMaterialProperties())
                 {
                     glm::vec4 diffuse = material->GetDiffuseColor();
@@ -1003,7 +1013,6 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
                 }
                 else
                 {
-                    // Default colour grey if no material is available
                     currentShader->SetVec3("materialDiffuse", glm::vec3(0.6f, 0.6f, 0.6f));
                 }
             }

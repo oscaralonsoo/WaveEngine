@@ -600,6 +600,7 @@ bool Shader::CreateNoTexture()
         "uniform vec3 tintColor;\n"
         "uniform vec3 lightDir;\n"
         "uniform vec3 materialDiffuse;\n"
+        "uniform float opacity;\n"
         "\n"
         "void main()\n"
         "{\n"
@@ -625,7 +626,7 @@ bool Shader::CreateNoTexture()
         "   vec3 diffuse = diff * baseColor;\n"
         "   \n"
         "   vec3 result = ambient + diffuse;\n"
-        "   FragColor = vec4(result, alpha);\n"
+        "   FragColor = vec4(result, alpha * opacity);\n"
         "}\0";
 
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -858,6 +859,7 @@ bool Shader::CreateWater()
         "uniform vec3 lightDir;\n"
         "uniform vec3 viewPos;\n"
         "uniform float waveAmplitude;\n"
+        "uniform float opacity;\n"
         "\n"
         "void main()\n"
         "{\n"
@@ -887,10 +889,10 @@ bool Shader::CreateWater()
         "    float F0 = 0.02;\n"
         "    float fresnel = F0 + (1.0 - F0) * pow(1.0 - max(dot(norm, viewDir), 0.0), 5.0);\n"
         "    \n"
-        "    vec3 result = ambient + diffuse + specular;\n"
+    "    vec3 result = ambient + diffuse + specular;\n"
         "    float alpha = mix(0.7, 0.95, fresnel);\n"
         "    \n"
-        "    FragColor = vec4(result, alpha);\n"
+        "    FragColor = vec4(result, alpha * opacity);\n"
         "}\0";
 
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);

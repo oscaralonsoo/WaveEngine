@@ -66,6 +66,7 @@ uniform vec3 materialDiffuse;
 uniform vec3 lightDir;
 uniform vec3 viewPos;
 uniform int lightingMode;
+uniform float opacity;
 
 void main()
 {
@@ -96,8 +97,10 @@ void main()
         finalLighting = (ambient + diffuse + specular) * materialDiffuse;
     }
 
+    vec4 texColor = vec4(1.0);
     if (hasTexture == 1)
-        FragColor = vec4(finalLighting, 1.0) * texture(texture1, TexCoords);
-    else
-        FragColor = vec4(finalLighting, 1.0);
+        texColor = texture(texture1, TexCoords);
+        
+    FragColor = vec4(finalLighting, 1.0) * texColor;
+    FragColor.a *= opacity; // Apply material opacity
 }

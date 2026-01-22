@@ -303,6 +303,12 @@ void ComponentMaterial::OnEditor()
             changed = true;
         }
 
+        float alpha = opacity;
+        if (ImGui::SliderFloat("Opacity", &alpha, 0.0f, 1.0f)) {
+            SetOpacity(alpha);
+            changed = true;
+        }
+
         ImGui::Separator();
         ImGui::Text("Lighting Mode:");
         const char* modes[] = { "Vertex (Gouraud - Faceted)", "Pixel (Blinn-Phong - Smooth)" };
