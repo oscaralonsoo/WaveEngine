@@ -2,7 +2,7 @@
 x = 0.0;
 y = 0.0;
 rot = 0.0;
-speed = 0.005;
+speed = 0.05;
 bullets = {}
 angles = {}
 DeleteTime = {}
@@ -135,6 +135,9 @@ function MoveBackward(object, angl, speed)
 
     SetPosition(object, pos.x - dirX * speed, pos.y, pos.z - dirZ * speed)
 end
+
+
+
 
 
 

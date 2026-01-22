@@ -4243,7 +4243,7 @@
                 },
                 {
                     "active": true,
-                    "aspectRatio": 1.9289772510528564,
+                    "aspectRatio": 1.9124293327331543,
                     "farPlane": 500.0,
                     "fov": 45.0,
                     "frustumCullingEnabled": false,
@@ -4253,7 +4253,7 @@
             ],
             "name": "Camera",
             "script": [
-                "C:\\Users\\joelv\\Documents\\GitHub\\Motor2025\\Engine\\Assets\\Scripts\\CamController.lua"
+                "..\\Assets\\Scripts\\CamController.lua"
             ]
         },
         {
@@ -5162,7 +5162,7 @@
             ],
             "name": "tank",
             "script": [
-                "C:\\Users\\joelv\\Documents\\GitHub\\Motor2025\\Engine\\Assets\\Scripts\\TankController.lua"
+                "..\\Assets\\Scripts\\TankController.lua"
             ]
         }
     ],

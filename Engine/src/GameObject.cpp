@@ -180,7 +180,13 @@ void GameObject::Serialize(nlohmann::json& gameObjectArray) const {
     }
     gameObjectObj["components"] = componentsArray;
     for (auto* script : scripts) {
-        gameObjectObj["script"].push_back(script->filePath);
+        std::string filePath = script->filePath;
+        size_t pos1 = filePath.find_last_of("/\\");
+        size_t pos2 = filePath.find_last_of("/\\", pos1 - 1);
+        size_t pos3 = filePath.find_last_of("/\\", pos2 - 1);
+
+        filePath = ".." + filePath.substr(pos3);
+        gameObjectObj["script"].push_back(filePath);
     }
     // Children
     nlohmann::json childrenArray = nlohmann::json::array();

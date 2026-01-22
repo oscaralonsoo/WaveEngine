@@ -124,10 +124,10 @@ void ScriptEditorWindow::ReloadScriptInScene(GameObject* root, const std::string
 
     for (ModuleScripting* script : root->scripts)
     {
-      
-        if (script->GetFilePath() == filePath)
+        std::string fileName = script->GetFilePath();
+        if (fileName.substr(fileName.find_last_of("/\\") + 1) == filePath.substr( filePath.find_last_of("/\\")+1))
         {
-            if (!script->ReloadScript(filePath))
+            if (!script->ReloadScript(fileName))
             {
                 errorFound = true;
                 errorMsg = script->GetLastError();

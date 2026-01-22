@@ -367,7 +367,6 @@ bool ModuleScripting::LoadScript(const char* path)
         lua_pop(L, 1);
         return false;
     }
-
     if (lua_pcall(L, 0, 0, 0) != LUA_OK)
     {
         //LOG_CONSOLE("Lua runtime error: %s", lua_tostring(L, -1));
