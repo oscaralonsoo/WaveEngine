@@ -4,3 +4,8 @@ Engine/CMakeUserPresets.json
 
 #will temporarily ignore the SDK folder in order to push without GitLFS
 Engine/External/Wwise/SDK/
+
+#wwise user-specific files
+*.prof
+*.validationcache
+*.wsettings
