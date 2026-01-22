@@ -27,7 +27,9 @@ public:
     
     // Funciones internas de Bullet
     btRigidBody* GetRigidBody() const { return rigidBody; }
-        void SyncToBullet();
+    void SyncToBullet();
+
+    void ResetPhysics();
 
 private:
     void AddBodyToWorld();
@@ -45,4 +47,8 @@ private:
     glm::vec3 lastScale = glm::vec3(1.0f);
 
     ShapeType shapeType = ShapeType::BOX;
+
+    glm::vec3 initialPos;
+    glm::quat initialRot;
+    glm::vec3 initialScale;
 };

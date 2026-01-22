@@ -27,6 +27,8 @@ public:
     GameObject* GetRoot() const { return root; }
 
     GameObject* CreateCube();
+
+    GameObject* CreateStaticCube();
     
     GameObject* CreateSphere();
 

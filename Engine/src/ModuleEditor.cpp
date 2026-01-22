@@ -380,7 +380,11 @@ void ModuleEditor::ShowMenuBar()
             {
                 if (ImGui::MenuItem("Cube"))
                 {
-                    CreatePrimitiveGameObject("Cube", Primitives::CreateCube());
+                    CreatePrimitiveGameObjectPhysics(Primitives::CreateCubeGameObject("Cube", 1.0f));
+                }
+                if (ImGui::MenuItem("StaticCube"))
+                {
+                    CreatePrimitiveGameObjectPhysics(Primitives::CreateCubeGameObject("StaticCube", 0.0f));
                 }
                 if (ImGui::MenuItem("Pyramid"))
                 {
@@ -934,4 +938,23 @@ std::string ModuleEditor::OpenLoadFile(const std::string& defaultPath)
     }
 
     return ""; // User cancelled
+}
+
+// ModuleEditor.cpp
+
+void ModuleEditor::CreatePrimitiveGameObjectPhysics(GameObject* go)
+{
+    if (go == nullptr) return;
+
+    // 1. Añadimos el componente de material con la textura de cuadros (checkerboard)
+    // tal como hace la función original de mallas.
+    ComponentMaterial* materialComp = static_cast<ComponentMaterial*>(go->CreateComponent(ComponentType::MATERIAL));
+    if (materialComp) {
+        materialComp->CreateCheckerboardTexture();
+    }
+
+    // 2. Refrescamos el Octree de la escena para que el nuevo objeto se pueda seleccionar
+    Application::GetInstance().scene->RebuildOctree();
+
+    LOG_CONSOLE("%s creado e integrado en el editor", go->GetName().c_str());
 }

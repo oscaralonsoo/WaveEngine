@@ -134,6 +134,10 @@ set(PHYSICS_SRC
     src/PhysicsDebugDrawer.h
     src/ComponentRigidBody.cpp
     src/ComponentRigidBody.h
+    src/ComponentBoxCollider.cpp
+    src/ComponentBoxCollider.h
+    src/ComponentCollider.cpp
+    src/ComponentCollider.h
 )
 
 source_group("Source\\Core" FILES ${CORE_SRC})

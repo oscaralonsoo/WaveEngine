@@ -3,6 +3,7 @@
 #include "PhysicsDebugDrawer.h"
 #include "ComponentRigidBody.h"
 #include "GameObject.h"
+#include "ModuleScene.h"
 
 #include <iostream>
 
@@ -60,22 +61,38 @@ bool ModulePhysics::Start()
     return true;
 }
 
+// NUEVA: Función para resetear todos los cuerpos al estado inicial
+void ModulePhysics::ResetAllRigidBodies(GameObject* obj) {
+    if (obj == nullptr) return;
+
+    ComponentRigidBody* rb = (ComponentRigidBody*)obj->GetComponent(ComponentType::RIGIDBODY);
+    if (rb) {
+        rb->ResetPhysics(); // Esta es la función que guarda/restaura pos, rot y escala
+    }
+
+    for (GameObject* child : obj->GetChildren()) {
+        ResetAllRigidBodies(child);
+    }
+}
+
 bool ModulePhysics::PreUpdate()
 {
+    // 1. Simulación o Sincronización Manual
     if (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING)
     {
+        // Si el juego está corriendo, la física manda
         world->stepSimulation(1.0f / 60.0f, 10);
     }
     else 
     {
-        // --- MODO EDITOR ---
-        // Accedemos al root de la escena y sincronizamos toda la jerarquía
+        // Si estamos en el editor, Bullet sigue a los objetos del motor
         GameObject* root = Application::GetInstance().scene->GetRoot();
         if (root != nullptr) {
             SyncAllRigidBodies(root);
         }
     }
 
+    // 2. Dibujar líneas de colisión
     if (world)
     {
         world->debugDrawWorld();

@@ -1,9 +1,58 @@
 #include "Primitives.h"
+#include "GameObject.h"
+#include "ComponentMesh.h"
+#include "ComponentBoxCollider.h"
+#include "ComponentRigidBody.h"
+#include "Application.h"
+#include "ModuleScene.h"
 #include <cmath>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif
+
+GameObject* Primitives::CreateCubeGameObject(const std::string& name, float mass)
+{
+    // 1. Creamos el objeto a través del ModuleScene del App
+    GameObject* go = Application::GetInstance().scene->CreateGameObject(name);
+
+    // 2. Añadimos la malla visual
+    ComponentMesh* mesh = (ComponentMesh*)go->CreateComponent(ComponentType::MESH);
+    if (mesh) mesh->SetMesh(Primitives::CreateCube());
+
+    // 3. Añadimos el Collider (Caja para el cubo)
+    ComponentBoxCollider* boxCol = (ComponentBoxCollider*)go->CreateComponent(ComponentType::COLLIDER_BOX);
+    if (boxCol) boxCol->SetSize(glm::vec3(1.0f, 1.0f, 1.0f));
+
+    // 4. Añadimos el RigidBody
+    ComponentRigidBody* rb = (ComponentRigidBody*)go->CreateComponent(ComponentType::RIGIDBODY);
+    if (rb) {
+        rb->SetMass(mass);
+        rb->Start();
+    }
+
+    return go;
+}
+
+GameObject* Primitives::CreateSphereGameObject(const std::string& name, float mass)
+{
+    GameObject* go = Application::GetInstance().scene->CreateGameObject(name);
+
+    ComponentMesh* mesh = (ComponentMesh*)go->CreateComponent(ComponentType::MESH);
+    if (mesh) mesh->SetMesh(Primitives::CreateSphere());
+
+    // 3. Añadimos el Collider (Asumiendo que tienes COLLIDER_SPHERE)
+    // ComponentSphereCollider* sphereCol = (ComponentSphereCollider*)go->CreateComponent(ComponentType::COLLIDER_SPHERE);
+    // if (sphereCol) sphereCol->SetRadius(0.5f);
+
+    ComponentRigidBody* rb = (ComponentRigidBody*)go->CreateComponent(ComponentType::RIGIDBODY);
+    if (rb) {
+        rb->SetMass(mass);
+        rb->Start();
+    }
+
+    return go;
+}
 
 Mesh Primitives::CreateTriangle()
 {

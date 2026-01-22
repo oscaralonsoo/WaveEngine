@@ -71,9 +71,10 @@ private:
     void ShowPlayToolbar();
     void DrawAboutWindow();
     void CreatePrimitiveGameObject(const std::string& name, Mesh mesh);
+    void CreatePrimitiveGameObjectPhysics(GameObject* go);
     void HandleDeleteKey();
     void UpdateCurrentWindow();
-    const char* EditorWindowTypeToString(EditorWindowType type); // For debug // Delete before release
+    const char* EditorWindowTypeToString(EditorWindowType type); 
 
     // Layout management
     void SaveLayoutAs(const std::string& filename);
@@ -111,5 +112,4 @@ private:
     // Meta file monitoring
     float metaFileCheckTimer = 0.0f;
     const float metaFileCheckInterval = 2.0f;
-
 };

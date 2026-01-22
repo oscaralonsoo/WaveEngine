@@ -6,6 +6,7 @@
 #include <btBulletDynamicsCommon.h>
 
 class PhysicsDebugDrawer;
+class GameObject;
 
 class ModulePhysics : public Module
 {
@@ -30,4 +31,7 @@ private:
     btSequentialImpulseConstraintSolver* solver = nullptr;
     btDiscreteDynamicsWorld* world = nullptr;
     PhysicsDebugDrawer* debug_draw = nullptr;
+
+    void ResetAllRigidBodies(GameObject* obj);
+
 };

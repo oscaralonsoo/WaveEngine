@@ -11,6 +11,8 @@ enum class ComponentType {
     CAMERA,
     ROTATE,
     RIGIDBODY,
+    COLLIDER_BOX,
+    COLLIDER_SPHERE,
     UNKNOWN
 };
 
