@@ -31,15 +31,24 @@ AudioListener::~AudioListener()
 void AudioListener::SetTransform() {
     Transform* trans = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
     if (trans) {
+        // Use the recursive version to ensure we have the absolute truth
+        glm::mat4 globalMat = trans->GetWorldMatrixRecursive();
+
+        // Extract World Position (4th Column)
+        glm::vec3 worldPos = glm::vec3(globalMat[3]);
+
+        // Extract World Orientation (Rotation only)
+        glm::vec3 worldForward = glm::normalize(glm::vec3(globalMat * glm::vec4(0, 0, 1, 0)));
+        glm::vec3 worldUp = glm::normalize(glm::vec3(globalMat * glm::vec4(0, 1, 0, 0)));
+
         AkSoundPosition listenerPos;
-        glm::vec3 pos = trans->GetPosition();
-        glm::vec3 forward = trans->GetForward();
-        glm::vec3 up = trans->GetUp();
+        listenerPos.SetPosition(worldPos.x,worldPos.y,worldPos.z);
 
-        listenerPos.SetPosition(pos.x, pos.y, pos.z);
-        listenerPos.SetOrientation(forward.x, forward.y, forward.z, up.x, up.y, up.z);
+        listenerPos.SetOrientation(
+            worldForward.x, worldForward.y, worldForward.z,
+            worldUp.x, worldUp.y, worldUp.z
+        );
 
-        // Register the listener as a game object and set its position
         AK::SoundEngine::SetPosition(this->goID, listenerPos);
     }
 }
@@ -47,4 +56,17 @@ void AudioListener::SetTransform() {
 void AudioListener::SetAsDefaultListener()
 {
     AK::SoundEngine::SetDefaultListeners(&this->goID, 1);
+}
+
+void AudioListener::Serialize(nlohmann::json& componentObj) const {
+    componentObj["isDefault"] = isDefault; 
+}
+
+void AudioListener::Deserialize(const nlohmann::json& componentObj) {
+    if (componentObj.contains("isDefault")) {
+        isDefault = componentObj["isDefault"].get<bool>();
+        if (isDefault) {
+            SetAsDefaultListener(); //set as default listener if saved like that
+        }
+    }
 }

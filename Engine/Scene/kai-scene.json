@@ -2399,18 +2399,18 @@
                                                     "active": true,
                                                     "position": [
                                                         0.0,
-                                                        0.0,
-                                                        0.0
+                                                        -2.86102294921875e-05,
+                                                        -1.732006808197184e-06
                                                     ],
                                                     "rotation": [
-                                                        0.0,
-                                                        0.0,
+                                                        6.106669532025821e-13,
+                                                        5.823769755570537e-19,
                                                         0.0
                                                     ],
                                                     "scale": [
                                                         1.0,
-                                                        1.0,
-                                                        1.0
+                                                        0.9999992847442627,
+                                                        0.9999992847442627
                                                     ],
                                                     "type": 0
                                                 },
@@ -2457,7 +2457,10 @@
                                                 },
                                                 {
                                                     "active": true,
-                                                    "type": 6
+                                                    "eventName": "HelpMe",
+                                                    "playOnAwake": true,
+                                                    "type": 6,
+                                                    "volume": 100.0
                                                 }
                                             ],
                                             "name": "City_building_022"
@@ -4247,7 +4250,7 @@
                 },
                 {
                     "active": true,
-                    "aspectRatio": 1.826704502105713,
+                    "aspectRatio": 2.0153374671936035,
                     "farPlane": 500.0,
                     "fov": 45.0,
                     "frustumCullingEnabled": false,
@@ -4256,6 +4259,7 @@
                 },
                 {
                     "active": true,
+                    "isDefault": true,
                     "type": 5
                 }
             ],

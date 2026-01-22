@@ -2,7 +2,6 @@
 #include "ModuleAudio.h"
 
 
-
 ModuleAudio::ModuleAudio() : Module() {
     name = "Audio";
     audioSystem = std::make_unique<AudioSystem>();
@@ -15,6 +14,34 @@ bool ModuleAudio::Start() {
 }
 
 bool ModuleAudio::Update() {
+    //audioSystem->Update();
+    if (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING) {
+        //play on awake triggers
+        for (auto* component : audioSystem->audioComponents) {
+            if (component->GetType() == ComponentType::AUDIOSOURCE) {
+                AudioSource* source = static_cast<AudioSource*>(component);
+
+                //trigger if not played yet
+                if (source->playOnAwake && !source->hasAwoken) {
+                    std::wstring wideName(source->eventName.begin(), source->eventName.end());
+                    audioSystem->PlayEvent(wideName.c_str(), source->goID);
+                    source->hasAwoken = true;
+                }
+            }
+        }
+    }
+    else if (Application::GetInstance().GetPlayState() == Application::PlayState::EDITING) {
+        //reset hasAwoken
+        for (auto* component : audioSystem->audioComponents) {
+            if (component->GetType() == ComponentType::AUDIOSOURCE) {
+                static_cast<AudioSource*>(component)->hasAwoken = false;
+            }
+        }
+    }
+    return true;
+}
+
+bool ModuleAudio::PostUpdate() {
     audioSystem->Update();
     return true;
 }

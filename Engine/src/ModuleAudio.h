@@ -32,6 +32,7 @@ public:
 
     bool Start() override;
     bool Update() override;
+    bool PostUpdate() override;
     bool CleanUp() override;
 
     void PlayAudio(AudioSource* source, AkUniqueID event);

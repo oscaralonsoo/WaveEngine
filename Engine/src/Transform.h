@@ -31,6 +31,9 @@ public:
     const glm::mat4& GetLocalMatrix();
     const glm::mat4& GetGlobalMatrix();
 
+    //for audio coords
+    glm::mat4 GetWorldMatrixRecursive();
+
     void UpdateLocalMatrix();
     void UpdateGlobalMatrix();
 

@@ -7,6 +7,8 @@
 #include <ctime>
 #include <iostream>
 #include <cwchar>
+#include <fstream>
+#include <nlohmann/json.hpp>
 #include "AudioSystem.h"
 #include "AudioUtility.h"
 #include "AudioComponent.h"
@@ -191,7 +193,8 @@ bool AudioSystem::Awake() {
     //load project specific bank
     LoadBank(BANKNAME_MUSIC);
 
-	
+    //event list for the UI dropdown
+    DiscoverEvents();
 
     SetGlobalVolume(globalVolume);
     return true;
@@ -389,6 +392,49 @@ void AudioSystem::EventCallBack(AkCallbackType in_eType, AkEventCallbackInfo* in
     {
         pEvent->playingID = 0L; 
     }
+}
+
+void AudioSystem::DiscoverEvents() {
+    // Clear existing names to avoid duplicates
+    eventNames.clear();
+    std::string path = "..\\Assets\\Audio\\GeneratedSoundBanks\\Windows\\MainSoundBank.json";
+
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        LOG_CONSOLE("Audio Error: Could not open MainSoundBank.json at %s", path.c_str());
+        return;
+    }
+
+    try {
+        nlohmann::json data;
+        file >> data;
+
+        //SoundBanksInfo -> SoundBanks
+        if (data.contains("SoundBanksInfo") && data["SoundBanksInfo"].contains("SoundBanks")) {
+            for (auto& bank : data["SoundBanksInfo"]["SoundBanks"]) {
+                // Check the "Events" array
+                if (bank.contains("Events")) {
+                    for (auto& event : bank["Events"]) {
+                        if (event.contains("Name")) {
+                            std::string name = event["Name"].get<std::string>();
+                            eventNames.push_back(name);
+                        }
+                    }
+                }
+            }
+        }
+
+        std::sort(eventNames.begin(), eventNames.end());
+        LOG_CONSOLE("Audio: Discovered %d events from MainSoundBank.json", (int)eventNames.size());
+    }
+    catch (const nlohmann::json::exception& e) {
+        LOG_CONSOLE("Audio Error: Failed to parse MainSoundBank.json: %s", e.what());
+    }
+}
+
+void AudioSystem::StopAllAudio() {
+    AK::SoundEngine::StopAll();
+    AK::SoundEngine::RenderAudio();
 }
 
 //---------------AK and helpers

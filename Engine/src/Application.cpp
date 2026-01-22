@@ -210,6 +210,7 @@ void Application::Stop()
     playState = PlayState::EDITING;
     time->Reset();
     time->Pause();
+    audio->audioSystem->StopAllAudio();
 }
 
 void Application::Step()

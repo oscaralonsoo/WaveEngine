@@ -895,11 +895,25 @@ void InspectorWindow::DrawAudioSourceComponent(GameObject* selectedObject) {
     if (!source) return;
 
     if (ImGui::CollapsingHeader("Audio Source", ImGuiTreeNodeFlags_DefaultOpen)) {
-        char buf[128];
-        strcpy(buf, source->eventName.c_str());
-        if (ImGui::InputText("Event Name", buf, IM_ARRAYSIZE(buf))) {
-            source->eventName = buf;
+        //get all wwise events
+        auto& events = Application::GetInstance().audio->audioSystem->eventNames;
+
+        if (ImGui::BeginCombo("Wwise Event", source->eventName.c_str())) {
+            for (const auto& eventName : events) {
+                bool isSelected = (source->eventName == eventName);
+                if (ImGui::Selectable(eventName.c_str(), isSelected)) {
+                    source->eventName = eventName;
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
         }
+
+        ImGui::SliderFloat("Volume", &source->volume, 0.0f, 100.0f);
+
+        ImGui::Checkbox("Play On Awake", &source->playOnAwake);
 
         if (ImGui::Button("Play")) {
 

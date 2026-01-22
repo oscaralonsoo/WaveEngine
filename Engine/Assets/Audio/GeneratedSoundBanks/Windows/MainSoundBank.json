@@ -10,7 +10,7 @@
     "Type": "User",
     "GUID": "{7C55CBAC-5186-4208-888F-0BCE02308A98}",
     "Language": "SFX",
-    "Hash": "{78C0EC16-490F-A30B-2E2E-E6A938FDA757}",
+    "Hash": "{4865D23F-A5C8-9806-9A8C-16A60546BEEF}",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\MainSoundBank",
     "ShortName": "MainSoundBank",
     "Path": "MainSoundBank.bnk",
@@ -47,6 +47,7 @@
       "Name": "HelpMe",
       "ObjectPath": "\\Events\\Default Work Unit\\HelpMe",
       "GUID": "{84CBD89F-1713-4085-A80D-62410557503B}",
+      "MaxAttenuation": "20",
       "DurationType": "OneShot",
       "DurationMin": "5.3405895",
       "DurationMax": "5.3405895",
@@ -76,6 +77,6 @@
     ]
    }
   ],
-  "FileHash": "{B941E9C9-EF8F-8EFB-7DDA-BCDF1EE1EB35}"
+  "FileHash": "{9C8D8443-487A-EA5B-5148-658AD94A2017}"
  }
 }

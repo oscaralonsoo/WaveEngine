@@ -85,6 +85,8 @@ public:
 
 	static void EventCallBack(AkCallbackType in_eType, AkEventCallbackInfo* in_pEventInfo, void* in_pCallbackInfo, void* in_pCookie);
 
+	void DiscoverEvents();
+	void StopAllAudio();
 
 private:
 	bool InitEngine();
@@ -102,7 +104,6 @@ private:
 
 	std::vector<AkGameObjectID> gameObjectIDs;
 	std::vector<AudioEvent*> audioEvents;
-	std::vector<AudioComponent*> audioComponents;
 
 public:
 	//low_level I/O implementation taken from the samples folder
@@ -110,5 +111,10 @@ public:
 
 	//implements AK::StreamMgr::IAkFileLocationResolver + AK::StreamMgr::IAkLowLevelIOHook interfaces, 
 	//and is able to load file packages generated with the File Packager utility
+
+	//list of events
+	std::vector<std::string> eventNames;
+
+	std::vector<AudioComponent*> audioComponents;
 
 };

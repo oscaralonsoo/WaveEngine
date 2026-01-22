@@ -12,6 +12,11 @@ public:
     //override from AudioComponent
     void SetTransform() override;
 
+    ComponentType GetType() const override { return ComponentType::AUDIOSOURCE; }
+
+    void Serialize(nlohmann::json& componentObj) const override;
+    void Deserialize(const nlohmann::json& componentObj) override;
+
     ////Play sound by its name
     //void PlayEvent(const char* eventName);
 
@@ -23,5 +28,6 @@ public:
 public:
     std::string eventName = "";
     bool playOnAwake = false;
-    float volume = 1.0f;
+    bool hasAwoken = false;
+    float volume = 100.0f;
 };

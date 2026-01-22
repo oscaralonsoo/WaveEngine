@@ -7,6 +7,8 @@ Component::Component(GameObject* owner, ComponentType type) : owner(owner), type
     case ComponentType::MESH: name = "Mesh"; break;
     case ComponentType::MATERIAL: name = "Material"; break;
 	case ComponentType::CAMERA: name = "Camera"; break;
+    case ComponentType::AUDIOSOURCE: name = "AudioSource"; break;
+    case ComponentType::LISTENER: name = "Listener"; break;
     default: name = "Unknown Component";
     }
 }
