@@ -9,6 +9,7 @@
 #include "AudioSource.h"
 #include "AudioListener.h"
 #include "ComponentMove.h"
+#include "ReverbZone.h"
 #include <nlohmann/json.hpp>
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
@@ -64,6 +65,9 @@ Component* GameObject::CreateComponent(ComponentType type) {
         break;
     case ComponentType::MOVE:
         newComponent = new ComponentMove(this);
+        break;
+    case ComponentType::REVERBZONE:
+        newComponent = new ReverbZone(this);
         break;
     default:
         LOG_DEBUG("ERROR: Unknown component type requested for GameObject '%s'", name.c_str());

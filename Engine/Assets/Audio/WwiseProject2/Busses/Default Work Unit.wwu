@@ -84,8 +84,24 @@
 								</ObjectList>
 							</ObjectLists>
 						</Bus>
-						<Bus Name="Reverb Bus" ID="{CC3A5574-BDAD-4F60-8013-C70F6A014CB4}">
+						<Bus Name="Reverb_AuxBus" ID="{CC3A5574-BDAD-4F60-8013-C70F6A014CB4}">
+							<PropertyList>
+								<Property Name="BusVolume" Type="Real64">
+									<ValueList>
+										<Value>-96</Value>
+									</ValueList>
+								</Property>
+							</PropertyList>
 							<ObjectLists>
+								<ObjectList Name="Effects">
+									<EffectSlot Name="" ID="{2334EBAC-7B56-4509-871A-63D70EBC3E65}" ShortID="876859074">
+										<ReferenceList>
+											<Reference Name="Effect" PluginName="Wwise RoomVerb" CompanyID="0" PluginID="118" PluginType="3">
+												<ObjectRef Name="Holy" ID="{CC7B8638-C670-4AD5-B3FB-331EA81037F6}" WorkUnitID="{E8613F7D-BAD3-45CD-A3ED-505576F31277}"/>
+											</Reference>
+										</ReferenceList>
+									</EffectSlot>
+								</ObjectList>
 								<ObjectList Name="RTPC">
 									<RTPC Name="" ID="{27D56E7B-BC96-41B8-BA6D-D8665343EED0}" ShortID="348059624">
 										<PropertyList>

@@ -13,6 +13,8 @@
 #include "AudioUtility.h"
 #include "AudioComponent.h"
 #include "Log.h"
+#include "ReverbZone.h"
+#include "AudioListener.h"
 
 #include <AK/SoundEngine/Common/AkSoundEngine.h>
 #include <AK/SpatialAudio/Common/AkSpatialAudio.h>
@@ -40,7 +42,7 @@ AudioSystem::~AudioSystem() {
 
 bool AudioSystem::InitEngine() {
 
-    LOG_DEBUG("# Initializing Audio Engine...");
+    if (enableDebugLogs) LOG_DEBUG("# Initializing Audio Engine...");
 
     //Wwise submodules must be initialized in the following order:
     if (!InitMemoryManager()) {
@@ -94,7 +96,7 @@ bool AudioSystem::InitStreamingManager() {
 
     wchar_t cwd[MAX_PATH];
     _wgetcwd(cwd, MAX_PATH);
-    LOG_CONSOLE("Current Working Directory: %ls", cwd);
+    if (enableDebugLogs) LOG_CONSOLE("Current Working Directory: %ls", cwd);
     
     AkStreamMgrSettings stmSettings;
     AK::StreamMgr::GetDefaultSettings(stmSettings);
@@ -206,6 +208,9 @@ bool AudioSystem::Update() {
         component->SetTransform();
     }
 
+    // Process reverb zones (set aux sends on listener)
+    ProcessReverbZones();
+
     //ProcessAudio() in the Sound Integration Walkthrough
     //processes bank requests, events, positions, RTPC, etc.
     AK::SoundEngine::RenderAudio();
@@ -248,13 +253,13 @@ void AudioSystem::PlayEvent(AkUniqueID event, AkGameObjectID goID)
         if (audioEvents[i]->playingID == 0L)
         {
             AK::SoundEngine::PostEvent(event, goID, AkCallbackType::AK_EndOfEvent, audioEvents[i]->eventCallback, (void*)audioEvents[i]);
-            LOG_DEBUG("Playing event from %d audiogameobject", goID);
+            if (enableDebugLogs) LOG_DEBUG("Playing event from %d audiogameobject", goID);
             audioEvents[i]->playingID = 1L; //1L = event slot is now taken
 
             return;
         }
     }
-    LOG_DEBUG("Maximum amount of audio events at the same time reached: %d", MAX_AUDIO_EVENTS);
+    if (enableDebugLogs) LOG_DEBUG("Maximum amount of audio events at the same time reached: %d", MAX_AUDIO_EVENTS);
 }
 
 
@@ -274,46 +279,46 @@ void AudioSystem::PlayEvent(const wchar_t* eventName, AkGameObjectID goID)
 
 void AudioSystem::StopEvent(AkUniqueID event, AkGameObjectID goID) {
     AK::SoundEngine::ExecuteActionOnEvent(event, AK::SoundEngine::AkActionOnEventType::AkActionOnEventType_Stop, goID);
-    LOG_DEBUG("Stopping event from %d audiogameobject", goID);
+    if (enableDebugLogs) LOG_DEBUG("Stopping event from %d audiogameobject", goID);
 }
 
 void AudioSystem::PauseEvent(AkUniqueID event, AkGameObjectID goID) {
     AK::SoundEngine::ExecuteActionOnEvent(event, AK::SoundEngine::AkActionOnEventType::AkActionOnEventType_Pause, goID);
-    LOG_DEBUG("Pausing event from %d audiogameobject", goID);
+    if (enableDebugLogs) LOG_DEBUG("Pausing event from %d audiogameobject", goID);
 }
 
 void AudioSystem::ResumeEvent(AkUniqueID event, AkGameObjectID goID) {
     AK::SoundEngine::ExecuteActionOnEvent(event, AK::SoundEngine::AkActionOnEventType::AkActionOnEventType_Resume, gameObjectIDs[goID]);
-    LOG_DEBUG("Resuming event from %d audiogameobject", goID);
+    if (enableDebugLogs) LOG_DEBUG("Resuming event from %d audiogameobject", goID);
 }
 
 void AudioSystem::SetState(AkStateGroupID stateGroup, AkStateID state)
 {
     AK::SoundEngine::SetState(stateGroup, state);
-    LOG_DEBUG("Setting wwise state through ID");
+    if (enableDebugLogs) LOG_DEBUG("Setting wWise state through ID");
 }
 
 void AudioSystem::SetState(const char* stateGroup, const char* state)
 {
     AK::SoundEngine::SetState(stateGroup, state);
-    LOG_DEBUG("Setting wwise state through name");
+    if (enableDebugLogs) LOG_DEBUG("Setting wWise state through name");
 }
 
 
 void AudioSystem::SetSwitch(AkSwitchGroupID switchGroup, AkSwitchStateID switchState, AkGameObjectID goID)
 {
     AK::SoundEngine::SetSwitch(switchGroup, switchState, goID);
-    LOG_DEBUG("Setting wwise switch");
+    if (enableDebugLogs) LOG_DEBUG("Setting wwise switch");
 }
 
 void AudioSystem::SetRTPCValue(AkRtpcID rtpcID, AkRtpcValue value) {
     AK::SoundEngine::SetRTPCValue(rtpcID, value);
-    LOG_DEBUG("Setting RTPC value through ID");
+    if (enableDebugLogs) LOG_DEBUG("Setting RTPC value through ID");
 }
 
 void AudioSystem::SetRTPCValue(const char* name, int value) {
     AK::SoundEngine::SetRTPCValue(name, value);
-    LOG_DEBUG("Setting RTPC value through name");
+    if (enableDebugLogs) LOG_DEBUG("Setting RTPC value through name");
 }
 
 
@@ -341,46 +346,226 @@ void AudioSystem::SetSFXVolume(int vol) {
 //    AK::SoundEngine::SetRTPCValue(AK::GAME_PARAMETERS::DIALOG_VOLUME, (AkRtpcValue)vol);
 //}
 
+// Reverb zone registration
+void AudioSystem::RegisterReverbZone(ReverbZone* zone)
+{
+    if (!zone) return;
+    if (std::find(reverbZones.begin(), reverbZones.end(), zone) == reverbZones.end())
+        reverbZones.push_back(zone);
+}
 
-void AudioSystem::LoadBank(const wchar_t* bankName) {
-    AkBankID bankID;
-    AKRESULT eResult = AK::SoundEngine::LoadBank(bankName, bankID);
+void AudioSystem::UnregisterReverbZone(ReverbZone* zone)
+{
+    if (!zone) return;
+    auto it = std::find(reverbZones.begin(), reverbZones.end(), zone);
+    if (it != reverbZones.end()) reverbZones.erase(it);
+}
 
-    if (eResult == AK_Success) {
-        LOG_CONSOLE("Loaded Bank: %ls", bankName);
+// processing reverb zones each frame
+void AudioSystem::ProcessReverbZones()
+{
+    // Find the listener game object (first registered AudioComponent that is a listener)
+    AkGameObjectID listenerID = AK_INVALID_GAME_OBJECT;
+    std::shared_ptr<GameObject> listenerGO;
+
+    for (AudioComponent* comp : audioComponents) {
+        AudioListener* listener = dynamic_cast<AudioListener*>(comp);
+        if (listener) {
+            listenerID = listener->goID;
+            listenerGO = listener->GetGameObject();
+            break;
+        }
     }
-    else {
-        LOG_CONSOLE("Wwise Bank Error: %ls (Result Code: %d)", bankName, (int)eResult);
+
+    if (listenerID == AK_INVALID_GAME_OBJECT || !listenerGO) {
+        // no listener, still process source sends (they can be independent)
+    }
+
+    // Get listener world position (if available)
+    glm::vec3 listenerPos(0.0f);
+    if (listenerGO) {
+        Transform* lt = static_cast<Transform*>(listenerGO->GetComponent(ComponentType::TRANSFORM));
+        if (lt) listenerPos = glm::vec3(lt->GetGlobalMatrix()[3]);
+    }
+
+    // Determine best (highest-priority) zone that contains the listener (for debug & consistent send)
+    ReverbZone* listenerBestZone = nullptr;
+    int listenerBestPriority = INT_MIN;
+    for (ReverbZone* zone : reverbZones) {
+        if (!zone || !zone->enabled) continue;
+        if (zone->ContainsPoint(listenerPos)) {
+            if (zone->priority > listenerBestPriority) {
+                listenerBestPriority = zone->priority;
+                listenerBestZone = zone;
+            }
+        }
+    }
+
+    // Update debug tracking and log transitions
+    if (listenerBestZone != currentListenerZone) {
+        if (currentListenerZone) {
+            if (enableDebugLogs) LOG_DEBUG("Listener left reverb zone '%s'", currentListenerZone->auxBusName.c_str());
+        }
+        if (listenerBestZone) {
+            if (enableDebugLogs) LOG_DEBUG("Listener entered reverb zone '%s' (wet=%.2f priority=%d)",
+                listenerBestZone->auxBusName.c_str(), listenerBestZone->wetLevel, listenerBestZone->priority);
+        }
+        currentListenerZone = listenerBestZone;
+    }
+
+    // Apply aux send for listener: turn off all, then enable only the best zone's bus (if any)
+    if (listenerID != AK_INVALID_GAME_OBJECT) {
+        // First clear sends for known busses (conservative)
+        for (ReverbZone* zone : reverbZones) {
+            if (!zone || zone->auxBusName.empty()) continue;
+            std::wstring wideName(zone->auxBusName.begin(), zone->auxBusName.end());
+            SetGameObjectAuxSend(listenerID, wideName.c_str(), 0.0f);
+        }
+
+        if (listenerBestZone && !listenerBestZone->auxBusName.empty()) {
+            std::wstring wideName(listenerBestZone->auxBusName.begin(), listenerBestZone->auxBusName.end());
+            SetGameObjectAuxSend(listenerID, wideName.c_str(), listenerBestZone->wetLevel);
+        }
+    }
+
+    // NEW: set aux sends per audio source (AudioComponent) so each source can be routed to zone aux bus
+    // This selects the highest-priority zone that contains the source and applies that zone's wetLevel.
+    for (AudioComponent* comp : audioComponents) {
+        if (!comp) continue;
+
+        // Each AudioComponent is expected to expose its Wwise gameobject id (goID) and game object
+        AkGameObjectID sourceID = comp->goID;
+        std::shared_ptr<GameObject> sourceGO = comp->GetGameObject();
+        if (sourceID == AK_INVALID_GAME_OBJECT || !sourceGO) {
+            continue;
+        }
+
+        // Get source world position
+        Transform* st = static_cast<Transform*>(sourceGO->GetComponent(ComponentType::TRANSFORM));
+        if (!st) {
+            // If no transform, ensure sends are off for this source
+            // We need a bus name to switch off; but we don't know which bus was used previously
+            // Skip clearing here (listener will still handle global reverb)
+            continue;
+        }
+        glm::vec3 sourcePos = glm::vec3(st->GetGlobalMatrix()[3]);
+
+        // Find the best matching zone for this source (highest priority)
+        ReverbZone* bestZone = nullptr;
+        int bestPriority = INT_MIN;
+        for (ReverbZone* zone : reverbZones) {
+            if (!zone || !zone->enabled) continue;
+            if (zone->ContainsPoint(sourcePos)) {
+                if (zone->priority > bestPriority) {
+                    bestPriority = zone->priority;
+                    bestZone = zone;
+                }
+            }
+        }
+
+        if (bestZone) {
+            if (!bestZone->auxBusName.empty()) {
+                std::wstring wideName(bestZone->auxBusName.begin(), bestZone->auxBusName.end());
+                SetGameObjectAuxSend(sourceID, wideName.c_str(), bestZone->wetLevel);
+            }
+        } else {
+            // No zone -> turn off aux sends for known busses.
+            // If you only use one aux bus name across zones you can clear it here.
+            // Otherwise it's safer to clear all possible buses or track per-source current sends.
+            // Here's a conservative approach: clear sends for every registered zone aux bus.
+            for (ReverbZone* zone : reverbZones) {
+                if (!zone) continue;
+                if (zone->auxBusName.empty()) continue;
+                std::wstring wideName(zone->auxBusName.begin(), zone->auxBusName.end());
+                SetGameObjectAuxSend(sourceID, wideName.c_str(), 0.0f);
+            }
+        }
     }
 }
 
-void AudioSystem::RegisterAudioComponent(AudioComponent* component) {
-    audioComponents.push_back(component);
+void AudioSystem::SetGameObjectAuxSend(AkGameObjectID id, const wchar_t* auxBusName, float controlValue)
+{
+    if (id == AK_INVALID_GAME_OBJECT || auxBusName == nullptr) {
+        if (enableDebugLogs) LOG_DEBUG("SetGameObjectAuxSend: invalid parameters id=%d auxBusName=%p control=%.2f", id, (void*)auxBusName, controlValue);
+        return;
+    }
+
+    // Convert auxBusName to narrow for logging
+    std::wstring wname(auxBusName);
+    std::string auxName;
+    auxName.assign(wname.begin(), wname.end());
+
+    // Resolve Aux Bus ID
+    AkAuxBusID busId = (AkAuxBusID)AK::SoundEngine::GetIDFromString(auxBusName);
+
+    // Check for invalid id
+    if (busId == AK_INVALID_UNIQUE_ID) {
+        if (enableDebugLogs) LOG_DEBUG("SetGameObjectAuxSend: Aux bus name '%s' not found (GetIDFromString returned invalid id). control=%.2f targetGO=%d", auxName.c_str(), controlValue, id);
+        return;
+    }
+
+    // Build AkAuxSendValue array (one element)
+    AkAuxSendValue send;
+    AkAuxSendValue sends[1];
+    send.auxBusID = busId;
+    send.fControlValue = controlValue;
+    sends[0] = send;
+
+    // Log before applying
+    if (enableDebugLogs) LOG_DEBUG("SetGameObjectAuxSend: applying aux send -> bus='%s' (id=%u) control=%.2f to GO id=%d", auxName.c_str(), (unsigned int)busId, controlValue, id);
+
+    // Apply send
+    AK::SoundEngine::SetGameObjectAuxSendValues(id, sends, 1);
 }
 
-void AudioSystem::UnregisterAudioComponent(AudioComponent* component) {
-    auto it = std::find(audioComponents.begin(), audioComponents.end(), component);
-    if (it != audioComponents.end()) {
-        audioComponents.erase(it);
+void AudioSystem::DiscoverAuxBuses()
+{
+    auxBusNames.clear();
+
+    std::string path = "..\\Assets\\Audio\\GeneratedSoundBanks\\Windows\\MainSoundBank.json";
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        LOG_CONSOLE("Audio Error: Could not open MainSoundBank.json at %s", path.c_str());
+        return;
+    }
+
+    try {
+        nlohmann::json data;
+        file >> data;
+
+        // The generated JSON often contains lists for AuxBusses under "SoundBanksInfo" or "AuxBusses".
+        // Try a few likely places.
+        if (data.contains("SoundBanksInfo") && data["SoundBanksInfo"].contains("AuxBusses")) {
+            for (auto& bus : data["SoundBanksInfo"]["AuxBusses"]) {
+                if (bus.contains("Name")) {
+                    auxBusNames.push_back(bus["Name"].get<std::string>());
+                }
+            }
+        }
+        // Older or different resolvers might have AuxBusses at top-level
+        if (data.contains("AuxBusses")) {
+            for (auto& bus : data["AuxBusses"]) {
+                if (bus.contains("Name")) {
+                    auxBusNames.push_back(bus["Name"].get<std::string>());
+                }
+            }
+        }
+
+        // Deduplicate & sort for neatness
+        std::sort(auxBusNames.begin(), auxBusNames.end());
+        auxBusNames.erase(std::unique(auxBusNames.begin(), auxBusNames.end()), auxBusNames.end());
+
+        LOG_CONSOLE("Audio: Discovered %d aux busses from MainSoundBank.json", (int)auxBusNames.size());
+        if (enableDebugLogs) {
+            for (const auto& n : auxBusNames) {
+                LOG_DEBUG(" - AuxBus: %s", n.c_str());
+            }
+        }
+    }
+    catch (const nlohmann::json::exception& e) {
+        LOG_CONSOLE("Audio Error: Failed to parse MainSoundBank.json for aux busses: %s", e.what());
     }
 }
-
-void AudioSystem::RegisterGameObject(AkGameObjectID id, const char* name) {
-    AK::SoundEngine::RegisterGameObj(id, name);
-}
-
-void AudioSystem::UnregisterGameObject(AkGameObjectID id) {
-    AK::SoundEngine::UnregisterGameObj(id);
-}
-
-void AudioSystem::SetPosition(AkGameObjectID id, const glm::vec3& pos, const glm::vec3& front, const glm::vec3& top) {
-    AkSoundPosition soundPos;
-    soundPos.SetPosition(pos.x, pos.y, pos.z);
-    soundPos.SetOrientation(front.x, front.y, front.z, top.x, top.y, top.z);
-    AK::SoundEngine::SetPosition(id, soundPos);
-}
-
-
 
 void AudioSystem::EventCallBack(AkCallbackType in_eType, AkEventCallbackInfo* in_pEventInfo, void* in_pCallbackInfo, void* in_pCookie)
 {
@@ -435,6 +620,24 @@ void AudioSystem::DiscoverEvents() {
 void AudioSystem::StopAllAudio() {
     AK::SoundEngine::StopAll();
     AK::SoundEngine::RenderAudio();
+}
+
+void AudioSystem::LoadBank(const wchar_t* bankName)
+{
+    if (!bankName) {
+        LOG_CONSOLE("AudioSystem::LoadBank called with null bankName");
+        return;
+    }
+
+    AkBankID bankID = AK::SoundEngine::LoadBank(bankName, bankID);
+  
+
+    // Try to detect success via bankID (non-zero usually means success) and log
+    if (bankID != AK_INVALID_BANK_ID) {
+        LOG_CONSOLE("Loaded Bank: %ls (BankID: %u)", bankName, (unsigned int)bankID);
+    } else {
+        LOG_CONSOLE("Wwise Bank Error: %ls (Could not load bank or invalid bank ID)", bankName);
+    }
 }
 
 //---------------AK and helpers

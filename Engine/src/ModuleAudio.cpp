@@ -17,7 +17,7 @@ bool ModuleAudio::Update() {
     //audioSystem->Update();
     if (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING) {
         //play on awake triggers
-        for (auto* component : audioSystem->audioComponents) {
+        for (auto* component : audioSystem->GetAudioComponents()) {
             if (component->GetType() == ComponentType::AUDIOSOURCE) {
                 AudioSource* source = static_cast<AudioSource*>(component);
 
@@ -32,7 +32,7 @@ bool ModuleAudio::Update() {
     }
     else if (Application::GetInstance().GetPlayState() == Application::PlayState::EDITING) {
         //reset hasAwoken
-        for (auto* component : audioSystem->audioComponents) {
+        for (auto* component : audioSystem->GetAudioComponents()) {
             if (component->GetType() == ComponentType::AUDIOSOURCE) {
                 static_cast<AudioSource*>(component)->hasAwoken = false;
             }

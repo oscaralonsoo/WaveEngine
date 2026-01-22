@@ -37,6 +37,7 @@ private:
     void DrawAudioSourceComponent(GameObject* selectedObject);
     void DrawAudioListenerComponent(GameObject* selectedObject);
     void DrawMoveComponent(GameObject* selectedObject);
+    void DrawReverbZoneComponent(GameObject* selectedObject); 
 
     // Helper methods
     void GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects);

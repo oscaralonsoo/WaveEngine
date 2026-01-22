@@ -6,6 +6,7 @@
 #include <Win32/AkDefaultIOHookDeferred.h>
 
 class AudioComponent;
+class ReverbZone;
 
 #define MAX_AUDIO_EVENTS 30
 
@@ -76,17 +77,35 @@ public:
 	void SetSFXVolume(int volume);
 	void SetMusicVolume(int volume);
 
-	void RegisterAudioComponent(AudioComponent* component);
-	void UnregisterAudioComponent(AudioComponent* component);
+	// Register/unregister AudioComponent
+	inline void RegisterAudioComponent(AudioComponent* component) {
+		if (!component) return;
+		audioComponents.push_back(component);
+	}
+	inline void UnregisterAudioComponent(AudioComponent* component) {
+		if (!component) return;
+		auto it = std::find(audioComponents.begin(), audioComponents.end(), component);
+		if (it != audioComponents.end()) {
+			audioComponents.erase(it);
+		}
+	}
 
 	void RegisterGameObject(AkGameObjectID id, const char* name);
 	void UnregisterGameObject(AkGameObjectID id);
 	void SetPosition(AkGameObjectID id, const glm::vec3& pos, const glm::vec3& front, const glm::vec3& top);
 
+	// Reverb zone registration
+	void RegisterReverbZone(ReverbZone* zone);
+	void UnregisterReverbZone(ReverbZone* zone);
+
 	static void EventCallBack(AkCallbackType in_eType, AkEventCallbackInfo* in_pEventInfo, void* in_pCallbackInfo, void* in_pCookie);
 
 	void DiscoverEvents();
 	void StopAllAudio();
+
+	// Control verbose debug logging for this subsystem (default: off)
+	inline void SetDebugLogging(bool enable) { enableDebugLogs = enable; }
+	inline bool IsDebugLoggingEnabled() const { return enableDebugLogs; }
 
 private:
 	bool InitEngine();
@@ -96,9 +115,14 @@ private:
 	bool InitSpatialAudio();
 	bool InitCommunication();
 
-	void AudioSystem::LoadBank(const wchar_t* bankName);
+	// member function LoadBank
+	void LoadBank(const wchar_t* bankName);
 
-	
+	// processing reverb zones each frame
+	void ProcessReverbZones();
+
+	// set aux send helper
+	void SetGameObjectAuxSend(AkGameObjectID id, const wchar_t* auxBusName, float controlValue);
 
 	float globalVolume = 100.0f;
 
@@ -109,12 +133,31 @@ public:
 	//low_level I/O implementation taken from the samples folder
 	CAkDefaultIOHookDeferred g_lowLevelIO;
 
-	//implements AK::StreamMgr::IAkFileLocationResolver + AK::StreamMgr::IAkLowLevelIOHook interfaces, 
-	//and is able to load file packages generated with the File Packager utility
-
-	//list of events
+	// list of events
 	std::vector<std::string> eventNames;
 
-	std::vector<AudioComponent*> audioComponents;
+	// registered reverb zones
+	std::vector<ReverbZone*> reverbZones;
 
+	// Debug: current reverb zone containing the listener (if any)
+	ReverbZone* GetCurrentListenerZone() const { return currentListenerZone; }
+	bool IsListenerInReverbZone() const { return currentListenerZone != nullptr; }
+
+	// Debug: list of auxiliary bus names discovered from the soundbank JSON
+	std::vector<std::string> auxBusNames;
+
+	// Populate auxBusNames from MainSoundBank.json (call from Awake for diagnostics)
+	void DiscoverAuxBuses();
+
+private:
+    // Registered audio components (sources + listener wrappers)
+    std::vector<AudioComponent*> audioComponents;
+
+    // Add this member to track the current listener's reverb zone
+    ReverbZone* currentListenerZone = nullptr;
+
+	// Toggle to reduce log noise (default: false)
+	bool enableDebugLogs = false;
+public:
+    const std::vector<AudioComponent*>& GetAudioComponents() const { return audioComponents; }
 };

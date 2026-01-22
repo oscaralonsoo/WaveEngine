@@ -12,6 +12,7 @@
 #include "AudioComponent.h"
 #include "AudioSource.h"
 #include "AudioListener.h"
+#include "ReverbZone.h"
 #include "Log.h"
 
 InspectorWindow::InspectorWindow()
@@ -89,6 +90,10 @@ void InspectorWindow::Draw()
             selectedObject->CreateComponent(ComponentType::LISTENER);
             LOG_CONSOLE("Added AudioListener to %s", selectedObject->GetName().c_str());
         }
+        if (ImGui::MenuItem("Reverb Zone")) {
+            selectedObject->CreateComponent(ComponentType::REVERBZONE);
+            LOG_CONSOLE("Added ReverbZone to %s", selectedObject->GetName().c_str());
+        }
         if (ImGui::MenuItem("Move Component")) {
             selectedObject->CreateComponent(ComponentType::MOVE);
             LOG_CONSOLE("Added MoveComponent to %s", selectedObject->GetName().c_str());
@@ -108,6 +113,7 @@ void InspectorWindow::Draw()
     DrawRotateComponent(selectedObject);
     DrawAudioSourceComponent(selectedObject);
     DrawAudioListenerComponent(selectedObject);
+    DrawReverbZoneComponent(selectedObject);
     DrawMoveComponent(selectedObject);
 
     ImGui::End();
@@ -923,6 +929,16 @@ void InspectorWindow::DrawAudioListenerComponent(GameObject* selectedObject) {
 
     if (ImGui::CollapsingHeader("Audio Listener", ImGuiTreeNodeFlags_DefaultOpen)) {
         listener->OnEditor(); 
+    }
+}
+
+void InspectorWindow::DrawReverbZoneComponent(GameObject* selectedObject)
+{
+    ReverbZone* zone = static_cast<ReverbZone*>(selectedObject->GetComponent(ComponentType::REVERBZONE));
+    if (!zone) return;
+
+    if (ImGui::CollapsingHeader("Reverb Zone", ImGuiTreeNodeFlags_DefaultOpen)) {
+        zone->OnEditor();
     }
 }
 
