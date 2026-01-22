@@ -176,7 +176,7 @@ Include new script menu options:
 ---
 
 <p align="center">
-  <img src="Gifs/EngineFunctions.gif" alt="Editor Scripting Functions" width="600">
+  <img src="Gifs/EngineFunctions.gif" alt="Editor Scripting Functions" width="720">
 </p>
 
 ### **In-Editor Script Editing**
@@ -259,7 +259,7 @@ Scripts can be attached to **GameObjects** and **Cameras**, allowing you to defi
 ---
 
 <p align="center">
-  <img src="Gifs/EngineDemo.gif" alt="Editor Scripting Demo" width="600">
+  <img src="Gifs/EngineDemo.gif" alt="Editor Scripting Demo" width="720">
 </p>
 
 <p align="center">
