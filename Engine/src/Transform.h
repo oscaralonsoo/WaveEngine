@@ -37,6 +37,9 @@ public:
     void SetGlobalPosition(const glm::vec3& globalPos);
     void SetGlobalRotationQuat(const glm::quat& globalRot);
 
+    glm::vec3 GetGlobalPosition();
+    glm::quat GetGlobalRotation();
+
 private:
     // Transforms
     glm::vec3 position;

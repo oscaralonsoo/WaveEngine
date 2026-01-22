@@ -238,3 +238,13 @@ void Transform::SetGlobalRotationQuat(const glm::quat& globalRot) {
         SetRotationQuat(localRot);
     }
 }
+
+// Añade esto a Transform.cpp
+glm::vec3 Transform::GetGlobalPosition() {
+    return glm::vec3(GetGlobalMatrix()[3]);
+}
+
+glm::quat Transform::GetGlobalRotation() {
+    // Extraemos la rotación de la matriz global (ignorando la escala)
+    return glm::quat_cast(GetGlobalMatrix());
+}

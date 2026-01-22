@@ -33,8 +33,8 @@ void ComponentRigidBody::Start()
     // 1. Obtener el Transform para la posición inicial y sincronización
     Transform* trans = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
     if (trans) {
-        initialPos = trans->GetPosition();
-        initialRot = trans->GetRotationQuat();
+        initialPos = trans->GetGlobalPosition(); 
+        initialRot = trans->GetGlobalRotation();
         initialScale = trans->GetScale();
     }
 
@@ -123,20 +123,39 @@ void ComponentRigidBody::CreateShape()
     }
 }
 
-void ComponentRigidBody::Update() {
-    if (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING) {
-        if (rigidBody && rigidBody->getMotionState()) {
-            btTransform btTrans;
-            rigidBody->getMotionState()->getWorldTransform(btTrans);
+void ComponentRigidBody::Update() 
+{
+    // Solo sincronizamos de Bullet hacia el motor si estamos en modo PLAY
+    if (Application::GetInstance().GetPlayState() != Application::PlayState::PLAYING) return;
 
-            // Pasamos la posición de Bullet a nuestro Transform visual
-            Transform* trans = (Transform*)owner->GetComponent(ComponentType::TRANSFORM);
+    if (rigidBody && rigidBody->getMotionState()) 
+    {
+        btTransform btTrans;
+        rigidBody->getMotionState()->getWorldTransform(btTrans);
+
+        btVector3 pos = btTrans.getOrigin();
+        btQuaternion rot = btTrans.getRotation();
+
+        Transform* trans = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
+        if (trans) 
+        {
+            // USAR COORDENADAS GLOBALES
+            // Bullet siempre trabaja en espacio de mundo (World Space)
+            trans->SetGlobalPosition(glm::vec3(pos.x(), pos.y(), pos.z()));
             
-            btVector3 pos = btTrans.getOrigin();
-            btQuaternion rot = btTrans.getRotation();
+            // Ojo al orden del Quaternión: 
+            // Bullet usa (x, y, z, w) y el constructor de GLM espera (w, x, y, z)
+            trans->SetGlobalRotationQuat(glm::quat(rot.w(), rot.x(), rot.y(), rot.z()));
+        }
+    }
 
-            trans->SetPosition(glm::vec3(pos.x(), pos.y(), pos.z()));
-            trans->SetRotationQuat(glm::quat(rot.w(), rot.x(), rot.y(), rot.z()));
+    // Mantén tu lógica de escala si la tenías para detectar cambios en el editor
+    Transform* trans = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
+    if (trans) {
+        glm::vec3 currentScale = trans->GetScale();
+        if (glm::length(currentScale - lastScale) > 0.001f) {
+            lastScale = currentScale;
+            UpdateRigidBodyScale();
         }
     }
 }

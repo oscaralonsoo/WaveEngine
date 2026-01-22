@@ -325,6 +325,10 @@ bool ModuleScene::LoadScene(const std::string& filepath)
     // Force full rebuild after loading scene
     needsOctreeRebuild = true;
 
+    if (root) {
+        ApplyPhysicsToAll(root);
+    }
+
     LOG_CONSOLE("Scene loaded successfully");
     return true;
 }
@@ -369,4 +373,31 @@ ComponentCamera* ModuleScene::FindCameraInHierarchy(GameObject* obj)
     }
 
     return nullptr;
+}
+
+void ModuleScene::ApplyPhysicsToAll(GameObject* obj) {
+    if (!obj) return;
+
+    // Comprobamos si tiene malla (MESH) y no tiene ya físicas
+    if (obj->GetComponent(ComponentType::MESH) != nullptr && 
+        obj->GetComponent(ComponentType::RIGIDBODY) == nullptr) 
+    {
+        // 1. Crear Collider
+        ComponentBoxCollider* col = (ComponentBoxCollider*)obj->CreateComponent(ComponentType::COLLIDER_BOX);
+        if (col) col->SetSize(glm::vec3(1.0f)); // Tamaño inicial
+
+        // 2. Crear RigidBody
+        ComponentRigidBody* rb = (ComponentRigidBody*)obj->CreateComponent(ComponentType::RIGIDBODY);
+        
+        // 3. ¡ESTO ES LO QUE FALTA! Forzar la activación física
+        if (rb) {
+            rb->SetMass(1.0f); 
+            rb->Start(); // <--- Sin esto, el objeto no entra en el mundo de Bullet
+        }
+    }
+
+    // Recursividad para hijos
+    for (GameObject* child : obj->GetChildren()) {
+        ApplyPhysicsToAll(child);
+    }
 }

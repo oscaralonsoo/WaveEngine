@@ -42,6 +42,7 @@ public:
     bool SaveScene(const std::string& filepath);
     bool LoadScene(const std::string& filepath);
     void ClearScene();
+    void ApplyPhysicsToAll(GameObject* obj);
 
     // for raycast visualization
     glm::vec3 lastRayOrigin = glm::vec3(0.0f);

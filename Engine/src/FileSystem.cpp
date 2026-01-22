@@ -332,6 +332,10 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
 
     aiReleaseImport(scene);
 
+    if (rootObj) {
+        Application::GetInstance().scene->ApplyPhysicsToAll(rootObj);
+    }
+
     LOG_CONSOLE("Model loaded successfully: %s", file_path.c_str());
 
     return rootObj;
