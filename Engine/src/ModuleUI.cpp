@@ -109,6 +109,7 @@ void ModuleUI::RenderMainMenu()
 	ImGui::SetCursorPos(ImVec2(center.x - 100, center.y));
 	ImGui::Text("Nombre del Jugador:");
 	ImGui::SetCursorPosX(center.x - 100);
+	ImGui::SetNextItemWidth(200.0f);
 	ImGui::InputText("##NameInput", playerNameInput, sizeof(playerNameInput));
 
 
