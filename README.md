@@ -12,6 +12,8 @@ In this version, a functioning audio system has been implemented through the int
 
 <p align="center">
 🔗 <strong>GitHub Repository:</strong> <a href="https://github.com/bottzo/Motor2025/tree/Audio-System_VroomTeam"></a>
+</p>
+<p align="center">
 🔗 <strong>Latest Release:</strong> link aqui
 </p>
 
@@ -20,7 +22,7 @@ In this version, a functioning audio system has been implemented through the int
 ## 🐚 Audio System Team Members
 
 - **Kai Caire** — [GitHub: KaiCaire](https://github.com/KaiCaire)
-   - 
+   - tasks stuff
 - **Lara Guevara** — [GitHub: LaraGuevara](https://github.com/LaraGuevara)
    - Audio Listener and Audio Source components
    - Spatial Audio Implementation
@@ -28,7 +30,7 @@ In this version, a functioning audio system has been implemented through the int
    - Audio Components Inspector GUI
    - Move Component (for Spatial Audio test)
 - **Marti Mach** — [GitHub: 0psycada](https://github.com/0psycada)
-   - 
+   - tasks stuff
 
 ## 🎏 Core Engine Team Members
 
@@ -206,9 +208,9 @@ giffff
    - Both Audio Listener(s) and Audio Source(s) position are set for Wwise, allowing Spatial Audio adjusted to the Game Object positions
    - The Audio Component Game Objects can be visualized in the Wwise Game Object 3D Viewer
 - **Music Mixing**
-   - 
+   - music mixing stuff here
 - **Audio Effects**
-   - 
+   - audio effects stuff here
 
 giffff
 
