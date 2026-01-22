@@ -37,7 +37,7 @@ void InspectorWindow::Draw()
 
     GameObject* selectedObject = selectionManager->GetSelectedObject();
 
-    if (selectedObject == nullptr)
+    if (selectedObject == nullptr || selectedObject->IsMarkedForDeletion())
     {
         ImGui::TextDisabled("Invalid selection");
         ImGui::End();

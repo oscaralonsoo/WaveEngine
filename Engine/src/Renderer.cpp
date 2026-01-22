@@ -663,6 +663,8 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
 
         for (GameObject* selectedObj : selectedObjects)
         {
+            if (!selectedObj || selectedObj->IsMarkedForDeletion())
+                continue;
             if (!selectedObj->IsActive())
                 continue;
             if (!IsGameObjectAndParentsActive(selectedObj))
@@ -737,6 +739,8 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
 
         for (GameObject* selectedObj : selectedObjects)
         {
+            if (!selectedObj || selectedObj->IsMarkedForDeletion())
+                continue;
             if (!selectedObj->IsActive())
                 continue;
             if (!IsGameObjectAndParentsActive(selectedObj))

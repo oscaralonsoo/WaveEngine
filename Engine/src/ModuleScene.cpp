@@ -222,6 +222,8 @@ void ModuleScene::CleanupMarkedObjects(GameObject* parent)
                 Application::GetInstance().camera->SetSceneCamera(nullptr);
             }
 
+            Application::GetInstance().selectionManager->RemoveFromSelection(child);
+
             parent->RemoveChild(child);
             delete child;
 
