@@ -1,10 +1,10 @@
 State Group	ID	Name			Wwise Object Path	Notes
-	3729505769	TimeOfDay			\Default Work Unit\TimeOfDay	
+	3086301423	BGM_State			\Default Work Unit\BGM_State	
 
 State	ID	Name	State Group			Notes
-	311764537	Day	TimeOfDay			
-	748895195	None	TimeOfDay			
-	1011622525	Night	TimeOfDay			
+	748895195	None	BGM_State			
+	931153941	CoffeeShop	BGM_State			
+	1814469713	PizzaParlor	BGM_State			
 
 Game Parameter	ID	Name			Wwise Object Path	Notes
 	1006694123	Music_Volume			\Default Work Unit\Music_Volume	

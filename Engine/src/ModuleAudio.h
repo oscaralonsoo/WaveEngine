@@ -21,6 +21,7 @@
 #include "Module.h"
 #include "AudioSystem.h"
 #include "AudioSource.h"
+#include "Time.h"
 #include <memory>
 
 
@@ -46,6 +47,10 @@ public:
 
     void SetSwitch(AudioSource* source, AkSwitchGroupID switchGroup, AkSwitchStateID switchState);
 
+    //for switching bg music
+    void SwitchBGM();
+    float musicTimer = 0.0f;
+    bool music1 = true;
 
     std::unique_ptr<AudioSystem> audioSystem;
 };

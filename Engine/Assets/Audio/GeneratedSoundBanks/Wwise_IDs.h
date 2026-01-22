@@ -14,6 +14,7 @@ namespace AK
     namespace EVENTS
     {
         static const AkUniqueID HELPME = 1896801622U;
+        static const AkUniqueID PLAY_CLUBPENGUIN = 2681289886U;
         static const AkUniqueID PLAY_COFFEESHOP = 586175602U;
         static const AkUniqueID PLAY_LOOKINFRESH = 111646406U;
         static const AkUniqueID TALKINGSFX = 2400116970U;
@@ -21,34 +22,19 @@ namespace AK
 
     namespace STATES
     {
-        namespace TIMEOFDAY
+        namespace BGM_STATE
         {
-            static const AkUniqueID GROUP = 3729505769U;
+            static const AkUniqueID GROUP = 3086301423U;
 
             namespace STATE
             {
-                static const AkUniqueID DAY = 311764537U;
-                static const AkUniqueID NIGHT = 1011622525U;
+                static const AkUniqueID COFFEESHOP = 931153941U;
                 static const AkUniqueID NONE = 748895195U;
+                static const AkUniqueID PIZZAPARLOR = 1814469713U;
             } // namespace STATE
-        } // namespace TIMEOFDAY
+        } // namespace BGM_STATE
 
     } // namespace STATES
-
-    namespace SWITCHES
-    {
-        namespace SHOP
-        {
-            static const AkUniqueID GROUP = 251412225U;
-
-            namespace SWITCH
-            {
-                static const AkUniqueID HOTLANTIS = 1220000209U;
-                static const AkUniqueID SHRIMPKICKS = 2048228345U;
-            } // namespace SWITCH
-        } // namespace SHOP
-
-    } // namespace SWITCHES
 
     namespace GAME_PARAMETERS
     {

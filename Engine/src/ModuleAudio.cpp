@@ -2,6 +2,7 @@
 #include "ModuleAudio.h"
 
 
+
 ModuleAudio::ModuleAudio() : Module() {
     name = "Audio";
     audioSystem = std::make_unique<AudioSystem>();
@@ -14,8 +15,11 @@ bool ModuleAudio::Start() {
 }
 
 bool ModuleAudio::Update() {
-    //audioSystem->Update();
+    /*audioSystem->Update();*/
+
+
     if (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING) {
+
         //play on awake triggers
         for (auto* component : audioSystem->audioComponents) {
             if (component->GetType() == ComponentType::AUDIOSOURCE) {
@@ -29,6 +33,8 @@ bool ModuleAudio::Update() {
                 }
             }
         }
+
+        
     }
     else if (Application::GetInstance().GetPlayState() == Application::PlayState::EDITING) {
         //reset hasAwoken
@@ -38,7 +44,35 @@ bool ModuleAudio::Update() {
             }
         }
     }
+    SwitchBGM(); //Keep switching bg music
+
     return true;
+}
+
+void ModuleAudio::SwitchBGM() {
+    // Accumulate time (dt is in seconds)
+    musicTimer += Application::GetInstance().time.get()->GetRealDeltaTime();
+
+    if (musicTimer >= 30.0f) //switch every 30 sec
+    {
+        musicTimer = 0.0f; //reset timer
+        music1 = !music1; 
+
+        if (music1)
+        {
+            // Make sure these strings match your Wwise Game Syncs exactly!
+            AK::SoundEngine::SetState(AK::STATES::BGM_STATE::GROUP, AK::STATES::BGM_STATE::STATE::COFFEESHOP);
+            LOG_CONSOLE("WWISE: BGM_State switched to Music1");
+        }
+        else
+        {
+            AK::SoundEngine::SetState(AK::STATES::BGM_STATE::GROUP, AK::STATES::BGM_STATE::STATE::PIZZAPARLOR);
+            LOG_CONSOLE("WWISE: BGM_State switched to Music2");
+        }
+
+        // Render audio to ensure Wwise processes the state change this frame
+        AK::SoundEngine::RenderAudio();
+    }
 }
 
 bool ModuleAudio::PostUpdate() {
