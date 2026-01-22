@@ -389,6 +389,7 @@ GameObject* ModuleScene::CreateCube()
     if (rb) {
         // Configuramos el tipo de forma para que coincida con la primitiva
         rb->SetShapeType(ShapeType::BOX); 
+        rb->Start();
     }
 
     return go;

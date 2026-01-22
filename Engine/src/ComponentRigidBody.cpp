@@ -66,11 +66,12 @@ void ComponentRigidBody::Start()
     btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, colShape, localInertia);
     rigidBody = new btRigidBody(rbInfo);
 
-    UpdateRigidBodyScale();
     AddBodyToWorld();
 
+    UpdateRigidBodyScale();
+
     if (rigidBody) {
-    rigidBody->setActivationState(DISABLE_DEACTIVATION); // Opcional: que nunca se duerma
+    rigidBody->setActivationState(DISABLE_DEACTIVATION); 
     // O simplemente:
     rigidBody->activate(true);
     }   
@@ -116,6 +117,7 @@ void ComponentRigidBody::Update()
     Transform* transformComp = dynamic_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
     if (!transformComp) return;
 
+    // 1. Sincronizar Escala (Esto ya lo tenías bien)
     glm::vec3 currentScale = transformComp->GetScale();
     if (glm::distance(currentScale, lastScale) > 0.001f)
     {
@@ -123,8 +125,12 @@ void ComponentRigidBody::Update()
         UpdateRigidBodyScale();
     }
 
-    if (mass > 0.0f) // Dinámico
+    // 2. Control de Sincronización según el estado de la App
+    bool isPlaying = (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING);
+
+    if (isPlaying && mass > 0.0f) 
     {
+        // --- MODO JUEGO (Dinámico): Bullet manda sobre el Transform ---
         btTransform trans;
         if (rigidBody->getMotionState())
             rigidBody->getMotionState()->getWorldTransform(trans);
@@ -137,13 +143,17 @@ void ComponentRigidBody::Update()
         glm::vec3 bulletPos(origin.getX(), origin.getY(), origin.getZ());
         glm::quat bulletRot(rotation.getW(), rotation.getX(), rotation.getY(), rotation.getZ());
 
+        // Ajuste por el centerOffset
         glm::vec3 visualPos = bulletPos - (bulletRot * centerOffset);
 
         transformComp->SetPosition(visualPos);
         transformComp->SetRotationQuat(bulletRot);
     }
-    else // Estático
+    else 
     {
+        // --- MODO EDITOR o ESTÁTICO: El Transform manda sobre Bullet ---
+        // Esto hace que si mueves el objeto en el editor, el collider verde le siga
+        
         glm::vec3 pos = transformComp->GetPosition();
         glm::quat rot = transformComp->GetRotationQuat();
         glm::vec3 finalPos = pos + (rot * centerOffset);
@@ -152,9 +162,18 @@ void ComponentRigidBody::Update()
         worldTrans.setOrigin(btVector3(finalPos.x, finalPos.y, finalPos.z));
         worldTrans.setRotation(btQuaternion(rot.x, rot.y, rot.z, rot.w));
 
+        // "Teletransportamos" el cuerpo de Bullet a la posición del transform
         rigidBody->setWorldTransform(worldTrans);
         if(rigidBody->getMotionState())
-             rigidBody->getMotionState()->setWorldTransform(worldTrans);
+            rigidBody->getMotionState()->setWorldTransform(worldTrans);
+        
+        // Importante: Si es dinámico pero estamos en el editor, 
+        // limpiamos las fuerzas para que no se "acumule" gravedad mientras lo movemos
+        if (mass > 0.0f) {
+            rigidBody->setLinearVelocity(btVector3(0, 0, 0));
+            rigidBody->setAngularVelocity(btVector3(0, 0, 0));
+            rigidBody->activate(true);
+        }
     }
 }
 
