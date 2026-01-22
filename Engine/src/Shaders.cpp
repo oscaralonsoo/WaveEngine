@@ -3,6 +3,10 @@
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
 #include "Log.h"
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+
 
 Shader::Shader() : shaderProgram(0)
 {
@@ -492,7 +496,23 @@ bool Shader::CreateDepthVisualization()
 
 bool Shader::CreateNoTexture()
 {
-    const char* vertexShaderSource = "#version 330 core\n"
+    auto ReadWholeFile = [](const std::string& path, std::string& out) -> bool
+        {
+            std::ifstream f(path, std::ios::in);
+            if (!f.is_open()) return false;
+            std::stringstream ss;
+            ss << f.rdbuf();
+            out = ss.str();
+            return !out.empty();
+        };
+
+    std::string vsrcFile, fsrcFile;
+    const std::string vpath = "Assets/Shaders/test.vert";
+    const std::string fpath = "Assets/Shaders/test.frag";
+
+    bool loadedFromFiles = ReadWholeFile(vpath, vsrcFile) && ReadWholeFile(fpath, fsrcFile);
+
+    /*const char* vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
         "layout (location = 1) in vec3 aNormal;\n"
         "layout (location = 2) in vec2 aTexCoord;\n"
@@ -551,7 +571,85 @@ bool Shader::CreateNoTexture()
         "   \n"
         "   vec3 result = ambient + diffuse;\n"
         "   FragColor = vec4(result, alpha);\n"
-        "}\0";
+        "}\0";*/
+
+    const char* vertexShaderSource = nullptr;
+    const char* fragmentShaderSource = nullptr;
+
+    if (loadedFromFiles)
+    {
+        vertexShaderSource = vsrcFile.c_str();
+        fragmentShaderSource = fsrcFile.c_str();
+        LOG_CONSOLE("Using shader from files: %s + %s", vpath.c_str(), fpath.c_str());
+    }
+    else
+    {
+        // fallback: keep your original hardcoded strings
+        /*vertexShaderSource = "...原本那段 #version 330 ...";
+        fragmentShaderSource = "...原本那段 #version 330 ...";*/
+         vertexShaderSource = "#version 330 core\n"
+            "layout (location = 0) in vec3 aPos;\n"
+            "layout (location = 1) in vec3 aNormal;\n"
+            "layout (location = 2) in vec2 aTexCoord;\n"
+            "\n"
+            "out vec3 FragPos;\n"
+            "out vec3 Normal;\n"
+            "out vec2 TexCoord;\n"
+            "\n"
+            "uniform mat4 model;\n"
+            "uniform mat4 view;\n"
+            "uniform mat4 projection;\n"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "   FragPos = vec3(model * vec4(aPos, 1.0));\n"
+            "   Normal = mat3(transpose(inverse(model))) * aNormal;\n"
+            "   TexCoord = aTexCoord;\n"
+            "   gl_Position = projection * view * vec4(FragPos, 1.0);\n"
+            "}\0";
+
+         fragmentShaderSource = "#version 330 core\n"
+            "out vec4 FragColor;\n"
+            "\n"
+            "in vec3 FragPos;\n"
+            "in vec3 Normal;\n"
+            "in vec2 TexCoord;\n"
+            "\n"
+            "uniform sampler2D texture1;\n"
+            "uniform int hasTexture;\n"
+            "uniform vec3 tintColor;\n"
+            "uniform vec3 lightDir;\n"
+            "uniform vec3 materialDiffuse;\n"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "   vec3 baseColor;\n"
+            "   float alpha = 1.0;\n"
+            "   \n"
+            "   if (hasTexture == 1) {\n"
+            "       vec4 texColor = texture(texture1, TexCoord);\n"
+            "       if(texColor.a < 0.01) discard;\n"
+            "       baseColor = texColor.rgb * tintColor;\n"
+            "       alpha = texColor.a;\n"
+            "   } else {\n"
+            "       baseColor = materialDiffuse;\n"
+            "   }\n"
+            "   \n"
+            "   // Iluminaci?n difusa simple\n"
+            "   vec3 norm = normalize(Normal);\n"
+            "   vec3 light = normalize(-lightDir);\n"
+            "   float diff = max(dot(norm, light), 0.0);\n"
+            "   \n"
+            "   // Luz ambiental + difusa\n"
+            "   vec3 ambient = 0.3 * baseColor;\n"
+            "   vec3 diffuse = diff * baseColor;\n"
+            "   \n"
+            "   vec3 result = ambient + diffuse;\n"
+            "   FragColor = vec4(result, alpha);\n"
+            "}\0";
+        LOG_CONSOLE("Using built-in shader (shader files not found)");
+    }
+
 
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);

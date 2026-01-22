@@ -1430,6 +1430,8 @@ bool AssetsWindow::IsAssetFile(const std::string& extension) const
         extension == ".texture" ||
         extension == ".wav" ||
         extension == ".ogg" ||
+        extension == ".vert" ||
+        extension == ".frag" ||
         extension == ".json";
 }
 
@@ -1974,6 +1976,22 @@ bool AssetsWindow::ProcessDroppedFile(const std::string& sourceFilePath)
     LOG_CONSOLE("[AssetsWindow] File extension: %s", extension.c_str());
 
     AssetType assetType = MetaFile::GetAssetType(extension);
+
+    // ---- Route 2: treat shader sources as raw assets (no import, no meta) ----
+    if (extension == ".vert" || extension == ".frag" || extension == ".glsl")
+    {
+        std::string outDestPath;
+        if (CopyFileToAssets(sourceFilePath, outDestPath))
+        {
+            LOG_CONSOLE("[AssetsWindow] Shader source copied to Assets: %s", outDestPath.c_str());
+            RefreshAssets();
+            return true;
+        }
+        return false;
+    }
+
+
+
     if (assetType == AssetType::UNKNOWN)
     {
         LOG_CONSOLE("[AssetsWindow] ERROR: Unsupported file type: %s", extension.c_str());
