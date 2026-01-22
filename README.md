@@ -228,7 +228,7 @@ Scripts can be attached to **GameObjects** and **Cameras**, allowing you to defi
   ```lua
   GetScale(GameObject)
   ```
-  - **Input Data:**
+- **Input Data:**
   - Mouse X Position: 
   ```lua
   Input.MouseX
