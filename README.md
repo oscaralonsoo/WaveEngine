@@ -6,19 +6,22 @@ It integrates several external libraries such as Assimp (for 3D model loading), 
 </p>
 
 <p align="center">
-In version 2.0, we've evolved beyond simple FBX dependency, implementing a complete resource management system with custom file formats and significant rendering optimizations. The engine now features an advanced editor interface with scene serialization, resource management, and acceleration structures for optimal performance.
+In this version, the engine adds a Lua scripting system that allows developers to define custom behaviors, control GameObjects, and handle input directly from within the editor. This feature removes the need for external IDEs and enables rapid iteration through live script editing and debugging.
 </p>
 
 <p align="center">
-🔗 <strong>GitHub Repository:</strong> <a href="https://github.com/Audra0000/Engine">https://github.com/Audra0000/Engine</a>
+🔗 <strong>GitHub Repository:</strong> <a href="https://[github.com/Audra0000/Engine](https://github.com/bottzo/Motor2025/edit/Scripting(Grup_AJJ)">https://[github.com/Audra0000/Engine](https://github.com/bottzo/Motor2025/edit/Scripting(Grup_AJJ)</a>
 </p>
 
 ---
 
 ## 🎏 Team Members
 
-- **Haosheng Li** — [GitHub: HaosLii](https://github.com/HaosLii)  
-- **Ana Alcaraz** — [GitHub: Audra0000](https://github.com/Audra0000)
+_Joel Vicente_ « **Github**: [Jowy02](https://github.com/Jowy02)
+
+_Arthur Cordoba_ « **Github**: [000Arthur](https://github.com/000Arthur)
+
+_Jana Puig_ « **Github**: [JanaPuig](https://github.com/JanaPuig)
 
 ---
 
