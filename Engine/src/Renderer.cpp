@@ -773,6 +773,16 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_STENCIL_TEST);
 
+    glm::mat4 view = renderCamera->GetViewMatrix();
+        glm::mat4 proj = renderCamera->GetProjectionMatrix();
+
+        // 2. Llamamos al módulo de físicas
+        // Importante: Asegúrate de tener #include "ModulePhysics.h" arriba del todo
+        if (Application::GetInstance().physics)
+        {
+            Application::GetInstance().physics->Draw(view, proj);
+        }
+
     defaultShader->Use();
 }
 

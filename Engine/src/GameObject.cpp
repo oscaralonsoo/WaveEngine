@@ -6,6 +6,7 @@
 #include "ComponentCamera.h"
 #include "ComponentRotate.h"
 #include <nlohmann/json.hpp>
+#include "ComponentRigidBody.h"
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
     CreateComponent(ComponentType::TRANSFORM);
@@ -51,6 +52,10 @@ Component* GameObject::CreateComponent(ComponentType type) {
 
     case ComponentType::ROTATE:
         newComponent = new ComponentRotate(this);
+        break;
+
+    case ComponentType::RIGIDBODY:
+        newComponent = new ComponentRigidBody(this);
         break;
 
     default:
@@ -234,4 +239,24 @@ GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObj
     }
 
     return newObject;
+}
+
+void GameObject::AddComponent(Component* component)
+{
+    if (component == nullptr)
+        return;
+
+    // Verificar si ya tiene dueño, si no, asignarlo (aunque el constructor suele hacerlo)
+    // component->SetOwner(this); // Descomentar si tu Component tiene SetOwner
+
+    // Evitar duplicados de tipos únicos (como Transform)
+    if (component->GetType() == ComponentType::TRANSFORM)
+    {
+        if (GetComponent(ComponentType::TRANSFORM) != nullptr)
+        {
+            return; // Ya tiene transform
+        }
+    }
+
+    components.push_back(component);
 }

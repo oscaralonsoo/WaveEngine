@@ -9,6 +9,8 @@
 #include <functional>
 #include "ComponentMesh.h"
 #include "ComponentCamera.h"
+#include "ComponentRigidBody.h"
+#include "Primitives.h"         
 #include <nlohmann/json.hpp>
 #include <fstream>
 
@@ -37,8 +39,11 @@ bool ModuleScene::Awake()
 bool ModuleScene::Start()
 {
     LOG_DEBUG("Initializing Scene");
-    renderer->DrawScene();
+    
+    if (renderer) renderer->DrawScene();
+
     root = new GameObject("Root");
+
     LOG_CONSOLE("Scene ready");
 
     return true;

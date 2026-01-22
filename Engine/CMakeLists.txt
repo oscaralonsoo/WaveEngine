@@ -130,6 +130,10 @@ set(IMPORTERS_SRC
 set(PHYSICS_SRC
     src/ModulePhysics.cpp
     src/ModulePhysics.h
+    src/PhysicsDebugDrawer.cpp
+    src/PhysicsDebugDrawer.h
+    src/ComponentRigidBody.cpp
+    src/ComponentRigidBody.h
 )
 
 source_group("Source\\Core" FILES ${CORE_SRC})

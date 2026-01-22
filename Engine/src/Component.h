@@ -10,6 +10,7 @@ enum class ComponentType {
     MATERIAL,
     CAMERA,
     ROTATE,
+    RIGIDBODY,
     UNKNOWN
 };
 

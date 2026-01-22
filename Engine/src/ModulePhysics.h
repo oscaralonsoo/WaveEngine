@@ -5,6 +5,8 @@
 // Bullet library
 #include <btBulletDynamicsCommon.h>
 
+class PhysicsDebugDrawer;
+
 class ModulePhysics : public Module
 {
 public:
@@ -18,6 +20,7 @@ public:
 
     // Getter para acceder al mundo desde otros componentes (Colliders, etc.)
     btDiscreteDynamicsWorld* GetWorld() const { return world; }
+    void Draw(const glm::mat4& view, const glm::mat4& projection);
 
 private:
     // Configuración básica de Bullet
@@ -26,4 +29,5 @@ private:
     btBroadphaseInterface* broad_phase = nullptr;
     btSequentialImpulseConstraintSolver* solver = nullptr;
     btDiscreteDynamicsWorld* world = nullptr;
+    PhysicsDebugDrawer* debug_draw = nullptr;
 };

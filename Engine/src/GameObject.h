@@ -41,6 +41,8 @@ public:
     void Serialize(nlohmann::json& gameObjectArray) const;
     static GameObject* Deserialize(const nlohmann::json& gameObjectObj, GameObject* parent = nullptr);
 
+    void AddComponent(Component* component);
+
 public:
     std::string name;
     bool active = true;

@@ -7,6 +7,7 @@
 #include <memory>
 #include "Primitives.h"
 #include "ComponentCamera.h"
+#include "ModulePhysics.h"
 
 class GameObject;
 

@@ -1,5 +1,8 @@
 #include "ModulePhysics.h"
 #include "Application.h"
+#include "PhysicsDebugDrawer.h" // Necesario aquí porque en el .h solo hicimos forward declaration
+
+#include <iostream>
 
 ModulePhysics::ModulePhysics()
 {
@@ -14,36 +17,46 @@ bool ModulePhysics::Start()
 {
     LOG_CONSOLE("Inicializando Physics con Bullet");
 
-    // 1. Configuración de colisiones predeterminada
+    // --- 1. Inicialización de Bullet (ESTO SE QUEDA) ---
     collision_conf = new btDefaultCollisionConfiguration();
-
-    // 2. Dispatcher de colisiones (gestiona los algoritmos de colisión)
     dispatcher = new btCollisionDispatcher(collision_conf);
-
-    // 3. Broadphase (detecta pares de objetos cercanos)
     broad_phase = new btDbvtBroadphase();
-
-    // 4. Solver (resuelve las restricciones, colisiones, uniones, etc.)
     solver = new btSequentialImpulseConstraintSolver();
-
-    // 5. El mundo físico
     world = new btDiscreteDynamicsWorld(dispatcher, broad_phase, solver, collision_conf);
 
-    // Configurar gravedad global (eje Y hacia abajo estándar)
+    // Gravedad estándar
     world->setGravity(btVector3(0.0f, -9.81f, 0.0f));
+
+    // --- 2. Inicialización del Debug Drawer (ESTO SE QUEDA) ---
+    debug_draw = new PhysicsDebugDrawer();
+    debug_draw->Init();
+    debug_draw->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+    
+    world->setDebugDrawer(debug_draw);
+
+    // --- ¡BORRADO! --- 
+    // Aquí es donde borramos todo lo del groundShape, sphereShape, addRigidBody manual, etc.
+    // El mundo debe empezar vacío.
 
     return true;
 }
 
 bool ModulePhysics::PreUpdate()
 {
-    // Solo simulamos físicas si estamos en modo PLAYING
-    // (O si implementas un modo "Step" paso a paso)
+    // --- CONTROL DE TIEMPO ---
+    // Solo avanzamos la simulación física si el juego está en modo PLAYING
     if (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING)
     {
-        // stepSimulation(timeStep, maxSubSteps, fixedTimeStep)
-        // Usamos 1/60 (60 FPS) como paso fijo para consistencia física
+        // 60 FPS fijos
         world->stepSimulation(1.0f / 60.0f, 10);
+    }
+
+    // --- RENDERIZADO DE DEBUG ---
+    // Llamamos a esto siempre para ver los colliders verdes/rojos 
+    // incluso en modo Editor (PAUSA/EDITING)
+    if (world)
+    {
+        world->debugDrawWorld();
     }
 
     return true;
@@ -58,7 +71,17 @@ bool ModulePhysics::CleanUp()
 {
     LOG_CONSOLE("Limpiando Physics");
 
-    // Borrar en orden inverso a la creación
+    // Borrar Debug Drawer
+    if (debug_draw)
+    {
+        delete debug_draw;
+        debug_draw = nullptr;
+    }
+
+    // Borrar Bullet (En orden inverso a creación)
+    // Nota: Para un cleanup limpio de verdad deberíamos borrar primero 
+    // los rigidbodies que añadimos en Start(), pero al destruir el mundo
+    // y cerrar la app, el SO liberará la memoria.
     delete world;
     delete solver;
     delete broad_phase;
@@ -66,4 +89,12 @@ bool ModulePhysics::CleanUp()
     delete collision_conf;
 
     return true;
+}
+
+void ModulePhysics::Draw(const glm::mat4& view, const glm::mat4& projection)
+{
+    if (debug_draw)
+    {
+        debug_draw->Draw(view, projection);
+    }
 }
