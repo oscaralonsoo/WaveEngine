@@ -36,8 +36,8 @@ set(RENDERING_SRC
     src/RenderContext.cpp 
     src/Renderer.h 
     src/Renderer.cpp 
-    src/Shaders.h 
-    src/Shaders.cpp 
+    src/Shader.h 
+    src/Shader.cpp 
     src/Frustum.h 
     src/Frustum.cpp 
 )

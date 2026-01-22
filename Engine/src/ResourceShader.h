@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ModuleResources.h"
-#include "Shaders.h"
+#include "Shader.h"
 #include <string>
 
 class ResourceShader : public Resource {
