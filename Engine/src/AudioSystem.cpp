@@ -203,6 +203,7 @@ bool AudioSystem::Awake() {
 }
 
 bool AudioSystem::Update() { 
+    if (!AK::SoundEngine::IsInitialized()) return true;
     //components push their current position to Wwise
     for (auto* component : audioComponents) {
         component->SetTransform();
@@ -487,6 +488,11 @@ void AudioSystem::SetGameObjectAuxSend(AkGameObjectID id, const wchar_t* auxBusN
 {
     if (id == AK_INVALID_GAME_OBJECT || auxBusName == nullptr) {
         if (enableDebugLogs) LOG_DEBUG("SetGameObjectAuxSend: invalid parameters id=%d auxBusName=%p control=%.2f", id, (void*)auxBusName, controlValue);
+        return;
+    }
+
+    auto it = std::find(gameObjectIDs.begin(), gameObjectIDs.end(), id);
+    if (it == gameObjectIDs.end()) {
         return;
     }
 

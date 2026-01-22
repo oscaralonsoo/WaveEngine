@@ -92,6 +92,8 @@ set(COMPONENTS_SRC
     src/AudioListener.cpp
     src/ComponentMove.h
     src/ComponentMove.cpp
+    src/ReverbZone.h
+    src/ReverbZone.cpp
 )
 
 set(LOADERS_SRC 
