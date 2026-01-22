@@ -17,6 +17,9 @@
 #include "Window.h"        
 #include "ModuleCamera.h"   
 #include <SDL3/SDL_scancode.h>
+#include "GameWindow.h"
+#include "EditorWindow.h"
+#include "ModuleEditor.h"
 
 #include <filesystem>
 #include <cmath>            
@@ -200,14 +203,36 @@ static int Lua_Input_GetKeyDown(lua_State* L) {
 }
 
 static int Lua_Input_GetMousePosition(lua_State* L) {
-    int x, y;
-    Input::GetMousePosition(x, y);
+    int rawX, rawY;
+    Input::GetMousePosition(rawX, rawY);
 
-    lua_pushnumber(L, static_cast<lua_Number>(x));
-    lua_pushnumber(L, static_cast<lua_Number>(y));
+    auto& app = Application::GetInstance();
+
+    // Get the Game window directly
+    GameWindow* gameWindow = app.editor->GetGameWindow();
+
+    if (gameWindow) {
+        ImVec2 viewportPos = gameWindow->GetViewportPos();
+        ImVec2 viewportSize = gameWindow->GetViewportSize();
+
+        // Convert to viewport-relative coordinates
+        int relativeX = rawX - static_cast<int>(viewportPos.x);
+        int relativeY = rawY - static_cast<int>(viewportPos.y);
+
+        // Check if mouse is inside the game viewport
+        if (relativeX >= 0 && relativeX < viewportSize.x &&
+            relativeY >= 0 && relativeY < viewportSize.y) {
+            lua_pushnumber(L, static_cast<lua_Number>(relativeX));
+            lua_pushnumber(L, static_cast<lua_Number>(relativeY));
+            return 2;
+        }
+    }
+
+    // If not in game window, return nil
+    lua_pushnil(L);
+    lua_pushnil(L);
     return 2;
 }
-
 static int Lua_Time_GetDeltaTime(lua_State* L) {
     lua_pushnumber(L, Time::GetDeltaTimeStatic());
     return 1;
@@ -220,12 +245,31 @@ static int Lua_Camera_GetScreenToWorldPlane(lua_State* L) {
 
     auto& app = Application::GetInstance();
 
-    // Obtener dimensiones de la ventana
-    int screenWidth, screenHeight;
-    app.window->GetWindowSize(screenWidth, screenHeight);
+    // Get Game window dimensions
+    int screenWidth = 800;
+    int screenHeight = 600;
 
-    // Obtener la cámara del editor
-    ComponentCamera* camera = app.camera->GetEditorCamera();
+    GameWindow* gameWindow = app.editor->GetGameWindow();
+    if (gameWindow) {
+        ImVec2 viewportSize = gameWindow->GetViewportSize();
+        screenWidth = static_cast<int>(viewportSize.x);
+        screenHeight = static_cast<int>(viewportSize.y);
+    }
+
+    ComponentCamera* camera = nullptr;
+    
+    if (app.GetPlayState() == Application::PlayState::PLAYING) {
+        // En Play mode: usar la cámara de escena (ya cacheada)
+        camera = app.camera->GetSceneCamera();
+        
+        // Fallback a editor si no hay cámara de juego
+        if (!camera) {
+            camera = app.camera->GetEditorCamera();
+        }
+    } else {
+        // En Editor mode: usar cámara del editor
+        camera = app.camera->GetEditorCamera();
+    }
 
     if (!camera) {
         LOG_CONSOLE("[Lua] ERROR: No camera available");
@@ -237,9 +281,8 @@ static int Lua_Camera_GetScreenToWorldPlane(lua_State* L) {
     glm::vec3 rayDir = camera->ScreenToWorldRay(mouseX, mouseY, screenWidth, screenHeight);
     glm::vec3 rayOrigin = camera->GetPosition();
 
-    // Calcular intersección con el plano Y = planeY
+    // Calculate intersection with plane Y = planeY
     if (std::abs(rayDir.y) < 0.0001f) {
-        // El rayo es casi paralelo al plano
         lua_pushnil(L);
         lua_pushnil(L);
         return 2;
@@ -248,21 +291,17 @@ static int Lua_Camera_GetScreenToWorldPlane(lua_State* L) {
     float t = (planeY - rayOrigin.y) / rayDir.y;
 
     if (t < 0) {
-        // Intersección detrás de la cámara
         lua_pushnil(L);
         lua_pushnil(L);
         return 2;
     }
 
-    // Calcular punto de intersección
     glm::vec3 intersection = rayOrigin + t * rayDir;
 
-    // Retornar coordenadas X y Z (horizontales)
     lua_pushnumber(L, intersection.x);
     lua_pushnumber(L, intersection.z);
     return 2;
 }
-
 
 void ScriptManager::RegisterEngineFunctions() {
     if (!L) {
@@ -857,6 +896,7 @@ static int Lua_Transform_Index(lua_State* L) {
 
     const char* key = luaL_checkstring(L, 2);
 
+    // LOCAL POSITION
     if (strcmp(key, "position") == 0) {
         const glm::vec3& pos = t->GetPosition();
 
@@ -871,6 +911,43 @@ static int Lua_Transform_Index(lua_State* L) {
         return 1;
     }
 
+    if (strcmp(key, "worldPosition") == 0) {
+        try {
+            // Intentar obtener la matriz global
+            const glm::mat4& worldMatrix = t->GetGlobalMatrix();
+
+            // Extraer posición mundial - GLM matrices son column-major
+            // La última columna (índice 3) contiene la posición
+            float worldX = worldMatrix[3][0];
+            float worldY = worldMatrix[3][1];
+            float worldZ = worldMatrix[3][2];
+
+            LOG_DEBUG("[Lua] WorldPos calculated: (%.2f, %.2f, %.2f)", worldX, worldY, worldZ);
+
+            // Crear tabla Lua
+            lua_newtable(L);
+            lua_pushnumber(L, worldX);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, worldY);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, worldZ);
+            lua_setfield(L, -2, "z");
+
+            return 1;
+        }
+        catch (const std::exception& e) {
+            LOG_CONSOLE("[Lua] ERROR getting worldPosition: %s", e.what());
+            lua_pushnil(L);
+            return 1;
+        }
+        catch (...) {
+            LOG_CONSOLE("[Lua] ERROR: Unknown exception getting worldPosition");
+            lua_pushnil(L);
+            return 1;
+        }
+    }
+
+    // ROTATION
     if (strcmp(key, "rotation") == 0) {
         const glm::vec3& rot = t->GetRotation();
 
@@ -885,6 +962,7 @@ static int Lua_Transform_Index(lua_State* L) {
         return 1;
     }
 
+    // SCALE
     if (strcmp(key, "scale") == 0) {
         const glm::vec3& scl = t->GetScale();
 
@@ -899,6 +977,7 @@ static int Lua_Transform_Index(lua_State* L) {
         return 1;
     }
 
+    // METHODS
     if (strcmp(key, "SetPosition") == 0) {
         lua_pushcfunction(L, Lua_Transform_SetPosition);
         return 1;
@@ -914,9 +993,11 @@ static int Lua_Transform_Index(lua_State* L) {
         return 1;
     }
 
-    return 0;
+    // Si la clave no se encuentra, retornar nil
+    LOG_DEBUG("[Lua] Transform key not found: %s", key);
+    lua_pushnil(L);
+    return 1;
 }
-
 void ScriptManager::RegisterComponentAPI() {
     // Transform metatable
     luaL_newmetatable(L, "Transform");
@@ -1050,4 +1131,7 @@ void ScriptManager::RegisterPrefabAPI() {
     LOG_CONSOLE("[ScriptManager] Prefab API registered");
 }
 
-
+static GameWindow* GetGameWindow() {
+    GameWindow* window = Application::GetInstance().editor->GetGameWindow();
+    return window;
+}
