@@ -7,6 +7,7 @@
 #include "Time.h"
 #include "Log.h"
 #include <imgui.h>
+bool ModuleUI::colour = true;
 
 ModuleUI::ModuleUI() : Module()
 {
@@ -20,6 +21,7 @@ ModuleUI::~ModuleUI()
 bool ModuleUI::Start()
 {
 	LOG_DEBUG("Initializing Module UI");
+	
 	return true;
 }
 
@@ -30,7 +32,12 @@ bool ModuleUI::Update()
 
 	if (Application::GetInstance().input->GetKey(SDL_SCANCODE_F1) == KEY_DOWN)
 		showOptions = !showOptions;
-
+	if (darkTheme) {
+		ImGui::StyleColorsDark();
+	}
+	else {
+		ImGui::StyleColorsLight();
+	}
 
 	switch (uiState)
 	{
@@ -134,7 +141,19 @@ void ModuleUI::RenderOptionsWindow()
 		{
 			Application::GetInstance().window->SetVsync(vsyncEnabled);
 		}
-
+		if (ImGui::Checkbox("Cross colour", &colour))
+		{
+			
+		}
+		if (ImGui::Checkbox("Dark Mode", &darkTheme)) {
+			
+			if (darkTheme) {
+				ImGui::StyleColorsDark();
+			}
+			else {
+				ImGui::StyleColorsLight();
+			}
+		}
 		ImGui::Spacing();
 		ImGui::Text("Player: %s", playerNameInput);
 
@@ -145,6 +164,7 @@ void ModuleUI::RenderOptionsWindow()
 	}
 	ImGui::End();
 }
+
 
 void ModuleUI::RenderHUD()
 {
@@ -179,7 +199,16 @@ void ModuleUI::DrawCrosshairInsideWindow() {
 	
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-	
+	if (colour==true) {
+		drawList->AddLine(ImVec2(center.x, center.y - gap), ImVec2(center.x, center.y - gap - lineSize), IM_COL32(0, 255, 255, 255), thickness);
+
+		drawList->AddLine(ImVec2(center.x, center.y + gap), ImVec2(center.x, center.y + gap + lineSize), IM_COL32(0, 255,255, 255), thickness);
+
+		drawList->AddLine(ImVec2(center.x - gap, center.y), ImVec2(center.x - gap - lineSize, center.y), IM_COL32(0, 255, 255, 255), thickness);
+
+		drawList->AddLine(ImVec2(center.x + gap, center.y), ImVec2(center.x + gap + lineSize, center.y), IM_COL32(0, 255, 255, 255), thickness);
+	}
+	else {
 	drawList->AddLine(ImVec2(center.x, center.y - gap), ImVec2(center.x, center.y - gap - lineSize), color, thickness);
 	
 	drawList->AddLine(ImVec2(center.x, center.y + gap), ImVec2(center.x, center.y + gap + lineSize), color, thickness);
@@ -187,6 +216,8 @@ void ModuleUI::DrawCrosshairInsideWindow() {
 	drawList->AddLine(ImVec2(center.x - gap, center.y), ImVec2(center.x - gap - lineSize, center.y), color, thickness);
 	
 	drawList->AddLine(ImVec2(center.x + gap, center.y), ImVec2(center.x + gap + lineSize, center.y), color, thickness);
+	}
+	
 	
 	ImGui::GetWindowDrawList()->AddCircleFilled(center, 2.0f, IM_COL32(255, 0, 0, 255));
 

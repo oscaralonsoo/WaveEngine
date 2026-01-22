@@ -19,8 +19,10 @@ public:
         FADING_OUT,
         IN_GAME
     };
+   static bool colour;
+   bool darkTheme = true;
     static void DrawCrosshairInsideWindow();
-
+    
 private:
     void RenderMainMenu();
     void RenderHUD();
@@ -39,4 +41,5 @@ private:
 
     bool showOptions = false;
     bool vsyncEnabled = true;
+    
 };
