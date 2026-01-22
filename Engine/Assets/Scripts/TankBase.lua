@@ -24,11 +24,11 @@ function Update(self, dt)
     local rotationSpeed = self.public and self.public.rotationSpeed or 90.0
     
     -- Rotación (A/D)
-    if Input.GetKey("A") then
+    if Input.GetKey("D") then
         self.transform:SetRotation(rot.x, rot.y - rotationSpeed * dt, rot.z)
     end
     
-    if Input.GetKey("D") then
+    if Input.GetKey("A") then
         self.transform:SetRotation(rot.x, rot.y + rotationSpeed * dt, rot.z)
     end
 end

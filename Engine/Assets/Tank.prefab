@@ -172,6 +172,33 @@
                 },
                 {
                     "active": true,
+                    "publicVariables": [
+                        {
+                            "name": "fireRate",
+                            "type": 0,
+                            "value": 0.5
+                        },
+                        {
+                            "name": "barrelLength",
+                            "type": 0,
+                            "value": 0.699999988079071
+                        },
+                        {
+                            "name": "bulletPrefab",
+                            "type": 1,
+                            "value": "Bullet.prefab"
+                        },
+                        {
+                            "name": "spawnHeight",
+                            "type": 0,
+                            "value": 0.11999999731779099
+                        },
+                        {
+                            "name": "bulletScale",
+                            "type": 0,
+                            "value": 0.20000000298023224
+                        }
+                    ],
                     "scriptUID": 5606997379816900307,
                     "type": 5
                 }
@@ -242,6 +269,13 @@
                 },
                 {
                     "active": true,
+                    "publicVariables": [
+                        {
+                            "name": "rotationSpeed",
+                            "type": 0,
+                            "value": 117.0999984741211
+                        }
+                    ],
                     "scriptUID": 17415563879416647993,
                     "type": 5
                 }
@@ -263,17 +297,24 @@
                 0.0
             ],
             "scale": [
-                0.06920749694108963,
-                0.06920749694108963,
-                0.06920749694108963
+                0.005647331941872835,
+                0.005647331941872835,
+                0.005647331941872835
             ],
             "type": 0
         },
         {
             "active": true,
+            "publicVariables": [
+                {
+                    "name": "moveSpeed",
+                    "type": 0,
+                    "value": 1.2999999523162842
+                }
+            ],
             "scriptUID": 4268147733416096540,
             "type": 5
         }
     ],
-    "name": "Tank_0"
+    "name": "Tank"
 }

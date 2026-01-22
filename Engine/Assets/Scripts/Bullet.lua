@@ -1,7 +1,7 @@
 -- BULLET CONTROLLER - SIMPLE PROJECTILE
 
 public = {
-    speed = 20.0,
+    speed = 5.0,
     lifetime = 5.0
 }
 

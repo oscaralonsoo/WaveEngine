@@ -186,13 +186,99 @@ void ComponentScript::OnEditor()
 void ComponentScript::Serialize(nlohmann::json& componentObj) const
 {
     componentObj["scriptUID"] = scriptUID;
+
+    if (!publicVariables.empty()) {
+        nlohmann::json varsArray = nlohmann::json::array();
+
+        for (const auto& var : publicVariables) {
+            nlohmann::json varObj;
+            varObj["name"] = var.name;
+            varObj["type"] = static_cast<int>(var.type);
+
+            switch (var.type) {
+            case ScriptVarType::NUMBER:
+                varObj["value"] = std::get<float>(var.value);
+                break;
+
+            case ScriptVarType::STRING:
+                varObj["value"] = std::get<std::string>(var.value);
+                break;
+
+            case ScriptVarType::BOOLEAN:
+                varObj["value"] = std::get<bool>(var.value);
+                break;
+
+            case ScriptVarType::VEC3: {
+                const glm::vec3& vec = std::get<glm::vec3>(var.value);
+                varObj["value"] = { vec.x, vec.y, vec.z };
+                break;
+            }
+            }
+
+            varsArray.push_back(varObj);
+        }
+
+        componentObj["publicVariables"] = varsArray;
+    }
 }
 
 void ComponentScript::Deserialize(const nlohmann::json& componentObj)
 {
     if (componentObj.contains("scriptUID")) {
         UID uid = componentObj["scriptUID"];
-        LoadScriptByUID(uid);
+
+        // Cargar el script primero (esto extrae variables del .lua)
+        if (LoadScriptByUID(uid)) {
+
+            if (componentObj.contains("publicVariables")) {
+                const auto& varsArray = componentObj["publicVariables"];
+
+                // Restaurar valores guardados sobre los extraídos del .lua
+                for (const auto& varObj : varsArray) {
+                    std::string varName = varObj["name"];
+                    ScriptVarType varType = static_cast<ScriptVarType>(varObj["type"]);
+
+                    // Buscar la variable en publicVariables por nombre
+                    for (auto& var : publicVariables) {
+                        if (var.name == varName && var.type == varType) {
+
+                            // Restaurar el valor guardado
+                            switch (varType) {
+                            case ScriptVarType::NUMBER:
+                                var.value = varObj["value"].get<float>();
+                                break;
+
+                            case ScriptVarType::STRING:
+                                var.value = varObj["value"].get<std::string>();
+                                break;
+
+                            case ScriptVarType::BOOLEAN:
+                                var.value = varObj["value"].get<bool>();
+                                break;
+
+                            case ScriptVarType::VEC3: {
+                                auto vec = varObj["value"];
+                                var.value = glm::vec3(
+                                    vec[0].get<float>(),
+                                    vec[1].get<float>(),
+                                    vec[2].get<float>()
+                                );
+                                break;
+                            }
+                            }
+
+                            break;
+                        }
+                    }
+                }
+
+                // Sincronizar a Lua con los valores restaurados
+                SyncPublicVariablesToLua();
+
+                LOG_DEBUG("[ComponentScript] Restored %zu public variables from save",
+                    varsArray.size());
+            }
+        }
     }
 }
 
@@ -260,9 +346,31 @@ bool ComponentScript::ReloadScript()
 {
     if (!HasScript()) return false;
 
+    std::vector<ScriptVariable> savedVariables = publicVariables;
+
     UID uid = scriptUID;
     UnloadScript();
-    return LoadScriptByUID(uid);
+
+    if (!LoadScriptByUID(uid)) {
+        return false;
+    }
+
+    for (const auto& savedVar : savedVariables) {
+        // Buscar la variable por nombre en las nuevas
+        for (auto& newVar : publicVariables) {
+            if (newVar.name == savedVar.name && newVar.type == savedVar.type) {
+                // Mantener el valor que tenía antes del reload
+                newVar.value = savedVar.value;
+                break;
+            }
+        }
+    }
+
+    // Sincronizar a Lua
+    SyncPublicVariablesToLua();
+
+    LOG_CONSOLE("[ComponentScript] Hot reloaded and preserved variable values");
+    return true;
 }
 
 void ComponentScript::CallStart()
