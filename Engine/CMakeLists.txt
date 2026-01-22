@@ -90,6 +90,8 @@ set(COMPONENTS_SRC
     src/AudioSource.cpp
     src/AudioListener.h
     src/AudioListener.cpp
+    src/ComponentMove.h
+    src/ComponentMove.cpp
 )
 
 set(LOADERS_SRC 

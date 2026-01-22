@@ -17,6 +17,8 @@ public:
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;
 
+    void OnEditor() override;
+
     ////Play sound by its name
     //void PlayEvent(const char* eventName);
 

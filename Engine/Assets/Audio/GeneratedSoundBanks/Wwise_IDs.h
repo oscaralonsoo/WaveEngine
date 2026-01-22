@@ -14,7 +14,9 @@ namespace AK
     namespace EVENTS
     {
         static const AkUniqueID HELPME = 1896801622U;
+        static const AkUniqueID PLAY_COFFEESHOP = 586175602U;
         static const AkUniqueID PLAY_LOOKINFRESH = 111646406U;
+        static const AkUniqueID TALKINGSFX = 2400116970U;
     } // namespace EVENTS
 
     namespace STATES

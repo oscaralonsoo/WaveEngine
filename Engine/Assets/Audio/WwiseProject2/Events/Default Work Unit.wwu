@@ -25,6 +25,28 @@
 						</Action>
 					</ChildrenList>
 				</Event>
+				<Event Name="TalkingSFX" ID="{2408F51F-9869-4000-BE1D-F416FC96603E}">
+					<ChildrenList>
+						<Action Name="" ID="{B7D21CC6-82C2-4237-8E20-417CB6ACC3BA}" ShortID="138905718">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="animalCrossingTalking" ID="{CB2D3E0D-BFF3-4B8F-A854-618F6532729B}" WorkUnitID="{E6B49273-C487-4B59-8546-E4217EE02E56}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="Play_CoffeeShop" ID="{C7BE46E3-438B-401F-96DD-E8F317BBE48A}">
+					<ChildrenList>
+						<Action Name="" ID="{C7EFC138-D4EA-40BC-A69A-6F17E15E854F}" ShortID="272998514">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="coffeeShop" ID="{2C733244-9812-447E-A09E-A06DA0044FD4}" WorkUnitID="{E6B49273-C487-4B59-8546-E4217EE02E56}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
 			</ChildrenList>
 		</WorkUnit>
 	</Events>

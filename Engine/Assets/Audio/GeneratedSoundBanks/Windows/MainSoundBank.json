@@ -10,11 +10,19 @@
     "Type": "User",
     "GUID": "{7C55CBAC-5186-4208-888F-0BCE02308A98}",
     "Language": "SFX",
-    "Hash": "{4865D23F-A5C8-9806-9A8C-16A60546BEEF}",
+    "Hash": "{89F5DF9C-E4F9-DC25-F249-1622624266C1}",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\MainSoundBank",
     "ShortName": "MainSoundBank",
     "Path": "MainSoundBank.bnk",
     "Media": [
+     {
+      "Id": "60684799",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "animalCrossingTalking.wav",
+      "CachePath": "DF/{DF60B5D6-E183-80D8-F9F9-17969D1694ED}.wem"
+     },
      {
       "Id": "63924214",
       "Language": "SFX",
@@ -23,6 +31,14 @@
       "ShortName": "Lookin' Fresh (Hotlantis)_stereo.wav",
       "Path": "Media/63/63924214.wem",
       "CachePath": "EE/{EEBA906F-9817-9DC0-E2C0-B8D58079B757}.wem"
+     },
+     {
+      "Id": "352851221",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "coffeeShop.wav",
+      "CachePath": "2B/{2B154332-6CDB-A031-4D10-CA2E596ED15D}.wem"
      },
      {
       "Id": "597016523",
@@ -58,6 +74,19 @@
       ]
      },
      {
+      "Id": "586175602",
+      "Name": "Play_CoffeeShop",
+      "ObjectPath": "\\Events\\Default Work Unit\\Play_CoffeeShop",
+      "GUID": "{C7BE46E3-438B-401F-96DD-E8F317BBE48A}",
+      "MaxAttenuation": "20",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "352851221"
+       }
+      ]
+     },
+     {
       "Id": "111646406",
       "Name": "Play_LookinFresh",
       "ObjectPath": "\\Events\\Default Work Unit\\Play_LookinFresh",
@@ -73,10 +102,23 @@
         "Id": "1051818920"
        }
       ]
+     },
+     {
+      "Id": "2400116970",
+      "Name": "TalkingSFX",
+      "ObjectPath": "\\Events\\Default Work Unit\\TalkingSFX",
+      "GUID": "{2408F51F-9869-4000-BE1D-F416FC96603E}",
+      "MaxAttenuation": "20",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "60684799"
+       }
+      ]
      }
     ]
    }
   ],
-  "FileHash": "{9C8D8443-487A-EA5B-5148-658AD94A2017}"
+  "FileHash": "{893BC491-8D8E-20AC-C2B6-6B0A616EC589}"
  }
 }

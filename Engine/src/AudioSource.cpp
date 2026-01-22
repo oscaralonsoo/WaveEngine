@@ -84,6 +84,54 @@ void AudioSource::Deserialize(const nlohmann::json& componentObj) {
     hasAwoken = false;
 }
 
+void AudioSource::OnEditor() {
+    //get all Wwise events 
+    auto& events = Application::GetInstance().audio->audioSystem->eventNames;
+
+    if (ImGui::BeginCombo("Wwise Event", eventName.c_str())) {
+        for (const auto& name : events) {
+            bool isSelected = (eventName == name);
+            if (ImGui::Selectable(name.c_str(), isSelected)) {
+                eventName = name;
+            }
+            if (isSelected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    ImGui::SliderFloat("Volume", &volume, 0.0f, 100.0f);
+    ImGui::Checkbox("Play On Awake", &playOnAwake);
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    if (ImGui::Button("Play")) {
+        std::wstring wideName(eventName.begin(), eventName.end());
+        AkUniqueID eventID = AK::SoundEngine::GetIDFromString(wideName.c_str());
+
+        if (eventID == AK_INVALID_UNIQUE_ID) {
+            LOG_CONSOLE("Wwise Error: Event name '%s' not found!", eventName.c_str());
+        }
+        else {
+            Application::GetInstance().audio->PlayAudio(this, eventID);
+        }
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Stop")) {
+        std::wstring wideName(eventName.begin(), eventName.end());
+        AkUniqueID eventID = AK::SoundEngine::GetIDFromString(wideName.c_str());
+
+        if (eventID != AK_INVALID_UNIQUE_ID) {
+            Application::GetInstance().audio->StopAudio(this, eventID);
+        }
+    }
+}
+
 //void AudioSource::PlayEvent(char const* eventName)
 //{
 //    if (eventName == nullptr || strlen(eventName) == 0) return;

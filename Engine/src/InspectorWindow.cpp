@@ -89,6 +89,10 @@ void InspectorWindow::Draw()
             selectedObject->CreateComponent(ComponentType::LISTENER);
             LOG_CONSOLE("Added AudioListener to %s", selectedObject->GetName().c_str());
         }
+        if (ImGui::MenuItem("Move Component")) {
+            selectedObject->CreateComponent(ComponentType::MOVE);
+            LOG_CONSOLE("Added MoveComponent to %s", selectedObject->GetName().c_str());
+        }
         ImGui::EndPopup();
     }
     ImGui::Spacing();
@@ -104,6 +108,7 @@ void InspectorWindow::Draw()
     DrawRotateComponent(selectedObject);
     DrawAudioSourceComponent(selectedObject);
     DrawAudioListenerComponent(selectedObject);
+    DrawMoveComponent(selectedObject);
 
     ImGui::End();
 }
@@ -813,6 +818,19 @@ void InspectorWindow::DrawRotateComponent(GameObject* selectedObject)
     }
 }
 
+void InspectorWindow::DrawMoveComponent(GameObject* selectedObject)
+{
+    ComponentRotate* moveComp = static_cast<ComponentRotate*>(selectedObject->GetComponent(ComponentType::MOVE));
+
+    if (moveComp == nullptr) return;
+
+    if (ImGui::CollapsingHeader("Move Component", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        moveComp->OnEditor();
+    }
+}
+
+
 bool InspectorWindow::DrawGameObjectSection(GameObject* selectedObject)
 {
     bool objectDeleted = false;
@@ -895,61 +913,7 @@ void InspectorWindow::DrawAudioSourceComponent(GameObject* selectedObject) {
     if (!source) return;
 
     if (ImGui::CollapsingHeader("Audio Source", ImGuiTreeNodeFlags_DefaultOpen)) {
-        //get all wwise events
-        auto& events = Application::GetInstance().audio->audioSystem->eventNames;
-
-        if (ImGui::BeginCombo("Wwise Event", source->eventName.c_str())) {
-            for (const auto& eventName : events) {
-                bool isSelected = (source->eventName == eventName);
-                if (ImGui::Selectable(eventName.c_str(), isSelected)) {
-                    source->eventName = eventName;
-                }
-                if (isSelected) {
-                    ImGui::SetItemDefaultFocus();
-                }
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::SliderFloat("Volume", &source->volume, 0.0f, 100.0f);
-
-        ImGui::Checkbox("Play On Awake", &source->playOnAwake);
-
-        if (ImGui::Button("Play")) {
-
-            std::string nameStr = source->eventName;
-            std::wstring wideName(nameStr.begin(), nameStr.end());
-
-            //get ID using  WIDE string
-            AkUniqueID eventID = AK::SoundEngine::GetIDFromString(wideName.c_str());
-            
-            
-            if (eventID == AK_INVALID_UNIQUE_ID)
-            {
-                LOG_CONSOLE("Wwise Error: Event name '%ls' not found!", source->eventName);
-                return;
-            }
-
-            Application::GetInstance().audio.get()->PlayAudio(source, eventID);
-            
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Stop")) {
-
-            std::string nameStr = source->eventName;
-            std::wstring wideName(nameStr.begin(), nameStr.end());
-
-            //get ID using  WIDE string
-            AkUniqueID eventID = AK::SoundEngine::GetIDFromString(wideName.c_str());
-
-            if (eventID == AK_INVALID_UNIQUE_ID)
-            {
-                LOG_CONSOLE("Wwise Error: Event name '%ls' not found!", source->eventName);
-                return;
-            }
-
-            Application::GetInstance().audio.get()->StopAudio(source, eventID);
-        }
+        source->OnEditor(); 
     }
 }
 
@@ -958,10 +922,7 @@ void InspectorWindow::DrawAudioListenerComponent(GameObject* selectedObject) {
     if (!listener) return;
 
     if (ImGui::CollapsingHeader("Audio Listener", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Text("This object is acting as the 3D ears of the scene.");
-        if (ImGui::Button("Set as Default Listener")) {
-            listener->SetAsDefaultListener();
-        }
+        listener->OnEditor(); 
     }
 }
 

@@ -1,8 +1,12 @@
 Event	ID	Name			Wwise Object Path	Notes
 	111646406	Play_LookinFresh			\Default Work Unit\Play_LookinFresh	
+	586175602	Play_CoffeeShop			\Default Work Unit\Play_CoffeeShop	
 	1896801622	HelpMe			\Default Work Unit\HelpMe	
+	2400116970	TalkingSFX			\Default Work Unit\TalkingSFX	
 
 In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
+	60684799	animalCrossingTalking	.cache\DF\{DF60B5D6-E183-80D8-F9F9-17969D1694ED}.wem		\Containers\Default Work Unit\animalCrossingTalking		1764096
+	352851221	coffeeShop	.cache\2B\{2B154332-6CDB-A031-4D10-CA2E596ED15D}.wem		\Containers\Default Work Unit\coffeeShop		558934
 	597016523	HelpMe	.cache\15\{15E837B0-2159-FDED-526E-A24B07BABDBB}.wem		\Containers\Default Work Unit\HelpMe		942176
 	1051818920	Lookin' Fresh (Shrimp Kicks)_stereo	.cache\D9\{D9640CFF-5305-D424-6B0B-03D6AC8E899D}.wem		\Containers\Default Work Unit\LookinFresh_Playlist\Lookin' Fresh (Shrimp Kicks)_stereo\Lookin' Fresh (Shrimp Kicks)_stereo		16162912
 

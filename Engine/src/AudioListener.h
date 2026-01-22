@@ -18,6 +18,8 @@ public:
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;
 
+    void OnEditor() override;
+
 private:
     bool isDefault = true;
 };

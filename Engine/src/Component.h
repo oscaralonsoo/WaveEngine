@@ -12,6 +12,7 @@ enum class ComponentType {
     ROTATE,
     LISTENER,
     AUDIOSOURCE,
+    MOVE,
     UNKNOWN
 };
 

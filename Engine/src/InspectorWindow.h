@@ -36,6 +36,7 @@ private:
     void DrawRotateComponent(GameObject* selectedObject);
     void DrawAudioSourceComponent(GameObject* selectedObject);
     void DrawAudioListenerComponent(GameObject* selectedObject);
+    void DrawMoveComponent(GameObject* selectedObject);
 
     // Helper methods
     void GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects);
