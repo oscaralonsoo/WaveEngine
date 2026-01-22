@@ -14,7 +14,6 @@ extern "C" {
 
 class Transform;
 
-// Tipos de variables que podemos exponer
 enum class ScriptVarType {
     NUMBER,
     STRING,
@@ -22,7 +21,6 @@ enum class ScriptVarType {
     VEC3
 };
 
-// Estructura para almacenar una variable expuesta
 struct ScriptVariable {
     std::string name;
     ScriptVarType type;
@@ -50,7 +48,6 @@ public:
     ComponentScript(GameObject* owner);
     ~ComponentScript() override;
 
-    // Component lifecycle
     void Enable() override;
     void Update() override;
     void Disable() override;
@@ -95,11 +92,14 @@ private:
     void SyncPublicVariablesToLua();
     void PushVariableToLua(lua_State* L, const ScriptVariable& var);
 
+    void RestoreSavedVariableValues(const std::vector<ScriptVariable>& savedVars);
+
     UID scriptUID = 0;
     std::string luaTableName;
     bool startCalled = false;
 
     std::vector<ScriptVariable> publicVariables;
+    std::vector<std::string> variableOrder;  
 
     bool pendingDestroy = false;
 };

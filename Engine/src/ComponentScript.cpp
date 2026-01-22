@@ -1,4 +1,5 @@
-﻿#include "ComponentScript.h"
+﻿
+#include "ComponentScript.h"
 #include "Application.h"
 #include "ScriptManager.h"
 #include "ResourceScript.h"
@@ -25,7 +26,6 @@ void ComponentScript::Enable()
 {
     if (!HasScript()) return;
 
-    // Llamar Start si no se ha llamado aún
     if (!startCalled && active) {
         CallStart();
     }
@@ -33,26 +33,15 @@ void ComponentScript::Enable()
 
 void ComponentScript::Update()
 {
+    if (!active) return;
+    if (!HasScript()) return;
 
-    if (!active) {
-        LOG_CONSOLE("[ComponentScript]  Update END (not active) - Owner: %s", owner->GetName().c_str());
-        return;
-    }
-
-    if (!HasScript()) {
-        LOG_CONSOLE("[ComponentScript]  Update END (no script) - Owner: %s", owner->GetName().c_str());
-        return;
-    }
-
-    // Solo actualizar en modo PLAYING
     auto& app = Application::GetInstance();
     if (app.GetPlayState() != Application::PlayState::PLAYING) {
-        LOG_CONSOLE("[ComponentScript]  Update END (not playing) - Owner: %s", owner->GetName().c_str());
         return;
     }
 
-
-    // Verificar si el script necesita recargarse (hot reload)
+    // Hot reload check
     ModuleResources* resources = app.resources.get();
     const Resource* res = resources->GetResourceDirect(scriptUID);
 
@@ -64,135 +53,29 @@ void ComponentScript::Update()
         }
     }
 
-
-    // Llamar Update del script
     float deltaTime = app.time->GetDeltaTime();
-
-
     CallUpdate(deltaTime);
 
-    // Ejecutar destrucción diferida DESPUÉS de Update
     if (pendingDestroy) {
         owner->MarkForDeletion();
         pendingDestroy = false;
     }
-
 }
-
 
 void ComponentScript::Disable()
 {
-    // Podríamos llamar a OnDisable() del script aquí si lo implementamos
 }
 
 void ComponentScript::OnEditor()
 {
-    if (!ImGui::CollapsingHeader("Script", ImGuiTreeNodeFlags_DefaultOpen))
-        return;
-
-    ImGui::Indent();
-
-    // Mostrar información del script actual
-    if (HasScript()) {
-        ModuleResources* resources = Application::GetInstance().resources.get();
-        const Resource* res = resources->GetResourceDirect(scriptUID);
-
-        if (res) {
-            std::string filename = std::filesystem::path(res->GetAssetFile()).filename().string();
-
-            ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "Current Script:");
-            ImGui::SameLine();
-            ImGui::Text("%s", filename.c_str());
-
-            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "UID: %llu", scriptUID);
-
-            // Botón para cambiar script
-            if (ImGui::Button("Change Script")) {
-                ImGui::OpenPopup("SelectScript");
-            }
-
-            ImGui::SameLine();
-
-            // Botón para eliminar script
-            if (ImGui::Button("Remove Script")) {
-                UnloadScript();
-            }
-
-            ImGui::SameLine();
-
-            // Botón para recargar manualmente (no haría falta pero lo dejamos por si deja de funcionar en algun punto) (lo quitamos antes de la release)!!!!!!!!!!!
-            if (ImGui::Button("Reload")) {
-                ReloadScript();
-                LOG_CONSOLE("[ComponentScript] Manual reload triggered");
-            }
-        }
-    }
-    else {
-        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "No script assigned");
-
-        if (ImGui::Button("Assign Script", ImVec2(150, 0))) {
-            ImGui::OpenPopup("SelectScript");
-        }
-    }
-
-    // Popup para seleccionar script
-    if (ImGui::BeginPopup("SelectScript")) {
-        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Select Script");
-        ImGui::Separator();
-
-        ModuleResources* resources = Application::GetInstance().resources.get();
-        const auto& allResources = resources->GetAllResources();
-
-        bool foundScripts = false;
-
-        for (const auto& [uid, resource] : allResources) {
-            if (resource->GetType() == Resource::SCRIPT) {
-                foundScripts = true;
-
-                std::string filename = std::filesystem::path(resource->GetAssetFile()).filename().string();
-
-                bool isSelected = (scriptUID == uid);
-                if (ImGui::Selectable(filename.c_str(), isSelected)) {
-                    LoadScriptByUID(uid);
-                    ImGui::CloseCurrentPopup();
-                }
-
-                if (isSelected) {
-                    ImGui::SetItemDefaultFocus();
-                }
-            }
-        }
-
-        if (!foundScripts) {
-            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "No .lua scripts found in Assets/");
-            ImGui::TextWrapped("Create a .lua file in Assets/Scripts/");
-        }
-
-        ImGui::EndPopup();
-    }
-
-    // Información adicional en modo DEBUG
-    if (HasScript()) {
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        if (ImGui::TreeNode("Debug Info")) {
-            ImGui::Text("Lua Table: %s", luaTableName.c_str());
-            ImGui::Text("Start Called: %s", startCalled ? "Yes" : "No");
-            ImGui::Text("Active: %s", active ? "Yes" : "No");
-
-            ImGui::TreePop();
-        }
-    }
-
-    ImGui::Unindent();
+    // Ya se dibuja desde InspectorWindow
 }
 
 void ComponentScript::Serialize(nlohmann::json& componentObj) const
 {
     componentObj["scriptUID"] = scriptUID;
 
+    // Guardar variables públicas con sus valores actuales
     if (!publicVariables.empty()) {
         nlohmann::json varsArray = nlohmann::json::array();
 
@@ -225,6 +108,8 @@ void ComponentScript::Serialize(nlohmann::json& componentObj) const
         }
 
         componentObj["publicVariables"] = varsArray;
+
+        LOG_DEBUG("[ComponentScript] Serialized %zu public variables", publicVariables.size());
     }
 }
 
@@ -236,53 +121,57 @@ void ComponentScript::Deserialize(const nlohmann::json& componentObj)
         // Cargar el script primero (esto extrae variables del .lua)
         if (LoadScriptByUID(uid)) {
 
+            // Si hay variables guardadas, restaurarlas
             if (componentObj.contains("publicVariables")) {
                 const auto& varsArray = componentObj["publicVariables"];
 
-                // Restaurar valores guardados sobre los extraídos del .lua
+                std::vector<ScriptVariable> savedVars;
+
+                // Leer variables guardadas
                 for (const auto& varObj : varsArray) {
                     std::string varName = varObj["name"];
                     ScriptVarType varType = static_cast<ScriptVarType>(varObj["type"]);
 
-                    // Buscar la variable en publicVariables por nombre
-                    for (auto& var : publicVariables) {
-                        if (var.name == varName && var.type == varType) {
+                    switch (varType) {
+                    case ScriptVarType::NUMBER: {
+                        float value = varObj["value"].get<float>();
+                        savedVars.emplace_back(varName, value);
+                        break;
+                    }
 
-                            // Restaurar el valor guardado
-                            switch (varType) {
-                            case ScriptVarType::NUMBER:
-                                var.value = varObj["value"].get<float>();
-                                break;
+                    case ScriptVarType::STRING: {
+                        std::string value = varObj["value"].get<std::string>();
+                        savedVars.emplace_back(varName, value);
+                        break;
+                    }
 
-                            case ScriptVarType::STRING:
-                                var.value = varObj["value"].get<std::string>();
-                                break;
+                    case ScriptVarType::BOOLEAN: {
+                        bool value = varObj["value"].get<bool>();
+                        savedVars.emplace_back(varName, value);
+                        break;
+                    }
 
-                            case ScriptVarType::BOOLEAN:
-                                var.value = varObj["value"].get<bool>();
-                                break;
-
-                            case ScriptVarType::VEC3: {
-                                auto vec = varObj["value"];
-                                var.value = glm::vec3(
-                                    vec[0].get<float>(),
-                                    vec[1].get<float>(),
-                                    vec[2].get<float>()
-                                );
-                                break;
-                            }
-                            }
-
-                            break;
-                        }
+                    case ScriptVarType::VEC3: {
+                        auto vec = varObj["value"];
+                        glm::vec3 value(
+                            vec[0].get<float>(),
+                            vec[1].get<float>(),
+                            vec[2].get<float>()
+                        );
+                        savedVars.emplace_back(varName, value);
+                        break;
+                    }
                     }
                 }
 
-                // Sincronizar a Lua con los valores restaurados
+                // Restaurar valores guardados
+                RestoreSavedVariableValues(savedVars);
+
+                // Sincronizar a Lua
                 SyncPublicVariablesToLua();
 
-                LOG_DEBUG("[ComponentScript] Restored %zu public variables from save",
-                    varsArray.size());
+                LOG_CONSOLE("[ComponentScript] Restored %zu public variables from save",
+                    savedVars.size());
             }
         }
     }
@@ -295,7 +184,6 @@ bool ComponentScript::LoadScriptByUID(UID uid)
         return false;
     }
 
-    // Descargar script anterior si existe
     if (HasScript()) {
         UnloadScript();
     }
@@ -317,13 +205,9 @@ bool ComponentScript::LoadScriptByUID(UID uid)
         return false;
     }
 
-    // Guardar UID
     scriptUID = uid;
-
-    // Crear tabla Lua única para este componente
     CreateLuaTable();
 
-    // Compilar y ejecutar el script
     if (!CompileAndExecuteScript(scriptContent)) {
         LOG_CONSOLE("[ComponentScript] ERROR: Failed to compile script");
         UnloadScript();
@@ -338,21 +222,22 @@ void ComponentScript::UnloadScript()
 {
     if (!HasScript()) return;
 
-    // Liberar recurso
     ModuleResources* resources = Application::GetInstance().resources.get();
     resources->ReleaseResource(scriptUID);
 
-    // Limpiar tabla Lua
     DestroyLuaTable();
 
     scriptUID = 0;
     startCalled = false;
+    publicVariables.clear();
+    variableOrder.clear(); 
 }
 
 bool ComponentScript::ReloadScript()
 {
     if (!HasScript()) return false;
 
+    // Guardar valores actuales ANTES del reload
     std::vector<ScriptVariable> savedVariables = publicVariables;
 
     UID uid = scriptUID;
@@ -362,16 +247,8 @@ bool ComponentScript::ReloadScript()
         return false;
     }
 
-    for (const auto& savedVar : savedVariables) {
-        // Buscar la variable por nombre en las nuevas
-        for (auto& newVar : publicVariables) {
-            if (newVar.name == savedVar.name && newVar.type == savedVar.type) {
-                // Mantener el valor que tenía antes del reload
-                newVar.value = savedVar.value;
-                break;
-            }
-        }
-    }
+    // Restaurar valores guardados sobre los nuevos del .lua
+    RestoreSavedVariableValues(savedVariables);
 
     // Sincronizar a Lua
     SyncPublicVariablesToLua();
@@ -384,7 +261,6 @@ void ComponentScript::CallStart()
 {
     if (!HasScript() || startCalled) return;
 
-    // Sincronizar variables públicas antes de Start
     SyncPublicVariablesToLua();
 
     ScriptManager* scriptManager = Application::GetInstance().scripts.get();
@@ -422,24 +298,11 @@ void ComponentScript::CallStart()
 
 void ComponentScript::CallUpdate(float deltaTime)
 {
-    // Validaciones previas
-    if (!active) {
-        return;
-    }
+    if (!active || !HasScript()) return;
+    if (!owner || owner->IsMarkedForDeletion()) return;
 
-    if (!HasScript()) {
-        return;
-    }
-
-    if (!owner || owner->IsMarkedForDeletion()) {
-        return;
-    }
-
-    // Verificar que estamos en modo PLAYING
     auto& app = Application::GetInstance();
-    if (app.GetPlayState() != Application::PlayState::PLAYING) {
-        return;
-    }
+    if (app.GetPlayState() != Application::PlayState::PLAYING) return;
 
     ScriptManager* scriptManager = app.scripts.get();
     lua_State* L = scriptManager->GetState();
@@ -449,59 +312,32 @@ void ComponentScript::CallUpdate(float deltaTime)
         return;
     }
 
-    // Hot reload check
-    ModuleResources* resources = app.resources.get();
-    const Resource* res = resources->GetResourceDirect(scriptUID);
-
-    if (res && res->GetType() == Resource::SCRIPT) {
-        const ResourceScript* scriptRes = static_cast<const ResourceScript*>(res);
-        if (scriptRes->NeedsReload()) {
-            LOG_CONSOLE("[ComponentScript] Hot reloading script for: %s", owner->GetName().c_str());
-            ReloadScript();
-        }
-    }
-
-    // Obtener la tabla del script
     lua_getglobal(L, luaTableName.c_str());
 
     if (!lua_istable(L, -1)) {
-        LOG_CONSOLE("[ComponentScript] ERROR: Script table not found: %s (Owner: %s)",
-            luaTableName.c_str(), owner->GetName().c_str());
+        LOG_CONSOLE("[ComponentScript] ERROR: Script table not found: %s", luaTableName.c_str());
         lua_pop(L, 1);
         return;
     }
 
-    // Obtener la función Update
     lua_getfield(L, -1, "Update");
 
     if (!lua_isfunction(L, -1)) {
-        lua_pop(L, 2);  // Pop function + table
+        lua_pop(L, 2);
         return;
     }
 
-    // Push self (la tabla del script)
     lua_pushvalue(L, -2);
-
-    // Push deltaTime
     lua_pushnumber(L, deltaTime);
 
-    // Ejecutar Update(self, deltaTime)
     if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
         const char* error = lua_tostring(L, -1);
-
-        LOG_CONSOLE("[ComponentScript] ========================================");
-        LOG_CONSOLE("[ComponentScript] LUA ERROR in Update():");
-        LOG_CONSOLE("[ComponentScript] Owner: %s", owner->GetName().c_str());
-        LOG_CONSOLE("[ComponentScript] Script Table: %s", luaTableName.c_str());
-        LOG_CONSOLE("[ComponentScript] Error: %s", error ? error : "Unknown error");
-        LOG_CONSOLE("[ComponentScript] ========================================");
-
+        LOG_CONSOLE("[ComponentScript] ERROR in Update(): %s", error);
         lua_pop(L, 1);
     }
 
-    lua_pop(L, 1);  // Pop table
+    lua_pop(L, 1);
 
-    // Ejecutar destrucción diferida DESPUÉS de Update
     if (pendingDestroy) {
         owner->MarkForDeletion();
         pendingDestroy = false;
@@ -515,12 +351,10 @@ void ComponentScript::CreateLuaTable()
 
     if (!L) return;
 
-    // Generar nombre único para la tabla: "Script_GameObjectName_UID"
     std::stringstream ss;
     ss << "Script_" << owner->GetName() << "_" << scriptUID << "_" << (uintptr_t)this;
     luaTableName = ss.str();
 
-    // Crear nueva tabla en Lua
     lua_newtable(L);
     lua_setglobal(L, luaTableName.c_str());
 
@@ -536,7 +370,6 @@ void ComponentScript::DestroyLuaTable()
 
     if (!L) return;
 
-    // Establecer la tabla como nil para liberarla
     lua_pushnil(L);
     lua_setglobal(L, luaTableName.c_str());
 
@@ -546,9 +379,8 @@ void ComponentScript::DestroyLuaTable()
 
 void ComponentScript::SetupLuaEnvironment()
 {
-    // Aquí podríamos configurar el entorno Lua del script
-    // Por ejemplo, establecer variables específicas del GameObject
 }
+
 bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
 {
     ScriptManager* scriptManager = Application::GetInstance().scripts.get();
@@ -584,7 +416,6 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
     lua_getglobal(L, luaTableName.c_str());
 
     if (lua_istable(L, -1)) {
-        // Copiar Start si existe
         lua_getglobal(L, "Start");
         if (lua_isfunction(L, -1)) {
             lua_setfield(L, -2, "Start");
@@ -593,7 +424,6 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
             lua_pop(L, 1);
         }
 
-        // Copiar Update si existe
         lua_getglobal(L, "Update");
         if (lua_isfunction(L, -1)) {
             lua_setfield(L, -2, "Update");
@@ -602,7 +432,6 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
             lua_pop(L, 1);
         }
 
-        // Copiar tabla "public" global si existe
         lua_getglobal(L, "public");
         if (lua_istable(L, -1)) {
             lua_setfield(L, -2, "public");
@@ -617,7 +446,6 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
 
     lua_pop(L, 1);
 
-    // Extraer variables públicas
     ExtractPublicVariables();
 
     return true;
@@ -625,48 +453,37 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
 
 void ComponentScript::SetupScriptEnvironment(lua_State* L)
 {
-    // La tabla del script ya está en el stack (-1)
+    LOG_CONSOLE("[ComponentScript] SetupScriptEnvironment - Owner: %s", owner->GetName().c_str());
 
-    LOG_CONSOLE("[ComponentScript] SetupScriptEnvironment - Owner: %s, This: %p", owner->GetName().c_str(), (void*)this);
-
-    // Crear userdata para el GameObject real
     GameObject** goUserdata = (GameObject**)lua_newuserdata(L, sizeof(GameObject*));
     *goUserdata = owner;
 
-    // Asignar metatable GameObject
     luaL_getmetatable(L, "GameObject");
     lua_setmetatable(L, -2);
 
-    lua_setfield(L, -2, "gameObject");  // script.gameObject = userdata
+    lua_setfield(L, -2, "gameObject");
 
     LOG_CONSOLE("[ComponentScript] Injected GameObject userdata");
 
-    // Guardar puntero al ComponentScript para destrucción diferida
     ComponentScript** scriptUserdata = (ComponentScript**)lua_newuserdata(L, sizeof(ComponentScript*));
     *scriptUserdata = this;
     lua_setfield(L, -2, "__componentScript");
 
-    // Función helper Destroy() que MARCA para destruir
     lua_pushcfunction(L, [](lua_State* L) -> int {
         lua_getfield(L, 1, "__componentScript");
-
         if (!lua_isuserdata(L, -1)) {
             LOG_CONSOLE("[Lua] ERROR: __componentScript is not valid");
             return 0;
         }
-
         ComponentScript* script = *(ComponentScript**)lua_touserdata(L, -1);
         script->MarkGameObjectForDestroy();
-
         LOG_CONSOLE("[Lua] GameObject marked for deferred destroy: %s", script->owner->GetName().c_str());
-
         return 0;
         });
     lua_setfield(L, -2, "Destroy");
 
     LOG_CONSOLE("[ComponentScript] Added Destroy() helper with deferred execution");
 
-    // Inyectar transform
     Transform* transform = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
     if (transform) {
         CreateTransformUserdata(L, transform);
@@ -679,79 +496,51 @@ void ComponentScript::SetupScriptEnvironment(lua_State* L)
 
 void ComponentScript::CreateTransformUserdata(lua_State* L, Transform* transform)
 {
-    // Crear userdata para Transform
     Transform** udata = (Transform**)lua_newuserdata(L, sizeof(Transform*));
     *udata = transform;
 
-    // Crear metatable para Transform
     luaL_newmetatable(L, "Transform");
 
-    // __index metamethod
     lua_pushcfunction(L, [](lua_State* L) -> int {
         Transform* t = *(Transform**)lua_touserdata(L, 1);
         const char* key = luaL_checkstring(L, 2);
 
-        // Propiedad "position"
         if (strcmp(key, "position") == 0) {
             const glm::vec3& pos = t->GetPosition();
-
             lua_newtable(L);
-            lua_pushnumber(L, pos.x);
-            lua_setfield(L, -2, "x");
-            lua_pushnumber(L, pos.y);
-            lua_setfield(L, -2, "y");
-            lua_pushnumber(L, pos.z);
-            lua_setfield(L, -2, "z");
-
+            lua_pushnumber(L, pos.x); lua_setfield(L, -2, "x");
+            lua_pushnumber(L, pos.y); lua_setfield(L, -2, "y");
+            lua_pushnumber(L, pos.z); lua_setfield(L, -2, "z");
             return 1;
         }
 
-		// World position
         if (strcmp(key, "worldPosition") == 0) {
             const glm::mat4& globalMatrix = t->GetGlobalMatrix();
-
             lua_newtable(L);
-            lua_pushnumber(L, globalMatrix[3][0]);
-            lua_setfield(L, -2, "x");
-            lua_pushnumber(L, globalMatrix[3][1]);
-            lua_setfield(L, -2, "y");
-            lua_pushnumber(L, globalMatrix[3][2]);
-            lua_setfield(L, -2, "z");
-
+            lua_pushnumber(L, globalMatrix[3][0]); lua_setfield(L, -2, "x");
+            lua_pushnumber(L, globalMatrix[3][1]); lua_setfield(L, -2, "y");
+            lua_pushnumber(L, globalMatrix[3][2]); lua_setfield(L, -2, "z");
             return 1;
         }
 
-        // Propiedad "rotation"
         if (strcmp(key, "rotation") == 0) {
             const glm::vec3& rot = t->GetRotation();
-
             lua_newtable(L);
-            lua_pushnumber(L, rot.x);
-            lua_setfield(L, -2, "x");
-            lua_pushnumber(L, rot.y);
-            lua_setfield(L, -2, "y");
-            lua_pushnumber(L, rot.z);
-            lua_setfield(L, -2, "z");
-
+            lua_pushnumber(L, rot.x); lua_setfield(L, -2, "x");
+            lua_pushnumber(L, rot.y); lua_setfield(L, -2, "y");
+            lua_pushnumber(L, rot.z); lua_setfield(L, -2, "z");
             return 1;
         }
 
-        // Propiedad "scale"
         if (strcmp(key, "scale") == 0) {
             const glm::vec3& scl = t->GetScale();
-
             lua_newtable(L);
-            lua_pushnumber(L, scl.x);
-            lua_setfield(L, -2, "x");
-            lua_pushnumber(L, scl.y);
-            lua_setfield(L, -2, "y");
-            lua_pushnumber(L, scl.z);
-            lua_setfield(L, -2, "z");
-
+            lua_pushnumber(L, scl.x); lua_setfield(L, -2, "x");
+            lua_pushnumber(L, scl.y); lua_setfield(L, -2, "y");
+            lua_pushnumber(L, scl.z); lua_setfield(L, -2, "z");
             return 1;
         }
 
-        // Método SetPosition
         if (strcmp(key, "SetPosition") == 0) {
             lua_pushcfunction(L, [](lua_State* L) -> int {
                 Transform* t = *(Transform**)lua_touserdata(L, 1);
@@ -764,7 +553,6 @@ void ComponentScript::CreateTransformUserdata(lua_State* L, Transform* transform
             return 1;
         }
 
-        // Método SetRotation
         if (strcmp(key, "SetRotation") == 0) {
             lua_pushcfunction(L, [](lua_State* L) -> int {
                 Transform* t = *(Transform**)lua_touserdata(L, 1);
@@ -777,7 +565,6 @@ void ComponentScript::CreateTransformUserdata(lua_State* L, Transform* transform
             return 1;
         }
 
-        // Método SetScale
         if (strcmp(key, "SetScale") == 0) {
             lua_pushcfunction(L, [](lua_State* L) -> int {
                 Transform* t = *(Transform**)lua_touserdata(L, 1);
@@ -799,20 +586,18 @@ void ComponentScript::CreateTransformUserdata(lua_State* L, Transform* transform
 
 void ComponentScript::ExtractPublicVariables()
 {
-    publicVariables.clear();
+    bool isFirstExtraction = publicVariables.empty();
 
-    if (!HasScript()) return;
+    std::vector<ScriptVariable> newVariables;
 
     ScriptManager* scriptManager = Application::GetInstance().scripts.get();
     lua_State* L = scriptManager->GetState();
 
     if (!L) return;
 
-    // 2. Dentro de la tabla del script: script.public = {...}
-
-    bool foundPublic = false;
-
+    // Intentar obtener tabla 'public' global
     lua_getglobal(L, "public");
+    bool foundPublic = false;
 
     if (lua_istable(L, -1)) {
         foundPublic = true;
@@ -829,8 +614,7 @@ void ComponentScript::ExtractPublicVariables()
             if (lua_istable(L, -1)) {
                 foundPublic = true;
                 LOG_DEBUG("[ComponentScript] Found 'public' table inside script table");
-                // Intercambiar para que "public" esté en top
-                lua_remove(L, -2);
+                lua_remove(L, -2);  // Quitar tabla del script, dejar 'public' en top
             }
             else {
                 lua_pop(L, 2);
@@ -847,7 +631,6 @@ void ComponentScript::ExtractPublicVariables()
     }
 
     // Ahora tenemos la tabla "public" en el top del stack
-    // Iterar sobre todas sus variables
     lua_pushnil(L);
 
     while (lua_next(L, -2) != 0) {
@@ -856,18 +639,15 @@ void ComponentScript::ExtractPublicVariables()
 
             if (lua_isnumber(L, -1)) {
                 float value = (float)lua_tonumber(L, -1);
-                publicVariables.emplace_back(varName, value);
-                LOG_DEBUG("[ComponentScript]   - %s = %.2f (number)", varName, value);
+                newVariables.emplace_back(varName, value);
             }
             else if (lua_isstring(L, -1)) {
                 const char* value = lua_tostring(L, -1);
-                publicVariables.emplace_back(varName, std::string(value));
-                LOG_DEBUG("[ComponentScript]   - %s = \"%s\" (string)", varName, value);
+                newVariables.emplace_back(varName, std::string(value));
             }
             else if (lua_isboolean(L, -1)) {
                 bool value = lua_toboolean(L, -1);
-                publicVariables.emplace_back(varName, value);
-                LOG_DEBUG("[ComponentScript]   - %s = %s (boolean)", varName, value ? "true" : "false");
+                newVariables.emplace_back(varName, value);
             }
             else if (lua_istable(L, -1)) {
                 // Verificar si es un vec3 (tabla con x, y, z)
@@ -879,12 +659,14 @@ void ComponentScript::ExtractPublicVariables()
                     float x = (float)lua_tonumber(L, -3);
                     float y = (float)lua_tonumber(L, -2);
                     float z = (float)lua_tonumber(L, -1);
-                    publicVariables.emplace_back(varName, glm::vec3(x, y, z));
-                    LOG_DEBUG("[ComponentScript]   - %s = {%.2f, %.2f, %.2f} (vec3)",
-                        varName, x, y, z);
+                    newVariables.emplace_back(varName, glm::vec3(x, y, z));
                 }
 
                 lua_pop(L, 3);
+            }
+
+            if (isFirstExtraction) {
+                variableOrder.push_back(varName);
             }
         }
 
@@ -893,7 +675,59 @@ void ComponentScript::ExtractPublicVariables()
 
     lua_pop(L, 1);  // Pop tabla "public"
 
-    LOG_CONSOLE("[ComponentScript] Extracted %zu public variables from script", publicVariables.size());
+    if (!isFirstExtraction && !variableOrder.empty()) {
+        std::vector<ScriptVariable> orderedVariables;
+
+        // Primero, añadir variables en el orden guardado
+        for (const auto& orderedName : variableOrder) {
+            for (const auto& newVar : newVariables) {
+                if (newVar.name == orderedName) {
+                    orderedVariables.push_back(newVar);
+                    break;
+                }
+            }
+        }
+
+        // Luego, añadir variables nuevas que no estaban antes (al final)
+        for (const auto& newVar : newVariables) {
+            bool found = false;
+            for (const auto& orderedName : variableOrder) {
+                if (newVar.name == orderedName) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                orderedVariables.push_back(newVar);
+                variableOrder.push_back(newVar.name);  // Añadir al orden
+                LOG_DEBUG("[ComponentScript] New variable added: %s", newVar.name.c_str());
+            }
+        }
+
+        publicVariables = orderedVariables;
+    }
+    else {
+        publicVariables = newVariables;
+    }
+
+    LOG_CONSOLE("[ComponentScript] Extracted %zu public variables (order stable: %s)",
+        publicVariables.size(), isFirstExtraction ? "NO" : "YES");
+}
+
+void ComponentScript::RestoreSavedVariableValues(const std::vector<ScriptVariable>& savedVars)
+{
+    for (const auto& savedVar : savedVars) {
+        // Buscar la variable por nombre en las actuales
+        for (auto& currentVar : publicVariables) {
+            if (currentVar.name == savedVar.name && currentVar.type == savedVar.type) {
+                // Sobrescribir con el valor guardado
+                currentVar.value = savedVar.value;
+                LOG_DEBUG("[ComponentScript] Restored value for '%s'", savedVar.name.c_str());
+                break;
+            }
+        }
+    }
 }
 
 void ComponentScript::SyncPublicVariablesToLua()
@@ -910,7 +744,6 @@ void ComponentScript::SyncPublicVariablesToLua()
     bool hasGlobalPublic = lua_istable(L, -1);
 
     if (hasGlobalPublic) {
-        // Actualizar variables en tabla global
         for (const auto& var : publicVariables) {
             PushVariableToLua(L, var);
             lua_setfield(L, -2, var.name.c_str());
@@ -922,7 +755,6 @@ void ComponentScript::SyncPublicVariablesToLua()
     lua_getglobal(L, luaTableName.c_str());
 
     if (lua_istable(L, -1)) {
-        // Obtener o crear tabla "public" dentro del script
         lua_getfield(L, -1, "public");
 
         if (!lua_istable(L, -1)) {
@@ -932,7 +764,6 @@ void ComponentScript::SyncPublicVariablesToLua()
             lua_setfield(L, -3, "public");
         }
 
-        // Actualizar variables en tabla del script
         for (const auto& var : publicVariables) {
             PushVariableToLua(L, var);
             lua_setfield(L, -2, var.name.c_str());
