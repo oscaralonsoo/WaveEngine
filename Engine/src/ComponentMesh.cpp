@@ -348,3 +348,9 @@ void ComponentMesh::Deserialize(const nlohmann::json& componentObj)
         SetMesh(recreatedMesh);
     }
 }
+
+void ComponentMesh::GetLocalAABB(glm::vec3& outMin, glm::vec3& outMax) const
+{
+    outMin = GetAABBMin();
+    outMax = GetAABBMax();
+}

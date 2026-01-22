@@ -15,6 +15,7 @@
 #include <fstream>
 #include "ComponentCollider.h"
 #include "ComponentBoxCollider.h"
+#include "ComponentMaterial.h"
 
 ModuleScene::ModuleScene() : Module()
 {
@@ -44,8 +45,50 @@ bool ModuleScene::Start()
     if (renderer) renderer->DrawScene();
 
     root = new GameObject("Root");
+    
+    // Obtenemos referencia a la instancia para acceder a los módulos
+    Application& app = Application::GetInstance();
 
-    LOG_CONSOLE("Escena preparada usando Primitives Factory.");
+    // --- 1. SUELO ESTÁTICO ---
+    GameObject* floor = Primitives::CreateCubeGameObject("Floor", 0.0f);
+    if (floor) {
+        Transform* trans = (Transform*)floor->GetComponent(ComponentType::TRANSFORM);
+        if (trans) {
+            trans->SetPosition(glm::vec3(0.0f, -0.5f, 0.0f));
+            trans->SetScale(glm::vec3(40.0f, 0.5f, 40.0f));
+        }
+    }
+
+    float mass = 1.0f;
+
+    GameObject* house1 = Primitives::CreateCubeGameObject("House1", mass);
+    if (house1) {
+        Transform* trans = (Transform*)house1->GetComponent(ComponentType::TRANSFORM);
+        if (trans) {
+            trans->SetPosition(glm::vec3(15.0f, 10.0f, 10.0f));
+            trans->SetScale(glm::vec3(5.0f, 7.0f, 5.0f));
+        }
+    }
+
+    GameObject* house2 = Primitives::CreateCubeGameObject("House2", mass);
+    if (house2) {
+        Transform* trans = (Transform*)house2->GetComponent(ComponentType::TRANSFORM);
+        if (trans) {
+            trans->SetPosition(glm::vec3(-15.0f, 15.0f, 10.0f));
+            trans->SetScale(glm::vec3(5.0f, 7.0f, 5.0f));
+        }
+    }
+
+    GameObject* car = Primitives::CreateCubeGameObject("Car", mass);
+    if (car) {
+        Transform* trans = (Transform*)car->GetComponent(ComponentType::TRANSFORM);
+        if (trans) {
+            trans->SetPosition(glm::vec3(0.0f, 5.0f, 0.0f));
+            trans->SetScale(glm::vec3(2.0f, 1.0f, 5.0f));
+        }
+    }
+
+    LOG_CONSOLE("Escena creada: Suelo y 3 objetos con escalas y texturas aplicadas.");
     return true;
 }
 
@@ -375,28 +418,33 @@ ComponentCamera* ModuleScene::FindCameraInHierarchy(GameObject* obj)
     return nullptr;
 }
 
+// En ModuleScene.cpp
 void ModuleScene::ApplyPhysicsToAll(GameObject* obj) {
     if (!obj) return;
 
-    // Comprobamos si tiene malla (MESH) y no tiene ya físicas
-    if (obj->GetComponent(ComponentType::MESH) != nullptr && 
-        obj->GetComponent(ComponentType::RIGIDBODY) == nullptr) 
+    ComponentMesh* mesh = (ComponentMesh*)obj->GetComponent(ComponentType::MESH);
+    if (mesh != nullptr && obj->GetComponent(ComponentType::RIGIDBODY) == nullptr) 
     {
-        // 1. Crear Collider
-        ComponentBoxCollider* col = (ComponentBoxCollider*)obj->CreateComponent(ComponentType::COLLIDER_BOX);
-        if (col) col->SetSize(glm::vec3(1.0f)); // Tamaño inicial
-
-        // 2. Crear RigidBody
-        ComponentRigidBody* rb = (ComponentRigidBody*)obj->CreateComponent(ComponentType::RIGIDBODY);
+        glm::vec3 minB, maxB;
+        mesh->GetLocalAABB(minB, maxB);
         
-        // 3. ¡ESTO ES LO QUE FALTA! Forzar la activación física
+        glm::vec3 size = maxB - minB;
+        glm::vec3 centerOffset = (minB + maxB) * 0.5f;
+
+        ComponentBoxCollider* col = (ComponentBoxCollider*)obj->CreateComponent(ComponentType::COLLIDER_BOX);
+        if (col) {
+            col->SetSize(size); 
+        }
+
+        ComponentRigidBody* rb = (ComponentRigidBody*)obj->CreateComponent(ComponentType::RIGIDBODY);
         if (rb) {
-            rb->SetMass(1.0f); 
-            rb->Start(); // <--- Sin esto, el objeto no entra en el mundo de Bullet
+            // APLICAR EL OFFSET AL RIGIDBODY
+            rb->SetCenterOffset(centerOffset);
+            rb->SetMass(1.0f);
+            rb->Start();
         }
     }
 
-    // Recursividad para hijos
     for (GameObject* child : obj->GetChildren()) {
         ApplyPhysicsToAll(child);
     }

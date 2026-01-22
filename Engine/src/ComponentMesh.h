@@ -74,6 +74,8 @@ public:
     // World space AABB (transformed by GameObject's global matrix)
     void GetWorldAABB(glm::vec3& outMin, glm::vec3& outMax) const;
 
+    void GetLocalAABB(glm::vec3& outMin, glm::vec3& outMax) const;
+
 private:
 
     UID meshUID = 0;

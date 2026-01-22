@@ -58,50 +58,6 @@ bool FileSystem::Start()
         return true;
     }
 
-    // Buscar el modelo
-    fs::path streetPath = assetsPath / "Street";
-    fs::path housePath = streetPath / "street2.fbx";
-
-    if (!fs::exists(housePath)) {
-        LOG_CONSOLE("[FileSystem] WARNING: street2.fbx not found at: %s", housePath.string().c_str());
-        LOG_CONSOLE("[FileSystem] Using fallback geometry.");
-
-        GameObject* pyramidObject = new GameObject("Pyramid");
-        ComponentMesh* meshComp = static_cast<ComponentMesh*>(pyramidObject->CreateComponent(ComponentType::MESH));
-        Mesh pyramidMesh = Primitives::CreatePyramid();
-        meshComp->SetMesh(pyramidMesh);
-
-        GameObject* root = Application::GetInstance().scene->GetRoot();
-        root->AddChild(pyramidObject);
-        Application::GetInstance().scene->RebuildOctree();
-
-        return true;
-    }
-
-    // Cargar el modelo
-    GameObject* houseModel = LoadFBXAsGameObject(housePath.string());
-
-    if (houseModel != nullptr)
-    {
-        GameObject* root = Application::GetInstance().scene->GetRoot();
-        root->AddChild(houseModel);
-        Application::GetInstance().scene->RebuildOctree();
-        LOG_CONSOLE("[FileSystem] Model loaded successfully: %s", housePath.filename().string().c_str());
-    }
-    else
-    {
-        LOG_CONSOLE("[FileSystem] Failed to load model, using fallback geometry.");
-
-        GameObject* pyramidObject = new GameObject("Pyramid");
-        ComponentMesh* meshComp = static_cast<ComponentMesh*>(pyramidObject->CreateComponent(ComponentType::MESH));
-        Mesh pyramidMesh = Primitives::CreatePyramid();
-        meshComp->SetMesh(pyramidMesh);
-
-        GameObject* root = Application::GetInstance().scene->GetRoot();
-        root->AddChild(pyramidObject);
-        Application::GetInstance().scene->RebuildOctree();
-    }
-
     // Crear cámara de escena
     Application& app = Application::GetInstance();
     GameObject* cameraGO = app.scene->CreateGameObject("Camera");

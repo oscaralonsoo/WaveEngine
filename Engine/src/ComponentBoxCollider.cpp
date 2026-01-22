@@ -8,11 +8,12 @@ ComponentBoxCollider::ComponentBoxCollider(GameObject* owner)
     shape = new btBoxShape(btVector3(0.5f, 0.5f, 0.5f));
 }
 
-// AQUÍ ESTABA EL ERROR: Asegúrate de que coincida exactamente con el .h
+
 void ComponentBoxCollider::SetSize(const glm::vec3& newSize) {
     size = newSize;
     if (shape) delete shape;
     
+    // Bullet usa "half extents", por eso multiplicamos por 0.5
     shape = new btBoxShape(btVector3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f));
 }
 
