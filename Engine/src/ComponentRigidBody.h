@@ -27,6 +27,7 @@ public:
     
     // Funciones internas de Bullet
     btRigidBody* GetRigidBody() const { return rigidBody; }
+        void SyncToBullet();
 
 private:
     void AddBodyToWorld();

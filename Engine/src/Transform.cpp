@@ -217,3 +217,24 @@ void Transform::Deserialize(const nlohmann::json& componentObj)
         }
     }
 }
+
+void Transform::SetGlobalPosition(const glm::vec3& globalPos) {
+    if (owner->GetParent() == nullptr || owner->GetParent()->GetName() == "Root") {
+        SetPosition(globalPos);
+    } else {
+        // Convertimos la posición global a local dividiendo por la matriz del padre
+        glm::mat4 parentGlobal = static_cast<Transform*>(owner->GetParent()->GetComponent(ComponentType::TRANSFORM))->GetGlobalMatrix();
+        glm::vec3 localPos = glm::vec3(glm::inverse(parentGlobal) * glm::vec4(globalPos, 1.0f));
+        SetPosition(localPos);
+    }
+}
+
+void Transform::SetGlobalRotationQuat(const glm::quat& globalRot) {
+    if (owner->GetParent() == nullptr || owner->GetParent()->GetName() == "Root") {
+        SetRotationQuat(globalRot);
+    } else {
+        glm::quat parentRot = glm::quat_cast(static_cast<Transform*>(owner->GetParent()->GetComponent(ComponentType::TRANSFORM))->GetGlobalMatrix());
+        glm::quat localRot = glm::inverse(parentRot) * globalRot;
+        SetRotationQuat(localRot);
+    }
+}

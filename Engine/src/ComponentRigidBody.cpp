@@ -35,46 +35,36 @@ ComponentRigidBody::~ComponentRigidBody()
 void ComponentRigidBody::Start()
 {
     Transform* trans = dynamic_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
-    
-    if (trans)
-        lastScale = trans->GetScale();
-    
-    // --- CREACIÓN DE LA FORMA SEGÚN EL TIPO ---
+    if (!trans) return;
+
+    lastScale = trans->GetScale();
     CreateShape();
-    // ------------------------------------------
+
+    // 1. Obtenemos Transformación GLOBAL (Mundo)
+    glm::mat4 globalMat = trans->GetGlobalMatrix();
+    glm::vec3 worldPos = glm::vec3(globalMat[3]);
+    glm::quat worldRot = glm::quat_cast(globalMat);
+
+    // 2. Aplicamos el offset (Visual -> Física)
+    glm::vec3 physWorldPos = worldPos + (worldRot * centerOffset);
 
     btTransform startTransform;
     startTransform.setIdentity();
+    startTransform.setOrigin(btVector3(physWorldPos.x, physWorldPos.y, physWorldPos.z));
+    startTransform.setRotation(btQuaternion(worldRot.x, worldRot.y, worldRot.z, worldRot.w));
 
-    if (trans)
-    {
-        glm::vec3 pos = trans->GetPosition();
-        glm::quat rot = trans->GetRotationQuat();
-
-        glm::vec3 finalPos = pos + (rot * centerOffset);
-
-        startTransform.setOrigin(btVector3(finalPos.x, finalPos.y, finalPos.z));
-        startTransform.setRotation(btQuaternion(rot.x, rot.y, rot.z, rot.w));
-    }
-
+    // 3. Crear el cuerpo
     motionState = new btDefaultMotionState(startTransform);
-
     btVector3 localInertia(0, 0, 0);
-    if (mass != 0.0f)
-        colShape->calculateLocalInertia(mass, localInertia);
+    if (mass != 0.0f) colShape->calculateLocalInertia(mass, localInertia);
 
     btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, colShape, localInertia);
     rigidBody = new btRigidBody(rbInfo);
 
     AddBodyToWorld();
-
     UpdateRigidBodyScale();
-
-    if (rigidBody) {
-    rigidBody->setActivationState(DISABLE_DEACTIVATION); 
-    // O simplemente:
-    rigidBody->activate(true);
-    }   
+    
+    if (rigidBody) rigidBody->activate(true);
 }
 
 // Nueva función para gestionar la creación de formas
@@ -112,67 +102,26 @@ void ComponentRigidBody::CreateShape()
 
 void ComponentRigidBody::Update()
 {
-    if (!rigidBody) return;
-
-    Transform* transformComp = dynamic_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
-    if (!transformComp) return;
-
-    // 1. Sincronizar Escala (Esto ya lo tenías bien)
-    glm::vec3 currentScale = transformComp->GetScale();
-    if (glm::distance(currentScale, lastScale) > 0.001f)
+    // Solo si el juego está corriendo, la física manda sobre el transform
+    if (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING)
     {
-        lastScale = currentScale;
-        UpdateRigidBodyScale();
-    }
+        if (rigidBody && rigidBody->getMotionState())
+        {
+            btTransform btTrans;
+            rigidBody->getMotionState()->getWorldTransform(btTrans);
 
-    // 2. Control de Sincronización según el estado de la App
-    bool isPlaying = (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING);
-
-    if (isPlaying && mass > 0.0f) 
-    {
-        // --- MODO JUEGO (Dinámico): Bullet manda sobre el Transform ---
-        btTransform trans;
-        if (rigidBody->getMotionState())
-            rigidBody->getMotionState()->getWorldTransform(trans);
-        else
-            trans = rigidBody->getWorldTransform();
-
-        btVector3 origin = trans.getOrigin();
-        btQuaternion rotation = trans.getRotation();
-
-        glm::vec3 bulletPos(origin.getX(), origin.getY(), origin.getZ());
-        glm::quat bulletRot(rotation.getW(), rotation.getX(), rotation.getY(), rotation.getZ());
-
-        // Ajuste por el centerOffset
-        glm::vec3 visualPos = bulletPos - (bulletRot * centerOffset);
-
-        transformComp->SetPosition(visualPos);
-        transformComp->SetRotationQuat(bulletRot);
-    }
-    else 
-    {
-        // --- MODO EDITOR o ESTÁTICO: El Transform manda sobre Bullet ---
-        // Esto hace que si mueves el objeto en el editor, el collider verde le siga
-        
-        glm::vec3 pos = transformComp->GetPosition();
-        glm::quat rot = transformComp->GetRotationQuat();
-        glm::vec3 finalPos = pos + (rot * centerOffset);
-
-        btTransform worldTrans;
-        worldTrans.setOrigin(btVector3(finalPos.x, finalPos.y, finalPos.z));
-        worldTrans.setRotation(btQuaternion(rot.x, rot.y, rot.z, rot.w));
-
-        // "Teletransportamos" el cuerpo de Bullet a la posición del transform
-        rigidBody->setWorldTransform(worldTrans);
-        if(rigidBody->getMotionState())
-            rigidBody->getMotionState()->setWorldTransform(worldTrans);
-        
-        // Importante: Si es dinámico pero estamos en el editor, 
-        // limpiamos las fuerzas para que no se "acumule" gravedad mientras lo movemos
-        if (mass > 0.0f) {
-            rigidBody->setLinearVelocity(btVector3(0, 0, 0));
-            rigidBody->setAngularVelocity(btVector3(0, 0, 0));
-            rigidBody->activate(true);
+            Transform* trans = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
+            if (trans)
+            {
+                // Convertimos la posición de Bullet (matriz) de vuelta a nuestro Transform
+                float matrix[16];
+                btTrans.getOpenGLMatrix(matrix);
+                
+                // Suponiendo que tienes un método para setear la matriz global o posición
+                glm::mat4 glmMat = glm::make_mat4(matrix);
+                trans->SetGlobalPosition(glm::vec3(glmMat[3]));
+                trans->SetGlobalRotationQuat(glm::quat_cast(glmMat));
+            }
         }
     }
 }
@@ -201,6 +150,8 @@ void ComponentRigidBody::OnEditor()
         {
             SetCenterOffset(newOffset);
         }
+
+        SyncToBullet();
     }
 }
 
@@ -296,5 +247,32 @@ void ComponentRigidBody::RemoveBodyFromWorld()
     if (rigidBody && Application::GetInstance().physics)
     {
         Application::GetInstance().physics->GetWorld()->removeRigidBody(rigidBody);
+    }
+}
+
+void ComponentRigidBody::SyncToBullet()
+{
+    Transform* trans = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
+    if (trans && rigidBody)
+    {
+        btTransform btTrans;
+        // Convertimos la mat4 de GLM a la btTransform de Bullet
+        btTrans.setFromOpenGLMatrix(glm::value_ptr(trans->GetGlobalMatrix()));
+
+        // 1. Actualizamos el transform del cuerpo
+        rigidBody->setWorldTransform(btTrans);
+
+        // 2. Sincronizamos el MotionState (para que no haya saltos al dar al Play)
+        if (rigidBody->getMotionState())
+        {
+            rigidBody->getMotionState()->setWorldTransform(btTrans);
+        }
+
+        // 3. Forzamos a Bullet a actualizar el volumen de colisión (AABB) 
+        // para que el Debug Drawer se mueva en el editor
+        if (Application::GetInstance().physics->GetWorld())
+        {
+            Application::GetInstance().physics->GetWorld()->updateSingleAabb(rigidBody);
+        }
     }
 }

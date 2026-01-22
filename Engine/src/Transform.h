@@ -34,6 +34,9 @@ public:
     void UpdateLocalMatrix();
     void UpdateGlobalMatrix();
 
+    void SetGlobalPosition(const glm::vec3& globalPos);
+    void SetGlobalRotationQuat(const glm::quat& globalRot);
+
 private:
     // Transforms
     glm::vec3 position;

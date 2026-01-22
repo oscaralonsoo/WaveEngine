@@ -1,8 +1,27 @@
 #include "ModulePhysics.h"
 #include "Application.h"
-#include "PhysicsDebugDrawer.h" // Necesario aquí porque en el .h solo hicimos forward declaration
+#include "PhysicsDebugDrawer.h"
+#include "ComponentRigidBody.h"
+#include "GameObject.h"
 
 #include <iostream>
+
+void SyncAllRigidBodies(GameObject* obj) {
+    if (obj == nullptr) return;
+
+    // Si tiene un RigidBody, lo sincronizamos
+    ComponentRigidBody* rb = (ComponentRigidBody*)obj->GetComponent(ComponentType::RIGIDBODY);
+    if (rb && rb->IsActive()) {
+        // Usamos un casting manual o un método específico. 
+        // SyncToBullet() debe ser público en ComponentRigidBody.h
+        ((ComponentRigidBody*)rb)->SyncToBullet(); 
+    }
+
+    // Recorremos los hijos recursivamente
+    for (GameObject* child : obj->GetChildren()) {
+        SyncAllRigidBodies(child);
+    }
+}
 
 ModulePhysics::ModulePhysics()
 {
@@ -43,17 +62,20 @@ bool ModulePhysics::Start()
 
 bool ModulePhysics::PreUpdate()
 {
-    // --- CONTROL DE TIEMPO ---
-    // Solo avanzamos la simulación física si el juego está en modo PLAYING
     if (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING)
     {
-        // 60 FPS fijos
         world->stepSimulation(1.0f / 60.0f, 10);
     }
+    else 
+    {
+        // --- MODO EDITOR ---
+        // Accedemos al root de la escena y sincronizamos toda la jerarquía
+        GameObject* root = Application::GetInstance().scene->GetRoot();
+        if (root != nullptr) {
+            SyncAllRigidBodies(root);
+        }
+    }
 
-    // --- RENDERIZADO DE DEBUG ---
-    // Llamamos a esto siempre para ver los colliders verdes/rojos 
-    // incluso en modo Editor (PAUSA/EDITING)
     if (world)
     {
         world->debugDrawWorld();
