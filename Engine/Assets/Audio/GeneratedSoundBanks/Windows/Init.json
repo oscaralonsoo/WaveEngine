@@ -10,7 +10,7 @@
     "Type": "User",
     "GUID": "{701ECBBD-9C7B-4030-8CDB-749EE5D1C7B9}",
     "Language": "SFX",
-    "Hash": "{AB7C8BE8-01E3-8C41-501F-BC44EA8F59B1}",
+    "Hash": "{1EBEBC11-7B71-2944-F357-7C50BCC98A66}",
     "ObjectPath": "Init",
     "ShortName": "Init",
     "Path": "Init.bnk",
@@ -148,50 +148,28 @@
     ],
     "StateGroups": [
      {
-      "Id": "3729505769",
-      "Name": "TimeOfDay",
-      "ObjectPath": "\\States\\Default Work Unit\\TimeOfDay",
-      "GUID": "{7523F532-E936-4A84-A4D6-5050B8658BBC}",
+      "Id": "3086301423",
+      "Name": "BGM_State",
+      "ObjectPath": "\\States\\Default Work Unit\\BGM_State",
+      "GUID": "{212BF06F-B611-45DB-82D2-933EE818AAFE}",
       "States": [
-       {
-        "Id": "311764537",
-        "Name": "Day",
-        "ObjectPath": "\\States\\Default Work Unit\\TimeOfDay\\Day",
-        "GUID": "{51F097EF-EB10-415D-B08E-3AD293EC7859}"
-       },
        {
         "Id": "748895195",
         "Name": "None",
-        "ObjectPath": "\\States\\Default Work Unit\\TimeOfDay\\None",
-        "GUID": "{920E540B-7A5A-4399-A6B7-EABAA41A3123}"
+        "ObjectPath": "\\States\\Default Work Unit\\BGM_State\\None",
+        "GUID": "{59F33362-CF7E-4453-975B-0B83B84E7D38}"
        },
        {
-        "Id": "1011622525",
-        "Name": "Night",
-        "ObjectPath": "\\States\\Default Work Unit\\TimeOfDay\\Night",
-        "GUID": "{FA30204D-4CAC-4BC8-9AC6-A84E9D66DC27}"
-       }
-      ]
-     }
-    ],
-    "SwitchGroups": [
-     {
-      "Id": "251412225",
-      "Name": "Shop",
-      "ObjectPath": "\\Switches\\Default Work Unit\\Shop",
-      "GUID": "{973F43BD-17BF-4A65-AA90-057797F53C92}",
-      "Switches": [
-       {
-        "Id": "1220000209",
-        "Name": "Hotlantis",
-        "ObjectPath": "\\Switches\\Default Work Unit\\Shop\\Hotlantis",
-        "GUID": "{13ECC3F8-EDBF-4E91-99D5-A87BC719DD5A}"
+        "Id": "931153941",
+        "Name": "CoffeeShop",
+        "ObjectPath": "\\States\\Default Work Unit\\BGM_State\\CoffeeShop",
+        "GUID": "{234D10A0-6799-4EF8-8F4E-A9C817848F9C}"
        },
        {
-        "Id": "2048228345",
-        "Name": "ShrimpKicks",
-        "ObjectPath": "\\Switches\\Default Work Unit\\Shop\\ShrimpKicks",
-        "GUID": "{26143028-B4FC-46A6-BEF4-CED6DB8A53C4}"
+        "Id": "1814469713",
+        "Name": "PizzaParlor",
+        "ObjectPath": "\\States\\Default Work Unit\\BGM_State\\PizzaParlor",
+        "GUID": "{B4515133-463C-4D09-8EF9-F32B7B62A759}"
        }
       ]
      }
@@ -675,6 +653,6 @@
     ]
    }
   ],
-  "FileHash": "{72C8326C-9601-69E2-E9EF-7019DD76197A}"
+  "FileHash": "{AF36A061-8B6A-E5E8-878B-7772FC3171CA}"
  }
 }

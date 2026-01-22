@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WwiseDocument Type="WorkUnit" ID="{2BEB6A99-023B-48CB-A490-0C27C5069DC6}" SchemaVersion="133">
 	<Switches>
-		<WorkUnit Name="Default Work Unit" ID="{2BEB6A99-023B-48CB-A490-0C27C5069DC6}" PersistMode="Standalone">
-			<ChildrenList>
-				<SwitchGroup Name="Shop" ID="{973F43BD-17BF-4A65-AA90-057797F53C92}">
-					<ChildrenList>
-						<Switch Name="Hotlantis" ID="{13ECC3F8-EDBF-4E91-99D5-A87BC719DD5A}"/>
-						<Switch Name="ShrimpKicks" ID="{26143028-B4FC-46A6-BEF4-CED6DB8A53C4}"/>
-					</ChildrenList>
-				</SwitchGroup>
-			</ChildrenList>
-		</WorkUnit>
+		<WorkUnit Name="Default Work Unit" ID="{2BEB6A99-023B-48CB-A490-0C27C5069DC6}" PersistMode="Standalone"/>
 	</Switches>
 </WwiseDocument>

@@ -5,8 +5,11 @@
 			<ChildrenList>
 				<SoundBank Name="MainSoundBank" ID="{7C55CBAC-5186-4208-888F-0BCE02308A98}">
 					<ObjectInclusionList>
+						<ObjectRef Name="TalkingSFX" ID="{2408F51F-9869-4000-BE1D-F416FC96603E}" WorkUnitID="{F7D79E53-8C87-4B2D-9C7B-4D4D9C5E20AB}" Origin="Manual" Filter="7"/>
+						<ObjectRef Name="Play_CoffeeShop" ID="{C7BE46E3-438B-401F-96DD-E8F317BBE48A}" WorkUnitID="{F7D79E53-8C87-4B2D-9C7B-4D4D9C5E20AB}" Origin="Manual" Filter="7"/>
 						<ObjectRef Name="HelpMe" ID="{84CBD89F-1713-4085-A80D-62410557503B}" WorkUnitID="{F7D79E53-8C87-4B2D-9C7B-4D4D9C5E20AB}" Origin="Manual" Filter="7"/>
 						<ObjectRef Name="Play_LookinFresh" ID="{AA7F5DED-771C-45B7-81FB-B880BC6EC428}" WorkUnitID="{F7D79E53-8C87-4B2D-9C7B-4D4D9C5E20AB}" Origin="Manual" Filter="7"/>
+						<ObjectRef Name="Play_ClubPenguin" ID="{6921382D-4CAF-4D5A-B5F9-AF66E9C46744}" WorkUnitID="{F7D79E53-8C87-4B2D-9C7B-4D4D9C5E20AB}" Origin="Manual" Filter="7"/>
 					</ObjectInclusionList>
 					<ObjectExclusionList/>
 					<GameSyncExclusionList/>

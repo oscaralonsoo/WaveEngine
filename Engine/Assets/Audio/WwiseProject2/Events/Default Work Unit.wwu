@@ -8,7 +8,7 @@
 						<Action Name="" ID="{C7D924C5-CF98-474B-BEDA-9B66DE89B150}" ShortID="960650751">
 							<ReferenceList>
 								<Reference Name="Target">
-									<ObjectRef Name="LookinFresh_Playlist" ID="{9037899F-5605-420E-88A5-1889CC89EB1D}" WorkUnitID="{E6B49273-C487-4B59-8546-E4217EE02E56}"/>
+									<ObjectRef Name="LookinFresh_Switch" ID="{C9E51BFB-E933-4E25-94D0-C6B6F469C2EE}" WorkUnitID="{E6B49273-C487-4B59-8546-E4217EE02E56}"/>
 								</Reference>
 							</ReferenceList>
 						</Action>
@@ -42,6 +42,17 @@
 							<ReferenceList>
 								<Reference Name="Target">
 									<ObjectRef Name="coffeeShop" ID="{2C733244-9812-447E-A09E-A06DA0044FD4}" WorkUnitID="{E6B49273-C487-4B59-8546-E4217EE02E56}"/>
+								</Reference>
+							</ReferenceList>
+						</Action>
+					</ChildrenList>
+				</Event>
+				<Event Name="Play_ClubPenguin" ID="{6921382D-4CAF-4D5A-B5F9-AF66E9C46744}">
+					<ChildrenList>
+						<Action Name="" ID="{1BDD5B17-C974-4BF2-82FD-97E0B885C09F}" ShortID="435868749">
+							<ReferenceList>
+								<Reference Name="Target">
+									<ObjectRef Name="CPMusic_Switch" ID="{255D671E-305B-4B3A-AC1D-EDF7ED95898C}" WorkUnitID="{E6B49273-C487-4B59-8546-E4217EE02E56}"/>
 								</Reference>
 							</ReferenceList>
 						</Action>

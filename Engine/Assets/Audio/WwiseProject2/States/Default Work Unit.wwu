@@ -3,11 +3,11 @@
 	<States>
 		<WorkUnit Name="Default Work Unit" ID="{22AB25E2-BB71-4CE9-8093-B569E18EB5A3}" PersistMode="Standalone">
 			<ChildrenList>
-				<StateGroup Name="TimeOfDay" ID="{7523F532-E936-4A84-A4D6-5050B8658BBC}">
+				<StateGroup Name="BGM_State" ID="{212BF06F-B611-45DB-82D2-933EE818AAFE}">
 					<ChildrenList>
-						<State Name="None" ID="{920E540B-7A5A-4399-A6B7-EABAA41A3123}"/>
-						<State Name="Day" ID="{51F097EF-EB10-415D-B08E-3AD293EC7859}"/>
-						<State Name="Night" ID="{FA30204D-4CAC-4BC8-9AC6-A84E9D66DC27}"/>
+						<State Name="None" ID="{59F33362-CF7E-4453-975B-0B83B84E7D38}"/>
+						<State Name="CoffeeShop" ID="{234D10A0-6799-4EF8-8F4E-A9C817848F9C}"/>
+						<State Name="PizzaParlor" ID="{B4515133-463C-4D09-8EF9-F32B7B62A759}"/>
 					</ChildrenList>
 				</StateGroup>
 			</ChildrenList>

@@ -1,21 +1,36 @@
-<h1 align="center">🌊 Wave Engine 🌊</h1>
+<h1 align="center">🌊 Wave Engine 🌊 Audio System 🌊</h1>
 
 <p align="center">
 This project is a custom 3D game engine developed in C++ using OpenGL as the main graphics API.  
 It integrates several external libraries such as Assimp (for 3D model loading), DevIL (for texture management), and ImGui (for the user interface).
+This project was created as an assignement for the Video Game Engines class for Bachelor's degrees in Video Game Design and Development.
 </p>
 
 <p align="center">
-In version 2.0, we've evolved beyond simple FBX dependency, implementing a complete resource management system with custom file formats and significant rendering optimizations. The engine now features an advanced editor interface with scene serialization, resource management, and acceleration structures for optimal performance.
+In this version, a functioning audio system has been implemented through the intergration of Wwise. 
 </p>
 
 <p align="center">
-🔗 <strong>GitHub Repository:</strong> <a href="https://github.com/Audra0000/Engine">https://github.com/Audra0000/Engine</a>
+🔗 <strong>GitHub Repository:</strong> <a href="https://github.com/bottzo/Motor2025/tree/Audio-System_VroomTeam"></a>
+🔗 <strong>Latest Release:</strong> link aqui
 </p>
 
 ---
 
-## 🎏 Team Members
+## 🐚 Audio System Team Members
+
+- **Kai Caire** — [GitHub: KaiCaire](https://github.com/KaiCaire)
+   - 
+- **Lara Guevara** — [GitHub: LaraGuevara](https://github.com/LaraGuevara)
+   - Audio Listener and Audio Source components
+   - Spatial Audio Implementation
+   - Audio Components Serialization
+   - Audio Components Inspector GUI
+   - Move Component (for Spatial Audio test)
+- **Marti Mach** — [GitHub: 0psycada](https://github.com/0psycada)
+   - 
+
+## 🎏 Core Engine Team Members
 
 - **Haosheng Li** — [GitHub: HaosLii](https://github.com/HaosLii)  
 - **Ana Alcaraz** — [GitHub: Audra0000](https://github.com/Audra0000)
@@ -126,6 +141,16 @@ Provides detailed information and transformation options for the selected GameOb
 - **Camera Component** (when selected):  
   - Active frustum culling
   - Toggle debug visualization for frustum culling
+- **Audio Source** (when selected):
+   - Select Wwise Event from dropdown
+   - Adjust Volume of the source
+   - Play on Awake toggle
+- **Audio Listener** (when selected):
+   - Set as Default Listener
+- **Move Component** (when selected):
+   - Adjust Speed
+   - Adjust Maximum Distance
+   - Adjust movement Direction
 
 ---
 
@@ -152,49 +177,56 @@ Includes the following menu options:
 
 ---
 
-## ✨ Extra features 
-- **Transparente textures**
-- **zBuffer**
-- **Assets icons**
-- **Asset Deletion:** Delete assets directly from the explorer with automatic cleanup of associated Library files
-- **Import Settings:** Basic implementation of import options for different asset types:
-  - **Textures:** Control filtering modes, max texture size, and flip options (X/Y axes)
-  - **Meshes:** Configure global scaling, axis configuration, Post-processing options: generate normals, flip uv, optimize meshes
-  - **Metadata:** All import settings are saved in .meta files to ensure proper regeneration of the Library folder
+## 🎶 Audio System Implementation 
+- **Wwise Integration**
+   - Wwise was intergrated into the Engine in order to implement the Audio System
+- **Audio Components**
+   - Audio Listener
+      - Implemented Audio Listener component that can be added to Game Objects
+      - Creating an Audio Listener will be set as the Main/Default Listener upon creation
+         - Aditionally, an Audio Listener can be set as the Main/Default from the Inspector Window
+      - Audio Listener Serialization
+         - When a scene is saved, the Audio Listener component is saved
+         - The Default Listener variable is saved
+   - Audio Source
+      - Implemented Audio Source component that can be added to Game Objects
+      - Inspector settings for Audio Source
+         - Can set Wwise Event from a drop down
+            - On Program Launch, Wwise project's .json file is read to find all created Events
+         - Volume can be changed
+         - Set on Awake toggle
+            - When Play mode is active, Event immediately plays
+      - Audio Source Serialization
+         - When a scene is saved, the Audio Source component is saved
+         - The Wwise Event, Volume and Play on Awake variables are saved
 
----
+giffff
 
-## ✨ New Core Features 
+- **Spatial Audio**
+   - Both Audio Listener(s) and Audio Source(s) position are set for Wwise, allowing Spatial Audio adjusted to the Game Object positions
+   - The Audio Component Game Objects can be visualized in the Wwise Game Object 3D Viewer
+- **Music Mixing**
+   - 
+- **Audio Effects**
+   - 
 
-### **Resource Management System**
-- Complete asset pipeline with automatic conversion to custom file formats
-- Assets stored in a structured "Assets" folder, with optimized versions cached in "Library"
-- Reference counting ensures resources are loaded only once regardless of usage count
-- Automatic regeneration of Library folder from Assets and metadata files
-- Support for importing new assets at runtime
+giffff
 
-### **Performance Optimizations**
-- **Frustum Culling:** Objects outside the camera view are not rendered
-- **Octree Spatial Partitioning:** Accelerates both rendering culling and object selection
-- **Debug Visualizations:** Toggle visual representations of AABBs, octree nodes, and frustum
+- **Additional Implementations**
+   - Move Component
+      - To test the Spatial Audio intergration, a simple Move Component was created to move a Game Object along one direction back and forth
+      - Can be customized from the Inspector 
+   - Add Component in Inspector
+      - Added a button in the Inspector when a Game Object is selected
+      - Can add:
+         - Audio Source
+         - Audio Listener
+         - Move Component
 
-### **Scene Management**
-- Scene serialization to custom file format
-- Automatic loading of default scene ("StreetEnvironment")
-- Complete GameObject hierarchy support with parent-child relationships
-- Runtime transformation of objects (position, rotation, scale)
-
-### **Camera System**
-- Configurable camera component with adjustable parameters
-- Selection system using raycasting with octree
-- Visual feedback for selection operations
-
-### **Custom File Formats**
-- Proprietary formats for models, textures and scenes
-- Metadata files storing import settings and dependencies
-
+## Scene Save and Load
+el video aqui
 ---
 
 <p align="center">
-<sub>© 2025 Wave Engine — Developed by Haosheng Li & Ana Alcaraz — MIT License</sub>
+<sub>© 2025 Wave Engine  — MIT License</sub>
 </p>

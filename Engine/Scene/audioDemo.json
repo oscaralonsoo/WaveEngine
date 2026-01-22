@@ -62,7 +62,7 @@
                                                         {
                                                             "active": true,
                                                             "position": [
-                                                                0.0,
+                                                                73.72462463378906,
                                                                 1.3642420526593924e-12,
                                                                 -7.62939453125e-06
                                                             ],
@@ -394,7 +394,7 @@
                         },
                         {
                             "active": true,
-                            "eventName": "Play_CoffeeShop",
+                            "eventName": "Play_ClubPenguin",
                             "playOnAwake": true,
                             "type": 6,
                             "volume": 80.0

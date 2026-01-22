@@ -3,13 +3,19 @@ Event	ID	Name			Wwise Object Path	Notes
 	586175602	Play_CoffeeShop			\Default Work Unit\Play_CoffeeShop	
 	1896801622	HelpMe			\Default Work Unit\HelpMe	
 	2400116970	TalkingSFX			\Default Work Unit\TalkingSFX	
+	2681289886	Play_ClubPenguin			\Default Work Unit\Play_ClubPenguin	
+
+State Group	ID	Name			Wwise Object Path	Notes
+	3086301423	BGM_State			\Default Work Unit\BGM_State	
+
+State	ID	Name	State Group			Notes
+	748895195	None	BGM_State			
+	931153941	CoffeeShop	BGM_State			
+	1814469713	PizzaParlor	BGM_State			
 
 In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
 	60684799	animalCrossingTalking	.cache\DF\{DF60B5D6-E183-80D8-F9F9-17969D1694ED}.wem		\Containers\Default Work Unit\animalCrossingTalking		1764096
 	352851221	coffeeShop	.cache\2B\{2B154332-6CDB-A031-4D10-CA2E596ED15D}.wem		\Containers\Default Work Unit\coffeeShop		558934
+	516869498	Charlies Here - Pizza Parlor _ Club Penguin OST	.cache\12\{12D22832-71FA-5C42-6CAD-FFA7A59033CD}.wem		\Containers\Default Work Unit\CPMusic_Switch\pizzaParlor\Charlies Here - Pizza Parlor _ Club Penguin OST		29114464
 	597016523	HelpMe	.cache\15\{15E837B0-2159-FDED-526E-A24B07BABDBB}.wem		\Containers\Default Work Unit\HelpMe		942176
-	1051818920	Lookin' Fresh (Shrimp Kicks)_stereo	.cache\D9\{D9640CFF-5305-D424-6B0B-03D6AC8E899D}.wem		\Containers\Default Work Unit\LookinFresh_Playlist\Lookin' Fresh (Shrimp Kicks)_stereo\Lookin' Fresh (Shrimp Kicks)_stereo		16162912
-
-Streamed Audio	ID	Name	Audio source file	Generated audio file	Wwise Object Path	Notes
-	63924214	Lookin' Fresh (Hotlantis)_stereo	.cache\EE\{EEBA906F-9817-9DC0-E2C0-B8D58079B757}.wem	63924214.wem	\Containers\Default Work Unit\LookinFresh_Playlist\Lookin' Fresh (Hotlantis)_stereo\Lookin' Fresh (Hotlantis)_stereo	
 
