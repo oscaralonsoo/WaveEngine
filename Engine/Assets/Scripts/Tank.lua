@@ -1,13 +1,10 @@
--- TANK CONTROLLER - MOVEMENT ONLY
+-- TANK CONTROLLER 
 -- Controles:
--- W/S: Mover adelante/atrás
--- A/D: Mover izquierda/derecha (strafe)
--- Q/E: Rotar el tanque (cuerpo)
--- ==========================================
+-- W/S: Mover adelante/atrás (en la dirección que mira)
+-- A/D: Girar el tanque izquierda/derecha
 
 public = {
     moveSpeed = 5.0,
-    strafeSpeed = 3.0,
     rotationSpeed = 90.0
 }
 
@@ -16,8 +13,7 @@ function Start(self)
     Engine.Log("Tank: " .. self.gameObject.name)
     Engine.Log("Controls:")
     Engine.Log("  W/S = Forward/Backward")
-    Engine.Log("  A/D = Strafe Left/Right")
-    Engine.Log("  Q/E = Rotate tank body")
+    Engine.Log("  A/D = Rotate Left/Right")
 end
 
 function Update(self, dt)
@@ -29,27 +25,16 @@ function Update(self, dt)
         return
     end
     
-    -- Obtener velocidades desde variables públicas
+    -- Obtener velocidades desde variables pubnli
     local moveSpeed = self.public and self.public.moveSpeed or 5.0
-    local strafeSpeed = self.public and self.public.strafeSpeed or 3.0
     local rotationSpeed = self.public and self.public.rotationSpeed or 90.0
     
-    -- Calcular vectores de dirección del tanque
+    -- Calcular vector forward del tanque
     local tankRadians = math.rad(rot.y)
     local forwardX = math.sin(tankRadians)
     local forwardZ = math.cos(tankRadians)
-    local rightX = math.cos(tankRadians)
-    local rightZ = -math.sin(tankRadians)
     
     -- Movimiento adelante/atrás (W/S)
-    if Input.GetKey("W") then
-        self.transform:SetPosition(
-            pos.x + forwardX * moveSpeed * dt,
-            pos.y,
-            pos.z + forwardZ * moveSpeed * dt
-        )
-    end
-    
     if Input.GetKey("S") then
         self.transform:SetPosition(
             pos.x - forwardX * moveSpeed * dt,
@@ -58,29 +43,20 @@ function Update(self, dt)
         )
     end
     
-    -- Movimiento lateral (A/D) - Strafe
+    if Input.GetKey("W") then
+        self.transform:SetPosition(
+            pos.x + forwardX * moveSpeed * dt,
+            pos.y,
+            pos.z + forwardZ * moveSpeed * dt
+        )
+    end
+    
+    -- Rotación del tanque (A/D)
     if Input.GetKey("A") then
-        self.transform:SetPosition(
-            pos.x - rightX * strafeSpeed * dt,
-            pos.y,
-            pos.z - rightZ * strafeSpeed * dt
-        )
-    end
-    
-    if Input.GetKey("D") then
-        self.transform:SetPosition(
-            pos.x + rightX * strafeSpeed * dt,
-            pos.y,
-            pos.z + rightZ * strafeSpeed * dt
-        )
-    end
-    
-    -- Rotación del tanque (Q/E)
-    if Input.GetKey("Q") then
         self.transform:SetRotation(rot.x, rot.y - rotationSpeed * dt, rot.z)
     end
     
-    if Input.GetKey("E") then
+    if Input.GetKey("D") then
         self.transform:SetRotation(rot.x, rot.y + rotationSpeed * dt, rot.z)
     end
 end
