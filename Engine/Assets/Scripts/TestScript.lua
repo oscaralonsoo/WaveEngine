@@ -37,7 +37,6 @@ function Update(self, dt)
     if Input.GetKey("D") then
         newX = newX + self.public.speed * dt
         moved = true
-        Engine.Log("Moving right at speed: " .. self.public.speed)
     end
     
     -- Aplicar nueva posición si se movió

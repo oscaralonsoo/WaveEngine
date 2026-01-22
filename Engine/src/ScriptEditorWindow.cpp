@@ -115,7 +115,6 @@ void ScriptEditorWindow::Draw()
 
                         strncpy_s(tab->textBuffer, bufferSize, content.c_str(), _TRUNCATE);
                         MarkCurrentTabAsModified();
-                        LOG_CONSOLE("[ScriptEditor] Replaced %d occurrences", count);
                     }
                 }
 
@@ -951,8 +950,6 @@ void ScriptEditorWindow::OpenScript(const std::string& scriptPath)
         {
             CheckSyntaxErrorsForTab(tab);
         }
-
-        LOG_CONSOLE("[ScriptEditor] Opened: %s", scriptPath.c_str());
     }
 }
 
@@ -1027,8 +1024,6 @@ void ScriptEditorWindow::CloseTab(int tabIndex)
 {
     if (tabIndex < 0 || tabIndex >= static_cast<int>(openTabs.size()))
         return;
-
-    LOG_CONSOLE("[ScriptEditor] Closed: %s", openTabs[tabIndex].fileName.c_str());
 
     openTabs.erase(openTabs.begin() + tabIndex);
 

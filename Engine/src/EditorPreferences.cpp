@@ -160,7 +160,6 @@ bool EditorPreferences::OpenFileWithPreferredEditor(const std::string& filePath)
 
     if (ShellExecuteExA(&sei))
     {
-        LOG_CONSOLE("[EditorPreferences] Opened file with external editor: %s", filePath.c_str());
         return true;
     }
     else
@@ -175,7 +174,6 @@ bool EditorPreferences::OpenFileWithPreferredEditor(const std::string& filePath)
 
     if (result == 0)
     {
-        LOG_CONSOLE("[EditorPreferences] Opened file with external editor: %s", filePath.c_str());
         return true;
     }
     else

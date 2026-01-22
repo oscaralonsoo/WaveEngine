@@ -20,7 +20,6 @@ ResourcePrefab::~ResourcePrefab()
 bool ResourcePrefab::LoadInMemory()
 {
     if (loadedInMemory) {
-        LOG_DEBUG("[ResourcePrefab] Prefab already loaded: %llu", uid);
         return true;
     }
 
@@ -53,9 +52,6 @@ bool ResourcePrefab::LoadInMemory()
 
     loadedInMemory = true;
 
-    LOG_DEBUG("[ResourcePrefab] Prefab loaded into memory: %s (UID: %llu)",
-        assetsFile.c_str(), uid);
-
     return true;
 }
 
@@ -68,7 +64,6 @@ void ResourcePrefab::UnloadFromMemory()
     prefabData.clear();
     loadedInMemory = false;
 
-    LOG_DEBUG("[ResourcePrefab] Prefab unloaded from memory: UID %llu", uid);
 }
 
 GameObject* ResourcePrefab::Instantiate()

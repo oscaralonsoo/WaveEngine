@@ -51,9 +51,6 @@ bool ResourceScript::LoadInMemory()
 
     loadedInMemory = true;
 
-    LOG_DEBUG("[ResourceScript] Script loaded into memory: %s (UID: %llu, Size: %zu bytes)",
-        assetsFile.c_str(), uid, scriptContent.size());
-
     return true;
 }
 
@@ -67,7 +64,6 @@ void ResourceScript::UnloadFromMemory()
     loadedInMemory = false;
     lastLoadTime = 0;
 
-    LOG_DEBUG("[ResourceScript] Script unloaded from memory: UID %llu", uid);
 }
 
 bool ResourceScript::Reload()

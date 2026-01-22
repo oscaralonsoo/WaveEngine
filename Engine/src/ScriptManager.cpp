@@ -64,8 +64,6 @@ bool ScriptManager::Update() {
 // Execute all deferred operations
 bool ScriptManager::PostUpdate() {
     if (!pendingOperations.empty()) {
-        LOG_DEBUG("[ScriptManager] Executing %zu pending operations", pendingOperations.size());
-
         // Execute all pending operations
         for (auto& operation : pendingOperations) {
             operation();
@@ -107,8 +105,6 @@ bool ScriptManager::LoadScript(const std::string& filepath) {
         return false;
     }
 
-    LOG_CONSOLE("[ScriptManager] Loading script: %s", filepath.c_str());
-
     int result = luaL_dofile(L, filepath.c_str());
 
     if (result != LUA_OK) {
@@ -126,11 +122,9 @@ bool ScriptManager::LoadScript(const std::string& filepath) {
     }
 
     loadedScripts[filepath] = true;
-    LOG_CONSOLE("[ScriptManager] Script loaded: %s", filepath.c_str());
     return true;
 }
 bool ScriptManager::ReloadScript(const std::string& filepath) {
-    LOG_CONSOLE("[ScriptManager] Reloading: %s", filepath.c_str());
     return LoadScript(filepath);
 }
 
@@ -391,11 +385,9 @@ static int Lua_GameObject_Create(lua_State* L) {
             GameObject* root = Application::GetInstance().scene->GetRoot();
             if (root && obj->GetParent() == nullptr) {
                 root->AddChild(obj);
-                LOG_DEBUG("[Lua] GameObject added to scene root: %s", name);
             }
 
             *udata = obj;  // Assign the created GameObject
-            LOG_DEBUG("[Lua] Created GameObject in PostUpdate: %s", name);
         }
         });
 
@@ -417,7 +409,6 @@ static int Lua_GameObject_Destroy(lua_State* L) {
     auto& app = Application::GetInstance();
     app.scripts->EnqueueOperation([obj]() {
         obj->MarkForDeletion();
-        LOG_DEBUG("[Lua] GameObject marked for deletion in PostUpdate: %s", obj->GetName().c_str());
         });
 
     return 0;
@@ -514,7 +505,6 @@ static int Lua_GameObject_AddComponent_MeshRenderer(lua_State* L) {
     app.scripts->EnqueueOperation([obj]() {
         if (!obj->IsMarkedForDeletion()) {
             obj->CreateComponent(ComponentType::MESH); 
-            LOG_DEBUG("[Lua] Added MeshRenderer component in PostUpdate");
         }
         });
 
@@ -538,7 +528,6 @@ static int Lua_GameObject_AddComponent_Material(lua_State* L) {
     app.scripts->EnqueueOperation([obj]() {
         if (!obj->IsMarkedForDeletion()) {
             obj->CreateComponent(ComponentType::MATERIAL); 
-            LOG_DEBUG("[Lua] Added Material component in PostUpdate");
         }
         });
 
@@ -948,7 +937,6 @@ static int Lua_Transform_Index(lua_State* L) {
             float worldY = worldMatrix[3][1];
             float worldZ = worldMatrix[3][2];
 
-            LOG_DEBUG("[Lua] WorldPos calculated: (%.2f, %.2f, %.2f)", worldX, worldY, worldZ);
 
             // Crear tabla Lua
             lua_newtable(L);
@@ -1020,7 +1008,6 @@ static int Lua_Transform_Index(lua_State* L) {
     }
 
     // Si la clave no se encuentra, retornar nil
-    LOG_DEBUG("[Lua] Transform key not found: %s", key);
     lua_pushnil(L);
     return 1;
 }
@@ -1033,7 +1020,6 @@ void ScriptManager::RegisterComponentAPI() {
 
     lua_pop(L, 1);
 
-    LOG_CONSOLE("[ScriptManager] Transform API registered");
 }
 
 // PREFAB API
@@ -1133,7 +1119,6 @@ static int Lua_Prefab_Instantiate(lua_State* L) {
 
         if (instance) {
             *udata = instance;
-            LOG_CONSOLE("[Lua] Prefab instantiated in PostUpdate: %s", name);
         }
         else {
             LOG_CONSOLE("[Lua] ERROR: Failed to instantiate prefab: %s", name);
@@ -1154,7 +1139,6 @@ void ScriptManager::RegisterPrefabAPI() {
 
     lua_setglobal(L, "Prefab");
 
-    LOG_CONSOLE("[ScriptManager] Prefab API registered");
 }
 
 static GameWindow* GetGameWindow() {

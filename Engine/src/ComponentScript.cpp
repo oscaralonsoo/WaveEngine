@@ -35,19 +35,16 @@ void ComponentScript::Update()
 {
 
     if (!active) {
-        LOG_CONSOLE("[ComponentScript]  Update END (not active) - Owner: %s", owner->GetName().c_str());
         return;
     }
 
     if (!HasScript()) {
-        LOG_CONSOLE("[ComponentScript]  Update END (no script) - Owner: %s", owner->GetName().c_str());
         return;
     }
 
     // Solo actualizar en modo PLAYING
     auto& app = Application::GetInstance();
     if (app.GetPlayState() != Application::PlayState::PLAYING) {
-        LOG_CONSOLE("[ComponentScript]  Update END (not playing) - Owner: %s", owner->GetName().c_str());
         return;
     }
 
@@ -59,11 +56,9 @@ void ComponentScript::Update()
     if (res && res->GetType() == Resource::SCRIPT) {
         const ResourceScript* scriptRes = static_cast<const ResourceScript*>(res);
         if (scriptRes->NeedsReload()) {
-            LOG_CONSOLE("[ComponentScript] Hot reloading script for: %s", owner->GetName().c_str());
             ReloadScript();
         }
     }
-
 
     // Llamar Update del script
     float deltaTime = app.time->GetDeltaTime();
@@ -120,10 +115,9 @@ void ComponentScript::OnEditor()
 
             ImGui::SameLine();
 
-            // Botón para recargar manualmente (no haría falta pero lo dejamos por si deja de funcionar en algun punto) (lo quitamos antes de la release)!!!!!!!!!!!
+            // Botón para recargar manualmente
             if (ImGui::Button("Reload")) {
                 ReloadScript();
-                LOG_CONSOLE("[ComponentScript] Manual reload triggered");
             }
         }
     }
@@ -244,7 +238,6 @@ bool ComponentScript::LoadScriptByUID(UID uid)
         return false;
     }
 
-    LOG_CONSOLE("[ComponentScript] Script loaded for GameObject: %s", owner->GetName().c_str());
     return true;
 }
 
@@ -348,7 +341,6 @@ void ComponentScript::CallUpdate(float deltaTime)
     if (res && res->GetType() == Resource::SCRIPT) {
         const ResourceScript* scriptRes = static_cast<const ResourceScript*>(res);
         if (scriptRes->NeedsReload()) {
-            LOG_CONSOLE("[ComponentScript] Hot reloading script for: %s", owner->GetName().c_str());
             ReloadScript();
         }
     }
@@ -381,12 +373,7 @@ void ComponentScript::CallUpdate(float deltaTime)
     if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
         const char* error = lua_tostring(L, -1);
 
-        LOG_CONSOLE("[ComponentScript] ========================================");
-        LOG_CONSOLE("[ComponentScript] LUA ERROR in Update():");
-        LOG_CONSOLE("[ComponentScript] Owner: %s", owner->GetName().c_str());
-        LOG_CONSOLE("[ComponentScript] Script Table: %s", luaTableName.c_str());
-        LOG_CONSOLE("[ComponentScript] Error: %s", error ? error : "Unknown error");
-        LOG_CONSOLE("[ComponentScript] ========================================");
+        LOG_CONSOLE("[ComponentScript] LUA ERROR in Update() - %s: %s", owner->GetName().c_str(), error ? error : "Unknown error");
 
         lua_pop(L, 1);
     }
@@ -415,8 +402,6 @@ void ComponentScript::CreateLuaTable()
     // Crear nueva tabla en Lua
     lua_newtable(L);
     lua_setglobal(L, luaTableName.c_str());
-
-    LOG_CONSOLE("[ComponentScript] Created Lua table: %s", luaTableName.c_str());
 }
 
 void ComponentScript::DestroyLuaTable()
@@ -432,7 +417,6 @@ void ComponentScript::DestroyLuaTable()
     lua_pushnil(L);
     lua_setglobal(L, luaTableName.c_str());
 
-    LOG_DEBUG("[ComponentScript] Destroyed Lua table: %s", luaTableName.c_str());
     luaTableName.clear();
 }
 
@@ -454,7 +438,6 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
         (unsigned char)cleanContent[1] == 0xBB &&
         (unsigned char)cleanContent[2] == 0xBF) {
         cleanContent = cleanContent.substr(3);
-        LOG_DEBUG("[ComponentScript] Removed UTF-8 BOM from script");
     }
 
     int loadResult = luaL_loadstring(L, cleanContent.c_str());
@@ -498,7 +481,6 @@ bool ComponentScript::CompileAndExecuteScript(const std::string& scriptContent)
         lua_getglobal(L, "public");
         if (lua_istable(L, -1)) {
             lua_setfield(L, -2, "public");
-            LOG_DEBUG("[ComponentScript] Copied 'public' table to script instance");
         }
         else {
             lua_pop(L, 1);
@@ -519,8 +501,6 @@ void ComponentScript::SetupScriptEnvironment(lua_State* L)
 {
     // La tabla del script ya está en el stack (-1)
 
-    LOG_CONSOLE("[ComponentScript] SetupScriptEnvironment - Owner: %s, This: %p", owner->GetName().c_str(), (void*)this);
-
     // Crear userdata para el GameObject real
     GameObject** goUserdata = (GameObject**)lua_newuserdata(L, sizeof(GameObject*));
     *goUserdata = owner;
@@ -530,8 +510,6 @@ void ComponentScript::SetupScriptEnvironment(lua_State* L)
     lua_setmetatable(L, -2);
 
     lua_setfield(L, -2, "gameObject");  // script.gameObject = userdata
-
-    LOG_CONSOLE("[ComponentScript] Injected GameObject userdata");
 
     // Guardar puntero al ComponentScript para destrucción diferida
     ComponentScript** scriptUserdata = (ComponentScript**)lua_newuserdata(L, sizeof(ComponentScript*));
@@ -550,23 +528,16 @@ void ComponentScript::SetupScriptEnvironment(lua_State* L)
         ComponentScript* script = *(ComponentScript**)lua_touserdata(L, -1);
         script->MarkGameObjectForDestroy();
 
-        LOG_CONSOLE("[Lua] GameObject marked for deferred destroy: %s", script->owner->GetName().c_str());
-
         return 0;
         });
     lua_setfield(L, -2, "Destroy");
-
-    LOG_CONSOLE("[ComponentScript] Added Destroy() helper with deferred execution");
 
     // Inyectar transform
     Transform* transform = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
     if (transform) {
         CreateTransformUserdata(L, transform);
         lua_setfield(L, -2, "transform");
-        LOG_CONSOLE("[ComponentScript] Injected Transform userdata");
     }
-
-    LOG_CONSOLE("[ComponentScript] SetupScriptEnvironment complete");
 }
 
 void ComponentScript::CreateTransformUserdata(lua_State* L, Transform* transform)
@@ -708,7 +679,6 @@ void ComponentScript::ExtractPublicVariables()
 
     if (lua_istable(L, -1)) {
         foundPublic = true;
-        LOG_DEBUG("[ComponentScript] Found global 'public' table");
     }
     else {
         // Si no existe global, buscar en la tabla del script
@@ -720,7 +690,6 @@ void ComponentScript::ExtractPublicVariables()
 
             if (lua_istable(L, -1)) {
                 foundPublic = true;
-                LOG_DEBUG("[ComponentScript] Found 'public' table inside script table");
                 // Intercambiar para que "public" esté en top
                 lua_remove(L, -2);
             }
@@ -734,7 +703,6 @@ void ComponentScript::ExtractPublicVariables()
     }
 
     if (!foundPublic) {
-        LOG_DEBUG("[ComponentScript] No 'public' table found in script");
         return;
     }
 
@@ -749,17 +717,14 @@ void ComponentScript::ExtractPublicVariables()
             if (lua_isnumber(L, -1)) {
                 float value = (float)lua_tonumber(L, -1);
                 publicVariables.emplace_back(varName, value);
-                LOG_DEBUG("[ComponentScript]   - %s = %.2f (number)", varName, value);
             }
             else if (lua_isstring(L, -1)) {
                 const char* value = lua_tostring(L, -1);
                 publicVariables.emplace_back(varName, std::string(value));
-                LOG_DEBUG("[ComponentScript]   - %s = \"%s\" (string)", varName, value);
             }
             else if (lua_isboolean(L, -1)) {
                 bool value = lua_toboolean(L, -1);
                 publicVariables.emplace_back(varName, value);
-                LOG_DEBUG("[ComponentScript]   - %s = %s (boolean)", varName, value ? "true" : "false");
             }
             else if (lua_istable(L, -1)) {
                 // Verificar si es un vec3 (tabla con x, y, z)
@@ -772,8 +737,6 @@ void ComponentScript::ExtractPublicVariables()
                     float y = (float)lua_tonumber(L, -2);
                     float z = (float)lua_tonumber(L, -1);
                     publicVariables.emplace_back(varName, glm::vec3(x, y, z));
-                    LOG_DEBUG("[ComponentScript]   - %s = {%.2f, %.2f, %.2f} (vec3)",
-                        varName, x, y, z);
                 }
 
                 lua_pop(L, 3);
@@ -784,8 +747,6 @@ void ComponentScript::ExtractPublicVariables()
     }
 
     lua_pop(L, 1);  // Pop tabla "public"
-
-    LOG_CONSOLE("[ComponentScript] Extracted %zu public variables from script", publicVariables.size());
 }
 
 void ComponentScript::SyncPublicVariablesToLua()
