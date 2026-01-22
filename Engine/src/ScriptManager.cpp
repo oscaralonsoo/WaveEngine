@@ -20,6 +20,7 @@
 #include "GameWindow.h"
 #include "EditorWindow.h"
 #include "ModuleEditor.h"
+#include "ConsoleWindow.h"
 
 #include <filesystem>
 #include <cmath>            
@@ -96,6 +97,13 @@ void ScriptManager::EnqueueOperation(std::function<void()> operation) {
 bool ScriptManager::LoadScript(const std::string& filepath) {
     if (!std::filesystem::exists(filepath)) {
         LOG_CONSOLE("[ScriptManager] ERROR: Script not found: %s", filepath.c_str());
+
+        // Activar flash de error
+        Application& app = Application::GetInstance();
+        if (app.editor && app.editor->GetConsoleWindow()) {
+            app.editor->GetConsoleWindow()->FlashError();
+        }
+
         return false;
     }
 
@@ -107,6 +115,13 @@ bool ScriptManager::LoadScript(const std::string& filepath) {
         const char* error = lua_tostring(L, -1);
         LOG_CONSOLE("[ScriptManager] ERROR: %s", error);
         lua_pop(L, 1);
+
+        // Activar flash de error
+        Application& app = Application::GetInstance();
+        if (app.editor && app.editor->GetConsoleWindow()) {
+            app.editor->GetConsoleWindow()->FlashError();
+        }
+
         return false;
     }
 
@@ -114,7 +129,6 @@ bool ScriptManager::LoadScript(const std::string& filepath) {
     LOG_CONSOLE("[ScriptManager] Script loaded: %s", filepath.c_str());
     return true;
 }
-
 bool ScriptManager::ReloadScript(const std::string& filepath) {
     LOG_CONSOLE("[ScriptManager] Reloading: %s", filepath.c_str());
     return LoadScript(filepath);
@@ -128,6 +142,12 @@ void ScriptManager::CallGlobalStart() {
             const char* error = lua_tostring(L, -1);
             LOG_CONSOLE("[ScriptManager] ERROR in Start(): %s", error);
             lua_pop(L, 1);
+
+            // Activar flash de error
+            auto& app = Application::GetInstance();
+            if (app.editor && app.editor->GetConsoleWindow()) {
+                app.editor->GetConsoleWindow()->FlashError();
+            }
         }
     }
     else {
@@ -145,6 +165,12 @@ void ScriptManager::CallGlobalUpdate(float deltaTime) {
             const char* error = lua_tostring(L, -1);
             LOG_CONSOLE("[ScriptManager] ERROR in Update(): %s", error);
             lua_pop(L, 1);
+
+            // Activar flash de error
+            auto& app = Application::GetInstance();
+            if (app.editor && app.editor->GetConsoleWindow()) {
+                app.editor->GetConsoleWindow()->FlashError();
+            }
         }
     }
     else {

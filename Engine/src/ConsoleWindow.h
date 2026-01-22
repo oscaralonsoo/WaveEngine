@@ -10,6 +10,8 @@ public:
 
     void Draw() override;
 
+    void FlashError();
+
 private:
     // Filter flags
     bool showErrors = true;
@@ -22,4 +24,8 @@ private:
     // Scroll control
     bool autoScroll = true;
     bool scrollToBottom = false;
+
+    // Error indicator
+    float errorFlashTimer = 0.0f;
+    static constexpr float FLASH_DURATION = 2.0f;
 };
