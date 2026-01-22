@@ -175,7 +175,9 @@ Include new script menu options:
   
 ---
 
-![Editor Scripting Demo](Gifs/EngineFunctions.gif)
+<p align="center">
+  <img src="Gifs/EngineFunctions.gif" alt="Editor Scripting Functions" width="600">
+</p>
 
 ### **In-Editor Script Editing**
 
@@ -255,6 +257,10 @@ Scripts can be attached to **GameObjects** and **Cameras**, allowing you to defi
   Input.A/Input.W/Input.S/...
   ```
 ---
+
+<p align="center">
+  <img src="Gifs/EngineDemo.gif" alt="Editor Scripting Demo" width="600">
+</p>
 
 <p align="center">
 <sub>© 2025 Wave Engine — Developed by ....— MIT License</sub>
