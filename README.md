@@ -17,8 +17,8 @@ In version 3.1, we developed a particle system for the engine, in it you can cha
 - **Aniol López** — [GitHub: Aniolobolo](https://github.com/Aniolobolo)
 - **Saüc Pellejero** — [GitHub: ZReiNa](https://github.com/ZReiNa)
 
-Particle system implementation: Aniol,Asier.
-Demo:Saüc.
+Particle system implementation: Aniol López and Asier Ulloa.
+Demo: Saüc Pellejero.
 
 ## 🦀 Controls
 
