@@ -59,4 +59,6 @@ private:
     FileSystem* filesystem = nullptr;
 
     ComponentCamera* FindCameraInHierarchy(GameObject* obj);
+
+    void UpdateGameCamera();
 };

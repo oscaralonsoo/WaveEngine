@@ -17,6 +17,9 @@
 #include "ComponentBoxCollider.h"
 #include "ComponentSphereCollider.h"
 #include "ComponentMaterial.h"
+#include "Input.h"
+#include "Window.h"       // Necesario para GetScale()
+#include "ComponentCamera.h"
 
 ModuleScene::ModuleScene() : Module()
 {
@@ -154,6 +157,8 @@ bool ModuleScene::Update()
     {
         root->Update();
     }
+
+    UpdateGameCamera();
 
     // Full rebuild only if explicitly requested
     if (needsOctreeRebuild)
@@ -481,5 +486,102 @@ void ModuleScene::FirstScene()
             trans->SetPosition(glm::vec3(0.0f, 5.0f, 0.0f));
             trans->SetScale(glm::vec3(2.0f, 1.0f, 5.0f));
         }
+    }
+}
+
+// Asegúrate de tener estos includes arriba en ModuleScene.cpp:
+// #include "Input.h"
+// #include "ModuleWindow.h"
+// #include "ComponentCamera.h"
+// #include "ComponentRigidBody.h"
+// #include "Transform.h"
+
+void ModuleScene::UpdateGameCamera()
+{
+    // --- 1. VALIDACIONES ---
+    if (!Application::GetInstance().camera) return;
+    ComponentCamera* gameCam = Application::GetInstance().camera->GetSceneCamera();
+
+    if (!gameCam || !gameCam->owner) return;
+
+    Input* input = Application::GetInstance().input.get();
+    if (!input) return;
+
+    // --- 2. PREPARACIÓN ---
+    float dt = 0.016f; // O tu App->time->dt
+    float speed = 10.0f * dt;
+    if (input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT) speed *= 2.0f;
+
+    // Ratón
+    float mouseXf, mouseYf;
+    SDL_GetMouseState(&mouseXf, &mouseYf);
+    int scale = Application::GetInstance().window.get()->GetScale();
+    mouseXf /= scale;
+    mouseYf /= scale;
+
+    static float lastMouseX = mouseXf;
+    static float lastMouseY = mouseYf;
+    float motionXf = mouseXf - lastMouseX;
+    float motionYf = mouseYf - lastMouseY;
+    lastMouseX = mouseXf;
+    lastMouseY = mouseYf;
+
+    // --- 3. LÓGICA DE MOVIMIENTO ---
+
+    // A) CLICK DERECHO (Rotación + Vuelo)
+    if (input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_REPEAT || input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN)
+    {
+        if (input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) gameCam->ResetMouseInput();
+
+        // 1. Rotar Cámara (Visual)
+        gameCam->HandleMouseInput(mouseXf, mouseYf);
+
+        // 2. Mover Posición (WASD)
+        GameObject* camObj = gameCam->owner;
+        Transform* trans = (Transform*)camObj->GetComponent(ComponentType::TRANSFORM);
+        ComponentRigidBody* rb = (ComponentRigidBody*)camObj->GetComponent(ComponentType::RIGIDBODY);
+
+        if (trans) {
+            // Vectores locales
+            glm::mat4 globalMat = trans->GetGlobalMatrix();
+            glm::vec3 right = glm::vec3(globalMat[0]); 
+            glm::vec3 forward = -glm::vec3(globalMat[2]); 
+            glm::vec3 up = glm::vec3(0, 1, 0);
+
+            glm::vec3 pos = trans->GetPosition();
+
+            if (input->GetKey(SDL_SCANCODE_W) == KEY_REPEAT) pos += forward * speed;
+            if (input->GetKey(SDL_SCANCODE_S) == KEY_REPEAT) pos -= forward * speed;
+            if (input->GetKey(SDL_SCANCODE_D) == KEY_REPEAT) pos += right * speed;
+            if (input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT) pos -= right * speed;
+            if (input->GetKey(SDL_SCANCODE_E) == KEY_REPEAT) pos += up * speed;
+            if (input->GetKey(SDL_SCANCODE_Q) == KEY_REPEAT) pos -= up * speed;
+
+            // 1. Aplicamos la posición al Transform visual
+            trans->SetPosition(pos);
+
+            // 2. OBLIGATORIO: Sincronizar el RigidBody al nuevo sitio
+            if (rb && rb->GetRigidBody()) 
+            {
+                rb->SyncToBullet(); // <--- ESTO MUEVE EL RIGIDBODY A DONDE ESTÁ EL TRANSFORM
+                
+                // Matamos la inercia para que pare en seco al soltar la tecla
+                rb->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+                rb->GetRigidBody()->activate(); 
+            }
+        }
+    }
+    // B) Orbitar
+    else if ((input->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT || input->GetKey(SDL_SCANCODE_RALT) == KEY_REPEAT) &&
+        (input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_REPEAT || input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN))
+    {
+        if (input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN) gameCam->ResetOrbitInput();
+        gameCam->HandleOrbitInput(mouseXf, mouseYf);
+    }
+    // C) Paneo
+    else if (input->GetMouseButtonDown(SDL_BUTTON_MIDDLE) == KEY_REPEAT || input->GetMouseButtonDown(SDL_BUTTON_MIDDLE) == KEY_DOWN)
+    {
+        if (input->GetMouseButtonDown(SDL_BUTTON_MIDDLE) == KEY_DOWN) gameCam->ResetPanInput();
+        gameCam->HandlePanInput(motionXf, motionYf);
     }
 }

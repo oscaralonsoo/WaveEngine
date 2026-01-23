@@ -4,6 +4,8 @@
 #include "Application.h"
 #include "Input.h"
 #include "Window.h"
+#include "ComponentRigidBody.h"
+#include "ComponentSphereCollider.h"
 
 ModuleCamera::ModuleCamera() : 
     Module(),
@@ -33,6 +35,34 @@ bool ModuleCamera::Start()
 
     editorCamera = static_cast<ComponentCamera*>(editorCameraGO->CreateComponent(ComponentType::CAMERA));
 
+    // -------------------------------------------------------------
+    // --- AÑADIR FÍSICAS A LA CÁMARA DEL EDITOR (NUEVO) ---
+    // -------------------------------------------------------------
+    
+    // 1. RIGIDBODY
+    ComponentRigidBody* rb = (ComponentRigidBody*)editorCameraGO->CreateComponent(ComponentType::RIGIDBODY);
+    if (rb)
+    {
+        rb->SetMass(1.0f); // Masa necesaria para colisionar
+        
+        // Configuración especial para cámara "voladora"
+        if (rb->GetRigidBody())
+        {
+            rb->GetRigidBody()->setGravity(btVector3(0, 0, 0)); // Sin gravedad
+            rb->GetRigidBody()->setDamping(0.9f, 0.9f);         // Frenado rápido (evita deslizamiento)
+            rb->GetRigidBody()->setAngularFactor(btVector3(0, 0, 0)); // Evita que la cámara rote al chocar
+        }
+        rb->Start(); // Inicializar física
+    }
+
+    // 2. COLLIDER (Esfera)
+    ComponentSphereCollider* col = (ComponentSphereCollider*)editorCameraGO->CreateComponent(ComponentType::COLLIDER_SPHERE);
+    if (col)
+    {
+        col->SetRadius(0.5f); // Tamaño de la colisión de la cámara
+    }
+    // -------------------------------------------------------------
+
     // Set aspect ratio from window
     Application& app = Application::GetInstance();
     int width, height;
@@ -44,7 +74,6 @@ bool ModuleCamera::Start()
         editorCamera->SetAspectRatio(aspectRatio);
     }
 
-    LOG_DEBUG("Camera Module initialized");
     return true;
 }
 
