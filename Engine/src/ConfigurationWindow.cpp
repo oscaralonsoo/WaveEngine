@@ -22,6 +22,19 @@ void ConfigurationWindow::Draw()
 
     isHovered = (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows));
 
+    if (ImGui::CollapsingHeader("VSync"))
+    {
+        if (ImGui::Checkbox("Activar Vertical Sync", &vsyncActive))
+        {
+
+            SDL_GL_SetSwapInterval(vsyncActive ? 1 : 0);
+            LOG_CONSOLE("VSync: %s", vsyncActive ? "Activado" : "Desactivado");
+        }
+        ImGui::Text("Estado: %s", vsyncActive ? "Limitado por el Monitor" : "FPS Desbloqueados");
+    }
+
+    ImGui::Separator();
+
     if (ImGui::CollapsingHeader("FPS"))
     {
         DrawFPSGraph();
