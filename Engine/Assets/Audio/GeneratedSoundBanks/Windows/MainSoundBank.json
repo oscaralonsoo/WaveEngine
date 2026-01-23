@@ -10,7 +10,7 @@
     "Type": "User",
     "GUID": "{7C55CBAC-5186-4208-888F-0BCE02308A98}",
     "Language": "SFX",
-    "Hash": "{38C99198-263F-DB83-3CF6-2974BE9FA2EE}",
+    "Hash": "{24CA5066-01CB-DE73-25BA-154C015628FD}",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\MainSoundBank",
     "ShortName": "MainSoundBank",
     "Path": "MainSoundBank.bnk",
@@ -191,7 +191,7 @@
       "Name": "Play_RadioStatic",
       "ObjectPath": "\\Events\\Default Work Unit\\Play_RadioStatic",
       "GUID": "{3551EEE5-E060-46CA-9383-5F51686E58F0}",
-      "MaxAttenuation": "20",
+      "MaxAttenuation": "15",
       "DurationType": "Infinite",
       "MediaRefs": [
        {
@@ -395,6 +395,6 @@
     ]
    }
   ],
-  "FileHash": "{0F0B748C-D26E-0731-25B3-B9E8258A49A7}"
+  "FileHash": "{DE3050AA-7E5C-7435-D86F-DEF66F2B087E}"
  }
 }

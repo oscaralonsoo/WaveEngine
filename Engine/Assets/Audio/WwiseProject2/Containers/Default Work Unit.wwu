@@ -1147,6 +1147,11 @@
 					<PropertyList>
 						<Property Name="3DSpatialization" Type="int16" Value="2"/>
 						<Property Name="IsLoopingEnabled" Type="bool" Value="True"/>
+						<Property Name="Volume" Type="Real64">
+							<ValueList>
+								<Value>12</Value>
+							</ValueList>
+						</Property>
 					</PropertyList>
 					<ReferenceList>
 						<Reference Name="Attenuation">
@@ -1156,7 +1161,7 @@
 							<ObjectRef Name="Default Conversion Settings" ID="{6D1B890C-9826-4384-BF07-C15223E9FB56}" WorkUnitID="{FB418BE9-1BF2-46F3-B748-3C670469BE90}"/>
 						</Reference>
 						<Reference Name="OutputBus">
-							<ObjectRef Name="Main Audio Bus" ID="{1514A4D8-1DA6-412A-A17E-75CA0C2149F3}" WorkUnitID="{F0D31CEB-8F9E-4AA4-B822-589F2A4A8993}"/>
+							<ObjectRef Name="SFX Bus" ID="{E901AF86-38FB-46EA-B16A-DDF987F9D27D}" WorkUnitID="{F0D31CEB-8F9E-4AA4-B822-589F2A4A8993}"/>
 						</Reference>
 					</ReferenceList>
 					<ChildrenList>
@@ -1175,7 +1180,13 @@
 				<Sound Name="radio-static" ID="{FF27F106-AC9B-4EFF-A7B9-769C43A03ADF}" ShortID="483183899">
 					<PropertyList>
 						<Property Name="3DSpatialization" Type="int16" Value="2"/>
+						<Property Name="AttenuationDistanceScaling" Type="Real32" Value="0.75"/>
 						<Property Name="IsLoopingEnabled" Type="bool" Value="True"/>
+						<Property Name="Volume" Type="Real64">
+							<ValueList>
+								<Value>3</Value>
+							</ValueList>
+						</Property>
 					</PropertyList>
 					<ReferenceList>
 						<Reference Name="Attenuation">
@@ -1185,7 +1196,7 @@
 							<ObjectRef Name="Default Conversion Settings" ID="{6D1B890C-9826-4384-BF07-C15223E9FB56}" WorkUnitID="{FB418BE9-1BF2-46F3-B748-3C670469BE90}"/>
 						</Reference>
 						<Reference Name="OutputBus">
-							<ObjectRef Name="Main Audio Bus" ID="{1514A4D8-1DA6-412A-A17E-75CA0C2149F3}" WorkUnitID="{F0D31CEB-8F9E-4AA4-B822-589F2A4A8993}"/>
+							<ObjectRef Name="SFX Bus" ID="{E901AF86-38FB-46EA-B16A-DDF987F9D27D}" WorkUnitID="{F0D31CEB-8F9E-4AA4-B822-589F2A4A8993}"/>
 						</Reference>
 					</ReferenceList>
 					<ChildrenList>

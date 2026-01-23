@@ -340,64 +340,6 @@
       ]
      }
     ],
-    "SwitchGroups": [
-     {
-      "Id": "2817781829",
-      "Name": "Reverb_Busses",
-      "ObjectPath": "\\Switches\\Default Work Unit\\Reverb_Busses",
-      "GUID": "{E68DE0C5-B527-4778-BBB1-2261FCF62880}",
-      "Switches": [
-       {
-        "Id": "438105790",
-        "Name": "Outside",
-        "ObjectPath": "\\Switches\\Default Work Unit\\Reverb_Busses\\Outside",
-        "GUID": "{7FFC46DD-ECF5-432F-9528-6B4AE9528B49}"
-       },
-       {
-        "Id": "701863527",
-        "Name": "Inside_My_Head",
-        "ObjectPath": "\\Switches\\Default Work Unit\\Reverb_Busses\\Inside_My_Head",
-        "GUID": "{ACCB129B-06D9-4A85-A3F6-2CAAE21C70F4}"
-       },
-       {
-        "Id": "1021965139",
-        "Name": "Large_Plate",
-        "ObjectPath": "\\Switches\\Default Work Unit\\Reverb_Busses\\Large_Plate",
-        "GUID": "{51ACD9F4-65FD-48B8-A20F-5FF3E551FED0}"
-       },
-       {
-        "Id": "1024696295",
-        "Name": "Cathedral",
-        "ObjectPath": "\\Switches\\Default Work Unit\\Reverb_Busses\\Cathedral",
-        "GUID": "{7889C2EB-DB77-47B8-A31B-D14148EE6104}"
-       },
-       {
-        "Id": "1220391191",
-        "Name": "Robotic",
-        "ObjectPath": "\\Switches\\Default Work Unit\\Reverb_Busses\\Robotic",
-        "GUID": "{4E7659F6-7C73-452C-8489-86DD370523F1}"
-       },
-       {
-        "Id": "1964438385",
-        "Name": "Metal_Tank",
-        "ObjectPath": "\\Switches\\Default Work Unit\\Reverb_Busses\\Metal_Tank",
-        "GUID": "{14D68433-F405-484A-81C4-66FF3F45EB8E}"
-       },
-       {
-        "Id": "2513696264",
-        "Name": "Long_Dark_Hall",
-        "ObjectPath": "\\Switches\\Default Work Unit\\Reverb_Busses\\Long_Dark_Hall",
-        "GUID": "{0738706E-5743-40E2-B9C0-D976B924430F}"
-       },
-       {
-        "Id": "4282896854",
-        "Name": "Absorption",
-        "ObjectPath": "\\Switches\\Default Work Unit\\Reverb_Busses\\Absorption",
-        "GUID": "{ADF99226-B226-434F-891D-4D213A287360}"
-       }
-      ]
-     }
-    ],
     "AcousticTextures": [
      {
       "Id": "504532776",
@@ -877,6 +819,6 @@
     ]
    }
   ],
-  "FileHash": "{FE579513-EBCF-283D-0982-9BC6E9235A1E}"
+  "FileHash": "{23D45FAA-D43D-D8DE-A728-829EDEDBC411}"
  }
 }

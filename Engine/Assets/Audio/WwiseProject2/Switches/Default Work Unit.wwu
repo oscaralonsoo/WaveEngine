@@ -1,21 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WwiseDocument Type="WorkUnit" ID="{2BEB6A99-023B-48CB-A490-0C27C5069DC6}" SchemaVersion="133">
 	<Switches>
-		<WorkUnit Name="Default Work Unit" ID="{2BEB6A99-023B-48CB-A490-0C27C5069DC6}" PersistMode="Standalone">
-			<ChildrenList>
-				<SwitchGroup Name="Reverb_Busses" ID="{E68DE0C5-B527-4778-BBB1-2261FCF62880}">
-					<ChildrenList>
-						<Switch Name="Cathedral" ID="{7889C2EB-DB77-47B8-A31B-D14148EE6104}"/>
-						<Switch Name="Metal_Tank" ID="{14D68433-F405-484A-81C4-66FF3F45EB8E}"/>
-						<Switch Name="Absorption" ID="{ADF99226-B226-434F-891D-4D213A287360}"/>
-						<Switch Name="Long_Dark_Hall" ID="{0738706E-5743-40E2-B9C0-D976B924430F}"/>
-						<Switch Name="Robotic" ID="{4E7659F6-7C73-452C-8489-86DD370523F1}"/>
-						<Switch Name="Large_Plate" ID="{51ACD9F4-65FD-48B8-A20F-5FF3E551FED0}"/>
-						<Switch Name="Inside_My_Head" ID="{ACCB129B-06D9-4A85-A3F6-2CAAE21C70F4}"/>
-						<Switch Name="Outside" ID="{7FFC46DD-ECF5-432F-9528-6B4AE9528B49}"/>
-					</ChildrenList>
-				</SwitchGroup>
-			</ChildrenList>
-		</WorkUnit>
+		<WorkUnit Name="Default Work Unit" ID="{2BEB6A99-023B-48CB-A490-0C27C5069DC6}" PersistMode="Standalone"/>
 	</Switches>
 </WwiseDocument>

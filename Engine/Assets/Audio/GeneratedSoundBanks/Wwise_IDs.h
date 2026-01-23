@@ -35,27 +35,6 @@ namespace AK
 
     } // namespace STATES
 
-    namespace SWITCHES
-    {
-        namespace REVERB_BUSSES
-        {
-            static const AkUniqueID GROUP = 2817781829U;
-
-            namespace SWITCH
-            {
-                static const AkUniqueID ABSORPTION = 4282896854U;
-                static const AkUniqueID CATHEDRAL = 1024696295U;
-                static const AkUniqueID INSIDE_MY_HEAD = 701863527U;
-                static const AkUniqueID LARGE_PLATE = 1021965139U;
-                static const AkUniqueID LONG_DARK_HALL = 2513696264U;
-                static const AkUniqueID METAL_TANK = 1964438385U;
-                static const AkUniqueID OUTSIDE = 438105790U;
-                static const AkUniqueID ROBOTIC = 1220391191U;
-            } // namespace SWITCH
-        } // namespace REVERB_BUSSES
-
-    } // namespace SWITCHES
-
     namespace GAME_PARAMETERS
     {
         static const AkUniqueID MASTER_VOLUME = 4179668880U;
