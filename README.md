@@ -17,8 +17,8 @@ In version 3.1, we developed a particle system for the engine, in it you can cha
 - **Aniol López** — [GitHub: Aniolobolo](https://github.com/Aniolobolo)
 - **Saüc Pellejero** — [GitHub: ZReiNa](https://github.com/ZReiNa)
 
-Particle system implementation: Aniol López and Asier Ulloa.
-Demo: Saüc Pellejero.
+Particle system implementation: Aniol,Asier.
+Demo:Saüc.
 
 ## 🦀 Controls
 
@@ -46,6 +46,10 @@ Demo: Saüc Pellejero.
 ## ✨ New Core Features
 - A particle system with a lot of features that you can customize.
 
+<p align="center">
+  <img src="editor.gif" alt="Editor" width="500">
+</p> 
+
 - Default particles to add directly to the scene.
 
 <p align="center">
@@ -55,7 +59,7 @@ Demo: Saüc Pellejero.
 - Fireworks that you can create when you press 1 while playing the current scene.
 
 <p align="center">
-  <img src="fireworks.gif" alt="Fire particle showcase" width="500">
+  <img src="fireworks.gif" alt="Firework particle showcase" width="500">
 </p> 
 
 ---
