@@ -18,8 +18,10 @@
 #include "ComponentSphereCollider.h"
 #include "ComponentMaterial.h"
 #include "Input.h"
-#include "Window.h"       // Necesario para GetScale()
+#include "Window.h"    
 #include "ComponentCamera.h"
+#include "GameObject.h"
+#include "ComponentP2PConstraint.h"
 
 ModuleScene::ModuleScene() : Module()
 {
@@ -422,14 +424,6 @@ void ModuleScene::FirstScene()
 
     GameObject* cameraGO = app.scene->CreateGameObject("MainCamera");
 
-    Transform* transform = static_cast<Transform*>(
-        cameraGO->GetComponent(ComponentType::TRANSFORM)
-        );
-    if (transform)
-    {
-        transform->SetPosition(glm::vec3(0.0f, 1.5f, 10.0f));
-    }
-
     ComponentCamera* sceneCamera = static_cast<ComponentCamera*>(
         cameraGO->CreateComponent(ComponentType::CAMERA)
         );
@@ -437,19 +431,6 @@ void ModuleScene::FirstScene()
     if (sceneCamera)
     {
         app.camera->SetSceneCamera(sceneCamera);
-    }
-
-    ComponentSphereCollider* col = (ComponentSphereCollider*)cameraGO->CreateComponent(ComponentType::COLLIDER_SPHERE);
-    col->SetRadius(0.5f);
-
-    // 2. Añadimos el RigidBody
-    ComponentRigidBody* rb = (ComponentRigidBody*)cameraGO->CreateComponent(ComponentType::RIGIDBODY);
-    rb->SetMass(1.0f); // Masa > 0 para que sea dinámico y colisione
-
-    if (rb->GetRigidBody()) {
-        rb->GetRigidBody()->setGravity(btVector3(0, 0, 0)); // Cámara flotante
-        rb->GetRigidBody()->setDamping(0.9f, 0.9f); // Para que no deslice infinitamente
-        rb->Start();
     }
 
     GameObject* floor = Primitives::CreateCubeGameObject("Floor", 0.0f);
@@ -487,101 +468,115 @@ void ModuleScene::FirstScene()
             trans->SetScale(glm::vec3(2.0f, 1.0f, 5.0f));
         }
     }
-}
 
-// Asegúrate de tener estos includes arriba en ModuleScene.cpp:
-// #include "Input.h"
-// #include "ModuleWindow.h"
-// #include "ComponentCamera.h"
-// #include "ComponentRigidBody.h"
-// #include "Transform.h"
+    GameObject* anchor = Primitives::CreateCubeGameObject("Initial_Anchor", 0.0f);
+    if (anchor) {
+        Transform* tA = (Transform*)anchor->GetComponent(ComponentType::TRANSFORM);
+        if (tA) tA->SetPosition(glm::vec3(0.0f, 15.0f, 0.0f));
+        
+        // Importante: si tienes una función para registrar la física en el editor, úsala
+        // Si no, Primitives::CreateCubeGameObject ya debería haberlo añadido al mundo
+    }
+
+    // 2. Crear el objeto dinámico (Cubo que colgará)
+    GameObject* dynamicObj = Primitives::CreateCubeGameObject("Initial_Dynamic", 1.0f);
+    if (dynamicObj) {
+        Transform* tB = (Transform*)dynamicObj->GetComponent(ComponentType::TRANSFORM);
+        // Lo ponemos a 5 unidades de distancia (largo de la cuerda)
+        if (tB) tB->SetPosition(glm::vec3(5.0f, 15.0f, 0.0f));
+
+        // 3. Crear y configurar el Constraint P2P
+        ComponentP2PConstraint* p2p = (ComponentP2PConstraint*)dynamicObj->CreateComponent(ComponentType::CONSTRAINT_P2P);
+        
+        if (p2p && anchor) {
+            p2p->SetTarget(anchor);
+            
+            // Definimos los puntos de anclaje (Pivots)
+            // Para una cuerda de 5m:
+            p2p->SetPivots(glm::vec3(-2.5f, 0.0f, 0.0f), glm::vec3(2.5f, 0.0f, 0.0f));
+            
+            // Forzamos la creación en Bullet
+            p2p->CreateConstraint();
+        }
+    }
+}
 
 void ModuleScene::UpdateGameCamera()
 {
-    // --- 1. VALIDACIONES ---
-    if (!Application::GetInstance().camera) return;
-    ComponentCamera* gameCam = Application::GetInstance().camera->GetSceneCamera();
+    // Usamos la instancia correcta de Application
+    Application& app = Application::GetInstance();
+    
+    ComponentCamera* gameCam = app.camera->GetActiveCamera();
+    
+    // ERROR FIX: En tus archivos, Component hereda de owner, pero se accede 
+    // mediante el miembro 'owner' (que es protected/public) no mediante GetOwner()
+    if (gameCam == nullptr || gameCam->owner == nullptr) return;
 
-    if (!gameCam || !gameCam->owner) return;
+    // Obtenemos los componentes desde el owner directamente
+    Transform* trans = (Transform*)gameCam->owner->GetComponent(ComponentType::TRANSFORM);
+    ComponentRigidBody* rb = (ComponentRigidBody*)gameCam->owner->GetComponent(ComponentType::RIGIDBODY);
+    
+    if (!trans) return;
 
-    Input* input = Application::GetInstance().input.get();
-    if (!input) return;
+    Input* input = app.input.get(); // Obtenemos el puntero del shared_ptr
+    float mouseXf = input->GetMouseX(); // Usa GetMouseXf() para floats según tus archivos
+    float mouseYf = input->GetMouseY();
 
-    // --- 2. PREPARACIÓN ---
-    float dt = 0.016f; // O tu App->time->dt
-    float speed = 10.0f * dt;
-    if (input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT) speed *= 2.0f;
+    glm::vec3 pos = trans->GetPosition();
+    glm::vec3 front = gameCam->GetFront();
+    glm::vec3 up = gameCam->GetUp();
+    glm::vec3 right = glm::normalize(glm::cross(front, up));
+    
+    // ERROR FIX: App->GetDeltaTime() -> app.time->GetDeltaTime() (según tu Application.h)
+    float speed = gameCam->GetMovementSpeed() * app.time->GetDeltaTime();
 
-    // Ratón
-    float mouseXf, mouseYf;
-    SDL_GetMouseState(&mouseXf, &mouseYf);
-    int scale = Application::GetInstance().window.get()->GetScale();
-    mouseXf /= scale;
-    mouseYf /= scale;
+    bool hasMoved = false;
 
-    static float lastMouseX = mouseXf;
-    static float lastMouseY = mouseYf;
-    float motionXf = mouseXf - lastMouseX;
-    float motionYf = mouseYf - lastMouseY;
-    lastMouseX = mouseXf;
-    lastMouseY = mouseYf;
-
-    // --- 3. LÓGICA DE MOVIMIENTO ---
-
-    // A) CLICK DERECHO (Rotación + Vuelo)
-    if (input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_REPEAT || input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN)
+    // A) MOVIMIENTO LIBRE
+    if (input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_REPEAT)
     {
-        if (input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) gameCam->ResetMouseInput();
+        if (input->GetKey(SDL_SCANCODE_W) == KEY_REPEAT) { pos += front * speed; hasMoved = true; }
+        if (input->GetKey(SDL_SCANCODE_S) == KEY_REPEAT) { pos -= front * speed; hasMoved = true; }
+        if (input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT) { pos -= right * speed; hasMoved = true; }
+        if (input->GetKey(SDL_SCANCODE_D) == KEY_REPEAT) { pos += right * speed; hasMoved = true; }
+        if (input->GetKey(SDL_SCANCODE_E) == KEY_REPEAT) { pos += up * speed; hasMoved = true; }
+        if (input->GetKey(SDL_SCANCODE_Q) == KEY_REPEAT) { pos -= up * speed; hasMoved = true; }
 
-        // 1. Rotar Cámara (Visual)
-        gameCam->HandleMouseInput(mouseXf, mouseYf);
-
-        // 2. Mover Posición (WASD)
-        GameObject* camObj = gameCam->owner;
-        Transform* trans = (Transform*)camObj->GetComponent(ComponentType::TRANSFORM);
-        ComponentRigidBody* rb = (ComponentRigidBody*)camObj->GetComponent(ComponentType::RIGIDBODY);
-
-        if (trans) {
-            // Vectores locales
-            glm::mat4 globalMat = trans->GetGlobalMatrix();
-            glm::vec3 right = glm::vec3(globalMat[0]); 
-            glm::vec3 forward = -glm::vec3(globalMat[2]); 
-            glm::vec3 up = glm::vec3(0, 1, 0);
-
-            glm::vec3 pos = trans->GetPosition();
-
-            if (input->GetKey(SDL_SCANCODE_W) == KEY_REPEAT) pos += forward * speed;
-            if (input->GetKey(SDL_SCANCODE_S) == KEY_REPEAT) pos -= forward * speed;
-            if (input->GetKey(SDL_SCANCODE_D) == KEY_REPEAT) pos += right * speed;
-            if (input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT) pos -= right * speed;
-            if (input->GetKey(SDL_SCANCODE_E) == KEY_REPEAT) pos += up * speed;
-            if (input->GetKey(SDL_SCANCODE_Q) == KEY_REPEAT) pos -= up * speed;
-
-            // 1. Aplicamos la posición al Transform visual
+        if (hasMoved) {
             trans->SetPosition(pos);
-
-            // 2. OBLIGATORIO: Sincronizar el RigidBody al nuevo sitio
-            if (rb && rb->GetRigidBody()) 
-            {
-                rb->SyncToBullet(); // <--- ESTO MUEVE EL RIGIDBODY A DONDE ESTÁ EL TRANSFORM
-                
-                // Matamos la inercia para que pare en seco al soltar la tecla
-                rb->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
-                rb->GetRigidBody()->activate(); 
-            }
         }
+
+        gameCam->HandleMouseInput(mouseXf, mouseYf);
+        hasMoved = true; 
     }
-    // B) Orbitar
+    // B) ORBITAR
     else if ((input->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT || input->GetKey(SDL_SCANCODE_RALT) == KEY_REPEAT) &&
-        (input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_REPEAT || input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN))
+             (input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_REPEAT || input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN))
     {
         if (input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN) gameCam->ResetOrbitInput();
         gameCam->HandleOrbitInput(mouseXf, mouseYf);
+        hasMoved = true;
     }
-    // C) Paneo
-    else if (input->GetMouseButtonDown(SDL_BUTTON_MIDDLE) == KEY_REPEAT || input->GetMouseButtonDown(SDL_BUTTON_MIDDLE) == KEY_DOWN)
+    // C) PANEO
+    else if (input->GetMouseButtonDown(SDL_BUTTON_MIDDLE) == KEY_REPEAT || 
+            ((input->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT || input->GetKey(SDL_SCANCODE_RALT) == KEY_REPEAT) && 
+              input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_REPEAT))
     {
-        if (input->GetMouseButtonDown(SDL_BUTTON_MIDDLE) == KEY_DOWN) gameCam->ResetPanInput();
-        gameCam->HandlePanInput(motionXf, motionYf);
+        if (input->GetMouseButtonDown(SDL_BUTTON_MIDDLE) == KEY_DOWN || input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) 
+            gameCam->ResetPanInput();
+        
+        gameCam->HandlePanInput(mouseXf, mouseYf);
+        hasMoved = true;
+    }
+
+    // --- SINCRONIZACIÓN FINAL ---
+    if (hasMoved && rb && rb->GetRigidBody())
+    {
+        rb->SyncToBullet();
+        
+        // Limpiamos fuerzas para evitar que la física "empuje" a la cámara tras el movimiento manual
+        rb->GetRigidBody()->setLinearVelocity(btVector3(0, 0, 0));
+        rb->GetRigidBody()->setAngularVelocity(btVector3(0, 0, 0));
+        rb->GetRigidBody()->activate(true);
     }
 }

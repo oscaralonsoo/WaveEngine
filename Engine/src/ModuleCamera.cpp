@@ -35,11 +35,6 @@ bool ModuleCamera::Start()
 
     editorCamera = static_cast<ComponentCamera*>(editorCameraGO->CreateComponent(ComponentType::CAMERA));
 
-    // -------------------------------------------------------------
-    // --- AÑADIR FÍSICAS A LA CÁMARA DEL EDITOR (NUEVO) ---
-    // -------------------------------------------------------------
-    
-    // 1. RIGIDBODY
     ComponentRigidBody* rb = (ComponentRigidBody*)editorCameraGO->CreateComponent(ComponentType::RIGIDBODY);
     if (rb)
     {
@@ -60,10 +55,7 @@ bool ModuleCamera::Start()
     if (col)
     {
         col->SetRadius(0.5f); // Tamaño de la colisión de la cámara
-    }
-    // -------------------------------------------------------------
-
-    // Set aspect ratio from window
+    }    
     Application& app = Application::GetInstance();
     int width, height;
     app.window->GetWindowSize(width, height);

@@ -13,6 +13,7 @@ enum class ComponentType {
     RIGIDBODY,
     COLLIDER_BOX,
     COLLIDER_SPHERE,
+    CONSTRAINT_P2P,
     UNKNOWN
 };
 

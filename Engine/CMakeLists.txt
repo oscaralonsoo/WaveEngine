@@ -140,6 +140,8 @@ set(PHYSICS_SRC
     src/ComponentSphereCollider.h
     src/ComponentCollider.cpp
     src/ComponentCollider.h
+    src/ComponentP2PConstraint.cpp
+    src/ComponentP2PConstraint.h
 )
 
 source_group("Source\\Core" FILES ${CORE_SRC})

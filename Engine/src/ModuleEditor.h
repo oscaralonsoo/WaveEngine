@@ -65,6 +65,7 @@ public:
     EditorWindowType GetCurrentWindow() const { return currentWindow; }
     bool IsSceneWindowActive() const { return currentWindow == EditorWindowType::SCENE;  }
     bool IsMouseOverScene() const;
+    void CreateP2PConstraintPair();
 
 private:
     void ShowMenuBar();

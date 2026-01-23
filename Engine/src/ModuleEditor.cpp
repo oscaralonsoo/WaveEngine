@@ -28,6 +28,8 @@
 #include "AssetsWindow.h"
 #include "MetaFile.h"
 
+#include "ComponentP2PConstraint.h"
+
 ModuleEditor::ModuleEditor() : Module()
 {
     name = "ModuleEditor";
@@ -407,6 +409,44 @@ void ModuleEditor::ShowMenuBar()
                     CreatePrimitiveGameObject("Cylinder", Primitives::CreateCylinder());
                 }
                 ImGui::EndMenu();
+            }
+
+            ImGui::Separator(); 
+
+            if (ImGui::BeginMenu("Physics")) 
+            {
+                // 1. Opción de crear la pareja (no depende de selección)
+                if (ImGui::MenuItem("Create P2P Constraint Pair")) 
+                {
+                    CreateP2PConstraintPair();
+                }
+
+                ImGui::Separator();
+
+                // 2. Obtener selección de forma ultra-segura
+                GameObject* selected = SelectionManager::GetInstance().GetSelectedObject();
+
+                // 3. Solo intentamos mostrar el nombre si 'selected' no es nulo
+                bool hasSelection = (selected != nullptr);
+                std::string menuLabel = hasSelection ? "Add P2P to: " + selected->GetName() : "Add P2P to Selected (No selection)";
+
+                if (ImGui::MenuItem(menuLabel.c_str(), nullptr, false, hasSelection)) 
+                {
+                    if (selected) // Doble comprobación por seguridad
+                    {
+                        if (selected->GetComponent(ComponentType::RIGIDBODY)) 
+                        {
+                            selected->CreateComponent(ComponentType::CONSTRAINT_P2P);
+                        }
+                        else 
+                        {
+                            LOG_CONSOLE("Error: No se puede añadir P2P. Falta RigidBody en %s", selected->GetName().c_str());
+                        }
+                    }
+                }
+
+                // MUY IMPORTANTE: Este EndMenu debe estar DENTRO del if(BeginMenu)
+                ImGui::EndMenu(); 
             }
 
             ImGui::Separator();
@@ -961,4 +1001,40 @@ void ModuleEditor::CreatePrimitiveGameObjectPhysics(GameObject* go)
     Application::GetInstance().scene->RebuildOctree();
 
     LOG_CONSOLE("%s creado e integrado en el editor", go->GetName().c_str());
+}
+
+void ModuleEditor::CreateP2PConstraintPair()
+{
+    float ropeLength = 5.0f; // <--- Longitud de la cuerda
+
+    // 1. Crear el Ancla (Cubo estático)
+    GameObject* anchor = Primitives::CreateCubeGameObject("P2P_Anchor", 0.0f);
+    if (anchor) {
+        Transform* tA = (Transform*)anchor->GetComponent(ComponentType::TRANSFORM);
+        if (tA) tA->SetPosition(glm::vec3(0, 15, 0)); // Lo subimos un poco más
+        CreatePrimitiveGameObjectPhysics(anchor);
+    }
+
+    // 2. Crear el objeto dinámico (Separado por la longitud de la cuerda)
+    GameObject* dynamicObj = Primitives::CreateCubeGameObject("P2P_Dynamic", 1.0f);
+    if (dynamicObj) {
+        Transform* tB = (Transform*)dynamicObj->GetComponent(ComponentType::TRANSFORM);
+        // Lo ponemos a la derecha según la longitud de la cuerda
+        if (tB) tB->SetPosition(glm::vec3(ropeLength, 15, 0)); 
+        CreatePrimitiveGameObjectPhysics(dynamicObj);
+
+        // 3. Configurar el Constraint
+        ComponentP2PConstraint* p2p = (ComponentP2PConstraint*)dynamicObj->CreateComponent(ComponentType::CONSTRAINT_P2P);
+        
+        if (p2p && anchor) {
+            p2p->SetTarget(anchor);
+            
+            // Calculamos los pivots para que se unan justo en el centro del espacio vacío
+            // Pivot A (en el cubo dinámico): a la izquierda la mitad de la cuerda
+            float halfRope = ropeLength / 2.0f;
+            p2p->SetPivots(glm::vec3(-halfRope, 0, 0), glm::vec3(halfRope, 0, 0));
+            
+            p2p->CreateConstraint();
+        }
+    }
 }

@@ -9,6 +9,7 @@
 #include "ComponentRigidBody.h"
 #include "ComponentBoxCollider.h"
 #include "ComponentSphereCollider.h"
+#include "ComponentP2PConstraint.h"
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
     CreateComponent(ComponentType::TRANSFORM);
@@ -67,6 +68,10 @@ Component* GameObject::CreateComponent(ComponentType type) {
     case ComponentType::COLLIDER_BOX:
             newComponent = new ComponentBoxCollider(this);
             break;
+
+    case ComponentType::CONSTRAINT_P2P:
+        newComponent = new ComponentP2PConstraint(this);
+        break;
 
     default:
         LOG_DEBUG("ERROR: Unknown component type requested for GameObject '%s'", name.c_str());

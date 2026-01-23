@@ -7,6 +7,11 @@ class GameObject;
 class SelectionManager
 {
 public:
+
+	static SelectionManager& GetInstance() {
+			static SelectionManager instance;
+			return instance;
+		}
 	SelectionManager() = default;
 	~SelectionManager() = default;
 
