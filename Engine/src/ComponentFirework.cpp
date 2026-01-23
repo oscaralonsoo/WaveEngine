@@ -13,6 +13,7 @@ ComponentFirework::ComponentFirework(GameObject* owner)
     totalLifetime(8.0f),
     currentTime(0.0f),
     hasExploded(false),
+    hasRequestedDeletion(false),
     explosionColor(1.0f, 1.0f, 1.0f, 1.0f)
 {
     Transform* transform = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
@@ -30,6 +31,14 @@ void ComponentFirework::Update()
 {
     if (!active) return;
 
+    // CRITICAL FIX: Check deletion flag at the very start
+    if (hasRequestedDeletion) return;
+
+    Application::PlayState playState = Application::GetInstance().GetPlayState();
+    if (playState == Application::PlayState::EDITING) return;
+
+    if (!owner) return;
+
     float deltaTime = Application::GetInstance().time->GetDeltaTime();
     currentTime += deltaTime;
 
@@ -44,41 +53,70 @@ void ComponentFirework::Update()
         transform->SetPosition(currentPos);
     }
     // Phase 2: Explosion
-	else if (!hasExploded)
-	{
-		hasExploded = true;
-
-		// Trigger explosion - change particle system dramatically
-		ComponentParticleSystem* ps = static_cast<ComponentParticleSystem*>(
-			owner->GetComponent(ComponentType::PARTICLE_SYSTEM));
-
-		if (ps)
-		{
-			// Reuse the tuned explosion preset instead of a custom setup
-			ps->LoadExplosionPreset();
-			ParticleSystemConfig& mainConfig = ps->GetMainConfig();
-			mainConfig.startColor = explosionColor;
-			ColorOverLifetimeModule& colorOverLife = ps->GetColorOverLifetime();
-			colorOverLife.startColor = explosionColor;
-			colorOverLife.endColor = glm::vec4(explosionColor.r, explosionColor.g, explosionColor.b, 0.0f);
-			// Ensure the system restarts with the new preset parameters
-			ps->Restart();
-			LOG_CONSOLE("Firework exploded!");
-		}
-	}
+    else if (!hasExploded)
+    {
+        TriggerExplosion();
+    }
     // Phase 3: Cleanup
     else if (currentTime > totalLifetime)
     {
-        // Mark for deletion when particle system has finished
+        // Check if particle system is done
         ComponentParticleSystem* ps = static_cast<ComponentParticleSystem*>(
             owner->GetComponent(ComponentType::PARTICLE_SYSTEM));
 
-        if (ps && !ps->IsAlive())
+        if (ps && ps->IsAlive())
         {
-            owner->MarkForDeletion();
+            // Particles still alive, wait
+            return;
+        }
+
+        // CRITICAL FIX: Set flag FIRST, mark for deletion LAST, then RETURN IMMEDIATELY
+        if (!hasRequestedDeletion)
+        {
+            hasRequestedDeletion = true;
             LOG_CONSOLE("Firework cleaned up");
+            owner->MarkForDeletion();
+
+            // CRITICAL: Return immediately - do NOT access 'this' after this point
+            return;
         }
     }
+}
+
+void ComponentFirework::TriggerExplosion()
+{
+    if (hasExploded) return;
+    if (!owner) return;
+
+    hasExploded = true;
+
+    ComponentParticleSystem* ps = static_cast<ComponentParticleSystem*>(
+        owner->GetComponent(ComponentType::PARTICLE_SYSTEM));
+
+    if (!ps || !ps->IsActive()) return;
+
+    try {
+        ps->Stop();
+        ps->LoadExplosionPreset();
+
+        ParticleSystemConfig& mainConfig = ps->GetMainConfig();
+        mainConfig.startColor = explosionColor;
+
+        ColorOverLifetimeModule& colorOverLife = ps->GetColorOverLifetime();
+        colorOverLife.startColor = explosionColor;
+        colorOverLife.endColor = glm::vec4(explosionColor.r, explosionColor.g, explosionColor.b, 0.0f);
+
+        ps->Restart();
+
+        LOG_CONSOLE("Firework exploded!");
+    }
+    catch (...) {
+        hasExploded = false;
+    }
+}
+
+void ComponentFirework::OnEditor()
+{
 }
 
 void ComponentFirework::SetLaunchParameters(float speed, float expTime, float totalLife)
@@ -86,4 +124,28 @@ void ComponentFirework::SetLaunchParameters(float speed, float expTime, float to
     upwardSpeed = speed;
     explosionTime = expTime;
     totalLifetime = totalLife;
+}
+
+void ComponentFirework::Reset()
+{
+    if (!owner) return;
+
+    currentTime = 0.0f;
+    hasExploded = false;
+    hasRequestedDeletion = false;
+
+    Transform* transform = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
+    if (transform)
+    {
+        startPosition = transform->GetPosition();
+    }
+
+    ComponentParticleSystem* ps = static_cast<ComponentParticleSystem*>(
+        owner->GetComponent(ComponentType::PARTICLE_SYSTEM));
+
+    if (ps)
+    {
+        ps->Stop();
+        ps->Clear();
+    }
 }

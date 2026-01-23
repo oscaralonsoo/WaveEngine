@@ -28,7 +28,7 @@ public:
 
     const std::string& GetName() const { return name; }
     void SetName(const std::string& newName) { name = newName; }
-    bool IsActive() const { return active; }
+    bool IsActive() const;
     void SetActive(bool state) { active = state; }
     GameObject* GetParent() const { return parent; }
     const std::vector<GameObject*>& GetChildren() const { return children; }

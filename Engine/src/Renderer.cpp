@@ -716,8 +716,10 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
         {
             if (!selectedObj->IsActive())
                 continue;
-            if (!IsGameObjectAndParentsActive(selectedObj))
+            if (selectedObj && !selectedObj->IsMarkedForDeletion() && !IsGameObjectAndParentsActive(selectedObj))
+            {
                 continue;
+            }
 
             Transform* transform = static_cast<Transform*>(selectedObj->GetComponent(ComponentType::TRANSFORM));
             if (transform == nullptr) continue;
@@ -1394,17 +1396,22 @@ void Renderer::DrawCameraFrustum(ComponentCamera* camera, const glm::vec3& color
 }
 bool Renderer::IsGameObjectAndParentsActive(GameObject* gameObject) const
 {
-    if (gameObject == nullptr)
-        return false;
+    if (!gameObject) return false;
 
-    if (!gameObject->IsActive())
-        return false;
+    if (gameObject->IsMarkedForDeletion()) return false;
 
+    // Check if this object is active
+    if (!gameObject->IsActive()) return false;
+
+    // Recursively check parents
     GameObject* parent = gameObject->GetParent();
     while (parent != nullptr)
     {
-        if (!parent->IsActive())
-            return false;
+        // CRITICAL: Check parent validity
+        if (parent->IsMarkedForDeletion()) return false;
+
+        if (!parent->IsActive()) return false;
+
         parent = parent->GetParent();
     }
 

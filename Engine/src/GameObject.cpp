@@ -162,6 +162,19 @@ void GameObject::Update() {
     }
 }
 
+bool GameObject::IsActive() const
+{
+    if (markedForDeletion) return false;
+
+    if (!active) return false;
+
+    if (parent != nullptr) {
+        return parent->IsActive();
+    }
+
+    return active;
+}
+
 void GameObject::Serialize(nlohmann::json& gameObjectArray) const {
     // Create a JSON object
     nlohmann::json gameObjectObj;

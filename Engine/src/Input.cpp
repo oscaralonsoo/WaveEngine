@@ -420,8 +420,11 @@ bool Input::PreUpdate()
 		}
 	}
 
+	Application& app = Application::GetInstance();
+	Application::PlayState currentState = app.GetPlayState();
+
 	// Firework creation when pressing "1"
-	if (keyboard[SDL_SCANCODE_1] == KEY_DOWN)
+	if (keyboard[SDL_SCANCODE_1] == KEY_DOWN && currentState == Application::PlayState::PLAYING)
 	{
 		CreateFirework();
 	}

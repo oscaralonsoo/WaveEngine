@@ -26,8 +26,6 @@ public:
     bool ShouldShowVertexNormals() const { return showVertexNormals; }
     bool ShouldShowFaceNormals() const { return showFaceNormals; }
 
-    void DrawParticleSystemComponent(GameObject* selectedObject);
-
 private:
     bool DrawGameObjectSection(GameObject* selectedObject);
     void DrawGizmoSettings();
@@ -36,6 +34,8 @@ private:
     void DrawMeshComponent(GameObject* selectedObject);
     void DrawMaterialComponent(GameObject* selectedObject);
     void DrawRotateComponent(GameObject* selectedObject);
+    void DrawParticleSystemComponent(GameObject* selectedObject);
+    void DrawFireworkComponent(GameObject* selectedObject);
 
     // Helper methods
     void GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects);

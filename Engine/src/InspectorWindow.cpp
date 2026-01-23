@@ -9,6 +9,7 @@
 #include "ComponentCamera.h"
 #include "ComponentRotate.h"
 #include "ComponentParticleSystem.h"
+#include "ComponentFirework.h"
 #include "ResourceTexture.h"
 #include "Log.h"
 
@@ -1523,10 +1524,6 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
             if (ImGui::Button("Fire##PresetFire")) { ps->LoadFirePreset(); ps->Play(); }
             ImGui::SameLine();
             if (ImGui::Button("Explosion##PresetExplosion")) { ps->LoadExplosionPreset(); ps->Play(); }
-
-            if (ImGui::Button("Sparkles##PresetSparkles")) { ps->LoadSparklesPreset(); ps->Play(); }
-            ImGui::SameLine();
-            if (ImGui::Button("Rain##PresetRain")) { ps->LoadRainPreset(); ps->Play(); }
             ImGui::SameLine();
             if (ImGui::Button("Snow##PresetSnow")) { ps->LoadSnowPreset(); ps->Play(); }
         }
@@ -1549,6 +1546,110 @@ void InspectorWindow::DrawParticleSystemComponent(GameObject* selectedObject)
             if (ps->LoadConfig(filename))
             {
                 LOG_CONSOLE("Config loaded");
+            }
+        }
+    }
+
+    ImGui::PopID();
+}
+
+void InspectorWindow::DrawFireworkComponent(GameObject* selectedObject)
+{
+    ComponentFirework* firework = static_cast<ComponentFirework*>(
+        selectedObject->GetComponent(ComponentType::FIREWORK));
+
+    if (firework == nullptr) return;
+
+    ImGui::PushID(firework);
+
+    if (ImGui::CollapsingHeader("Firework", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        bool active = firework->IsActive();
+        if (ImGui::Checkbox("Active##Firework", &active)) {
+            firework->SetActive(active);
+        }
+
+        ImGui::Separator();
+
+        // Only allow editing when not in play mode or hasn't exploded yet
+        Application::PlayState playState = Application::GetInstance().GetPlayState();
+        bool canEdit = (playState == Application::PlayState::EDITING ||
+            playState == Application::PlayState::PAUSED);
+
+        if (!canEdit)
+        {
+            ImGui::BeginDisabled();
+        }
+
+        float upwardSpeed = firework->GetUpwardSpeed();
+        if (ImGui::DragFloat("Upward Speed", &upwardSpeed, 0.5f, 1.0f, 50.0f))
+        {
+            float explosionTime = firework->GetExplosionTime();
+            float totalLifetime = firework->GetTotalLifetime();
+            firework->SetLaunchParameters(upwardSpeed, explosionTime, totalLifetime);
+        }
+
+        float explosionTime = firework->GetExplosionTime();
+        if (ImGui::DragFloat("Explosion Time", &explosionTime, 0.1f, 0.1f, 10.0f))
+        {
+            float upSpeed = firework->GetUpwardSpeed();
+            float totalLife = firework->GetTotalLifetime();
+            firework->SetLaunchParameters(upSpeed, explosionTime, totalLife);
+        }
+
+        float totalLifetime = firework->GetTotalLifetime();
+        if (ImGui::DragFloat("Total Lifetime", &totalLifetime, 0.1f, 1.0f, 30.0f))
+        {
+            float upSpeed = firework->GetUpwardSpeed();
+            float expTime = firework->GetExplosionTime();
+            firework->SetLaunchParameters(upSpeed, expTime, totalLifetime);
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        ImGui::Text("Explosion Color:");
+        ImGui::ColorEdit4("##FireworkColor", &firework->explosionColor[0]);
+
+        if (!canEdit)
+        {
+            ImGui::EndDisabled();
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // Status information
+        ImGui::Text("Status:");
+        float currentTime = firework->GetCurrentTime();
+        bool hasExploded = firework->HasExploded();
+
+        ImGui::Text("Current Time: %.2f", currentTime);
+
+        if (hasExploded)
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Status: EXPLODED");
+        }
+        else if (currentTime > 0.0f)
+        {
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Status: ASCENDING");
+        }
+        else
+        {
+            ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Status: READY");
+        }
+
+        ImGui::Spacing();
+
+        // Reset button (only in edit mode)
+        if (canEdit)
+        {
+            if (ImGui::Button("Reset Firework", ImVec2(-1, 0)))
+            {
+                firework->Reset();
+                LOG_CONSOLE("Firework reset");
             }
         }
     }

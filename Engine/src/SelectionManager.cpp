@@ -61,7 +61,16 @@ void SelectionManager::ClearSelection()
 
 GameObject* SelectionManager::GetSelectedObject() const
 {
-	return selectedObjects.empty() ? nullptr : selectedObjects[0];
+	if (selectedObjects.empty()) return nullptr;
+
+	GameObject* obj = selectedObjects[0];
+
+	if (obj && obj->IsMarkedForDeletion())
+	{
+		return nullptr;
+	}
+
+	return obj;
 }
 
 bool SelectionManager::IsSelected(GameObject* obj) const

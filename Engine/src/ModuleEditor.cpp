@@ -466,14 +466,14 @@ void ModuleEditor::ShowMenuBar()
                     LOG_CONSOLE("Explosion particle system created");
                 }
 
-                if (ImGui::MenuItem("Sparkles Effect"))
+                if (ImGui::MenuItem("Snow Effect"))
                 {
-                    GameObject* particleGO = Application::GetInstance().scene->CreateGameObject("Sparkles Particles");
+                    GameObject* particleGO = Application::GetInstance().scene->CreateGameObject("Snow Particles");
                     ComponentParticleSystem* ps = static_cast<ComponentParticleSystem*>(
                         particleGO->CreateComponent(ComponentType::PARTICLE_SYSTEM));
-                    ps->LoadSparklesPreset();
+                    ps->LoadSnowPreset();
                     ps->Play();
-                    LOG_CONSOLE("Sparkles particle system created");
+                    LOG_CONSOLE("Snow particle system created");
                 }
 
                 ImGui::EndMenu();

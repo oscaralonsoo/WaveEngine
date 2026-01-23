@@ -1,4 +1,4 @@
-<h1 align="center">🌊 Wave Engine 🌊</h1>
+<h1 align="center">🌊 Wave Engine 🌊:Wizard Engine vers.</h1>
 
 <p align="center">
 This project is a custom 3D game engine developed in C++ using OpenGL as the main graphics API.  
@@ -6,21 +6,17 @@ It integrates several external libraries such as Assimp (for 3D model loading), 
 </p>
 
 <p align="center">
-In version 2.0, we've evolved beyond simple FBX dependency, implementing a complete resource management system with custom file formats and significant rendering optimizations. The engine now features an advanced editor interface with scene serialization, resource management, and acceleration structures for optimal performance.
+In version 3.1, we developed a particle system for the engine, in it you can change the textura, colors, speed, direction and some more parameters, we also added that when you press the 1 key, a firework goes up to the sky.
 </p>
 
-<p align="center">
-🔗 <strong>GitHub Repository:</strong> <a href="https://github.com/Audra0000/Engine">https://github.com/Audra0000/Engine</a>
-</p>
+## 🧙‍♂️ Team Members
 
----
+- **Asier Ulloa** — [GitHub: AsiGamer29](https://github.com/AsiGamer29)  
+- **Aniol López** — [GitHub: Aniolobolo](https://github.com/Aniolobolo)
+- **Saüc Pellejero** — [GitHub: ZReiNa](https://github.com/ZReiNa)
 
-## 🎏 Team Members
-
-- **Haosheng Li** — [GitHub: HaosLii](https://github.com/HaosLii)  
-- **Ana Alcaraz** — [GitHub: Audra0000](https://github.com/Audra0000)
-
----
+Particle system implementation: Aniol,Asier.
+Demo:Saüc.
 
 ## 🦀 Controls
 
@@ -36,13 +32,14 @@ In version 2.0, we've evolved beyond simple FBX dependency, implementing a compl
 | Select | Left Mouse Button | |
 | Multiple select | Shift | Left Mouse Button |
 | Delete object | Backspace | |
-
-| Gizmo Action | Key 1 | Key 2 |
+| Create Fireworks | 1 | ONLY WORKS WHILE PLAYING THE SCENE |
+| Gizmo Action | Key 2 ||
 |------------|------------|------------|
 | Move | W | |
 | Rotate | E | |
 | Scale | R | |
 | Toggle Coordinate System | T | |
+
 ---
 
 ## 🐠 User Interface
@@ -144,6 +141,8 @@ Includes the following menu options:
 - **Gameobjects:**
   - Create primitves
   - Add rotate component
+  - Add Particle System
+  - Create Particle system(smoke,fire,explosion, sparkle effects)
 - **Help:**
   - *GitHub documentation:* Opens the official documentation  
   - *Report a bug:* Opens `[Link to repo]/issues`  
@@ -152,7 +151,7 @@ Includes the following menu options:
 
 ---
 
-## ✨ Extra features 
+## Extra features 
 - **Transparente textures**
 - **zBuffer**
 - **Assets icons**
@@ -160,11 +159,7 @@ Includes the following menu options:
 - **Import Settings:** Basic implementation of import options for different asset types:
   - **Textures:** Control filtering modes, max texture size, and flip options (X/Y axes)
   - **Meshes:** Configure global scaling, axis configuration, Post-processing options: generate normals, flip uv, optimize meshes
-  - **Metadata:** All import settings are saved in .meta files to ensure proper regeneration of the Library folder
-
----
-
-## ✨ New Core Features 
+  - **Metadata:** All import settings are saved in .meta files to ensure proper regeneration of the Library folder 
 
 ### **Resource Management System**
 - Complete asset pipeline with automatic conversion to custom file formats
@@ -193,8 +188,18 @@ Includes the following menu options:
 - Proprietary formats for models, textures and scenes
 - Metadata files storing import settings and dependencies
 
----
+## ✨ New Core Features
+- A particle system with a lot of features that you can customize.
+- Default particles to add directly to the scene.
+- Fireworks that you can create when you press 1 while playing the current scene.
+
+Insertar videos aquí
+<video src="path/to/video.mp4" width="320" height="240" controls></video>
+
+link al repo aquí
 
 <p align="center">
-<sub>© 2025 Wave Engine — Developed by Haosheng Li & Ana Alcaraz — MIT License</sub>
+<sub>© 2025 Wave Engine — Developed by Haosheng Li & Ana Alcaraz, Particle system by Asier Ulloa, Aniol López & Saüc pellejero — MIT License</sub>
 </p>
+
+

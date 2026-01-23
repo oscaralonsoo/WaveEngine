@@ -34,37 +34,28 @@ ComponentParticleSystem::~ComponentParticleSystem() {
 void ComponentParticleSystem::Update() {
     if (!IsActive()) return;
 
-    // IMPORTANTE: Actualizar SIEMPRE que isPlaying esté activo
-    // Ya sea en modo editor o en modo play
     if (!isPlaying) return;
 
     if (isPaused) return;
 
-    // Determinar el delta time apropiado
     float deltaTime;
     Application::PlayState playState = Application::GetInstance().GetPlayState();
 
     if (playState == Application::PlayState::EDITING) {
-        // En modo editor, usar delta time real para preview suave
         deltaTime = Application::GetInstance().time->GetRealDeltaTime();
 
-        // En editor, asegurar un mínimo para evitar frames muy largos
-        if (deltaTime > 0.033f) deltaTime = 0.033f; // Cap a ~30 FPS
+        if (deltaTime > 0.033f) deltaTime = 0.033f;
     }
     else {
-        // En modo play, usar delta time del juego (respeta time scale)
         deltaTime = Application::GetInstance().time->GetDeltaTime();
     }
 
     systemTime += deltaTime;
 
-    // Manejar fin de duración
     if (!mainConfig.looping && systemTime >= mainConfig.duration) {
-        // Si no hace loop, detener la emisión pero mantener las partículas vivas
         if (GetActiveParticleCount() == 0) {
             Stop();
         }
-        // No emitir más, pero seguir actualizando partículas existentes
         UpdateParticles(deltaTime);
         return;
     }
@@ -833,53 +824,6 @@ void ComponentParticleSystem::LoadExplosionPreset() {
     sizeOverLifetime.enabled = true;
     sizeOverLifetime.startSize = 1.0f;
     sizeOverLifetime.endSize = 0.2f;
-}
-
-void ComponentParticleSystem::LoadSparklesPreset() {
-    mainConfig.startLifetime = 2.0f;
-    mainConfig.startSpeed = 1.0f;
-    mainConfig.startSize = 0.2f;
-    mainConfig.gravityModifier = 0.5f;
-
-    emissionModule.enabled = true;
-    emissionModule.rateOverTime = 30.0f;
-
-    shapeModule.enabled = true;
-    shapeModule.shape = EmitterShape::SPHERE;
-    shapeModule.sphereRadius = 0.5f;
-
-    colorOverLifetime.enabled = true;
-    colorOverLifetime.startColor = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
-    colorOverLifetime.endColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
-
-    sizeOverLifetime.enabled = true;
-    sizeOverLifetime.startSize = 1.0f;
-    sizeOverLifetime.endSize = 0.5f;
-
-    rotationOverLifetime.enabled = true;
-    rotationOverLifetime.angularVelocity = 200.0f;
-    rotationOverLifetime.angularVelocityVariance = 100.0f;
-}
-
-void ComponentParticleSystem::LoadRainPreset() {
-    mainConfig.startLifetime = 2.0f;
-    mainConfig.startSpeed = 10.0f;
-    mainConfig.startSize = 0.1f;
-    mainConfig.gravityModifier = 2.0f;
-
-    emissionModule.enabled = true;
-    emissionModule.rateOverTime = 100.0f;
-
-    shapeModule.enabled = true;
-    shapeModule.shape = EmitterShape::BOX;
-    shapeModule.boxSize = glm::vec3(10.0f, 0.1f, 10.0f);
-    shapeModule.emitFromVolume = true;
-
-    colorOverLifetime.enabled = true;
-    colorOverLifetime.startColor = glm::vec4(0.5f, 0.7f, 1.0f, 0.8f);
-    colorOverLifetime.endColor = glm::vec4(0.5f, 0.7f, 1.0f, 0.4f);
-
-    sizeOverLifetime.enabled = false;
 }
 
 void ComponentParticleSystem::LoadSnowPreset() {

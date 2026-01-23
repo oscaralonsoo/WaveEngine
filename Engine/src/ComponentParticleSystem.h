@@ -299,8 +299,6 @@ public:
     void LoadSmokePreset();
     void LoadFirePreset();
     void LoadExplosionPreset();
-    void LoadSparklesPreset();
-    void LoadRainPreset();
     void LoadSnowPreset();
 
     // Save/Load config
