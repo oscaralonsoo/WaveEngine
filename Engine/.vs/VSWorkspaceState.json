@@ -1,12 +1,17 @@
 {
   "OutputFoldersPerTargetSystem": {
-    "\u672C\u5730\u8BA1\u7B97\u673A": [
+    "本地计算机": [
+      "build"
+    ],
+    "Local Machine": [
       "build"
     ]
   },
   "ExpandedNodes": [
-    ""
+    "",
+    "\\Assets",
+    "\\Assets\\Shaders"
   ],
-  "SelectedNode": "\\CMakeLists.txt",
+  "SelectedNode": "\\Assets\\Shaders\\test.vert",
   "PreviewInSolutionExplorer": false
 }
