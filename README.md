@@ -8,6 +8,8 @@
   <img src="Gif_Juego.gif" alt="Editor Scripting Demo" width="500">
 </p> 
 
+[![Ver video](https://img.youtube.com/vi/79wXfoxlBjI/maxresdefault.jpg)](https://www.youtube.com/watch?v=79wXfoxlBjI) 
+
 <p align="center">
 This project is a custom 3D game engine developed in C++ using OpenGL as the main graphics API.  
 It integrates several external libraries such as Assimp (for 3D model loading), DevIL (for texture management), and ImGui (for the user interface).
