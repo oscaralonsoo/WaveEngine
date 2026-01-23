@@ -28,6 +28,39 @@
 										</ReferenceList>
 									</EffectSlot>
 								</ObjectList>
+								<ObjectList Name="RTPC">
+									<RTPC Name="" ID="{4B4F096F-C4BF-4644-80F6-3F55E389FB8A}" ShortID="621260216">
+										<PropertyList>
+											<Property Name="PropertyName" Type="string" Value="Volume"/>
+										</PropertyList>
+										<ReferenceList>
+											<Reference Name="ControlInput">
+												<ObjectRef Name="SFXVolume" ID="{0CB4EF83-F46D-428A-8A5A-4555645C06F2}" WorkUnitID="{1BE8EDE9-6B2C-475A-9446-8D1624A2F33F}"/>
+											</Reference>
+											<Reference Name="Curve">
+												<Custom>
+													<Curve Name="" ID="{E2D5EFAB-4D7D-4F4B-9C52-F37131AC3E4E}">
+														<PropertyList>
+															<Property Name="Flags" Type="int32" Value="3"/>
+														</PropertyList>
+														<PointList>
+															<Point>
+																<XPos>0</XPos>
+																<YPos>-96</YPos>
+																<Flags>5</Flags>
+															</Point>
+															<Point>
+																<XPos>1</XPos>
+																<YPos>0</YPos>
+																<Flags>37</Flags>
+															</Point>
+														</PointList>
+													</Curve>
+												</Custom>
+											</Reference>
+										</ReferenceList>
+									</RTPC>
+								</ObjectList>
 							</ObjectLists>
 						</Bus>
 					</ChildrenList>
