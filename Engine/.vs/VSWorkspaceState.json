@@ -10,8 +10,9 @@
   "ExpandedNodes": [
     "",
     "\\Assets",
-    "\\Assets\\Shaders"
+    "\\Assets\\Shaders",
+    "\\src"
   ],
-  "SelectedNode": "\\Assets\\Shaders\\test.vert",
+  "SelectedNode": "\\src\\Shaders.cpp",
   "PreviewInSolutionExplorer": false
 }

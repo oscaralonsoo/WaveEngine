@@ -6,7 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
-
+#include <chrono>
 
 Shader::Shader() : shaderProgram(0)
 {
@@ -110,7 +110,27 @@ bool Shader::Create()
 
 void Shader::Use() const
 {
+    // 1. Activamos el shader
     glUseProgram(shaderProgram);
+
+    // 2. Buscamos si el shader necesita la variable "time"
+    GLint timeLoc = glGetUniformLocation(shaderProgram, "time");
+
+    // 3. Si lo necesita calculamos el tiempo y lo enviamos
+    if (timeLoc != -1)
+    {
+        // Guardamos el momento exacto en que empezó el juego (solo la primera vez)
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        // Miramos qué hora es ahora
+        auto currentTime = std::chrono::high_resolution_clock::now();
+
+        // Calculamos la diferencia en segundos
+        float timeValue = std::chrono::duration<float>(currentTime - startTime).count();
+
+        // Enviamos el tiempo al shader
+        glUniform1f(timeLoc, timeValue);
+    }
 }
 
 void Shader::Delete()
