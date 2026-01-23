@@ -53,8 +53,8 @@ The component exposes a complete UI for real-time editing:
 ### **Creation Process**
 
 <p align="center">
-  <a href="[link_video_yt]">
-    <img src="[png_miniatura_del_video]" alt="Creation Process" width="600"/>
+  <a href="https://www.youtube.com/watch?v=esKwzRaQlhk">
+    <img src="https://img.youtube.com/vi/esKwzRaQlhk/maxresdefault.jpg" alt="Creation Process" width="600"/>
   </a>
   <br>
   <em>(Click the image to watch a One-minute time-lapse video showing the process of using the particle system)</em>
