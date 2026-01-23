@@ -15,7 +15,7 @@ In this version, a functioning audio system has been implemented through the int
 </p>
 
 <p align="center">
-🔗 <strong>Latest Release:</strong> link aqui
+🔗 <strong>Latest Release:</strong> <a href="https://github.com/bottzo/Motor2025/releases">https://github.com/bottzo/Motor2025/releases</a>
 </p>
 
 ---
