@@ -23,17 +23,23 @@ In this version, a functioning audio system has been implemented through the int
 ## 🐚 Audio System Team Members
 
 - **Kai Caire** — [GitHub: KaiCaire](https://github.com/KaiCaire)
-   - Wwise Project Set up
-   - Music Mixing Implementation
-   - Reverb effect fixes
-   - Reverb Zone component Preset GUI implementation
+  ![a3ea991a-0788-4fd3-8ee2-ad71ca459fce](https://github.com/user-attachments/assets/c232d27c-41bc-4696-a234-1969de811b18)
+   - Wwise Low Level Integration
+   - Wwise Events & Buses Setup
+   - Interactive Music Implementation 
+   - Reverb Effect Configuration
+   - Reverb Zone Preset GUI implementation
+   
 - **Lara Guevara** — [GitHub: LaraGuevara](https://github.com/LaraGuevara)
+   ![0389be70-78cb-4b16-bd53-c43f766b73c2](https://github.com/user-attachments/assets/4b5283bd-056e-48a9-80cd-aed7f3da277a)
    - Audio Listener and Audio Source components
    - Spatial Audio Implementation
    - Audio Components (Source & Listener) Serialization
    - Audio Components (Source & Listener) Inspector GUI
    - Move Component (for Spatial Audio test)
+
 - **Marti Mach** — [GitHub: 0psycada](https://github.com/0psycada)
+  ![544d0d34-513b-4ada-8967-b5e835880753](https://github.com/user-attachments/assets/840841b0-04e5-434e-8dfa-ff3919d2c0aa)
    - Audio Effect Implementation
    - Reverb Zone component
    - Reverb Zone Serialization
@@ -212,13 +218,12 @@ Includes the following menu options:
          - Set on Awake toggle
             - When Play mode is active, Event immediately plays
 
-giffff
-
 - **Spatial Audio**
    - Both Audio Listener(s) and Audio Source(s) position are set for Wwise, allowing Spatial Audio adjusted to the Game Object positions
 - **Music Mixing**
    - Audio Sources can be set to play Music Playlist Events, allowing music mixing and fades
 - **Audio Effects**
+
    - A Reverb Zone component for Game Objects has been implemented, allowing to apply a Reverb Effect inside a set Zone in the Scene
    - Reverb Zones interact with the Main Audio Listener to apply the audio effect
    - Inspector Settings for Reverb Zone:
@@ -230,7 +235,7 @@ giffff
       - Set Priority
       - Toggle to set as Enable/Disabled 
 
-giffff
+![EnignesAudio_SceneCreation](https://github.com/user-attachments/assets/0fcb4be8-9085-4d8e-8844-e8ed37c6464b)
 
 - **Audio Component Serialization**
    - When a scene is saved, Audio Source and Audio Listener components are saved
@@ -249,10 +254,23 @@ giffff
          - Audio Listener
          - Reverb Zone
          - Move Component
+   - Configurable and serializable Roomverb Presets from Wwise by a drop down in the Inspector in the Reverb Zone component, both in editor and at runtime.
+     Managed in Wwise through Individual Auxiliary Busses
+         - Cathedral: A massive stone interior with long, shimmering decay and grand scale.
+         - Inside My Head: A tight, claustrophobic resonance that mimics internal dialogue or extreme proximity.
+         - Aluminum Tank: A high-frequency, ringing resonance typical of hollow metal containers or industrial pipes.
+         - Absorption: A deadened, muffled space that swallows high frequencies, perfect for padded rooms or thick carpets
+         - Large Plate: A classic, dense studio reverb that provides a smooth, metallic wash to any sound.
+         - Long Dark Hall: An eerie, expansive tunnel effect with a cold atmosphere and distant echoes.
+         - Robotic: A glitched, digitized reverb with metallic artifacts that sounds like an old, slightly malfunctioning robot
+         - Outside: A subtle, open-air ambience with natural reflections and zero "boxy" build-up.
+
+     
+See video here (a GIF for audio is not that useful, is it?): https://github.com/user-attachments/assets/d621ab74-c59e-4b35-af22-f43eb9aa292c
 
 ## Scene Save and Load
-el video aqui
----
+![EnginesAudio_SaveLoad](https://github.com/user-attachments/assets/92146cd5-1e38-40c2-8e3d-f44c6eaa7036)
+
 
 <p align="center">
 <sub>© 2025 Wave Engine  — MIT License</sub>
