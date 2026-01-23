@@ -390,7 +390,7 @@ void AudioSystem::ProcessReverbZones()
         Transform* lt = static_cast<Transform*>(listenerGO->GetComponent(ComponentType::TRANSFORM));
         if (lt) listenerPos = glm::vec3(lt->GetGlobalMatrix()[3]);
 
-        LOG_DEBUG("Listener Pos: %.2f, %.2f, %.2f", listenerPos.x, listenerPos.y, listenerPos.z);
+        if (enableDebugLogs) LOG_DEBUG("Listener Pos: %.2f, %.2f, %.2f", listenerPos.x, listenerPos.y, listenerPos.z);
     }
 
     
@@ -401,7 +401,7 @@ void AudioSystem::ProcessReverbZones()
     for (ReverbZone* zone : reverbZones) {
         if (!zone || !zone->enabled) continue;
         if (zone->ContainsPoint(listenerPos)) {
-            LOG_DEBUG("Checking zone %s: Result=%d", zone->auxBusName.c_str(), zone->ContainsPoint(listenerPos));
+            if (enableDebugLogs) LOG_DEBUG("Checking zone %s: Result=%d", zone->auxBusName.c_str(), zone->ContainsPoint(listenerPos));
 
             if (zone->priority > listenerBestPriority) {
                 listenerBestPriority = zone->priority;
@@ -468,7 +468,7 @@ void AudioSystem::ProcessReverbZones()
         for (ReverbZone* zone : reverbZones) {
             if (!zone || !zone->enabled) continue;
             if (zone->ContainsPoint(sourcePos)) {
-                LOG_DEBUG("Checking zone %s: Result=%d", zone->auxBusName.c_str(), zone->ContainsPoint(listenerPos));
+                if (enableDebugLogs) LOG_DEBUG("Checking zone %s: Result=%d", zone->auxBusName.c_str(), zone->ContainsPoint(listenerPos));
                 if (zone->priority > bestPriority) {
                     bestPriority = zone->priority;
                     bestZone = zone;
@@ -519,7 +519,7 @@ void AudioSystem::SetGameObjectAuxSend(AkGameObjectID id, const wchar_t* auxBusN
     }
 
     if (GetMainListenerWwiseID() == AK_INVALID_UNIQUE_ID) {
-        LOG_DEBUG("SetGameObjectAuxSend: listenerID %d was invalid", GetMainListenerWwiseID());
+        if (enableDebugLogs) LOG_DEBUG("SetGameObjectAuxSend: listenerID %d was invalid", GetMainListenerWwiseID());
         return;
     }
 
@@ -532,7 +532,7 @@ void AudioSystem::SetGameObjectAuxSend(AkGameObjectID id, const wchar_t* auxBusN
     sends[0] = send;
 
     // Log before applying
-    /*if (enableDebugLogs)*/ LOG_DEBUG("SetGameObjectAuxSend: applying aux send -> bus='%s' (id=%u) control=%.2f to GO id=%u", auxName.c_str(), (unsigned int)busId, controlValue, send.listenerID);
+    if (enableDebugLogs) LOG_DEBUG("SetGameObjectAuxSend: applying aux send -> bus='%s' (id=%u) control=%.2f to GO id=%u", auxName.c_str(), (unsigned int)busId, controlValue, send.listenerID);
 
     // Apply send
     AK::SoundEngine::SetGameObjectAuxSendValues(id, sends, 1);
