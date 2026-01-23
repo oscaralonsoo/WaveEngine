@@ -62,6 +62,33 @@ The component exposes a complete UI for real-time editing:
 
 ### **Creation Process Smoke effect in chimneys**
 
+To showcase the versatility and expressiveness of the engine's Particle System, a persistent ambient smoke simulation has been implemented for architectural elements. This feature demonstrates continuous particle emission, fine-tuned interpolation, and scene integration.
+
+#### Technical Implementation
+The chimney smoke effect is managed by `ModuleScene` and consists of a persistent, multi-emitter setup designed for atmospheric realism:
+
+##### 1. Emitter Placement
+* Four smoke emitters are instantiated at hardcoded chimney positions during scene initialization via `CreateChimneySmoke()`.
+* Each emitter is a distinct GameObject (`Chimney_Smoke_1` through `Chimney_Smoke_4`) positioned at realistic architectural locations within the scene.
+* Transform components position the emitters at precise 3D coordinates to align with chimney structures.
+
+##### 2. Particle Configuration
+The `ConfigureSmokeEffect()` method applies specialized settings to each `ComponentParticleSystem`:
+
+* **Emission Settings:** Cone-shaped emitter with a narrow angle (**1.0°**) and small radius (**0.1**) to simulate natural chimney draft.
+* **Lifecycle:** Particles persist for **1.0–2.2 seconds** with a controlled emission rate of **10 particles/second**, maintaining **60 particles maximum** per emitter.
+* **Visual Properties:**
+    * Color interpolation from semi-transparent gray (**0.45, 0.45, 0.48, 0.5**) to lighter, fully transparent (**0.7, 0.7, 0.72, 0.0**) simulating natural smoke dissipation.
+    * Size grows from **0.05** to **0.2** units, mimicking realistic smoke expansion.
+    * Random rotation speeds (**-10** to **10 deg/s**) add organic movement.
+* **Physics Simulation:** Custom gravity vector (**0.03, 0.2, 0.04**) creates upward drift with slight horizontal dispersion, replicating wind influence.
+
+##### 3. Rendering
+* Standard alpha blending (not additive) ensures smoke appears translucent and layered, matching real-world atmospheric scattering.
+* Particles are sorted by distance to camera for correct transparency rendering.
+
+*This implementation demonstrates how the modular Particle System can create subtle, long-running environmental effects that enhance scene believability without manual animation or excessive performance overhead.*
+
 ### **Creation Process Fireworks effect**
 
 To demonstrate the capabilities of the engine's modular **Particle System**, a dynamic firework simulation has been implemented. This feature showcases real-time object instantiation, physics-based particles, and automatic memory management.
