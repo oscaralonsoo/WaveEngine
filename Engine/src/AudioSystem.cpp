@@ -368,7 +368,7 @@ void AudioSystem::ProcessReverbZones()
 {
     // Find the listener game object (first registered AudioComponent that is a listener)
 
-    AkGameObjectID listenerID = AK_INVALID_GAME_OBJECT;
+    listenerID = AK_INVALID_GAME_OBJECT;
     std::shared_ptr<GameObject> listenerGO;
 
     for (AudioComponent* comp : audioComponents) {
@@ -442,6 +442,9 @@ void AudioSystem::ProcessReverbZones()
     for (AudioComponent* comp : audioComponents) {
         if (!comp) continue;
 
+        if (comp->goID == GetMainListenerWwiseID()) {
+            continue;
+        }
         // Each AudioComponent is expected to expose its Wwise gameobject id (goID) and game object
         AkGameObjectID sourceID = comp->goID;
         std::shared_ptr<GameObject> sourceGO = comp->GetGameObject();
@@ -474,18 +477,13 @@ void AudioSystem::ProcessReverbZones()
         }
 
         if (bestZone) {
-            if (!bestZone->auxBusName.empty()) {
-                std::wstring wideName(bestZone->auxBusName.begin(), bestZone->auxBusName.end());
-                SetGameObjectAuxSend(sourceID, wideName.c_str(), bestZone->wetLevel);
-            }
-        } else {
-            // No zone -> turn off aux sends for known busses.
-            // If you only use one aux bus name across zones you can clear it here.
-            // Otherwise it's safer to clear all possible buses or track per-source current sends.
-            // Here's a conservative approach: clear sends for every registered zone aux bus.
+            // We found a zone! Only set the reverb for THIS specific bus.
+            std::wstring wideName(bestZone->auxBusName.begin(), bestZone->auxBusName.end());
+            SetGameObjectAuxSend(sourceID, wideName.c_str(), bestZone->wetLevel);
+        }
+        else {
+            // ONLY if we are in NO zone at all, then we clear the faders.
             for (ReverbZone* zone : reverbZones) {
-                if (!zone) continue;
-                if (zone->auxBusName.empty()) continue;
                 std::wstring wideName(zone->auxBusName.begin(), zone->auxBusName.end());
                 SetGameObjectAuxSend(sourceID, wideName.c_str(), 0.0f);
             }
@@ -500,10 +498,11 @@ void AudioSystem::SetGameObjectAuxSend(AkGameObjectID id, const wchar_t* auxBusN
         return;
     }
 
-    auto it = std::find(gameObjectIDs.begin(), gameObjectIDs.end(), id);
-    if (it == gameObjectIDs.end()) {
-        return;
-    }
+    // Use find_if because we need to compare 'id' to 'comp->goID'
+    auto it = std::find_if(audioComponents.begin(), audioComponents.end(),
+        [id](AudioComponent* comp) {
+            return comp && comp->goID == id;
+        });
 
     // Convert auxBusName to narrow for logging
     std::wstring wname(auxBusName);
@@ -515,7 +514,12 @@ void AudioSystem::SetGameObjectAuxSend(AkGameObjectID id, const wchar_t* auxBusN
 
     // Check for invalid id
     if (busId == AK_INVALID_UNIQUE_ID) {
-        if (enableDebugLogs) LOG_DEBUG("SetGameObjectAuxSend: Aux bus name '%s' not found (GetIDFromString returned invalid id). control=%.2f targetGO=%d", auxName.c_str(), controlValue, id);
+        if (enableDebugLogs) LOG_DEBUG("SetGameObjectAuxSend: Aux bus name '%s' not found (GetIDFromString returned invalid id). control=%.2f targetGO=%d", auxName.c_str(), controlValue, GetMainListenerWwiseID());
+        return;
+    }
+
+    if (GetMainListenerWwiseID() == AK_INVALID_UNIQUE_ID) {
+        LOG_DEBUG("SetGameObjectAuxSend: listenerID %d was invalid", GetMainListenerWwiseID());
         return;
     }
 
@@ -523,14 +527,16 @@ void AudioSystem::SetGameObjectAuxSend(AkGameObjectID id, const wchar_t* auxBusN
     AkAuxSendValue send;
     AkAuxSendValue sends[1];
     send.auxBusID = busId;
+    send.listenerID = GetMainListenerWwiseID();
     send.fControlValue = controlValue;
     sends[0] = send;
 
     // Log before applying
-    /*if (enableDebugLogs)*/ LOG_DEBUG("SetGameObjectAuxSend: applying aux send -> bus='%s' (id=%u) control=%.2f to GO id=%d", auxName.c_str(), (unsigned int)busId, controlValue, id);
+    /*if (enableDebugLogs)*/ LOG_DEBUG("SetGameObjectAuxSend: applying aux send -> bus='%s' (id=%u) control=%.2f to GO id=%u", auxName.c_str(), (unsigned int)busId, controlValue, send.listenerID);
 
     // Apply send
     AK::SoundEngine::SetGameObjectAuxSendValues(id, sends, 1);
+    SetRTPCValue(AK::GAME_PARAMETERS::REVERB_VOLUME, controlValue);
 }
 
 void AudioSystem::DiscoverAuxBuses()

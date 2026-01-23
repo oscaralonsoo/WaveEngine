@@ -20,8 +20,11 @@
 				</GameParameter>
 				<GameParameter Name="Reverb_Volume" ID="{63F7E98E-93FE-4364-8928-682BB81C9FE8}">
 					<PropertyList>
-						<Property Name="InitialValue" Type="Real64" Value="0.5"/>
+						<Property Name="InitialValue" Type="Real64" Value="0"/>
 						<Property Name="Max" Type="Real64" Value="1"/>
+						<Property Name="RTPCRamping" Type="int16" Value="1"/>
+						<Property Name="SlewRateDown" Type="Real64" Value="5"/>
+						<Property Name="SlewRateUp" Type="Real64" Value="10"/>
 					</PropertyList>
 				</GameParameter>
 			</ChildrenList>

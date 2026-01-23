@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <Win32/AkDefaultIOHookDeferred.h>
+#include "AudioComponent.h"
 
 class AudioComponent;
 class ReverbZone;
@@ -78,13 +79,16 @@ public:
 	void SetMusicVolume(int volume);
 
 	// Register/unregister AudioComponent
-	inline void RegisterAudioComponent(AudioComponent* component) {
+	void RegisterAudioComponent(AudioComponent* component) {
 		if (!component) return;
-		/*gameObjectIDs.push_back(component->goID);*/ //TODO--> POPULATE gameObjectIDs for Roomverb Distance to work!
+		AK::SoundEngine::RegisterGameObj(component->goID);
 		audioComponents.push_back(component);
 	}
-	inline void UnregisterAudioComponent(AudioComponent* component) {
+	void UnregisterAudioComponent(AudioComponent* component) {
 		if (!component) return;
+
+		AK::SoundEngine::UnregisterGameObj(component->goID);
+
 		auto it = std::find(audioComponents.begin(), audioComponents.end(), component);
 		if (it != audioComponents.end()) {
 			audioComponents.erase(it);
@@ -143,6 +147,7 @@ public:
 	// Debug: current reverb zone containing the listener (if any)
 	ReverbZone* GetCurrentListenerZone() const { return currentListenerZone; }
 	bool IsListenerInReverbZone() const { return currentListenerZone != nullptr; }
+	AkGameObjectID GetMainListenerWwiseID() const { return listenerID; }
 
 	// Debug: list of auxiliary bus names discovered from the soundbank JSON
 	std::vector<std::string> auxBusNames;
@@ -154,11 +159,16 @@ private:
     // Registered audio components (sources + listener wrappers)
     std::vector<AudioComponent*> audioComponents;
 
+	//listener wwise object ID
+	AkGameObjectID listenerID;
+
     // Add this member to track the current listener's reverb zone
     ReverbZone* currentListenerZone;
 
 	// Toggle to reduce log noise (default: false)
 	bool enableDebugLogs = false;
+
+
 public:
     const std::vector<AudioComponent*>& GetAudioComponents() const { return audioComponents; }
 };

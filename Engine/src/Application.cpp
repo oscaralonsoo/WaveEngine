@@ -88,6 +88,7 @@ bool Application::Start()
 
     if (result)
     {
+        scene->LoadScene("../Scene/audioDemo.json");
         LOG_CONSOLE("Engine ready - All systems initialized");
     }
 

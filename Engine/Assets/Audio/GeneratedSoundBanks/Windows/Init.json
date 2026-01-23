@@ -10,7 +10,7 @@
     "Type": "User",
     "GUID": "{701ECBBD-9C7B-4030-8CDB-749EE5D1C7B9}",
     "Language": "SFX",
-    "Hash": "{0608D3FB-82FF-B06F-FF2E-89632E596400}",
+    "Hash": "{CFFD5688-A0DE-6F21-571E-71DAD9123DE1}",
     "ObjectPath": "Init",
     "ShortName": "Init",
     "Path": "Init.bnk",
@@ -49,15 +49,7 @@
       "Id": "1502772432",
       "Name": "SFX Bus",
       "ObjectPath": "\\Busses\\Default Work Unit\\Main Audio Bus\\SFX Bus",
-      "GUID": "{E901AF86-38FB-46EA-B16A-DDF987F9D27D}",
-      "AuxBusRefs": [
-       {
-        "Id": "2858851216",
-        "Name": "Reverb_AuxBus",
-        "ObjectPath": "\\Busses\\Default Work Unit\\Main Audio Bus\\Reverb_AuxBus",
-        "GUID": "{64009C03-8FCF-4415-9CF9-F5AC4444D726}"
-       }
-      ]
+      "GUID": "{E901AF86-38FB-46EA-B16A-DDF987F9D27D}"
      },
      {
       "Id": "2246998526",
@@ -680,6 +672,6 @@
     ]
    }
   ],
-  "FileHash": "{CE015967-565D-DACB-2593-B217A4A7EB99}"
+  "FileHash": "{46D1FF98-DAFB-660D-9EE0-3AA7FFCC5F17}"
  }
 }

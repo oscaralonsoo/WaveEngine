@@ -52,11 +52,10 @@
 							</ObjectLists>
 						</Bus>
 						<Bus Name="SFX Bus" ID="{E901AF86-38FB-46EA-B16A-DDF987F9D27D}">
-							<ReferenceList>
-								<Reference Name="UserAuxSend0">
-									<ObjectRef Name="Reverb_AuxBus" ID="{64009C03-8FCF-4415-9CF9-F5AC4444D726}" WorkUnitID="{F0D31CEB-8F9E-4AA4-B822-589F2A4A8993}"/>
-								</Reference>
-							</ReferenceList>
+							<PropertyList>
+								<Property Name="UseGameAuxSends" Type="bool" Value="True"/>
+							</PropertyList>
+							<ReferenceList/>
 							<ObjectLists>
 								<ObjectList Name="RTPC">
 									<RTPC Name="" ID="{C7CA8125-FFBC-428A-AC4A-AA9ED8A8802C}" ShortID="780067814">
