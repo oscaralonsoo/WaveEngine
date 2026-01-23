@@ -170,12 +170,14 @@ target_link_libraries(Engine PRIVATE Tracy::TracyClient)
 
 set(WWISE_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/External/Wwise/SDK")
 set(WWISE_SAMPLE_DIR "${WWISE_SDK_DIR}/samples/SoundEngine")
-set(WWISE_LIB_DIR "${WWISE_SDK_DIR}/x64_vc170/Debug/lib")
+set(WWISE_CONFIG_DIR $<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:Profile>:Profile>)
+set(WWISE_LIB_DIR "${WWISE_SDK_DIR}/x64_vc170/${WWISE_CONFIG_DIR}/lib")
 
 target_compile_definitions(Engine PRIVATE 
     AK_WIN 
     WIN32 
     $<$<CONFIG:Debug>:_DEBUG>
+    $<$<CONFIG:Release>:AK_OPTIMIZED>
 )
 
 target_include_directories(Engine PRIVATE BEFORE
@@ -205,7 +207,7 @@ target_link_libraries(Engine PRIVATE
     "${WWISE_LIB_DIR}/AkMemoryMgr.lib"
     "${WWISE_LIB_DIR}/AkStreamMgr.lib"
     "${WWISE_LIB_DIR}/AkSpatialAudio.lib"
-    "${WWISE_LIB_DIR}/CommunicationCentral.lib"
+    $<$<CONFIG:Debug,Profile>:"${WWISE_LIB_DIR}/CommunicationCentral.lib">
     "${WWISE_LIB_DIR}/AkRoomVerbFX.lib"
     ws2_32.lib 
     mswsock.lib 
