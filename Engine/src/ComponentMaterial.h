@@ -113,9 +113,9 @@ private:
     float roughness = 0.5f;
 
     // Water specific properties
-    float waveSpeed = 1.0f;
-    float waveAmplitude = 1.0f;
-    float waveFrequency = 1.0f;
+    float waveSpeed = 0.4f;
+    float waveAmplitude = 1.1f;
+    float waveFrequency = 8.2f;
     int lightingMode = 1; // 0 = Per-Vertex, 1 = Per-Pixel
 
     MaterialType materialType = MaterialType::STANDARD;

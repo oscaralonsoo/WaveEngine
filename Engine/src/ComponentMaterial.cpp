@@ -18,7 +18,10 @@ ComponentMaterial::ComponentMaterial(GameObject* owner)
     originalTexturePath(""),
     useCheckerboard(false),
     hasMaterialProperties(false),
-    lightingMode(1)  
+    lightingMode(1),
+    waveSpeed(0.4f),
+    waveAmplitude(1.1f),
+    waveFrequency(8.2f)
 {
 }
 
@@ -36,38 +39,49 @@ void ComponentMaterial::OnEditor()
 {
     if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        // Shader Type Selector
-        const char* materialTypes[] = { "Standard", "Water" };
-        int currentType = static_cast<int>(materialType);
-        
-        if (ImGui::Combo("Shader Type", &currentType, materialTypes, IM_ARRAYSIZE(materialTypes)))
-        {
-            materialType = static_cast<MaterialType>(currentType);
-        }
-
-        ImGui::Separator();
-        ImGui::Text("Custom Shader:");
-        ImGui::SameLine();
-
-        std::string currentShaderName = "None (Default)";
+        // Unified Shader Selector
+        std::string currentSelection = "Standard";
         if (shaderUID != 0) {
             ModuleResources* resources = Application::GetInstance().resources.get();
             const Resource* res = resources->GetResourceDirect(shaderUID);
             if (res) {
-                currentShaderName = res->GetAssetFile();
-                size_t lastSlash = currentShaderName.find_last_of("/\\");
+                currentSelection = res->GetAssetFile();
+                size_t lastSlash = currentSelection.find_last_of("/\\");
                 if (lastSlash != std::string::npos)
-                    currentShaderName = currentShaderName.substr(lastSlash + 1);
+                    currentSelection = currentSelection.substr(lastSlash + 1);
+            }
+            else {
+                currentSelection = "Unknown Shader";
             }
         }
+        else if (materialType == MaterialType::WATER) {
+            currentSelection = "Water";
+        }
 
-        if (ImGui::BeginCombo("##ShaderSelector", currentShaderName.c_str())) {
-            if (ImGui::Selectable("None (Default)", shaderUID == 0)) {
+        ImGui::Text("Shader:");
+        ImGui::SameLine();
+        if (ImGui::BeginCombo("##UnifiedShaderSelector", currentSelection.c_str()))
+        {
+            // Option: Standard
+            bool isStandard = (materialType == MaterialType::STANDARD && shaderUID == 0);
+            if (ImGui::Selectable("Standard", isStandard)) {
+                materialType = MaterialType::STANDARD;
                 ReleaseCurrentShader();
             }
+            if (isStandard) ImGui::SetItemDefaultFocus();
+
+            // Option: Water
+            bool isWater = (materialType == MaterialType::WATER && shaderUID == 0);
+            if (ImGui::Selectable("Water", isWater)) {
+                materialType = MaterialType::WATER;
+                ReleaseCurrentShader();
+            }
+            if (isWater) ImGui::SetItemDefaultFocus();
 
             ImGui::Separator();
+            ImGui::TextDisabled("Custom Shaders");
 
+            // Option: Custom Shaders from Resources
             ModuleResources* resources = Application::GetInstance().resources.get();
             const auto& allResources = resources->GetAllResources();
 
@@ -77,25 +91,49 @@ void ComponentMaterial::OnEditor()
                     size_t lastSlash = name.find_last_of("/\\");
                     if (lastSlash != std::string::npos) name = name.substr(lastSlash + 1);
 
-                    if (ImGui::Selectable(name.c_str(), shaderUID == pair.first)) {
+                    bool isSelected = (shaderUID == pair.first);
+                    if (ImGui::Selectable(name.c_str(), isSelected)) {
                         LoadShaderByUID(pair.first);
+                        materialType = MaterialType::STANDARD; // Reset type when using custom shader
                     }
+                    if (isSelected) ImGui::SetItemDefaultFocus();
                 }
             }
             ImGui::EndCombo();
         }
 
         if (shaderUID != 0 && ImGui::Button("Reload Shader")) {
-            LoadShaderByUID(shaderUID); 
+            LoadShaderByUID(shaderUID);
         }
 
         if (materialType == MaterialType::WATER)
         {
             ImGui::Separator();
             ImGui::Text("Water Parameters");
+            
             ImGui::DragFloat("Speed", &waveSpeed, 0.1f, 0.0f, 10.0f);
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("Controls how fast the waves move across the surface.");
+                ImGui::EndTooltip();
+            }
+
             ImGui::DragFloat("Amplitude", &waveAmplitude, 0.05f, 0.0f, 5.0f);
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("Controls the height of the waves.");
+                ImGui::EndTooltip();
+            }
+
             ImGui::DragFloat("Frequency", &waveFrequency, 0.1f, 0.0f, 10.0f);
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("Controls how many waves appear on the surface (density).");
+                ImGui::EndTooltip();
+            }
         }
 
         ImGui::Separator();
