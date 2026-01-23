@@ -6,9 +6,6 @@
 
 ## 👥 El Equipo
 
-![Foto del equipo](https://via.placeholder.com/800x400.png?text=FOTO+DEL+EQUIPO+WAVE+ENGINE) 
-*Miembros del Grupo 3*
-
 | Miembro | Contribuciones principales |
 | :--- | :--- |
 | **Toni Llovera Roca** | Implementación del **Vehicle Controller** (física de ruedas y chasis) y sistema de asignación automática de **RigidBodies y Colliders** para primitivas y modelos 3D. |
@@ -43,12 +40,6 @@ Siguiendo los requerimientos de la asignatura, hemos implementado un sistema de 
 > 2. Una vez en juego, cambia manualmente de la pestaña **Game** a la pestaña **Scene**.
 > 3. Utiliza la combinación **WASD + Click Derecho mantenido** para moverte. Verás cómo la cámara interactúa con el mundo físico.
 
----
-
-### Visualización del Sistema
-| Funcionalidad en Editor (Constraints/Config) | Comportamiento en Juego (Vehículo/Físicas) |
-| :--- | :--- |
-| ![GIF Editor](AQUÍ_VA_EL_LINK_AL_GIF_1) | ![GIF Juego](AQUÍ_VA_EL_LINK_AL_GIF_2) |
 
 ---
 
@@ -56,7 +47,7 @@ Siguiendo los requerimientos de la asignatura, hemos implementado un sistema de 
 
 En este vídeo de 1 minuto se muestra el proceso de diseño de una escena, configurando los componentes físicos y los constraints desde cero:
 
-[![Watch the video](https://img.youtube.com/vi/ID_DEL_VIDEO/0.jpg)](PONER_LINK_AL_VIDEO_AQUÍ)
+[![Watch the video](https://drive.google.com/file/d/1QPZXN4Q8vPpQJ6Qza2XsVvcpFhlluP_G/view?usp=sharing)]
 
 ---
 
