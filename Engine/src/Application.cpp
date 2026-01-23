@@ -185,7 +185,6 @@ void Application::Play()
     // Save
     if (playState == PlayState::EDITING) {
         LOG_CONSOLE("Saving initial scene state...");
-        scene->SaveScene("../Library/TempScene/__temp_scene_state__.json");
     }
 
     playState = PlayState::PLAYING;
@@ -200,10 +199,19 @@ void Application::Pause()
 
 void Application::Stop()
 {
+    // Procesar operaciones pendientes de scripts ANTES de restaurar
+    if (scripts) {
+        scripts->PostUpdate(); // Ejecuta pendingOperations y pendingDestroy
+    }
+
+    // Limpiar objetos marcados para eliminación
+    if (scene) {
+        scene->CleanupMarkedObjects(scene->GetRoot());
+    }
+
     // Restore
     if (playState != PlayState::EDITING) {
         LOG_CONSOLE("Restoring initial scene state...");
-        scene->LoadScene("../Library/TempScene/__temp_scene_state__.json");
     }
 
     playState = PlayState::EDITING;
