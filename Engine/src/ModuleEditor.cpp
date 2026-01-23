@@ -27,6 +27,8 @@
 #include "GameWindow.h"
 #include "AssetsWindow.h"
 #include "MetaFile.h"
+#include "ModuleAudio.h"
+
 
 ModuleEditor::ModuleEditor() : Module()
 {
@@ -81,6 +83,8 @@ bool ModuleEditor::Start()
     assetsWindow = std::make_unique<AssetsWindow>();
 
     LOG_CONSOLE("Editor initialized");
+    if (Application::GetInstance().audio)
+        sfxVolume01 = Application::GetInstance().audio->GetSfxVolume();
 
     return true;
 }
@@ -149,6 +153,37 @@ bool ModuleEditor::Update()
     hierarchyWindow->Draw();
     inspectorWindow->Draw();
     assetsWindow->Draw();
+    if (showAudioWindow)
+    {
+        ImGui::Begin("Audio", &showAudioWindow);
+
+        
+        if (ImGui::SliderFloat("SFX Volume", &sfxVolume01, 0.0f, 1.0f, "%.2f"))
+        {
+            
+            if (Application::GetInstance().audio)
+                Application::GetInstance().audio->SetSfxVolume(sfxVolume01);
+        }
+
+        
+        if (ImGui::Button("Mute"))
+        {
+            sfxVolume01 = 0.0f;
+            if (Application::GetInstance().audio)
+                Application::GetInstance().audio->SetSfxVolume(sfxVolume01);
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Max"))
+        {
+            sfxVolume01 = 1.0f;
+            if (Application::GetInstance().audio)
+                Application::GetInstance().audio->SetSfxVolume(sfxVolume01);
+        }
+
+        ImGui::End();
+    }
 
     if (showAbout) {
         DrawAboutWindow();
@@ -290,6 +325,12 @@ void ModuleEditor::ShowMenuBar()
             if (ImGui::MenuItem("Assets", NULL, &assetsOpen))
             {
                 assetsWindow->SetOpen(assetsOpen);
+            }
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Audio", NULL, &showAudioWindow))
+            {
+                // toggle ya lo hace ImGui con &showAudioWindow
             }
 
             ImGui::Separator();

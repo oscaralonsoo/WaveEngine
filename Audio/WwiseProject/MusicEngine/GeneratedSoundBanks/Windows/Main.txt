@@ -8,6 +8,7 @@ Event	ID	Name			Wwise Object Path	Notes
 
 Game Parameter	ID	Name			Wwise Object Path	Notes
 	867503	TunnelAmount			\Default Work Unit\TunnelAmount	
+	988953028	SFXVolume			\Default Work Unit\SFXVolume	
 
 Audio Bus	ID	Name			Wwise Object Path	Notes
 	393239870	SFX			\Default Work Unit\Main Audio Bus\SFX	

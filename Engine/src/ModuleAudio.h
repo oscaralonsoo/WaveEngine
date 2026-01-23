@@ -6,12 +6,16 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <string>
-#include <glm/glm.hpp>
+
+
+#include "Wwise_IDs.h"
 
 namespace AK { class IAkStreamMgr; }
 
+
 using AkBankID = unsigned int;
 using AkGameObjectID = unsigned long long;
+using AkRtpcID = unsigned int;
 using AkUInt8 = unsigned char;
 
 static constexpr AkBankID AK_INVALID_BANK_ID_VALUE = 0xFFFFFFFFu;
@@ -47,22 +51,24 @@ public:
 
     unsigned int PostEvent(unsigned int eventId, AkGameObjectID gameObjectId);
 
-   
+    // RTPC
     void SetRTPC(unsigned int rtpcId, float value, AkGameObjectID gameObjectId = 0);
     void SetRTPCByName(const char* rtpcName, float value, AkGameObjectID gameObjectId = 0);
 
-  
     float GetRTPCCached(unsigned int rtpcId) const;
     float GetRTPCCachedByName(const char* rtpcName) const;
 
+    // SFX Volume 
+    void SetSfxVolume(float volume01);
+    float GetSfxVolume() const { return sfxVolume01; }
     AkGameObjectID GetMusicGameObjectId() const { return MUSIC_GO; }
-
 private:
     bool InitWwise();
     void TerminateWwise();
 
     bool LoadBankFromMemory(const std::filesystem::path& fullPath, AkBankID& outId, std::vector<AkUInt8>& outData);
     void UnloadBankFromMemory(AkBankID id, std::vector<AkUInt8>& data);
+    
 
 private:
     static ModuleAudio* instance;
@@ -89,7 +95,10 @@ private:
     bool isPlaying = false;
     bool isPaused = false;
 
-    
+   
     std::unordered_map<unsigned int, float> rtpcCacheById;
     mutable std::unordered_map<std::string, unsigned int> rtpcNameToIdCache;
+
+    
+    float sfxVolume01 = 1.0f;
 };

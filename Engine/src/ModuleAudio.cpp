@@ -123,8 +123,16 @@ bool ModuleAudio::Start()
 {
     instance = this;
     initialized = InitWwise();
+
+    if (initialized)
+    {
+       
+        SetSfxVolume(sfxVolume01);
+    }
+
     return initialized;
 }
+
 
 bool ModuleAudio::Update()
 {
@@ -628,3 +636,16 @@ void ModuleAudio::UnloadBankFromMemory(AkBankID id, std::vector<AkUInt8>& data)
         data.clear();
     }
 }
+void ModuleAudio::SetSfxVolume(float volume01)
+{
+    if (!initialized) return;
+
+    if (volume01 < 0.0f) volume01 = 0.0f;
+    if (volume01 > 1.0f) volume01 = 1.0f;
+
+    sfxVolume01 = volume01;
+
+   
+    SetRTPC((unsigned int)AK::GAME_PARAMETERS::SFXVOLUME, sfxVolume01, 0);
+}
+

@@ -10,7 +10,7 @@
     "Type": "User",
     "GUID": "{3EB4423E-CDBE-48EF-B3A6-2E491FE970E5}",
     "Language": "SFX",
-    "Hash": "{D406CFBD-5CAF-4653-83EB-AFFDBED13F5D}",
+    "Hash": "{95A5AD4C-2FEC-3E0F-821F-9D001F020997}",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\Main",
     "ShortName": "Main",
     "Path": "Main.bnk",
@@ -185,10 +185,16 @@
       "Name": "TunnelAmount",
       "ObjectPath": "\\Game Parameters\\Default Work Unit\\TunnelAmount",
       "GUID": "{5389D694-24F5-4C22-B928-8FE0DD148234}"
+     },
+     {
+      "Id": "988953028",
+      "Name": "SFXVolume",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\SFXVolume",
+      "GUID": "{0CB4EF83-F46D-428A-8A5A-4555645C06F2}"
      }
     ]
    }
   ],
-  "FileHash": "{E42F6A79-1FBA-8A35-BC67-0383103D6768}"
+  "FileHash": "{D7A8F569-B1C8-AD5C-8E12-B8F093B47269}"
  }
 }

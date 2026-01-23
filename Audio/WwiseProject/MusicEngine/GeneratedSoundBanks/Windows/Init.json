@@ -10,7 +10,7 @@
     "Type": "User",
     "GUID": "{701ECBBD-9C7B-4030-8CDB-749EE5D1C7B9}",
     "Language": "SFX",
-    "Hash": "{164ACCC6-3B4F-4ECA-7BE8-B97F3E590E6A}",
+    "Hash": "{CFFC7A1C-5327-8E3D-8756-70B8581FC377}",
     "ObjectPath": "Init",
     "ShortName": "Init",
     "Path": "Init.bnk",
@@ -88,6 +88,12 @@
       "Name": "SS_Air_RPM",
       "ObjectPath": "\\Game Parameters\\Factory Soundseed Air Game Syncs\\SS_Air_RPM",
       "GUID": "{A34890AB-B9D5-4526-A64D-5290C43EF2DC}"
+     },
+     {
+      "Id": "988953028",
+      "Name": "SFXVolume",
+      "ObjectPath": "\\Game Parameters\\Default Work Unit\\SFXVolume",
+      "GUID": "{0CB4EF83-F46D-428A-8A5A-4555645C06F2}"
      },
      {
       "Id": "1029930033",
@@ -623,6 +629,6 @@
     ]
    }
   ],
-  "FileHash": "{C099F614-3BF9-DD07-B2D6-9C623AB79B27}"
+  "FileHash": "{850FFB60-DC40-7869-0856-15968A748C66}"
  }
 }

@@ -65,6 +65,10 @@ public:
     EditorWindowType GetCurrentWindow() const { return currentWindow; }
     bool IsSceneWindowActive() const { return currentWindow == EditorWindowType::SCENE;  }
     bool IsMouseOverScene() const;
+    bool showAudioWindow = true;
+    float sfxVolume01 = 1.0f;   
+  
+
 
 private:
     void ShowMenuBar();
