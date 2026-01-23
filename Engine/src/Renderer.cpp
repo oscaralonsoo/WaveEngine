@@ -970,6 +970,7 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
             waterShader->SetFloat("u_Time", time);
             waterShader->SetVec3("lightDir", glm::vec3(1.0f, -1.0f, -1.0f));
             waterShader->SetVec3("viewPos", renderCamera->GetPosition());
+            waterShader->SetFloat("opacity", material ? material->GetOpacity() : 1.0f);
 
             if (material) {
                 float speed = material->GetWaveSpeed();
