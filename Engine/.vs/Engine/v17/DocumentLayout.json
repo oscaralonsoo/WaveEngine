@@ -58,8 +58,7 @@
               "RelativeToolTip": "src\\ResourceShader.cpp",
               "ViewState": "AgIAAEAAAAAAAAAAAAAAAFIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-01-23T17:45:37.093Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-23T17:45:37.093Z"
             },
             {
               "$type": "Document",
@@ -71,8 +70,7 @@
               "RelativeToolTip": "src\\ComponentMaterial.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-01-23T17:26:39.873Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-23T17:26:39.873Z"
             },
             {
               "$type": "Document",
@@ -84,8 +82,7 @@
               "RelativeToolTip": "src\\AssetsWindow.cpp",
               "ViewState": "AgIAAFQHAAAAAAAAAAAwwGkHAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-01-23T12:52:36.905Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-23T12:52:36.905Z"
             },
             {
               "$type": "Document",
@@ -97,8 +94,7 @@
               "RelativeToolTip": "src\\Shaders.cpp",
               "ViewState": "AgIAAGgAAAAAAAAAAAAAAHQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-01-23T12:28:15.979Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-23T12:28:15.979Z"
             },
             {
               "$type": "Document",
@@ -110,8 +106,7 @@
               "RelativeToolTip": "Assets\\Shaders\\water.vert",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-01-23T12:22:39.408Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-23T12:22:39.408Z"
             },
             {
               "$type": "Document",
@@ -121,7 +116,7 @@
               "RelativeDocumentMoniker": "Assets\\Shaders\\water.frag",
               "ToolTip": "H:\\Motor2025\\Engine\\Assets\\Shaders\\water.frag",
               "RelativeToolTip": "Assets\\Shaders\\water.frag",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2026-01-23T12:22:26.861Z",
               "EditorCaption": ""
