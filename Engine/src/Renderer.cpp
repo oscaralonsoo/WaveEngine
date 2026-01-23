@@ -13,6 +13,9 @@
 #include <stack>
 
 #include "tracy/Tracy.hpp"
+static Shader* GetShaderForMaterial(ComponentMaterial* mat);
+static void ApplyMaterialUniforms(Shader* shader, ComponentMaterial* mat);
+
 
 Renderer::Renderer()
 {
@@ -442,6 +445,8 @@ bool Renderer::CleanUp()
 
     return true;
 }
+
+
 
 void Renderer::CreateFramebuffer(int width, int height)
 {
@@ -906,18 +911,91 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
 
         const glm::mat4& modelMatrix = transform->GetGlobalMatrix();
 
-        Shader* currentShader = showZBuffer ? depthShader.get() : defaultShader.get();
+        //Shader* currentShader = showZBuffer ? depthShader.get() : defaultShader.get();
+        //currentShader->Use();
+
+        //glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "projection"),
+        //    1, GL_FALSE, glm::value_ptr(renderCamera->GetProjectionMatrix()));
+        //glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "view"),
+        //    1, GL_FALSE, glm::value_ptr(renderCamera->GetViewMatrix()));
+        //glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "model"),
+        //    1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+        //ComponentMaterial* material = static_cast<ComponentMaterial*>(
+        //    currentObj->GetComponent(ComponentType::MATERIAL));
+
+        //bool materialBound = false;
+
+        //if (showZBuffer)
+        //{
+        //    depthShader->SetFloat("nearPlane", renderCamera->GetNearPlane());
+        //    depthShader->SetFloat("farPlane", renderCamera->GetFarPlane());
+        //}
+        //else
+        //{
+        //    defaultShader->SetVec3("tintColor", glm::vec3(1.0f));
+
+        //    bool hasTexture = (material && material->IsActive() && material->HasTexture());
+
+        //    // Configure uniform hasTexture
+        //    defaultShader->SetInt("hasTexture", hasTexture ? 1 : 0);
+
+        //    // Configure light direction
+        //    defaultShader->SetVec3("lightDir", glm::vec3(1.0f, -1.0f, -1.0f));
+
+        //    if (hasTexture)
+        //    {
+        //        material->Use();  // Bind the material's texture
+        //        materialBound = true;
+        //        defaultShader->SetVec3("materialDiffuse", glm::vec3(1.0f));
+        //    }
+        //    else
+        //    {
+        //        glBindTexture(GL_TEXTURE_2D, 0); // No texture
+
+        //        // Send diffuse colour of the material to the shader
+        //        if (material && material->HasMaterialProperties())
+        //        {
+        //            glm::vec4 diffuse = material->GetDiffuseColor();
+        //            defaultShader->SetVec3("materialDiffuse", glm::vec3(diffuse.r, diffuse.g, diffuse.b));
+        //        }
+        //        else
+        //        {
+        //            // Default colour grey if no material is available
+        //            defaultShader->SetVec3("materialDiffuse", glm::vec3(0.6f, 0.6f, 0.6f));
+        //        }
+        //    }
+
+        //    // Set the texture sampler uniform
+        //    glUniform1i(defaultUniforms.texture1, 0);
+        //}
+
+        ComponentMaterial* material = static_cast<ComponentMaterial*>(
+            currentObj->GetComponent(ComponentType::MATERIAL));
+
+        Shader* currentShader = nullptr;
+
+        // 1) 选 shader：ZBuffer 强制 depthShader；否则优先用 Material 的 shader
+        if (showZBuffer)
+        {
+            currentShader = depthShader.get();
+        }
+        else
+        {
+            // 你文件里已经有这个函数（上面定义的 static Shader* GetShaderForMaterial(...)）
+            currentShader = GetShaderForMaterial(material);
+            if (!currentShader) currentShader = defaultShader.get();
+        }
+
         currentShader->Use();
 
+        // 2) 传矩阵（注意：你们 shader 里名字就是 projection/view/model）
         glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "projection"),
             1, GL_FALSE, glm::value_ptr(renderCamera->GetProjectionMatrix()));
         glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "view"),
             1, GL_FALSE, glm::value_ptr(renderCamera->GetViewMatrix()));
         glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "model"),
             1, GL_FALSE, glm::value_ptr(modelMatrix));
-
-        ComponentMaterial* material = static_cast<ComponentMaterial*>(
-            currentObj->GetComponent(ComponentType::MATERIAL));
 
         bool materialBound = false;
 
@@ -928,42 +1006,53 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
         }
         else
         {
-            defaultShader->SetVec3("tintColor", glm::vec3(1.0f));
-
+            // 3) 贴图绑定：有贴图就绑定，没有就解绑
             bool hasTexture = (material && material->IsActive() && material->HasTexture());
-
-            // Configure uniform hasTexture
-            defaultShader->SetInt("hasTexture", hasTexture ? 1 : 0);
-
-            // Configure light direction
-            defaultShader->SetVec3("lightDir", glm::vec3(1.0f, -1.0f, -1.0f));
-
             if (hasTexture)
             {
-                material->Use();  // Bind the material's texture
+                material->Use();
                 materialBound = true;
-                defaultShader->SetVec3("materialDiffuse", glm::vec3(1.0f));
             }
             else
             {
-                glBindTexture(GL_TEXTURE_2D, 0); // No texture
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
 
-                // Send diffuse colour of the material to the shader
-                if (material && material->HasMaterialProperties())
+            // 4) 只有 defaultShader 才有这些“灯光/hasTexture/材质颜色”的默认 uniform
+            if (currentShader == defaultShader.get())
+            {
+                defaultShader->SetVec3("tintColor", glm::vec3(1.0f));
+                defaultShader->SetInt("hasTexture", hasTexture ? 1 : 0);
+                defaultShader->SetVec3("lightDir", glm::vec3(1.0f, -1.0f, -1.0f));
+
+                if (hasTexture)
                 {
-                    glm::vec4 diffuse = material->GetDiffuseColor();
-                    defaultShader->SetVec3("materialDiffuse", glm::vec3(diffuse.r, diffuse.g, diffuse.b));
+                    defaultShader->SetVec3("materialDiffuse", glm::vec3(1.0f));
                 }
                 else
                 {
-                    // Default colour grey if no material is available
-                    defaultShader->SetVec3("materialDiffuse", glm::vec3(0.6f, 0.6f, 0.6f));
+                    if (material && material->HasMaterialProperties())
+                    {
+                        glm::vec4 diffuse = material->GetDiffuseColor();
+                        defaultShader->SetVec3("materialDiffuse", glm::vec3(diffuse.r, diffuse.g, diffuse.b));
+                    }
+                    else
+                    {
+                        defaultShader->SetVec3("materialDiffuse", glm::vec3(0.6f, 0.6f, 0.6f));
+                    }
                 }
-            }
 
-            // Set the texture sampler uniform
-            glUniform1i(defaultUniforms.texture1, 0);
+                glUniform1i(defaultUniforms.texture1, 0);
+            }
+            else
+            {
+                // 5) 自定义 shader：把 Inspector 改的 uniforms 推进去
+                // 你文件里已经有这个函数（上面定义的 static void ApplyMaterialUniforms(...)）
+                currentShader->SetInt("texture1", 0);   // 有这个 uniform 就会生效，没有也没事
+                ApplyMaterialUniforms(currentShader, material);
+            }
         }
+
 
         const std::vector<Component*>& meshComponents =
             currentObj->GetComponentsOfType(ComponentType::MESH);
