@@ -1,18 +1,28 @@
 #include "Window.h"
+#include <iostream>
 #include <glad/glad.h>
 #include "Log.h"
 
-Window::Window() : window(nullptr), width(1280), height(720), scale(1), vsyncActive(true)
+Window::Window() : window(nullptr), width(1280), height(720), scale(1)
+{
+   LOG_CONSOLE("Window Constructor");
+}
+
+Window::~Window()
 {
 }
 
-Window::~Window() {}
-
 bool Window::Start()
 {
-    LOG_CONSOLE("Window Module: Initializing for Version 3...");
+    LOG_DEBUG("=== Initializing Window Module ===");
+    LOG_CONSOLE("Initializing SDL3 and OpenGL...");
 
-    if (!SDL_Init(SDL_INIT_VIDEO)) return false;
+    if (!SDL_Init(SDL_INIT_VIDEO))
+    {
+        LOG_DEBUG("ERROR: SDL_Init failed - %s", SDL_GetError());
+        LOG_CONSOLE("ERROR: Failed to initialize SDL3");
+        return false;
+    }
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
@@ -20,30 +30,32 @@ bool Window::Start()
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
+    int sdlVersion = SDL_GetVersion();
+    int major = SDL_VERSIONNUM_MAJOR(sdlVersion);
+    int minor = SDL_VERSIONNUM_MINOR(sdlVersion);
+    int patch = SDL_VERSIONNUM_MICRO(sdlVersion);
+    LOG_CONSOLE("SDL3 initialized - Version: %d.%d.%d", major, minor, patch);
+
+	SetVsync(true);
     window = SDL_CreateWindow(
-        "Wave Engine - V3 Build",
+        "Motor 2025",
         width,
         height,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
 
-    if (window == nullptr) return false;
 
-    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-
-    SetVsync(vsyncActive);
-
-    LOG_CONSOLE("Window created successfully (1280x720)");
-    return true;
-}
-
-void Window::SetVsync(bool enabled)
-{
-    vsyncActive = enabled;
-    if (SDL_GL_SetSwapInterval(vsyncActive ? 1 : 0) < 0)
+    if (window == nullptr)
     {
-        LOG_DEBUG("Warning: SDL could not set VSync! Error: %s", SDL_GetError());
+        LOG_DEBUG("ERROR: Window creation failed - %s", SDL_GetError());
+        LOG_CONSOLE("ERROR: Failed to create window");
+        return false;
     }
+
+    LOG_DEBUG("Window created successfully");
+    LOG_CONSOLE("Window created: %dx%d with OpenGL", width, height);
+
+    return true;
 }
 
 bool Window::Update()
@@ -57,20 +69,48 @@ bool Window::Update()
         height = newHeight;
         glViewport(0, 0, width, height);
     }
+
     return true;
 }
 
 bool Window::PostUpdate()
 {
-    SDL_GL_SwapWindow(window);
+    Render();
     return true;
+}
+
+void Window::Render()
+{
+    SDL_GL_SwapWindow(window);
 }
 
 bool Window::CleanUp()
 {
-    if (window) SDL_DestroyWindow(window);
+    LOG_DEBUG("Destroying SDL window");
+    if (window != nullptr)
+    {
+        SDL_DestroyWindow(window);
+        window = nullptr;
+    }
+
     SDL_Quit();
+
+    LOG_CONSOLE("Window closed");
     return true;
 }
 
-void Window::GetWindowSize(int& w, int& h) const { w = width; h = height; }
+void Window::GetWindowSize(int& width, int& height) const
+{
+    SDL_GetWindowSize(window, &width, &height);
+}
+
+int Window::GetScale() const
+{
+    return scale;
+}
+
+void Window::SetVsync(bool enabled)
+{
+    SDL_GL_SetSwapInterval(enabled ? 1 : 0);
+    LOG_CONSOLE("VSync set to: %s", enabled ? "ON" : "OFF");
+}

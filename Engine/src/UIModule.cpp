@@ -1,83 +1,207 @@
 #include "UIModule.h"
 #include "Application.h"
+#include "ModuleResources.h"
+#include "Texture.h"
 #include "Input.h"
 #include "Window.h"
+#include "Time.h"
+#include "Log.h"
 #include <imgui.h>
+bool UIModule::colour = true;
 
-UIModule::UIModule() : Module() { name = "UIModule"; }
-UIModule::~UIModule() {}
+UIModule::UIModule() : Module()
+{
+	name = "UIModule";
+}
 
-bool UIModule::Start() {
-    LOG_CONSOLE("Module UI V3: HUD y Ventanas Arrastrables activas.");
-    return true;
+UIModule::~UIModule()
+
+{
+}
+
+bool UIModule::Start()
+{
+	LOG_DEBUG("Initializing Module UI");
+	
+	return true;
 }
 
 bool UIModule::Update()
 {
 
-    if (Application::GetInstance().input->GetKey(SDL_SCANCODE_F1) == KEY_DOWN)
-        isSettingsVisible = !isSettingsVisible;
-        
-    RenderHUD(); 
+	if (Application::GetInstance().input->GetKey(SDL_SCANCODE_F1) == KEY_DOWN)
+		showOptions = !showOptions;
 
-    if (isSettingsVisible) 
-        DrawEngineSettings();
+	switch (uiState)
+	{
+	case UIState::MAIN_MENU:
+		RenderMainMenu();
+		break;
 
-    return true;
+	case UIState::FADING_OUT:
+
+		fadeAlpha -= fadeSpeed * Application::GetInstance().time->GetRealDeltaTime();
+		if (fadeAlpha < 0.0f) fadeAlpha = 0.0f;
+
+		
+		
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, (float)fadeAlpha);
+
+		RenderMainMenu();
+
+		ImGui::PopStyleVar(); 
+
+		if (fadeAlpha <= 0.0f)
+		{
+			uiState = UIState::IN_GAME;
+			fadeAlpha = 0.0f; 
+		}
+		break;
+
+	case UIState::IN_GAME:
+		RenderHUD();
+		if (showOptions) RenderOptionsWindow();
+		break;
+	}
+
+	return true;
 }
+
+void UIModule::RenderMainMenu()
+{
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(viewport->Pos);
+	ImGui::SetNextWindowSize(viewport->Size);
+
+	ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+	ImGui::Begin("MainMenu", nullptr, flags);
+
+	if (mainMenuBackground)
+	{
+		ImGui::SetCursorPos(ImVec2(0, 0));
+		ImGui::Image((ImTextureID)(unsigned long long)mainMenuBackground->GetID(), viewport->Size);
+	}
+	else
+	{
+		ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(0, 0), viewport->Size, IM_COL32(20, 30, 50, 255));
+	}
+
+
+	ImVec2 center = ImVec2(viewport->Size.x * 0.5f, viewport->Size.y * 0.5f);
+
+	ImGui::SetCursorPos(ImVec2(center.x - 80, center.y - 100));
+	ImGui::SetWindowFontScale(2.0f);
+	ImGui::Text("WaveEngine UI");
+	ImGui::SetWindowFontScale(1.0f);
+
+
+	ImGui::SetCursorPos(ImVec2(center.x - 100, center.y));
+	ImGui::Text("Nombre del Jugador:");
+	ImGui::SetCursorPosX(center.x - 100);
+	ImGui::SetNextItemWidth(200.0f);
+	ImGui::InputText("##NameInput", playerNameInput, sizeof(playerNameInput));
+
+
+	ImGui::SetCursorPos(ImVec2(center.x - 60, center.y + 60));
+	if (ImGui::Button("Jugar", ImVec2(120, 40)))
+	{
+		StartGame();
+	}
+
+	ImGui::End();
+}
+
+void UIModule::StartGame()
+{
+	uiState = UIState::FADING_OUT;
+	fadeAlpha = 1.0f;
+	LOG_CONSOLE("Inicio: %s", playerNameInput);
+}
+
+void UIModule::RenderOptionsWindow()
+{
+	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
+
+	if (ImGui::Begin("Game Options (F1)", &showOptions))
+	{
+		ImGui::Text("Settings");
+		ImGui::Separator();
+
+		if (ImGui::Checkbox("Vertical Sync", &vsyncEnabled))
+		{
+			Application::GetInstance().window->SetVsync(vsyncEnabled);
+		}
+		if (ImGui::Checkbox("Cross colour", &colour))
+		{
+			
+		}
+	
+		ImGui::Spacing();
+		ImGui::Text("Player: %s", playerNameInput);
+
+		if (ImGui::Button("Close"))
+		{
+			showOptions = false;
+		}
+	}
+	ImGui::End();
+}
+
 
 void UIModule::RenderHUD()
 {
-    ImGuiViewport* vp = ImGui::GetMainViewport();
-    ImVec2 screenCenter = ImVec2(vp->Pos.x + vp->Size.x * 0.5f, vp->Pos.y + vp->Size.y * 0.5f);
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImVec2 center = ImVec2(viewport->Size.x * 0.5f, viewport->Size.y * 0.5f);
 
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::SetNextWindowSize(viewport->Size);
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
+	ImGui::Begin("HUD", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-    ImDrawList* drawList = ImGui::GetForegroundDrawList();
+	float size = 10.0f;
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
+	drawList->AddLine(ImVec2(center.x - size, center.y), ImVec2(center.x + size, center.y), IM_COL32(255, 255, 255, 255), 2.0f);
+	drawList->AddLine(ImVec2(center.x, center.y - size), ImVec2(center.x, center.y + size), IM_COL32(255, 255, 255, 255), 2.0f);
 
-    ImU32 whiteColor = IM_COL32(255, 255, 255, 200);
-    
-    drawList->AddLine(
-        ImVec2(screenCenter.x - crosshairSize, screenCenter.y),
-        ImVec2(screenCenter.x + crosshairSize, screenCenter.y),
-        whiteColor, crosshairThickness
-    );
-    drawList->AddLine(
-        ImVec2(screenCenter.x, screenCenter.y - crosshairSize),
-        ImVec2(screenCenter.x, screenCenter.y + crosshairSize),
-        whiteColor, crosshairThickness
-    );
+	ImGui::End();
+	ImGui::PopStyleColor();
 }
+void UIModule::DrawCrosshairInsideWindow() {
+	ImVec2 center = ImVec2(
+		ImGui::GetWindowPos().x + ImGui::GetWindowSize().x * 0.5f,
+		ImGui::GetWindowPos().y + ImGui::GetWindowSize().y * 0.5f
+	);
+	float lineSize = 10.0f;
+	float gap = 3.0f;       
+	float thickness = 2.0f;
+	ImU32 color = IM_COL32(0, 255, 0, 255);
 
-void UIModule::DrawEngineSettings()
-{
-    ImGui::SetNextWindowSize(ImVec2(320, 260), ImGuiCond_FirstUseEver);
+	
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-    if (ImGui::Begin("Game Settings (F1)", &isSettingsVisible))
-    {
+	if (colour==true) {
+		drawList->AddLine(ImVec2(center.x, center.y - gap), ImVec2(center.x, center.y - gap - lineSize), IM_COL32(0, 255, 255, 255), thickness);
 
-        ImVec2 pos = ImGui::GetWindowPos();
-        ImGuiViewport* vp = ImGui::GetMainViewport();
-        
+		drawList->AddLine(ImVec2(center.x, center.y + gap), ImVec2(center.x, center.y + gap + lineSize), IM_COL32(0, 255,255, 255), thickness);
 
-        if (pos.x < vp->Pos.x) ImGui::SetWindowPos(ImVec2(vp->Pos.x, pos.y));
-        if (pos.y < vp->Pos.y) ImGui::SetWindowPos(ImVec2(pos.x, vp->Pos.y));
+		drawList->AddLine(ImVec2(center.x - gap, center.y), ImVec2(center.x - gap - lineSize, center.y), IM_COL32(0, 255, 255, 255), thickness);
 
-        ImGui::Text("Interface & Graphics");
-        ImGui::Separator();
+		drawList->AddLine(ImVec2(center.x + gap, center.y), ImVec2(center.x + gap + lineSize, center.y), IM_COL32(0, 255, 255, 255), thickness);
+	}
+	else {
+	drawList->AddLine(ImVec2(center.x, center.y - gap), ImVec2(center.x, center.y - gap - lineSize), color, thickness);
+	
+	drawList->AddLine(ImVec2(center.x, center.y + gap), ImVec2(center.x, center.y + gap + lineSize), color, thickness);
+	
+	drawList->AddLine(ImVec2(center.x - gap, center.y), ImVec2(center.x - gap - lineSize, center.y), color, thickness);
+	
+	drawList->AddLine(ImVec2(center.x + gap, center.y), ImVec2(center.x + gap + lineSize, center.y), color, thickness);
+	}
+	
+	
+	ImGui::GetWindowDrawList()->AddCircleFilled(center, 2.0f, IM_COL32(255, 0, 0, 255));
 
-        if (ImGui::Checkbox("VSync (V2 Feature)", &vsyncActive)) {
-            Application::GetInstance().window->SetVsync(vsyncActive);
-        }
 
-        
-        ImGui::Separator();
-        ImGui::Text("Crosshair Settings");
-        ImGui::SliderFloat("Size", &crosshairSize, 5.0f, 30.0f);
-        ImGui::SliderFloat("Thickness", &crosshairThickness, 1.0f, 5.0f);
-
-        ImGui::Spacing();
-        if (ImGui::Button("Close", ImVec2(80, 0))) isSettingsVisible = false;
-    }
-    ImGui::End();
 }
