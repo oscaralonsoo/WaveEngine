@@ -1,120 +1,33 @@
-#include "Window.h"
-#include <iostream>
-#include <glad/glad.h>
-#include "Log.h"
+#pragma once
 
-Window::Window() : window(nullptr), width(1280), height(720), scale(1)
+#include <SDL3/SDL.h>
+#include "Module.h"
+
+class Window : public Module
 {
-   LOG_CONSOLE("Window Constructor");
-}
+public:
+    Window();
+    ~Window() override;
 
-Window::~Window()
-{
-}
+    bool Start() override;
+    bool Update() override;
+    bool PostUpdate() override;
+    bool CleanUp() override;
 
-bool Window::Start()
-{
-    LOG_DEBUG("=== Initializing Window Module ===");
-    LOG_CONSOLE("Initializing SDL3 and OpenGL...");
+    void SetVsync(bool enabled);
+    bool IsVsyncActive() const { return vsyncActive; }
 
-    // Initialize SDL3
-    if (!SDL_Init(SDL_INIT_VIDEO))
-    {
-        LOG_DEBUG("ERROR: SDL_Init failed - %s", SDL_GetError());
-        LOG_CONSOLE("ERROR: Failed to initialize SDL3");
-        return false;
-    }
+    void GetWindowSize(int& width, int& height) const;
+    SDL_Window* GetWindow() const { return window; }
 
-    // Set OpenGL version to 4.6
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
+private:
+    void Render();
 
-    // Use the core OpenGL profile (modern functions only)
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+private:
+    SDL_Window* window = nullptr;
+    int width;
+    int height;
+    int scale;
 
-    // Enable double buffering to prevent flickering
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-    // Set depth buffer to 24 bits for proper 3D rendering
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-
-    int sdlVersion = SDL_GetVersion();
-    int major = SDL_VERSIONNUM_MAJOR(sdlVersion);
-    int minor = SDL_VERSIONNUM_MINOR(sdlVersion);
-    int patch = SDL_VERSIONNUM_MICRO(sdlVersion);
-    LOG_CONSOLE("SDL3 initialized - Version: %d.%d.%d", major, minor, patch);
-
-    // Create window WITH OpenGL flag
-    window = SDL_CreateWindow(
-        "Wave Engine",
-        width,
-        height,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
-    );
-
-
-    if (window == nullptr)
-    {
-        LOG_DEBUG("ERROR: Window creation failed - %s", SDL_GetError());
-        LOG_CONSOLE("ERROR: Failed to create window");
-        return false;
-    }
-
-    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-
-    LOG_DEBUG("Window created successfully");
-    LOG_CONSOLE("Window created: %dx%d with OpenGL", width, height);
-
-    return true;
-}
-
-bool Window::Update()
-{
-    int newWidth, newHeight;
-    SDL_GetWindowSize(window, &newWidth, &newHeight);
-
-    if (newWidth != width || newHeight != height)
-    {
-        width = newWidth;
-        height = newHeight;
-        glViewport(0, 0, width, height);
-    }
-
-    return true;
-}
-
-bool Window::PostUpdate()
-{
-    Render();
-    return true;
-}
-
-void Window::Render()
-{
-    SDL_GL_SwapWindow(window);
-}
-
-bool Window::CleanUp()
-{
-    LOG_DEBUG("Destroying SDL window");
-    if (window != nullptr)
-    {
-        SDL_DestroyWindow(window);
-        window = nullptr;
-    }
-
-    SDL_Quit();
-
-    LOG_CONSOLE("Window closed");
-    return true;
-}
-
-void Window::GetWindowSize(int& width, int& height) const
-{
-    SDL_GetWindowSize(window, &width, &height);
-}
-
-int Window::GetScale() const
-{
-    return scale;
-}
+    bool vsyncActive = true; 
+};
