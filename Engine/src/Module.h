@@ -16,11 +16,6 @@ public:
 	{
 	}
 
-	virtual ~Module() = default; 
-
-    virtual bool Start() 
-	{ return true; }
-
 	void Init()
 	{
 		active = true;
@@ -45,7 +40,7 @@ public:
 	}
 
 	// Called each loop iteration
-	virtual bool Update() // Aqui luego podemos aï¿½adit el dt
+	virtual bool Update() // Aqui luego podemos añadit el dt
 	{
 		return true;
 	}

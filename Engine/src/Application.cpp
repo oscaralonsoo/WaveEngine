@@ -1,5 +1,4 @@
 ﻿#include "Application.h"
-#include "ModuleUI.h"
 #include <iostream>
 #include <chrono>
 
@@ -14,7 +13,6 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     renderer = std::make_shared<Renderer>();
     scene = std::make_shared<ModuleScene>();
     camera = std::make_shared<ModuleCamera>();
-    ui = std::make_shared<ModuleUI>();
     editor = std::make_shared<ModuleEditor>();
     filesystem = std::make_shared<FileSystem>();
     time = std::make_shared<Time>();
@@ -26,7 +24,6 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     AddModule(std::static_pointer_cast<Module>(renderContext));
     AddModule(std::static_pointer_cast<Module>(scene));
     AddModule(std::static_pointer_cast<Module>(camera));
-    AddModule(std::static_pointer_cast<Module>(ui));
     AddModule(std::static_pointer_cast<Module>(editor));
     AddModule(std::static_pointer_cast<Module>(resources));
     AddModule(std::static_pointer_cast<Module>(filesystem));
@@ -91,8 +88,6 @@ bool Application::Start()
     {
         LOG_CONSOLE("Engine ready - All systems initialized");
     }
-
-    scene->LoadScene("Assets/Scenes/ciudad_demo.json");
 
     return true;
 }
@@ -182,14 +177,6 @@ bool Application::PostUpdate()
     }
 
     return result;
-}
-
-Application::Application() {
-    // ...
-    ui = std::make_shared<ModuleUI>();
-    
-    AddModule(ui);
-    AddModule(editor);
 }
 
 void Application::Play()
