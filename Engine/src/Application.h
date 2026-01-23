@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <list>
+#include "Module.h"
 #include "Window.h"
 #include "Input.h"
 #include "Time.h"
@@ -22,16 +23,12 @@ class Application
 public:
 
     static Application& GetInstance();
-
-
     bool Awake();
     bool Start();
     bool Update();
     bool CleanUp();
 
-
     void RequestExit() { isRunning = false; }
-
 
     enum class PlayState
     {
@@ -48,7 +45,7 @@ public:
 
 public:
 
-    std::shared_ptr<ModuleUI> ui;
+    std::shared_ptr<UIModule> ui; 
     std::shared_ptr<Window> window;
     std::shared_ptr<Input> input;
     
@@ -66,9 +63,9 @@ public:
     SelectionManager* selectionManager;
 
 private:
+
     Application();
     ~Application() = default;
-
 
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
@@ -78,7 +75,6 @@ private:
 
     bool isRunning;
     PlayState playState;
-
 
     bool PreUpdate();
     bool DoUpdate();

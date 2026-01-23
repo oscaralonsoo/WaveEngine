@@ -2,32 +2,27 @@
 #include "Module.h"
 #include <string>
 
-class ModuleUI : public Module
+class UIModule : public Module
 {
 public:
-    ModuleUI();
-    ~ModuleUI() override;
+    UIModule();
+    virtual ~UIModule();
 
     bool Start() override;
     bool Update() override;
 
-
-    enum class UIState {
-        MAIN_MENU,
-        FADING_OUT,
-        IN_GAME
-    };
-
 private:
     void DrawEngineSettings();
+    void RenderHUD(); 
 
 private:
-    UIState uiState = UIState::IN_GAME;
-    
 
     bool isSettingsVisible = false; 
-    bool vsyncActive = true;        
-     
+    bool vsyncActive = true;             
+
+
+    float crosshairSize = 12.0f;
+    float crosshairThickness = 2.0f;
 
     char userTag[64] = "Player 1";  
 };

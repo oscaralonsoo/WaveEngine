@@ -1,40 +1,38 @@
 #pragma once
-
-#include <SDL3/SDL_init.h>       // SDL_Init, SDL_Quit
-#include <SDL3/SDL_error.h>      // SDL_GetError
-#include <SDL3/SDL.H>
+#include <SDL3/SDL.h>
 #include "Module.h"
 
 class Window : public Module
 {
 public:
     Window();
-    ~Window();
+    virtual ~Window();
 
     bool Start() override; 
 
-    // Handle events (returns false if quit requested)
     bool Update() override;
-
-    // Clear screen and present
-    void Render();
 
     bool PostUpdate() override;
 
-    // Clean up resources
     bool CleanUp() override;
 
-    // Getters
+    void SetVsync(bool enabled);
+    bool GetVsync() const { return vsyncActive; }
+
     void GetWindowSize(int& width, int& height) const;
     int GetScale() const;
 
     SDL_Window* GetWindow() const { return window; }
 
 private:
-    SDL_Window* window;
-    //SDL_Renderer* renderer;
+    void Render();
 
-    int width;
-    int height;
-    int scale;
+private:
+    SDL_Window* window = nullptr;
+
+    int width = 1280;
+    int height = 720;
+    int scale = 1;
+
+    bool vsyncActive = true;
 };

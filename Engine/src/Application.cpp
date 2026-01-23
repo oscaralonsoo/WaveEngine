@@ -1,15 +1,17 @@
 ﻿#include "Application.h"
 #include "UIModule.h" 
+#include "ModuleScene.h"
+#include "Time.h"
 #include <iostream>
 #include <chrono>
 
 Application::Application() : isRunning(true), playState(PlayState::EDITING)
 {
-    LOG_CONSOLE("Engine V2: Booting core systems...");
+    LOG_CONSOLE("Engine V3: Visual Systems & HUD Stage Active...");
 
     window = std::make_shared<Window>();
     input = std::make_shared<Input>();
-    ui = std::make_shared<ModuleUI>(); 
+    ui = std::make_shared<UIModule>();
     renderContext = std::make_shared<RenderContext>();
     renderer = std::make_shared<Renderer>();
     scene = std::make_shared<ModuleScene>();
@@ -20,7 +22,6 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     grid = std::make_shared<Grid>();
     resources = std::make_shared<ModuleResources>();
 
- 
     AddModule(std::static_pointer_cast<Module>(window));
     AddModule(std::static_pointer_cast<Module>(input));
     AddModule(std::static_pointer_cast<Module>(renderContext));
@@ -37,13 +38,10 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     selectionManager = new SelectionManager();
 }
 
-
-
 bool Application::DoUpdate()
 {
     bool result = true;
     for (const auto& module : moduleList) {
- 
         if (playState == PlayState::EDITING && module == scene) {
             continue;
         }
@@ -54,11 +52,32 @@ bool Application::DoUpdate()
     return result;
 }
 
+void Application::Play()
+{
+    if (playState == PlayState::EDITING) {
+        LOG_CONSOLE("V3: Creating scene snapshot for Play mode...");
+        scene->SaveScene("../Library/TempScene/__v3_runtime_backup__.json");
+    }
 
+    playState = PlayState::PLAYING;
+    time->Resume();
+}
+
+void Application::Stop()
+{
+    if (playState != PlayState::EDITING) {
+        LOG_CONSOLE("V3: Restoring scene snapshot...");
+        scene->LoadScene("../Library/TempScene/__v3_runtime_backup__.json");
+    }
+
+    playState = PlayState::EDITING;
+    time->Reset();
+    time->Pause();
+}
 
 bool Application::CleanUp()
 {
-    LOG_CONSOLE("V2: Initiating orderly shutdown...");
+    LOG_CONSOLE("V3: Initiating clean shutdown of all systems...");
 
     bool result = true;
     for (const auto& module : moduleList) {
@@ -66,8 +85,6 @@ bool Application::CleanUp()
         if (!result) break;
     }
     moduleList.clear();
-
-
     ui.reset(); 
     editor.reset();
     camera.reset();
