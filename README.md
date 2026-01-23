@@ -192,7 +192,8 @@ Include new script menu options:
 
 ### **In-Editor Script Editing**
 
-- Scripts can be **created, modified, and saved** directly inside the engine.
+- Scripts can be **created, modified, and saved** directly inside the engine. They can be saved using the button at the top or with `Ctrl+S`. There is 
+  also a button that opens the script in Visual Studio Code, and the engine detects when the file has been modified externally.
 - Syntax errors are **reported in real time**, including the **line number** where the error occurs.
 - **Variables declared at the top of the script** are automatically exposed in the **Inspector window**, where they can be edited.
 
