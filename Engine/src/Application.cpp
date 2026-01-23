@@ -200,6 +200,16 @@ void Application::Pause()
 
 void Application::Stop()
 {
+    // Procesar operaciones pendientes de scripts ANTES de restaurar
+    if (scripts) {
+        scripts->PostUpdate(); // Ejecuta pendingOperations y pendingDestroy
+    }
+
+    // Limpiar objetos marcados para eliminación
+    if (scene) {
+        scene->CleanupMarkedObjects(scene->GetRoot());
+    }
+
     // Restore
     if (playState != PlayState::EDITING) {
         LOG_CONSOLE("Restoring initial scene state...");

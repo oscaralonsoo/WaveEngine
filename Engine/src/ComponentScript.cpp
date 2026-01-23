@@ -178,7 +178,6 @@ void ComponentScript::Deserialize(const nlohmann::json& componentObj)
 bool ComponentScript::LoadScriptByUID(UID uid)
 {
     if (uid == 0) {
-        LOG_CONSOLE("[ComponentScript] ERROR: Invalid UID");
         return false;
     }
 
@@ -693,8 +692,7 @@ void ComponentScript::ExtractPublicVariables()
         publicVariables = newVariables;
     }
 
-    LOG_CONSOLE("[ComponentScript] Extracted %zu public variables (order stable: %s)",
-        publicVariables.size(), isFirstExtraction ? "NO" : "YES");
+    //LOG_CONSOLE("[ComponentScript] Extracted %zu public variables");
 }
 
 void ComponentScript::RestoreSavedVariableValues(const std::vector<ScriptVariable>& savedVars)
