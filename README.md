@@ -9,13 +9,13 @@ Wave Engine is a feature-rich game engine developed as part of the Game Engines 
 **Institution:** CITM - Universitat Politècnica de Catalunya  
 **Delivery:** E3 - Shader Pipeline
 
-🔗 **Repository:** [bottzo/Motor2025](https://github.com/bottzo/Motor2025)  
-🌿 **Branch:** [Shaders_EduPau-G12](https://github.com/bottzo/Motor2025/tree/Shaders_EduPau-G12)  
-📦 **Releases:** [Download Latest](https://github.com/bottzo/Motor2025/releases)
+**Repository:** [bottzo/Motor2025](https://github.com/bottzo/Motor2025)  
+**Branch:** [Shaders_EduPau-G12](https://github.com/bottzo/Motor2025/tree/Shaders_EduPau-G12)  
+**Releases:** [Download Latest](https://github.com/bottzo/Motor2025/releases)
 
 ---
 
-## � Table of Contents
+## Table of Contents
 
 - [Team](#-team)
 - [Shader System](#-shader-system)
@@ -26,7 +26,7 @@ Wave Engine is a feature-rich game engine developed as part of the Game Engines 
 
 ---
 
-## 👥 Team
+## Team
 
 | GitHub | Role | Contributions |
 |--------|------|---------------|
@@ -35,7 +35,7 @@ Wave Engine is a feature-rich game engine developed as part of the Game Engines 
 
 ---
 
-## 🎨 Shader System
+## Shader System
 
 ### Overview
 
@@ -219,7 +219,7 @@ All shader parameters are exposed through the Inspector interface:
 
 ---
 
-## ✨ Features
+## Features
 
 ### Core Engine Systems
 
@@ -271,7 +271,7 @@ All shader parameters are exposed through the Inspector interface:
 
 ---
 
-## 📜 License
+## License
 
 **MIT License**
 
@@ -286,9 +286,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ---
 
 **Links:**
-- 🔗 [GitHub Repository](https://github.com/bottzo/Motor2025)
-- 🌿 [E3 Branch - Shaders_EduPau-G12](https://github.com/bottzo/Motor2025/tree/Shaders_EduPau-G12)
-- 📦 [Latest Release](https://github.com/bottzo/Motor2025/releases)
-- � [MIT License](https://github.com/PauGutsens/Motor?tab=MIT-1-ov-file)
+- [GitHub Repository](https://github.com/bottzo/Motor2025)
+- [E3 Branch - Shaders_EduPau-G12](https://github.com/bottzo/Motor2025/tree/Shaders_EduPau-G12)
+- [Latest Release](https://github.com/bottzo/Motor2025/releases)
+- [MIT License](https://github.com/PauGutsens/Motor?tab=MIT-1-ov-file)
 
 
