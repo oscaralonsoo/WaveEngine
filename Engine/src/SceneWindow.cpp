@@ -273,10 +273,7 @@ void SceneWindow::HandleAssetDropTarget()
                         {
                             delete newScript;
                         }
-                   /*     newScript->LoadScript(dropData->assetPath);
-
-                        obj->scripts.push_back(newScript);
-                        successCount++;*/
+         
                         
                     }
                 }

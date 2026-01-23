@@ -11,7 +11,7 @@
 #include <fstream> 
 #include <filesystem>
 
-#define WIN32_LEAN_AND_MEAN // Evita conflictos de "byte" y acelera la compilación
+#define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h> 
 #include <shellapi.h>
@@ -20,7 +20,7 @@ ScriptEditorWindow::ScriptEditorWindow() : EditorWindow("Script Editor") {
     auto lang = TextEditor::LanguageDefinition::Lua();
     editor.SetLanguageDefinition(lang);
     editor.SetPalette(TextEditor::GetDarkPalette());
-    editor.SetShowWhitespaces(false); //Quita los puntos
+    editor.SetShowWhitespaces(false); // Removes whitespace indicators
     editor.SetReadOnly(false);
 
     isOpen = false;
@@ -88,7 +88,7 @@ void ScriptEditorWindow::SaveScript() {
 
     showErrorPopup = false;
     errorMessage.clear();
-    editor.SetErrorMarkers(TextEditor::ErrorMarkers()); // Limpiar marcadores previos
+    editor.SetErrorMarkers(TextEditor::ErrorMarkers()); // Clear previous markers
 
     if (Application::GetInstance().filesystem->SaveStringToFile(currentPath.c_str(), textToSave)) {
         LOG_CONSOLE("[Editor] Script saved to disk: %s", currentName.c_str());
@@ -97,7 +97,7 @@ void ScriptEditorWindow::SaveScript() {
         std::string lastErrorMsg = "";
         GameObject* root = Application::GetInstance().scene->GetRoot();
 
-        // 3. Hot-Reload: Actualizar scripts en la escena
+        // Refresh scripts in the scene
         ReloadScriptInScene(root, currentPath, errorFound, lastErrorMsg);
 
         if (errorFound) {
@@ -137,7 +137,7 @@ void ScriptEditorWindow::ReloadScriptInScene(GameObject* root, const std::string
         }
     }
 
-    // Recursividad para los hijos
+    // Recursion for children
     for (GameObject* child : root->GetChildren())
     {
         ReloadScriptInScene(child, filePath, errorFound, errorMsg);
@@ -147,7 +147,7 @@ void ScriptEditorWindow::ReloadScriptInScene(GameObject* root, const std::string
 void ScriptEditorWindow::Draw() {
     if (!isOpen) return;
 
-    // Atajo Ctrl + S
+    // Keyboard shortcut: Ctrl + S
     if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S)) {
         SaveScript();
     }
@@ -172,15 +172,7 @@ void ScriptEditorWindow::Draw() {
 
             ImGui::EndMenuBar();
         }
-       /* if(showErrorPopup) {
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
-            ImGui::TextWrapped("LUA ERROR: %s", errorMessage.c_str());
-            ImGui::PopStyleColor();
-
-            if (ImGui::Button("Clear Error")) showErrorPopup = false;
-            ImGui::Separator();
-        }*/
-
+    
         if (showErrorPopup) {
             ImGui::BeginChild("ErrorConsole", ImVec2(0, 60), true);
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));

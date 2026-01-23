@@ -84,48 +84,10 @@ void InspectorWindow::Draw()
     DrawMaterialComponent(selectedObject);
     DrawRotateComponent(selectedObject);
 
-   /* if (ImGui::CollapsingHeader("Scripts", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-        for (int i = 0; i < selectedObject->scripts.size(); ++i)
-        {
-            
-        for (auto* script : selectedObject->scripts)
-        {
-            ImGui::Text("%s", script->name.c_str());
-            ImGui::PushID(script);
-            if (ImGui::Button("Delete Script", ImVec2(-1, 0)))
-            {
-                auto it = std::find(selectedObject->scripts.begin(),selectedObject->scripts.end(),script);
-
-                if (it != selectedObject->scripts.end())
-                {
-                    selectedObject->scripts.erase(it);
-                }
-            }
-           
-            ImGui::PopID();
-        }
-
-    }*/
-
+  
     if (ImGui::CollapsingHeader("Scripts", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        /*if (ImGui::Button("Add New Script (test.lua)"))
-        {
-            ModuleScripting* newScript = new ModuleScripting();
-            newScript->owner = selectedObject; 
-            newScript->Start();
-
-            if (newScript->LoadScript("../Assets/Scripts/test.lua"))
-            {
-                selectedObject->scripts.push_back(newScript);
-            }
-            else
-            {
-                delete newScript; 
-            }
-        }*/
-
+      
         if (ImGui::BeginDragDropTarget())
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_ITEM"))
@@ -169,7 +131,7 @@ void InspectorWindow::Draw()
 
             if (script->scriptError) ImGui::PopStyleColor();
 
-            // Botón Editar
+            // Button Edit
             ImGui::SameLine(ImGui::GetWindowWidth() - 70);
             if (ImGui::Button("Edit")) {
                 auto editor = Application::GetInstance().editor;
@@ -178,8 +140,6 @@ void InspectorWindow::Draw()
 
             if (open)
             {
-            /*if (ImGui::TreeNodeEx(script->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-            {*/
                 lua_State* L = script->GetLuaState();
                 if (L)
                 {

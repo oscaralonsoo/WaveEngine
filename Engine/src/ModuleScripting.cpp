@@ -132,7 +132,6 @@ int Lua_FindGameObject(lua_State* L)
 
         if (!go)
         {
-            //LOG_CONSOLE("[Script] %s error: GameObject %s not found",self->name.c_str(), ObjName.c_str());
             LOG_CONSOLE("ERROR [Script] %s: GameObject %s not found", self->name.c_str(), ObjName.c_str());
             lua_pushnil(L);
             return 0;
@@ -362,14 +361,12 @@ bool ModuleScripting::LoadScript(const char* path)
         scriptError = true;
 
         LOG_CONSOLE("ERROR [Lua Load] %s", lastError.c_str());
-        //LOG_CONSOLE("Lua load error: %s", lua_tostring(L, -1));
 
         lua_pop(L, 1);
         return false;
     }
     if (lua_pcall(L, 0, 0, 0) != LUA_OK)
     {
-        //LOG_CONSOLE("Lua runtime error: %s", lua_tostring(L, -1));
         LOG_CONSOLE("ERROR [Lua Runtime] %s", lua_tostring(L, -1));
         scriptError = true;
         lua_pop(L, 1);
@@ -390,7 +387,6 @@ bool ModuleScripting::ReloadScript(const std::string& path)
     {
         lastError = lua_tostring(L, -1);
         LOG_CONSOLE("ERROR [Lua Reload] %s", lastError.c_str());
-        //LOG_CONSOLE("[Lua Error] %s", lastError.c_str());
         scriptError = true;
         lua_pop(L, 1);
         return false;
@@ -400,7 +396,6 @@ bool ModuleScripting::ReloadScript(const std::string& path)
     {
         lastError = lua_tostring(L, -1);
         LOG_CONSOLE("ERROR [Lua Runtime] %s", lastError.c_str());
-       //LOG_CONSOLE("[Lua Runtime Error] %s", lastError.c_str());
         lastError = lua_tostring(L, -1);
         LOG_CONSOLE("ERROR %s", lastError.c_str());
         scriptError = true;
@@ -436,7 +431,6 @@ bool ModuleScripting::CreateScript(const std::string& name)
         "    -- Code here runs every frame\n"
         "end\n";
 
-    // 4. Escribir archivo
     std::ofstream file(path);
     if (file.is_open()) {
         file << content;
