@@ -27,9 +27,17 @@ bool ModuleUI::Start()
 
 bool ModuleUI::Update()
 {
+	/*if (Application::GetInstance().GetPlayState() != Application::PlayState::PLAYING)
+		return true;*/
 
 	if (Application::GetInstance().input->GetKey(SDL_SCANCODE_F1) == KEY_DOWN)
 		showOptions = !showOptions;
+	if (darkTheme) {
+		ImGui::StyleColorsDark();
+	}
+	else {
+		ImGui::StyleColorsLight();
+	}
 
 	switch (uiState)
 	{
@@ -39,6 +47,8 @@ bool ModuleUI::Update()
 
 	case UIState::FADING_OUT:
 
+		
+		//fade a todo transparente
 		fadeAlpha -= fadeSpeed * Application::GetInstance().time->GetRealDeltaTime();
 		if (fadeAlpha < 0.0f) fadeAlpha = 0.0f;
 
@@ -59,6 +69,7 @@ bool ModuleUI::Update()
 
 	case UIState::IN_GAME:
 		RenderHUD();
+		//test ModuleUI::DrawCrosshairInsideWindow();
 		if (showOptions) RenderOptionsWindow();
 		break;
 	}
@@ -91,7 +102,7 @@ void ModuleUI::RenderMainMenu()
 
 	ImGui::SetCursorPos(ImVec2(center.x - 80, center.y - 100));
 	ImGui::SetWindowFontScale(2.0f);
-	ImGui::Text("WaveEngine UI");
+	ImGui::Text("MI JUEGO");
 	ImGui::SetWindowFontScale(1.0f);
 
 
@@ -135,7 +146,15 @@ void ModuleUI::RenderOptionsWindow()
 		{
 			
 		}
-	
+		if (ImGui::Checkbox("Dark Mode", &darkTheme)) {
+			
+			if (darkTheme) {
+				ImGui::StyleColorsDark();
+			}
+			else {
+				ImGui::StyleColorsLight();
+			}
+		}
 		ImGui::Spacing();
 		ImGui::Text("Player: %s", playerNameInput);
 

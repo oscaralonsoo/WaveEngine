@@ -20,6 +20,7 @@ public:
         IN_GAME
     };
    static bool colour;
+   bool darkTheme = true;
     static void DrawCrosshairInsideWindow();
     
 private:
