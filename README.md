@@ -11,8 +11,9 @@ In this version, a functioning audio system has been implemented through the int
 </p>
 
 <p align="center">
-🔗 <strong>GitHub Repository:</strong> <a href="https://github.com/bottzo/Motor2025/tree/Audio-System_VroomTeam"></a>
+🔗 <strong>GitHub Repository:</strong> <a href="https://github.com/bottzo/Motor2025/tree/Audio-System_VroomTeam">https://github.com/bottzo/Motor2025/tree/Audio-System_VroomTeam</a>
 </p>
+
 <p align="center">
 🔗 <strong>Latest Release:</strong> link aqui
 </p>
@@ -22,15 +23,21 @@ In this version, a functioning audio system has been implemented through the int
 ## 🐚 Audio System Team Members
 
 - **Kai Caire** — [GitHub: KaiCaire](https://github.com/KaiCaire)
-   - tasks stuff
+   - Wwise Project Set up
+   - Music Mixing Implementation
+   - Reverb effect fixes
+   - Reverb Zone component Preset GUI implementation
 - **Lara Guevara** — [GitHub: LaraGuevara](https://github.com/LaraGuevara)
    - Audio Listener and Audio Source components
    - Spatial Audio Implementation
-   - Audio Components Serialization
-   - Audio Components Inspector GUI
+   - Audio Components (Source & Listener) Serialization
+   - Audio Components (Source & Listener) Inspector GUI
    - Move Component (for Spatial Audio test)
 - **Marti Mach** — [GitHub: 0psycada](https://github.com/0psycada)
-   - tasks stuff
+   - Audio Effect Implementation
+   - Reverb Zone component
+   - Reverb Zone Serialization
+   - Reverb Zone component Inspector GUI
 
 ## 🎏 Core Engine Team Members
 
@@ -144,11 +151,21 @@ Provides detailed information and transformation options for the selected GameOb
   - Active frustum culling
   - Toggle debug visualization for frustum culling
 - **Audio Source** (when selected):
-   - Select Wwise Event from dropdown
+   - Select Wwise Event from drop-down
    - Adjust Volume of the source
    - Play on Awake toggle
 - **Audio Listener** (when selected):
    - Set as Default Listener
+- **Reverb Zone** (when selected):
+   - Change Zone Shape from drop-down selection
+   - Change the Reverb Preset from drop-down selection
+   - Set the Zone's...
+      - If Zone Shape is Box :arrow_right: Half Extents
+      - If Zone Shape is Sphere :arrow_right: Radius
+   - Set the Aux Bus Name
+   - Change the Wet Level
+   - Set Priority
+   - Enable/Disable Toggle
 - **Move Component** (when selected):
    - Adjust Speed
    - Adjust Maximum Distance
@@ -187,42 +204,50 @@ Includes the following menu options:
       - Implemented Audio Listener component that can be added to Game Objects
       - Creating an Audio Listener will be set as the Main/Default Listener upon creation
          - Aditionally, an Audio Listener can be set as the Main/Default from the Inspector Window
-      - Audio Listener Serialization
-         - When a scene is saved, the Audio Listener component is saved
-         - The Default Listener variable is saved
    - Audio Source
       - Implemented Audio Source component that can be added to Game Objects
-      - Inspector settings for Audio Source
-         - Can set Wwise Event from a drop down
-            - On Program Launch, Wwise project's .json file is read to find all created Events
+      - Inspector settings for Audio Source:
+         - Can set Wwise Project's Event from a drop down
          - Volume can be changed
          - Set on Awake toggle
             - When Play mode is active, Event immediately plays
-      - Audio Source Serialization
-         - When a scene is saved, the Audio Source component is saved
-         - The Wwise Event, Volume and Play on Awake variables are saved
 
 giffff
 
 - **Spatial Audio**
    - Both Audio Listener(s) and Audio Source(s) position are set for Wwise, allowing Spatial Audio adjusted to the Game Object positions
-   - The Audio Component Game Objects can be visualized in the Wwise Game Object 3D Viewer
 - **Music Mixing**
-   - music mixing stuff here
+   - Audio Sources can be set to play Music Playlist Events, allowing music mixing and fades
 - **Audio Effects**
-   - audio effects stuff here
+   - A Reverb Zone component for Game Objects has been implemented, allowing to apply a Reverb Effect inside a set Zone in the Scene
+   - Reverb Zones interact with the Main Audio Listener to apply the audio effect
+   - Inspector Settings for Reverb Zone:
+      - Change Reverb Zone Shape (Box and Sphere options)
+         - Depending on the selected shape radius (for Sphere) or half extents (for Box) can be changed
+      - Reverb Preset drop-down
+      - Set Aux Bus Name
+      - Change Wet Level
+      - Set Priority
+      - Toggle to set as Enable/Disabled 
 
 giffff
 
+- **Audio Component Serialization**
+   - When a scene is saved, Audio Source and Audio Listener components are saved
+      - For Audio Listeners :arrow_right: The Default Listener variable is saved
+      - For Audio Sources :arrow_right: The Wwise Event, Volume and Play on Awake variables are saved
+      - For Reverb Zone :arrow_right: Shape, Radius, Extents, Aux Bus Name, Wet Level, Priority and Enabled variables are saved
 - **Additional Implementations**
    - Move Component
       - To test the Spatial Audio intergration, a simple Move Component was created to move a Game Object along one direction back and forth
-      - Can be customized from the Inspector 
-   - Add Component in Inspector
+      - Can be customized from the Inspector
+      - The component variables are also serialized when a scene is saved
+   - "Add Component" in Inspector
       - Added a button in the Inspector when a Game Object is selected
       - Can add:
          - Audio Source
          - Audio Listener
+         - Reverb Zone
          - Move Component
 
 ## Scene Save and Load
