@@ -23,7 +23,7 @@ In this version, a functioning audio system has been implemented through the int
 ## 🐚 Audio System Team Members
 
 - **Kai Caire** — [GitHub: KaiCaire](https://github.com/KaiCaire)
-  ![a3ea991a-0788-4fd3-8ee2-ad71ca459fce](https://github.com/user-attachments/assets/c232d27c-41bc-4696-a234-1969de811b18)
+    <img src="https://github.com/user-attachments/assets/c232d27c-41bc-4696-a234-1969de811b18" width="50%">
    - Wwise Low Level Integration
    - Wwise Events & Buses Setup
    - Interactive Music Implementation 
@@ -31,7 +31,7 @@ In this version, a functioning audio system has been implemented through the int
    - Reverb Zone Preset GUI implementation
    
 - **Lara Guevara** — [GitHub: LaraGuevara](https://github.com/LaraGuevara)
-   ![0389be70-78cb-4b16-bd53-c43f766b73c2](https://github.com/user-attachments/assets/4b5283bd-056e-48a9-80cd-aed7f3da277a)
+  <img src="https://github.com/user-attachments/assets/4b5283bd-056e-48a9-80cd-aed7f3da277a" width="50%">
    - Audio Listener and Audio Source components
    - Spatial Audio Implementation
    - Audio Components (Source & Listener) Serialization
@@ -39,7 +39,7 @@ In this version, a functioning audio system has been implemented through the int
    - Move Component (for Spatial Audio test)
 
 - **Marti Mach** — [GitHub: 0psycada](https://github.com/0psycada)
-  ![544d0d34-513b-4ada-8967-b5e835880753](https://github.com/user-attachments/assets/840841b0-04e5-434e-8dfa-ff3919d2c0aa)
+  <img src="https://github.com/user-attachments/assets/840841b0-04e5-434e-8dfa-ff3919d2c0aa" width="50%">
    - Audio Effect Implementation
    - Reverb Zone component
    - Reverb Zone Serialization
@@ -217,25 +217,27 @@ Includes the following menu options:
          - Volume can be changed
          - Set on Awake toggle
             - When Play mode is active, Event immediately plays
+          
+![EnignesAudio_SourceCreation](https://github.com/bottzo/Motor2025/blob/Audio-System_VroomTeam/readmeFiles/createSource.gif)
 
 - **Spatial Audio**
    - Both Audio Listener(s) and Audio Source(s) position are set for Wwise, allowing Spatial Audio adjusted to the Game Object positions
 - **Music Mixing**
    - Audio Sources can be set to play Music Playlist Events, allowing music mixing and fades
 - **Audio Effects**
-
    - A Reverb Zone component for Game Objects has been implemented, allowing to apply a Reverb Effect inside a set Zone in the Scene
    - Reverb Zones interact with the Main Audio Listener to apply the audio effect
+   - It is important to note that audio effects are not applied to background music elements
    - Inspector Settings for Reverb Zone:
       - Change Reverb Zone Shape (Box and Sphere options)
          - Depending on the selected shape radius (for Sphere) or half extents (for Box) can be changed
       - Reverb Preset drop-down
-      - Set Aux Bus Name
+      - See current Aux Bus Name
       - Change Wet Level
       - Set Priority
       - Toggle to set as Enable/Disabled 
 
-![EnignesAudio_SceneCreation](https://github.com/user-attachments/assets/0fcb4be8-9085-4d8e-8844-e8ed37c6464b)
+![EnignesAudio_ReverbCreation](https://github.com/bottzo/Motor2025/blob/Audio-System_VroomTeam/readmeFiles/createReverb.gif)
 
 - **Audio Component Serialization**
    - When a scene is saved, Audio Source and Audio Listener components are saved
@@ -264,12 +266,9 @@ Includes the following menu options:
        - Long Dark Hall: An eerie, expansive tunnel effect with a cold atmosphere and distant echoes.
        - Robotic: A glitched, digitized reverb with metallic artifacts that sounds like an old, slightly malfunctioning robot
        - Outside: A subtle, open-air ambience with natural reflections and zero "boxy" build-up.
-     
-See video here (a GIF for audio is not that useful, is it?): https://github.com/user-attachments/assets/d621ab74-c59e-4b35-af22-f43eb9aa292c
 
-## Scene Save and Load
-![EnginesAudio_SaveLoad](https://github.com/user-attachments/assets/92146cd5-1e38-40c2-8e3d-f44c6eaa7036)
-
+## Scene Creation
+![EnginesAudio_SaveLoad](https://github.com/bottzo/Motor2025/blob/Audio-System_VroomTeam/readmeFiles/createScene_video.mp4)
 
 <p align="center">
 <sub>© 2025 Wave Engine  — MIT License</sub>
