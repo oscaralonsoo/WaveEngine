@@ -26,6 +26,9 @@ AssetType MetaFile::GetAssetType(const std::string& extension) {
     if (ext == ".jpg" || ext == ".jpeg") return AssetType::TEXTURE_JPG;
     if (ext == ".dds") return AssetType::TEXTURE_DDS;
     if (ext == ".tga") return AssetType::TEXTURE_TGA;
+    if (ext == ".vert") return AssetType::SHADER_VERT;
+    if (ext == ".frag") return AssetType::SHADER_FRAG;
+
 
     return AssetType::UNKNOWN;
 }

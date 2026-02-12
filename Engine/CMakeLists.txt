@@ -124,6 +124,8 @@ set(IMPORTERS_SRC
     src/ResourceMesh.h 
     src/ResourceTexture.cpp 
     src/ResourceTexture.h 
+    src/ResourceShader.cpp 
+    src/ResourceShader.h 
 )
 
 source_group("Source\\Core" FILES ${CORE_SRC})

@@ -4,6 +4,8 @@
 #include "ModuleResources.h"  
 #include <string>
 #include <glm/glm.hpp> 
+#include <unordered_map>
+#include "ResourceShader.h" // for UniformType
 
 class ComponentMaterial : public Component {
 public:
@@ -63,6 +65,29 @@ public:
 
     void ReloadTexture();
 
+    // Shader
+    void SetShaderUID(UID uid) { shaderUID = uid; }
+    UID GetShaderUID() const { return shaderUID; }
+    bool HasShader() const { return shaderUID != 0; }
+
+    // Uniform overrides
+    struct UniformValue
+    {
+        ResourceShader::UniformType type;
+        glm::vec4 v4 = glm::vec4(0.0f); // use for float/vec3/vec4/bool/int as packed
+        int i = 0;
+        bool b = false;
+    };
+
+    bool HasUniform(const std::string& name) const;
+    UniformValue* GetUniform(const std::string& name);
+    const UniformValue* GetUniform(const std::string& name) const;
+    void SetUniform(const std::string& name, const UniformValue& v);
+    void RemoveUniform(const std::string& name);
+
+    const std::unordered_map<std::string, UniformValue>& GetAllUniforms() const { return uniformOverrides; }
+
+
 private:
     void ReleaseCurrentTexture();
 
@@ -86,4 +111,7 @@ private:
     float roughness = 0.5f;
 
     bool hasMaterialProperties = false;
+
+    UID shaderUID = 0;
+    std::unordered_map<std::string, UniformValue> uniformOverrides;
 };

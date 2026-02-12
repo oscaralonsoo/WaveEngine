@@ -3,6 +3,10 @@
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
 #include "Log.h"
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+#include <chrono>
 
 Shader::Shader() : shaderProgram(0)
 {
@@ -107,6 +111,25 @@ bool Shader::Create()
 void Shader::Use() const
 {
     glUseProgram(shaderProgram);
+
+    // Buscamos la variable "time"
+    GLint timeLoc = glGetUniformLocation(shaderProgram, "time");
+
+    // --- DIAGNÓSTICO (ESTO ESCRIBIRÁ EN LA CONSOLA DE ABAJO) ---
+    // Solo escribimos si encuentra la variable para no saturar
+    if (timeLoc != -1)
+    {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float timeValue = std::chrono::duration<float>(currentTime - startTime).count();
+
+        // Enviamos el valor
+        glUniform1f(timeLoc, timeValue);
+
+        // Descomenta la siguiente línea si quieres ver el Spam en la consola para confirmar que funciona:
+        //std::cout << "Shader Time: " << timeValue << " Location: " << timeLoc << std::endl;
+    }
+    // -------------------------------------------------------------
 }
 
 void Shader::Delete()
@@ -492,7 +515,23 @@ bool Shader::CreateDepthVisualization()
 
 bool Shader::CreateNoTexture()
 {
-    const char* vertexShaderSource = "#version 330 core\n"
+    auto ReadWholeFile = [](const std::string& path, std::string& out) -> bool
+        {
+            std::ifstream f(path, std::ios::in);
+            if (!f.is_open()) return false;
+            std::stringstream ss;
+            ss << f.rdbuf();
+            out = ss.str();
+            return !out.empty();
+        };
+
+    std::string vsrcFile, fsrcFile;
+    const std::string vpath = "Assets/Shaders/test.vert";
+    const std::string fpath = "Assets/Shaders/test.frag";
+
+    bool loadedFromFiles = ReadWholeFile(vpath, vsrcFile) && ReadWholeFile(fpath, fsrcFile);
+
+    /*const char* vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
         "layout (location = 1) in vec3 aNormal;\n"
         "layout (location = 2) in vec2 aTexCoord;\n"
@@ -551,7 +590,85 @@ bool Shader::CreateNoTexture()
         "   \n"
         "   vec3 result = ambient + diffuse;\n"
         "   FragColor = vec4(result, alpha);\n"
-        "}\0";
+        "}\0";*/
+
+    const char* vertexShaderSource = nullptr;
+    const char* fragmentShaderSource = nullptr;
+
+    if (loadedFromFiles)
+    {
+        vertexShaderSource = vsrcFile.c_str();
+        fragmentShaderSource = fsrcFile.c_str();
+        LOG_CONSOLE("Using shader from files: %s + %s", vpath.c_str(), fpath.c_str());
+    }
+    else
+    {
+        // fallback: keep your original hardcoded strings
+        /*vertexShaderSource = "...Ô­±¾ÄÇ¶Î #version 330 ...";
+        fragmentShaderSource = "...Ô­±¾ÄÇ¶Î #version 330 ...";*/
+         vertexShaderSource = "#version 330 core\n"
+            "layout (location = 0) in vec3 aPos;\n"
+            "layout (location = 1) in vec3 aNormal;\n"
+            "layout (location = 2) in vec2 aTexCoord;\n"
+            "\n"
+            "out vec3 FragPos;\n"
+            "out vec3 Normal;\n"
+            "out vec2 TexCoord;\n"
+            "\n"
+            "uniform mat4 model;\n"
+            "uniform mat4 view;\n"
+            "uniform mat4 projection;\n"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "   FragPos = vec3(model * vec4(aPos, 1.0));\n"
+            "   Normal = mat3(transpose(inverse(model))) * aNormal;\n"
+            "   TexCoord = aTexCoord;\n"
+            "   gl_Position = projection * view * vec4(FragPos, 1.0);\n"
+            "}\0";
+
+         fragmentShaderSource = "#version 330 core\n"
+            "out vec4 FragColor;\n"
+            "\n"
+            "in vec3 FragPos;\n"
+            "in vec3 Normal;\n"
+            "in vec2 TexCoord;\n"
+            "\n"
+            "uniform sampler2D texture1;\n"
+            "uniform int hasTexture;\n"
+            "uniform vec3 tintColor;\n"
+            "uniform vec3 lightDir;\n"
+            "uniform vec3 materialDiffuse;\n"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "   vec3 baseColor;\n"
+            "   float alpha = 1.0;\n"
+            "   \n"
+            "   if (hasTexture == 1) {\n"
+            "       vec4 texColor = texture(texture1, TexCoord);\n"
+            "       if(texColor.a < 0.01) discard;\n"
+            "       baseColor = texColor.rgb * tintColor;\n"
+            "       alpha = texColor.a;\n"
+            "   } else {\n"
+            "       baseColor = materialDiffuse;\n"
+            "   }\n"
+            "   \n"
+            "   // Iluminaci?n difusa simple\n"
+            "   vec3 norm = normalize(Normal);\n"
+            "   vec3 light = normalize(-lightDir);\n"
+            "   float diff = max(dot(norm, light), 0.0);\n"
+            "   \n"
+            "   // Luz ambiental + difusa\n"
+            "   vec3 ambient = 0.3 * baseColor;\n"
+            "   vec3 diffuse = diff * baseColor;\n"
+            "   \n"
+            "   vec3 result = ambient + diffuse;\n"
+            "   FragColor = vec4(result, alpha);\n"
+            "}\0";
+        LOG_CONSOLE("Using built-in shader (shader files not found)");
+    }
+
 
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -613,4 +730,72 @@ void Shader::SetVec4(const std::string& name, const glm::vec4& value) const
 void Shader::SetBool(const std::string& name, bool value) const
 {
     glUniform1i(glGetUniformLocation(shaderProgram, name.c_str()), (int)value);
+}
+
+static bool CompileStage(GLuint stage, const char* src, std::string* outErr)
+{
+    glShaderSource(stage, 1, &src, nullptr);
+    glCompileShader(stage);
+
+    GLint ok = 0;
+    glGetShaderiv(stage, GL_COMPILE_STATUS, &ok);
+    if (!ok)
+    {
+        GLint len = 0;
+        glGetShaderiv(stage, GL_INFO_LOG_LENGTH, &len);
+        std::string log(len, '\0');
+        glGetShaderInfoLog(stage, len, nullptr, log.data());
+        if (outErr) *outErr = log;
+        return false;
+    }
+    return true;
+}
+
+bool Shader::CreateFromSource(const std::string& vertexSrc,
+    const std::string& fragmentSrc,
+    std::string* outErrorLog)
+{
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+
+    std::string err;
+    if (!CompileStage(vs, vertexSrc.c_str(), &err))
+    {
+        if (outErrorLog) *outErrorLog = "Vertex compile error:\n" + err;
+        glDeleteShader(vs);
+        glDeleteShader(fs);
+        return false;
+    }
+    if (!CompileStage(fs, fragmentSrc.c_str(), &err))
+    {
+        if (outErrorLog) *outErrorLog = "Fragment compile error:\n" + err;
+        glDeleteShader(vs);
+        glDeleteShader(fs);
+        return false;
+    }
+
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vs);
+    glAttachShader(shaderProgram, fs);
+    glLinkProgram(shaderProgram);
+
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    GLint linked = 0;
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &linked);
+    if (!linked)
+    {
+        GLint len = 0;
+        glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &len);
+        std::string log(len, '\0');
+        glGetProgramInfoLog(shaderProgram, len, nullptr, log.data());
+        if (outErrorLog) *outErrorLog = "Link error:\n" + log;
+
+        glDeleteProgram(shaderProgram);
+        shaderProgram = 0;
+        return false;
+    }
+
+    return true;
 }

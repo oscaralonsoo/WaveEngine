@@ -16,7 +16,8 @@ public:
         MESH,
         MODEL,
         MATERIAL,
-        ANIMATION
+        ANIMATION,
+        SHADER
     };
 
     Resource(UID uid, Type type);

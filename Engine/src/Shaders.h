@@ -29,6 +29,12 @@ public:
     void SetVec4(const std::string& name, const glm::vec4& value) const;
     void SetBool(const std::string& name, bool value) const;
 
+    // NEW: compile from external sources / files
+    bool CreateFromSource(const std::string& vertexSrc,
+        const std::string& fragmentSrc,
+        std::string* outErrorLog = nullptr);
+
+
 private:
     unsigned int shaderProgram;
 };

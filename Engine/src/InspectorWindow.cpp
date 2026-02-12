@@ -10,6 +10,8 @@
 #include "ComponentRotate.h"
 #include "ResourceTexture.h"
 #include "Log.h"
+#include "ResourceShader.h"
+
 
 InspectorWindow::InspectorWindow()
     : EditorWindow("Inspector")
@@ -769,6 +771,143 @@ void InspectorWindow::DrawMaterialComponent(GameObject* selectedObject)
             }
         }
     }
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    ImGui::Text("Shader:");
+    ImGui::SameLine();
+
+    std::string currentShaderName = "Default";
+    UID currentShaderUID = materialComp->GetShaderUID();
+
+    if (currentShaderUID != 0)
+    {
+        ModuleResources* resources = Application::GetInstance().resources.get();
+        const Resource* r = resources->GetResourceDirect(currentShaderUID);
+        if (r) {
+            currentShaderName = std::string(r->GetAssetFile());
+            size_t s = currentShaderName.find_last_of("/\\");
+            if (s != std::string::npos) currentShaderName = currentShaderName.substr(s + 1);
+        }
+        else currentShaderName = "UID " + std::to_string(currentShaderUID);
+    }
+
+    ImGui::SetNextItemWidth(-1);
+    if (ImGui::BeginCombo("##ShaderSelector", currentShaderName.c_str()))
+    {
+        bool defSel = (currentShaderUID == 0);
+        if (ImGui::Selectable("Default", defSel))
+            materialComp->SetShaderUID(0);
+
+        ImGui::Separator();
+
+        ModuleResources* resources = Application::GetInstance().resources.get();
+        const auto& all = resources->GetAllResources();
+        for (const auto& p : all)
+        {
+            UID uid = p.first;
+            const Resource* r = p.second;
+            if (!r) continue;
+            if (r->GetType() != Resource::SHADER) continue;
+
+            std::string name = std::string(r->GetAssetFile());
+            size_t s = name.find_last_of("/\\");
+            if (s != std::string::npos) name = name.substr(s + 1);
+
+            bool sel = (uid == currentShaderUID);
+            if (ImGui::Selectable(name.c_str(), sel))
+            {
+                materialComp->SetShaderUID(uid);
+                // ensure loaded
+                Resource* rr = resources->GetResourceDirect(uid);
+                if (rr) rr->LoadInMemory();
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    // Uniforms UI (auto from shader)
+    if (currentShaderUID != 0)
+    {
+        ModuleResources* resources = Application::GetInstance().resources.get();
+        Resource* rr = resources->GetResourceDirect(currentShaderUID);
+        ResourceShader* rs = rr ? static_cast<ResourceShader*>(rr) : nullptr;
+
+        if (rs && rs->IsLoadedToMemory())
+        {
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Text("Shader Uniforms");
+
+            for (const auto& u : rs->GetUniforms())
+            {
+                // get or create local override
+                ComponentMaterial::UniformValue* val = materialComp->GetUniform(u.name);
+                if (!val)
+                {
+                    ComponentMaterial::UniformValue v;
+                    v.type = u.type;
+                    if (u.type == ResourceShader::UniformType::Vec4) v.v4 = glm::vec4(1, 1, 1, 1);
+                    else if (u.type == ResourceShader::UniformType::Vec3) v.v4 = glm::vec4(1, 1, 1, 0);
+                    else if (u.type == ResourceShader::UniformType::Float) v.v4.x = 1.0f;
+                    materialComp->SetUniform(u.name, v);
+                    val = materialComp->GetUniform(u.name);
+                }
+
+                ImGui::PushID(u.name.c_str());
+                if (u.type == ResourceShader::UniformType::Float)
+                {
+                    float f = val->v4.x;
+                    if (ImGui::DragFloat(u.name.c_str(), &f, 0.01f))
+                    {
+                        val->v4.x = f;
+                    }
+                }
+                else if (u.type == ResourceShader::UniformType::Int)
+                {
+                    int i = val->i;
+                    if (ImGui::DragInt(u.name.c_str(), &i, 1))
+                    {
+                        val->i = i;
+                    }
+                }
+                else if (u.type == ResourceShader::UniformType::Bool)
+                {
+                    bool b = val->b;
+                    if (ImGui::Checkbox(u.name.c_str(), &b))
+                    {
+                        val->b = b;
+                    }
+                }
+                else if (u.type == ResourceShader::UniformType::Vec3)
+                {
+                    float v[3] = { val->v4.x, val->v4.y, val->v4.z };
+                    if (ImGui::DragFloat3(u.name.c_str(), v, 0.01f))
+                    {
+                        val->v4.x = v[0]; val->v4.y = v[1]; val->v4.z = v[2];
+                    }
+                }
+                else // Vec4
+                {
+                    float v[4] = { val->v4.x, val->v4.y, val->v4.z, val->v4.w };
+                    if (ImGui::DragFloat4(u.name.c_str(), v, 0.01f))
+                    {
+                        val->v4 = glm::vec4(v[0], v[1], v[2], v[3]);
+                    }
+                }
+                ImGui::PopID();
+            }
+
+            if (!rs->GetLastError().empty())
+            {
+                ImGui::Spacing();
+                ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "Shader Errors:");
+                ImGui::TextWrapped("%s", rs->GetLastError().c_str());
+            }
+        }
+    }
+
 }
 
 void InspectorWindow::DrawRotateComponent(GameObject* selectedObject)

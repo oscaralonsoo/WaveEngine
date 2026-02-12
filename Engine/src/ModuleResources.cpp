@@ -1,6 +1,7 @@
 ﻿#include "ModuleResources.h"
 #include "ResourceTexture.h"
 #include "ResourceMesh.h"
+#include "ResourceShader.h"
 #include "LibraryManager.h"
 #include "MetaFile.h"
 #include "TextureImporter.h"
@@ -8,6 +9,7 @@
 #include "Log.h"
 #include <filesystem>
 #include <random>
+
 
 // Resource Implementation
 Resource::Resource(UID uid, Type type)
@@ -48,6 +50,17 @@ bool ModuleResources::Start() {
 }
 
 bool ModuleResources::Update() {
+    for (auto& it : resources)
+    {
+        Resource* r = it.second;
+        if (!r) continue;
+        if (r->GetType() == Resource::SHADER && r->IsLoadedToMemory())
+        {
+            ResourceShader* rs = static_cast<ResourceShader*>(r);
+            rs->CheckAndHotReload();
+        }
+    }
+   
     return true;
 }
 
@@ -137,6 +150,19 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
                 registered++;
             }
             break;
+        case AssetType::SHADER_VERT:
+        {
+            ResourceShader* rs = new ResourceShader(meta.uid);
+            rs->SetAssetFile(assetPath);
+            rs->SetVertexPath(assetPath);   // fragment 自动推导同名 .frag
+            resources[meta.uid] = rs;
+            registered++;
+            break;
+        }
+        case AssetType::SHADER_FRAG:
+            // 不注册为资源：避免重复（shader 资源只由 .vert 代表）
+            break;
+
 
         default:
             continue;
@@ -187,7 +213,7 @@ UID ModuleResources::ImportFile(const char* newFileInAssets) {
 
     bool importSuccess = false;
 
-    switch (type) {
+    /*switch (type) {
     case Resource::TEXTURE: {
         importSuccess = ImportTexture(resource, newFileInAssets);
         break;
@@ -203,7 +229,44 @@ UID ModuleResources::ImportFile(const char* newFileInAssets) {
     default:
         LOG_CONSOLE("ERROR: Import not implemented for this type");
         break;
+    }*/
+
+    switch (type) {
+    case Resource::TEXTURE: {
+        importSuccess = ImportTexture(resource, newFileInAssets);
+        break;
     }
+    case Resource::MESH: {
+        importSuccess = ImportMesh(resource, newFileInAssets);
+        break;
+    }
+    case Resource::MODEL: {
+        importSuccess = ImportModel(resource, newFileInAssets);
+        break;
+    }
+    case Resource::SHADER: {
+        // shader 不需要导入到 Library：直接从 Assets 编译即可
+        importSuccess = true;
+
+        // 只把 .vert 当成“shader 资源入口”，.frag 只是配套文件
+        std::filesystem::path p(newFileInAssets);
+        std::string ext = p.extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        if (ext != ".vert") {
+            LOG_CONSOLE("[ModuleResources] Shader resource should be a .vert. Skipping create for: %s", newFileInAssets);
+            importSuccess = false;
+        }
+        else {
+            ResourceShader* rs = static_cast<ResourceShader*>(resource);
+            rs->SetVertexPath(newFileInAssets);   
+        }
+        break;
+    }
+    default:
+        LOG_CONSOLE("ERROR: Import not implemented for this type");
+        break;
+    }
+
 
     if (!importSuccess) {
         LOG_CONSOLE("ERROR: Import failed for: %s", newFileInAssets);
@@ -219,6 +282,8 @@ UID ModuleResources::ImportFile(const char* newFileInAssets) {
         std::string metaPath = std::string(newFileInAssets) + ".meta";
         meta.Save(metaPath);
     }
+    /*if (ext == ".vert" || ext == ".frag" || ext == ".glsl" || ext == ".shader")
+        return Resource::SHADER;*/
 
     return meta.uid;
 }
@@ -234,6 +299,8 @@ Resource* ModuleResources::CreateNewResourceWithUID(const char* assetsFile, Reso
     case Resource::MESH:
         resource = new ResourceMesh(uid);
         break;
+    case Resource::SHADER:
+        resource = new ResourceShader(uid);
 
     default:
         LOG_CONSOLE("ERROR: Unsupported resource type");
@@ -335,6 +402,9 @@ Resource::Type ModuleResources::GetResourceTypeFromExtension(const std::string& 
     if (ext == ".mesh") {
         return Resource::MESH;
     }
+    if (ext == ".vert" || ext == ".frag" || ext == ".glsl" || ext == ".shader") {
+        return Resource::SHADER;
+    }
 
     return Resource::UNKNOWN;
 }
@@ -358,6 +428,9 @@ std::string ModuleResources::GenerateLibraryPath(Resource* resource) {
         return LibraryManager::GetMaterialPathFromUID(resource->GetUID());
     case Resource::ANIMATION:
         return LibraryManager::GetAnimationPathFromUID(resource->GetUID());
+
+        break;
+
     default:
         return "";
     }

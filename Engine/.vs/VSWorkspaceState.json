@@ -1,0 +1,17 @@
+{
+  "OutputFoldersPerTargetSystem": {
+    "本地计算机": [
+      "build"
+    ],
+    "Local Machine": [
+      "build"
+    ]
+  },
+  "ExpandedNodes": [
+    "",
+    "\\Assets",
+    "\\Assets\\Shaders",
+    "\\src"
+  ],
+  "PreviewInSolutionExplorer": false
+}

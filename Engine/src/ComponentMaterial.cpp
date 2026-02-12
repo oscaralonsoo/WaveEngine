@@ -210,6 +210,24 @@ void ComponentMaterial::Serialize(nlohmann::json& componentObj) const
         componentObj["metallic"] = metallic;
         componentObj["roughness"] = roughness;
     }
+    if (shaderUID != 0) componentObj["shaderUID"] = shaderUID;
+
+    // uniforms
+    if (!uniformOverrides.empty())
+    {
+        nlohmann::json arr = nlohmann::json::array();
+        for (const auto& kv : uniformOverrides)
+        {
+            nlohmann::json u;
+            u["name"] = kv.first;
+            u["type"] = (int)kv.second.type;
+            u["v4"] = { kv.second.v4.x, kv.second.v4.y, kv.second.v4.z, kv.second.v4.w };
+            u["i"] = kv.second.i;
+            u["b"] = kv.second.b;
+            arr.push_back(u);
+        }
+        componentObj["uniforms"] = arr;
+    }
 }
 
 void ComponentMaterial::Deserialize(const nlohmann::json& componentObj)
@@ -266,6 +284,23 @@ void ComponentMaterial::Deserialize(const nlohmann::json& componentObj)
             }
         }
     }
+    if (componentObj.contains("shaderUID"))
+        shaderUID = componentObj["shaderUID"].get<UID>();
+
+    uniformOverrides.clear();
+    if (componentObj.contains("uniforms"))
+    {
+        for (auto& u : componentObj["uniforms"])
+        {
+            UniformValue v;
+            v.type = (ResourceShader::UniformType)u["type"].get<int>();
+            auto a = u["v4"];
+            v.v4 = glm::vec4(a[0], a[1], a[2], a[3]);
+            v.i = u.value("i", 0);
+            v.b = u.value("b", false);
+            uniformOverrides[u["name"].get<std::string>()] = v;
+        }
+    }
 }
 
 void ComponentMaterial::ReloadTexture()
@@ -308,4 +343,30 @@ void ComponentMaterial::ReloadTexture()
     texturePath = texResource->GetAssetFile();
     LOG_DEBUG("[ComponentMaterial] Texture reloaded successfully (GPU_ID: %u)",
         texResource->GetGPU_ID());
+}
+bool ComponentMaterial::HasUniform(const std::string& name) const
+{
+    return uniformOverrides.find(name) != uniformOverrides.end();
+}
+
+ComponentMaterial::UniformValue* ComponentMaterial::GetUniform(const std::string& name)
+{
+    auto it = uniformOverrides.find(name);
+    return (it != uniformOverrides.end()) ? &it->second : nullptr;
+}
+
+const ComponentMaterial::UniformValue* ComponentMaterial::GetUniform(const std::string& name) const
+{
+    auto it = uniformOverrides.find(name);
+    return (it != uniformOverrides.end()) ? &it->second : nullptr;
+}
+
+void ComponentMaterial::SetUniform(const std::string& name, const UniformValue& v)
+{
+    uniformOverrides[name] = v;
+}
+
+void ComponentMaterial::RemoveUniform(const std::string& name)
+{
+    uniformOverrides.erase(name);
 }
