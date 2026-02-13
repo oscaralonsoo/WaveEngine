@@ -149,3 +149,31 @@ target_link_libraries(Engine PRIVATE imgui::imgui)
 target_link_libraries(Engine PRIVATE imguizmo::imguizmo)
 target_link_libraries(Engine PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(Engine PRIVATE Tracy::TracyClient)
+
+
+
+
+set(NOESIS_SDK_DIR "${CMAKE_SOURCE_DIR}/external/NoesisGUI")
+
+# Definir archivos del renderizador (Ajusta la ruta según donde esté el SDK)
+set(NOESIS_RENDERER_SRC 
+    "${NOESIS_SDK_DIR}/Src/Packages/Render/GLRenderDevice/GLRenderDevice.cpp"
+)
+
+# Añadir a la compilación
+target_sources(Engine PRIVATE ${NOESIS_RENDERER_SRC})
+target_include_directories(Engine PRIVATE "${NOESIS_SDK_DIR}/Include")
+
+if(WIN32)
+    set(NOESIS_LIB "${NOESIS_SDK_DIR}/Lib/windows_x86_64/Noesis.lib")
+    set(NOESIS_DLL "${NOESIS_SDK_DIR}/Bin/windows_x86_64/Noesis.dll")
+    
+    target_link_libraries(Engine PRIVATE ${NOESIS_LIB})
+    
+    # Copia automática de la DLL al generar el .exe
+    add_custom_command(TARGET Engine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${NOESIS_DLL}"
+        $<TARGET_FILE_DIR:Engine>
+    )
+endif()
