@@ -9,7 +9,6 @@ class FileSystem;
 class Renderer;
 class ComponentCamera;
 class SceneWindow;
-class ComponentParticleSystem;
 
 class ModuleScene : public Module
 {
@@ -37,10 +36,6 @@ public:
     bool SaveScene(const std::string& filepath);
     bool LoadScene(const std::string& filepath);
     void ClearScene();
-
-    // Chimney smoke system 
-    void CreateChimneySmoke();
-    void ConfigureSmokeEffect(ComponentParticleSystem* ps);
 
     // for raycast visualization
     glm::vec3 lastRayOrigin = glm::vec3(0.0f);

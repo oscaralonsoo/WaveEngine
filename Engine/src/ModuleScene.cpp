@@ -9,12 +9,8 @@
 #include <functional>
 #include "ComponentMesh.h"
 #include "ComponentCamera.h"
-#include "ComponentParticleSystem.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
-#include <algorithm> 
-#include <cctype>    
-
 
 ModuleScene::ModuleScene() : Module()
 {
@@ -43,7 +39,6 @@ bool ModuleScene::Start()
     LOG_DEBUG("Initializing Scene");
     renderer->DrawScene();
     root = new GameObject("Root");
-    CreateChimneySmoke();
     LOG_CONSOLE("Scene ready");
 
     return true;
@@ -326,7 +321,6 @@ bool ModuleScene::LoadScene(const std::string& filepath)
     needsOctreeRebuild = true;
 
     LOG_CONSOLE("Scene loaded successfully");
-
     return true;
 }
 
@@ -370,87 +364,4 @@ ComponentCamera* ModuleScene::FindCameraInHierarchy(GameObject* obj)
     }
 
     return nullptr;
-}
-
-void ModuleScene::CreateChimneySmoke() {
-    LOG_CONSOLE("Creating chimney smoke emitters");
-
-    // Chimney positions
-    std::vector<glm::vec3> chimneyPositions = {
-        glm::vec3(2.271f, 0.530f, 1.9456f),   
-        glm::vec3(-1.704f, 0.360f, -2.232f),  
-        glm::vec3(2.146f, 0.155f, -0.839f),   
-        glm::vec3(-2.219f, 0.399f, -1.693f),  
-    };
-
-    for (size_t i = 0; i < chimneyPositions.size(); i++) {
-        GameObject* smokeEmitter = CreateGameObject("Chimney_Smoke_" + std::to_string(i + 1));
-
-        Transform* trans = static_cast<Transform*>(
-            smokeEmitter->GetComponent(ComponentType::TRANSFORM));
-        if (trans) {
-            trans->SetPosition(chimneyPositions[i]);
-        }
-
-        ComponentParticleSystem* particleSys = static_cast<ComponentParticleSystem*>(
-            smokeEmitter->CreateComponent(ComponentType::PARTICLE));
-
-        if (particleSys) {
-            ConfigureSmokeEffect(particleSys);
-            LOG_CONSOLE("Created smoke at position (%.2f, %.2f, %.2f)",
-                chimneyPositions[i].x, chimneyPositions[i].y, chimneyPositions[i].z);
-        }
-    }
-
-    LOG_CONSOLE("Chimney smoke setup complete! %d smoke emitters created", (int)chimneyPositions.size());
-}
-
-void ModuleScene::ConfigureSmokeEffect(ComponentParticleSystem* ps) {
-    if (!ps || !ps->emitter) return;
-
-    // Global setting
-    ps->emitter->maxParticles = 60;        
-    ps->emitter->emissionRate = 10.0f;     
-    ps->emitter->additiveBlending = false; 
-    ps->emitter->active = true;            
-
-    // Module configuration
-    for (auto mod : ps->emitter->modules) {
-        if (mod->type == ParticleModuleType::SPAWNER) {
-            ModuleEmitterSpawn* spawn = static_cast<ModuleEmitterSpawn*>(mod);
-
-            spawn->shape = EmitterShape::CONE;
-            spawn->emissionRadius = 0.1f;      
-            spawn->coneAngle = 1.0f;           
-
-            // Life 
-            spawn->lifetimeMin = 1.0f;          
-            spawn->lifetimeMax = 2.2f;
-
-            // Speed
-            spawn->speedMin = 0.003f;
-            spawn->speedMax = 0.01f;
-
-            // Color and opacity
-            spawn->colorStart = glm::vec4(0.45f, 0.45f, 0.48f, 0.5f);
-            spawn->colorEnd = glm::vec4(0.7f, 0.7f, 0.72f, 0.0f);
-
-            // Size
-            spawn->sizeStart = 0.05f;
-            spawn->sizeEnd = 0.2f;
-
-            // Rotation speed
-            spawn->rotationSpeedMin = -10.0f;
-            spawn->rotationSpeedMax = 10.0f;
-        }
-        else if (mod->type == ParticleModuleType::MOVEMENT) {
-            ModuleEmitterMovement* move = static_cast<ModuleEmitterMovement*>(mod);
-
-            
-            move->gravity = glm::vec3(0.03f, 0.2f, 0.04f);
-           
-        }
-    }
-
-    LOG_DEBUG("Smoke effect configured for chimney");
 }
