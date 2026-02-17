@@ -51,6 +51,8 @@ public:
 
     void MarkForDeletion() { markedForDeletion = true; }
     bool IsMarkedForDeletion() const { return markedForDeletion; }
+    void MarkCleaning() { isCleaning = true; };
+    bool IsCleaning() { return isCleaning; };
 
     // Serialization
     void Serialize(nlohmann::json& gameObjectArray) const;
@@ -72,5 +74,6 @@ private:
     std::vector<std::unique_ptr<Component>> componentOwners;
 
     bool markedForDeletion = false;
+    bool isCleaning = false;
 
 };

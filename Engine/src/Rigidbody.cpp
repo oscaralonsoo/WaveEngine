@@ -349,7 +349,7 @@ void Rigidbody::UnattachCollider(Collider* collider)
     collider->attachedRigidbody = nullptr;
     collider->SetShape(nullptr);
 
-    if (/*!owner->isCleaning && */actor) {
+    if (!owner->IsCleaning() && actor) {
         CreateBody();
     }
 }

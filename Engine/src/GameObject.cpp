@@ -29,6 +29,8 @@ GameObject::GameObject(const std::string& name) : name(name), active(true), pare
 
 GameObject::~GameObject() {
     
+    MarkCleaning();
+
     components.clear();
     componentOwners.clear();
 

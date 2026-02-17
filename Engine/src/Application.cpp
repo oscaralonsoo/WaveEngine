@@ -251,26 +251,29 @@ bool Application::CleanUp()
     LOG_CONSOLE("Cleaning up modules...");
 
     bool result = true;
-    for (const auto& module : moduleList) {
-        result = module.get()->CleanUp();
+
+    for (auto it = moduleList.rbegin(); it != moduleList.rend(); ++it) {
+        result = (*it)->CleanUp();
         if (!result) {
-            break;
+            LOG_DEBUG("ERROR: Module failed CleanUp: %s", (*it)->name.c_str());
         }
     }
+
     moduleList.clear();
 
-    editor.reset();
-    camera.reset();
-    scene.reset();
     renderer.reset();
-    renderContext.reset();
     grid.reset();
     time.reset();
     filesystem.reset();
-    scripts.reset();  
+    scripts.reset();
+    resources.reset();
+    editor.reset();
+    camera.reset();
+    scene.reset();
+    renderContext.reset();
+    physics.reset();
     input.reset();
     window.reset();
-    resources.reset();
 
     delete selectionManager;
     selectionManager = nullptr;
