@@ -16,6 +16,7 @@ public:
     bool CreateDepthVisualization();
     bool CreateNoTexture(); 
     bool CreateWater();
+    bool CreateLinesShader(); 
 
     bool LoadFromSource(const char* vSource, const char* fSource, const char* gSource = nullptr);
 

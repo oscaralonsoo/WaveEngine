@@ -1,23 +1,52 @@
 #include "ConsoleWindow.h"
 #include <imgui.h>
 #include "Log.h"
+#include "Time.h"
 
 ConsoleWindow::ConsoleWindow()
     : EditorWindow("Console")
 {
 }
 
+void ConsoleWindow::FlashError()
+{
+    errorFlashTimer = FLASH_DURATION;
+}
+
 void ConsoleWindow::Draw()
 {
     if (!isOpen) return;
 
+    // Actualizar temporizador
+    if (errorFlashTimer > 0.0f)
+    {
+        errorFlashTimer -= Time::GetDeltaTimeStatic();
+        if (errorFlashTimer < 0.0f)
+            errorFlashTimer = 0.0f;
+    }
+
+    // Aplicar color de fondo si hay error activo
+    bool hasError = errorFlashTimer > 0.0f;
+    if (hasError)
+    {
+        // Parpadeo suave con interpolación
+        float intensity = (std::sin(errorFlashTimer * 8.0f) * 0.5f + 0.5f) * 0.3f;
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.5f + intensity, 0.1f, 0.1f, 1.0f));
+    }
+
     ImGui::Begin(name.c_str(), &isOpen);
+
+    if (hasError)
+    {
+        ImGui::PopStyleColor(); // WindowBg
+    }
 
     isHovered = (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows));
 
     if (ImGui::Button("Clear"))
     {
         ConsoleLog::GetInstance().Clear();
+        errorFlashTimer = 0.0f; // Reset flash cuando limpies
     }
 
     ImGui::SameLine();

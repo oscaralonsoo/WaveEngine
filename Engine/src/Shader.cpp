@@ -568,6 +568,54 @@ bool Shader::CreateDepthVisualization()
     return true;
 }
 
+bool Shader::CreateLinesShader()
+{
+    const char* vertexShaderSource = "#version 330 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "layout (location = 1) in vec4 aColor;\n"
+        "\n"
+        "out vec4 ourColor;\n"
+        "\n"
+        "uniform mat4 model;\n"
+        "uniform mat4 view;\n"
+        "uniform mat4 projection;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+        "   ourColor = aColor;\n"
+        "}\0";
+
+    const char* fragmentShaderSource = "#version 330 core\n"
+        "out vec4 FragColor;\n"
+        "in vec4 ourColor;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "   FragColor = ourColor;\n"
+        "}\0";
+
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    LOG_CONSOLE("Line Shader created successfully!");
+    return true;
+}
+
 bool Shader::CreateNoTexture()
 {
     const char* vertexShaderSource = "#version 330 core\n"

@@ -16,6 +16,10 @@
 #include "FileSystem.h"       
 #include "GameObject.h"        
 #include "Input.h"           
+#include "ScriptEditorWindow.h"
+#include "EditorPreferences.h"
+#include "ResourcePrefab.h"
+#include "PrefabManager.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -33,6 +37,7 @@ AssetsWindow::AssetsWindow()
 
     sceneRootPath = fs::path(assetsRootPath).parent_path().string() + "/Scene";
     importSettingsWindow = new ImportSettingsWindow();
+    scriptEditorWindow = new ScriptEditorWindow();  
 }
 
 AssetsWindow::~AssetsWindow()
@@ -42,6 +47,7 @@ AssetsWindow::~AssetsWindow()
         UnloadPreviewForAsset(asset);
     }
     delete importSettingsWindow;
+    delete scriptEditorWindow;  
 }
 
 std::string AssetsWindow::TruncateFileName(const std::string& name, float maxWidth) const
@@ -71,7 +77,6 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
 {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-    // If there's a preview texture AND show3DPreviews is enabled, display it
     if (show3DPreviews && asset.previewTextureID != 0)
     {
         ImVec2 topLeft = pos;
@@ -80,7 +85,6 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
         ImTextureID texID = (ImTextureID)(uintptr_t)asset.previewTextureID;
         drawList->AddImage(texID, topLeft, bottomRight, ImVec2(0, 1), ImVec2(1, 0));
 
-        // Border around the preview
         ImU32 borderColor = asset.inMemory ?
             ImGui::ColorConvertFloat4ToU32(ImVec4(0.3f, 0.8f, 0.3f, 1.0f)) :
             ImGui::ColorConvertFloat4ToU32(ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
@@ -89,7 +93,6 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
         return;
     }
 
-    // If there's no preview or show3DPreviews is disabled, use the original drawn icons
     ImVec4 buttonColor;
 
     if (asset.isDirectory) {
@@ -156,7 +159,6 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
     }
     else if (asset.extension == ".mesh")
     {
-        // Individual mesh icon (simple triangle)
         float meshSize = (size.x - padding * 2) * 0.5f;
         ImVec2 p1(center.x, center.y - meshSize * 0.6f);
         ImVec2 p2(center.x - meshSize * 0.5f, center.y + meshSize * 0.4f);
@@ -180,6 +182,58 @@ void AssetsWindow::DrawIconShape(const AssetEntry& asset, const ImVec2& pos, con
             ImVec2 p2(start.x + i * barWidth * 2 + barWidth, center.y + barHeight * 0.5f);
             drawList->AddRectFilled(p1, p2, color, 2.0f);
         }
+    }
+    else if (asset.extension == ".lua")
+    {
+        float w = size.x - padding * 2;
+        float h = size.y - padding * 2;
+        ImVec2 topLeft(pos.x + padding, pos.y + padding);
+        ImVec2 bottomRight(pos.x + size.x - padding, pos.y + size.y - padding);
+
+        // Fondo del documento
+        drawList->AddRectFilled(topLeft, bottomRight, color, 3.0f);
+        drawList->AddRect(topLeft, bottomRight, outlineColor, 3.0f, 0, 2.0f);
+
+        // Esquina doblada
+        ImVec2 cornerSize(w * 0.2f, h * 0.2f);
+
+        drawList->AddTriangleFilled(
+            ImVec2(bottomRight.x - cornerSize.x, topLeft.y),
+            ImVec2(bottomRight.x, topLeft.y),
+            ImVec2(bottomRight.x, topLeft.y + cornerSize.y),
+            ImGui::ColorConvertFloat4ToU32(ImVec4(buttonColor.x * 0.6f, buttonColor.y * 0.6f, buttonColor.z * 0.6f, 1.0f))
+        );
+
+        // Texto "Lua"
+        ImVec2 textPos(center.x - w * 0.15f, center.y - h * 0.1f);
+        drawList->AddText(textPos, ImGui::ColorConvertFloat4ToU32(ImVec4(0.2f, 0.2f, 0.8f, 1.0f)), "Lua");
+    }
+    else if (asset.extension == ".prefab")
+    {
+        float w = size.x - padding * 2;
+        float h = size.y - padding * 2;
+        ImVec2 topLeft(pos.x + padding, pos.y + padding);
+        ImVec2 bottomRight(pos.x + size.x - padding, pos.y + size.y - padding);
+
+        // Fondo del prefab (azul distintivo)
+        ImU32 prefabColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.3f, 0.5f, 0.8f, 1.0f));
+        drawList->AddRectFilled(topLeft, bottomRight, prefabColor, 3.0f);
+        drawList->AddRect(topLeft, bottomRight, outlineColor, 3.0f, 0, 2.0f);
+
+        // Dibujar cubo pequeño (ícono de GameObject)
+        float cubeSize = w * 0.3f;
+        ImVec2 cubeCenter(center.x, center.y);
+
+        ImU32 cubeColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.9f, 0.9f, 0.9f, 1.0f));
+
+        // Frente del cubo
+        ImVec2 c1(cubeCenter.x - cubeSize * 0.3f, cubeCenter.y);
+        ImVec2 c2(cubeCenter.x + cubeSize * 0.3f, cubeCenter.y);
+        ImVec2 c3(cubeCenter.x, cubeCenter.y - cubeSize * 0.5f);
+        ImVec2 c4(cubeCenter.x, cubeCenter.y + cubeSize * 0.5f);
+
+        drawList->AddTriangleFilled(c1, c2, c3, cubeColor);
+        drawList->AddTriangleFilled(c1, c2, c4, ImGui::ColorConvertFloat4ToU32(ImVec4(0.6f, 0.6f, 0.6f, 1.0f)));
     }
     else
     {
@@ -269,7 +323,7 @@ void AssetsWindow::Draw()
     {
         isHovered = ImGui::IsWindowHovered();
 
-        // CRÍTICO: Llamar a HandleExternalDragDrop AQUÍ
+        // Llamar a HandleExternalDragDrop 
         HandleExternalDragDrop();
 
         // Test manual con Ctrl+T
@@ -280,9 +334,25 @@ void AssetsWindow::Draw()
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
 
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+
         if (ImGui::Button("Refresh"))
         {
             RefreshAssets();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("New Folder"))
+        {
+            ImGui::OpenPopup("CreateFolder");
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("New Script"))
+        {
+            ImGui::OpenPopup("CreateScript");
         }
 
         ImGui::SameLine();
@@ -290,6 +360,86 @@ void AssetsWindow::Draw()
 
         ImGui::SameLine();
         ImGui::Checkbox("3D Previews", &show3DPreviews);
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("Show 3D preview for FBX models");
+            ImGui::EndTooltip();
+        }
+
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(100.0f);
+        ImGui::SliderFloat("Icon Size", &iconSize, 32.0f, 128.0f, "%.0f");
+
+        ImGui::PopStyleVar();
+        ImGui::Separator();
+
+        if (ImGui::BeginPopup("CreateFolder"))
+        {
+            static char folderName[256] = "NewFolder";
+
+            ImGui::Text("Create New Folder");
+            ImGui::Separator();
+
+            ImGui::InputText("Name", folderName, sizeof(folderName));
+
+            if (ImGui::Button("Create", ImVec2(120, 0)))
+            {
+                fs::path newFolderPath = fs::path(currentPath) / folderName;
+
+                if (!fs::exists(newFolderPath))
+                {
+                    fs::create_directory(newFolderPath);
+                    LOG_CONSOLE("[AssetsWindow] Created folder: %s", newFolderPath.string().c_str());
+                    RefreshAssets();
+                }
+                else
+                {
+                    LOG_CONSOLE("[AssetsWindow] ERROR: Folder already exists");
+                }
+
+                ImGui::CloseCurrentPopup();
+                strcpy(folderName, "NewFolder");
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            {
+                ImGui::CloseCurrentPopup();
+                strcpy(folderName, "NewFolder");
+            }
+
+            ImGui::EndPopup();
+        }
+
+        if (ImGui::BeginPopup("CreateScript"))
+        {
+            static char scriptName[256] = "NewScript";
+
+            ImGui::Text("Create New Lua Script");
+            ImGui::Separator();
+
+            ImGui::InputText("Name", scriptName, sizeof(scriptName));
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Extension .lua will be added automatically");
+
+            if (ImGui::Button("Create", ImVec2(120, 0)))
+            {
+                CreateNewScript(scriptName);
+                ImGui::CloseCurrentPopup();
+                strcpy(scriptName, "NewScript");
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            {
+                ImGui::CloseCurrentPopup();
+                strcpy(scriptName, "NewScript");
+            }
+
+            ImGui::EndPopup();
+        }
         if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
@@ -424,7 +574,10 @@ void AssetsWindow::Draw()
     {
         importSettingsWindow->Draw();
     }
-
+    if (scriptEditorWindow)
+    {
+        scriptEditorWindow->Draw();
+    }
     ImGui::End();
 }
 
@@ -511,13 +664,11 @@ void AssetsWindow::DrawAssetsList()
         if (showInMemoryOnly && !asset.inMemory)
             continue;
 
-        // Load preview only if show3DPreviews is enabled
         if (!asset.isDirectory && !asset.previewLoaded && show3DPreviews)
         {
             LoadPreviewForAsset(asset);
         }
 
-        // Only FBX files expand
         if (asset.isFBX) {
             DrawExpandableAssetItem(asset, pathPendingToLoad);
         }
@@ -541,8 +692,162 @@ void AssetsWindow::DrawAssetsList()
         currentPath = pathPendingToLoad;
         RefreshAssets();
     }
-}
 
+    ImVec2 contentRegion = ImGui::GetContentRegionAvail();
+
+    // Si hay espacio vacío, crear un área invisible para drop
+    if (contentRegion.y > 10.0f)
+    {
+        ImGui::InvisibleButton("##droparea", contentRegion);
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_GAMEOBJECT"))
+            {
+                GameObject* droppedObject = *(GameObject**)payload->Data;
+
+                if (droppedObject)
+                {
+                    LOG_CONSOLE("[AssetsWindow] GameObject dropped: %s", droppedObject->GetName().c_str());
+
+                    // Abrir popup para crear prefab
+                    ImGui::OpenPopup("CreatePrefabFromHierarchy");
+                }
+            }
+
+            // Visual feedback cuando se arrastra sobre el área
+            if (ImGui::GetDragDropPayload() && ImGui::GetDragDropPayload()->IsDataType("HIERARCHY_GAMEOBJECT"))
+            {
+                ImVec2 minPos = ImGui::GetItemRectMin();
+                ImVec2 maxPos = ImGui::GetItemRectMax();
+                ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+                // Dibujar borde punteado cuando se arrastra sobre
+                drawList->AddRect(minPos, maxPos, IM_COL32(100, 200, 255, 200), 0.0f, 0, 2.0f);
+
+                // Texto de ayuda
+                ImVec2 textPos = ImVec2(
+                    minPos.x + (maxPos.x - minPos.x) * 0.5f - 100.0f,
+                    minPos.y + (maxPos.y - minPos.y) * 0.5f
+                );
+                drawList->AddText(textPos, IM_COL32(100, 200, 255, 255), "Drop here to create Prefab");
+            }
+
+            ImGui::EndDragDropTarget();
+        }
+    }
+
+    // Popup modal para nombrar el prefab
+    static char s_prefabName[256] = "";
+    static bool s_popupJustOpened = false;
+    static GameObject* s_objectToConvertToPrefab = nullptr;
+
+    if (ImGui::BeginPopupModal("CreatePrefabFromHierarchy", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        if (ImGui::IsWindowAppearing())
+        {
+            SelectionManager* selection = Application::GetInstance().selectionManager;
+            if (selection->HasSelection())
+            {
+                s_objectToConvertToPrefab = selection->GetSelectedObject();
+
+                if (s_objectToConvertToPrefab)
+                {
+                    strncpy(s_prefabName, s_objectToConvertToPrefab->GetName().c_str(), sizeof(s_prefabName) - 1);
+                    s_prefabName[sizeof(s_prefabName) - 1] = '\0';
+                    s_popupJustOpened = true;
+                }
+            }
+        }
+
+        ImGui::Text("Create Prefab from GameObject");
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        if (s_objectToConvertToPrefab)
+        {
+            ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "GameObject: %s",
+                s_objectToConvertToPrefab->GetName().c_str());
+        }
+        else
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "ERROR: No GameObject selected");
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        ImGui::Text("Prefab Name:");
+        ImGui::SetNextItemWidth(300.0f);
+
+        if (s_popupJustOpened)
+        {
+            ImGui::SetKeyboardFocusHere();
+            s_popupJustOpened = false;
+        }
+
+        ImGui::InputText("##prefabname", s_prefabName, sizeof(s_prefabName));
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Extension .prefab will be added automatically");
+
+        ImGui::Spacing();
+
+        fs::path destinationPath = fs::path(currentPath) / (std::string(s_prefabName) + ".prefab");
+        std::string relativePath = destinationPath.string();
+        std::string assetsRoot = LibraryManager::GetAssetsRoot();
+
+        if (relativePath.find(assetsRoot) == 0)
+        {
+            relativePath = relativePath.substr(assetsRoot.length());
+            if (!relativePath.empty() && (relativePath[0] == '\\' || relativePath[0] == '/'))
+            {
+                relativePath = relativePath.substr(1);
+            }
+        }
+
+        ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Will be saved to:");
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.5f, 1.0f), "Assets/%s", relativePath.c_str());
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        bool canCreate = (strlen(s_prefabName) > 0 && s_objectToConvertToPrefab != nullptr);
+
+        if (!canCreate)
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+        }
+
+        if (ImGui::Button("Create", ImVec2(120, 0)) && canCreate)
+        {
+            HandlePrefabCreationDrop(s_prefabName);
+
+            s_objectToConvertToPrefab = nullptr;
+            strcpy(s_prefabName, "");
+            s_popupJustOpened = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (!canCreate)
+        {
+            ImGui::PopStyleVar();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            s_objectToConvertToPrefab = nullptr;
+            strcpy(s_prefabName, "");
+            s_popupJustOpened = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
 void AssetsWindow::DrawExpandableAssetItem(AssetEntry& asset, std::string& pathPendingToLoad)
 {
     ImGui::PushID(asset.path.c_str());
@@ -857,7 +1162,6 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
         payload.assetPath = asset.path;
         payload.assetUID = asset.uid;
 
-        // Determine the type of asset
         if (asset.extension == ".png" || asset.extension == ".jpg" ||
             asset.extension == ".jpeg" || asset.extension == ".dds" || asset.extension == ".tga")
         {
@@ -868,6 +1172,16 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
         {
             payload.assetType = DragDropAssetType::MESH;
             ImGui::Text("Mesh: %s", asset.name.c_str());
+        }
+        else if (asset.extension == ".lua")
+        {
+            payload.assetType = DragDropAssetType::SCRIPT;
+            ImGui::Text("Script: %s", asset.name.c_str());
+        }
+        else if (asset.extension == ".prefab")  
+        {
+            payload.assetType = DragDropAssetType::PREFAB;
+            ImGui::Text("Prefab: %s", asset.name.c_str());
         }
         else
         {
@@ -891,11 +1205,62 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
         }
     }
 
+    // Doble click
     if (isButtonHovered && ImGui::IsMouseDoubleClicked(0))
     {
         if (asset.isDirectory)
         {
             pathPendingToLoad = asset.path;
+        }
+        else if (asset.extension == ".lua")
+        {
+            if (EditorPreferences::GetPreferredEditor() == ExternalEditor::INTERNAL)
+            {
+                // Abrir con editor interno
+                if (scriptEditorWindow)
+                {
+                    scriptEditorWindow->OpenScript(asset.path);
+                }
+            }
+            else
+            {
+                // Abrir con editor externo
+                EditorPreferences::OpenFileWithPreferredEditor(asset.path);
+            }
+        }
+        else if (asset.extension == ".prefab")  
+        {
+            // Instanciar prefab en la escena (en el root)
+            ModuleResources* resources = Application::GetInstance().resources.get();
+            if (resources && asset.uid != 0)
+            {
+                ResourcePrefab* prefabRes = dynamic_cast<ResourcePrefab*>(
+                    resources->RequestResource(asset.uid)
+                    );
+
+                if (prefabRes && prefabRes->IsLoadedToMemory())
+                {
+                    GameObject* instance = prefabRes->Instantiate();
+                    if (instance)
+                    {
+                        LOG_CONSOLE("[AssetsWindow] Instantiated prefab: %s", asset.name.c_str());
+                        Application::GetInstance().scene->MarkOctreeForRebuild();
+
+                        // Seleccionar el objeto instanciado
+                        Application::GetInstance().selectionManager->SetSelectedObject(instance);
+                    }
+                    else
+                    {
+                        LOG_CONSOLE("[AssetsWindow] ERROR: Failed to instantiate prefab");
+                    }
+
+                    resources->ReleaseResource(asset.uid);
+                }
+                else
+                {
+                    LOG_CONSOLE("[AssetsWindow] ERROR: Failed to load prefab resource");
+                }
+            }
         }
     }
 
@@ -921,12 +1286,95 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
 
     ImGui::EndGroup();
 
+    // Context menu
     std::string popupID = "AssetContextMenu##" + asset.path;
     if (ImGui::BeginPopupContextItem(popupID.c_str()))
     {
         ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "%s", asset.name.c_str());
         ImGui::Separator();
 
+        // Menú específico para SCRIPTS (.lua)
+        if (!asset.isDirectory && asset.extension == ".lua")
+        {
+            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Open With:");
+
+            if (ImGui::MenuItem("Internal Editor"))
+            {
+                if (scriptEditorWindow)
+                {
+                    scriptEditorWindow->OpenScript(asset.path);
+                }
+            }
+
+            if (ImGui::MenuItem("Visual Studio 2022"))
+            {
+                EditorPreferences::SetPreferredEditor(ExternalEditor::VISUAL_STUDIO_2022);
+                if (!EditorPreferences::OpenFileWithPreferredEditor(asset.path))
+                {
+                    LOG_CONSOLE("[AssetsWindow] Failed to open with VS2022. Is it installed?");
+                }
+            }
+
+            if (ImGui::MenuItem("VS Code"))
+            {
+                EditorPreferences::SetPreferredEditor(ExternalEditor::VSCODE);
+                if (!EditorPreferences::OpenFileWithPreferredEditor(asset.path))
+                {
+                    LOG_CONSOLE("[AssetsWindow] Failed to open with VS Code. Is it installed?");
+                }
+            }
+
+            if (ImGui::MenuItem("Custom Editor..."))
+            {
+                ImGui::OpenPopup("SelectCustomEditor");
+            }
+
+            ImGui::Separator();
+
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Default Editor:");
+
+            ExternalEditor currentEditor = EditorPreferences::GetPreferredEditor();
+            const char* editorNames[] = { "Internal", "VS 2022", "VS Code", "Custom" };
+            int currentIdx = static_cast<int>(currentEditor);
+
+            if (ImGui::Combo("##defaulteditor", &currentIdx, editorNames, 4))
+            {
+                EditorPreferences::SetPreferredEditor(static_cast<ExternalEditor>(currentIdx));
+            }
+
+            ImGui::Separator();
+        }
+
+        // Menú específico para PREFABS (.prefab)
+        if (!asset.isDirectory && asset.extension == ".prefab")  
+        {
+            if (ImGui::MenuItem("Instantiate in Scene"))
+            {
+                ModuleResources* resources = Application::GetInstance().resources.get();
+                if (resources && asset.uid != 0)
+                {
+                    ResourcePrefab* prefabRes = dynamic_cast<ResourcePrefab*>(
+                        resources->RequestResource(asset.uid)
+                        );
+
+                    if (prefabRes && prefabRes->IsLoadedToMemory())
+                    {
+                        GameObject* instance = prefabRes->Instantiate();
+                        if (instance)
+                        {
+                            LOG_CONSOLE("[AssetsWindow] Instantiated prefab: %s", asset.name.c_str());
+                            Application::GetInstance().scene->MarkOctreeForRebuild();
+                            Application::GetInstance().selectionManager->SetSelectedObject(instance);
+                        }
+                        resources->ReleaseResource(asset.uid);
+                    }
+                }
+            }
+
+            ImGui::Separator();
+        }
+
+        // Import Settings para FBX y texturas
         if (!asset.isDirectory &&
             (asset.extension == ".fbx" ||
                 asset.extension == ".png" || asset.extension == ".jpg" ||
@@ -943,12 +1391,14 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
             ImGui::Separator();
         }
 
+        // Delete option (para todos los tipos)
         if (ImGui::MenuItem("Delete"))
         {
             assetToDelete = asset;
             showDeleteConfirmation = true;
         }
 
+        // Info section
         if (!asset.isDirectory && asset.uid != 0)
         {
             ImGui::Separator();
@@ -970,22 +1420,67 @@ void AssetsWindow::DrawAssetItem(const AssetEntry& asset, std::string& pathPendi
         ImGui::EndPopup();
     }
 
+    // Popup para seleccionar custom editor
+    if (ImGui::BeginPopup("SelectCustomEditor"))
+    {
+        static char editorPath[512] = "";
+
+        ImGui::Text("Select Custom Editor");
+        ImGui::Separator();
+
+        ImGui::InputText("Path", editorPath, sizeof(editorPath));
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Example: C:\\MyEditor\\editor.exe");
+
+        if (ImGui::Button("Browse..."))
+        {
+            LOG_CONSOLE("[AssetsWindow] File browser not implemented yet");
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            EditorPreferences::SetCustomEditorPath(editorPath);
+            EditorPreferences::SetPreferredEditor(ExternalEditor::CUSTOM);
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+
+    // Tooltip
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
         ImGui::Text("%s", asset.name.c_str());
+
         if (!asset.isDirectory && asset.uid != 0) {
             ImGui::Text("UID: %llu", asset.uid);
         }
+
         if (asset.isDirectory && asset.inMemory) {
             ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "Contains %d loaded refs", asset.references);
         }
+
+        // Tooltip específico para prefabs
+        if (asset.extension == ".prefab") {
+            ImGui::Separator();
+            ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "Double-click to instantiate");
+            ImGui::Text("Drag to Hierarchy to place as child");
+        }
+
         ImGui::EndTooltip();
     }
 
     ImGui::PopID();
 }
-
 void AssetsWindow::LoadFBXSubMeshes(AssetEntry& fbxAsset)
 {
     fbxAsset.subMeshes.clear();
@@ -1413,6 +1908,8 @@ const char* AssetsWindow::GetAssetIcon(const std::string& extension) const
     if (extension == ".mesh") return "[MSH]";
     if (extension == ".texture") return "[TEX]";
     if (extension == ".wav" || extension == ".ogg" || extension == ".mp3") return "[SND]";
+    if (extension == ".lua") return "[LUA]";  
+    if (extension == ".prefab") return "[PREFAB]";
     return "[FILE]";
 }
 
@@ -1429,7 +1926,9 @@ bool AssetsWindow::IsAssetFile(const std::string& extension) const
         extension == ".texture" ||
         extension == ".wav" ||
         extension == ".ogg" ||
-        extension == ".json";
+        extension == ".json" ||
+        extension == ".lua"  ||
+        extension == ".prefab";
 }
 
 void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
@@ -1920,8 +2419,10 @@ unsigned int AssetsWindow::RenderMultipleMeshesToTexture(const std::vector<const
 
     return colorTexture;
 }
+
 void AssetsWindow::HandleExternalDragDrop()
 {
+    // Manejar archivos externos (desde fuera de la aplicación)
     if (Application::GetInstance().input->HasDroppedFile())
     {
         ImVec2 mousePos = ImGui::GetMousePos();
@@ -1939,7 +2440,6 @@ void AssetsWindow::HandleExternalDragDrop()
         if (isMouseOverWindow || windowActive)
         {
             std::string droppedPath = Application::GetInstance().input->GetDroppedFilePath();
-
             Application::GetInstance().input->ClearDroppedFile();
 
             LOG_CONSOLE("[AssetsWindow] File dropped on Assets window: %s", droppedPath.c_str());
@@ -1955,7 +2455,6 @@ void AssetsWindow::HandleExternalDragDrop()
         }
     }
 }
-
 bool AssetsWindow::ProcessDroppedFile(const std::string& sourceFilePath)
 {
     LOG_CONSOLE("[AssetsWindow] Processing dropped file: %s", sourceFilePath.c_str());
@@ -2367,6 +2866,253 @@ bool AssetsWindow::TestImportSystem()
     else
     {
         return false;
+    }
+
+    return true;
+}
+
+// scripts
+void AssetsWindow::CreateNewScript(const std::string& scriptName)
+{
+    std::string filename = scriptName;
+
+    // Añadir extensión .lua si no está presente
+    if (filename.find(".lua") == std::string::npos)
+    {
+        filename += ".lua";
+    }
+
+    fs::path scriptPath = fs::path(currentPath) / filename;
+
+    // Verificar si el archivo ya existe
+    if (fs::exists(scriptPath))
+    {
+        LOG_CONSOLE("[AssetsWindow] ERROR: Script already exists: %s", filename.c_str());
+
+        // Generar nombre único
+        int counter = 1;
+        std::string baseName = scriptName;
+
+        do
+        {
+            filename = baseName + "_" + std::to_string(counter) + ".lua";
+            scriptPath = fs::path(currentPath) / filename;
+            counter++;
+        } while (fs::exists(scriptPath));
+
+        LOG_CONSOLE("[AssetsWindow] Using unique name: %s", filename.c_str());
+    }
+
+    // Crear archivo de script con template
+    std::ofstream scriptFile(scriptPath);
+
+    if (!scriptFile.is_open())
+    {
+        LOG_CONSOLE("[AssetsWindow] ERROR: Cannot create script file");
+        return;
+    }
+
+    scriptFile << GetDefaultScriptTemplate();
+    scriptFile.close();
+
+    LOG_CONSOLE("[AssetsWindow] Created script: %s", scriptPath.string().c_str());
+
+    // Crear archivo .meta
+    MetaFile meta;
+    meta.uid = MetaFile::GenerateUID();
+    meta.type = AssetType::SCRIPT_LUA;
+    meta.originalPath = scriptPath.string();
+    meta.lastModified = MetaFileManager::GetFileTimestamp(scriptPath.string());
+
+    std::string metaPath = scriptPath.string() + ".meta";
+    meta.Save(metaPath);
+
+    // Importar al sistema de recursos
+    ModuleResources* resources = Application::GetInstance().resources.get();
+    if (resources)
+    {
+        Resource* scriptResource = resources->CreateNewResourceWithUID(
+            scriptPath.string().c_str(),
+            Resource::SCRIPT,
+            meta.uid
+        );
+
+        if (scriptResource)
+        {
+            scriptResource->SetAssetFile(scriptPath.string());
+            scriptResource->SetLibraryFile(scriptPath.string());
+            LOG_CONSOLE("[AssetsWindow] Script registered with UID: %llu", meta.uid);
+        }
+    }
+
+    RefreshAssets();
+
+    // Abrir en el editor interno por defecto
+    if (scriptEditorWindow)
+    {
+        scriptEditorWindow->OpenScript(scriptPath.string());
+    }
+}
+
+std::string AssetsWindow::GetDefaultScriptTemplate()
+{
+    return R"(-- Script Template
+-- This script is attached to a GameObject
+-- Access the GameObject through: self.gameObject
+-- Access the Transform through: self.transform
+
+function Start()
+    -- Called once when the script is initialized
+    Engine.Log("Script Started!")
+    
+    -- Example: Get initial position
+    local pos = self.transform.position
+    Engine.Log("Initial Position: " .. pos.x .. ", " .. pos.y .. ", " .. pos.z)
+end
+
+function Update(deltaTime)
+    -- Called every frame
+    -- deltaTime = time since last frame in seconds
+    
+    -- Example: Rotate object
+    -- local rot = self.transform.rotation
+    -- self.transform:SetRotation(rot.x, rot.y + 90 * deltaTime, rot.z)
+    
+    -- Example: Move with WASD
+    -- local pos = self.transform.position
+    -- local speed = 5.0
+    -- 
+    -- if Input.GetKey("W") then
+    --     self.transform:SetPosition(pos.x, pos.y, pos.z - speed * deltaTime)
+    -- end
+    -- if Input.GetKey("S") then
+    --     self.transform:SetPosition(pos.x, pos.y, pos.z + speed * deltaTime)
+    -- end
+    -- if Input.GetKey("A") then
+    --     self.transform:SetPosition(pos.x - speed * deltaTime, pos.y, pos.z)
+    -- end
+    -- if Input.GetKey("D") then
+    --     self.transform:SetPosition(pos.x + speed * deltaTime, pos.y, pos.z)
+    -- end
+end
+)";
+}
+
+void AssetsWindow::HandlePrefabCreationDrop(const std::string& prefabName)
+{
+    SelectionManager* selection = Application::GetInstance().selectionManager;
+
+    if (!selection->HasSelection())
+    {
+        LOG_CONSOLE("[AssetsWindow] ERROR: No GameObject selected");
+        return;
+    }
+
+    GameObject* selectedObject = selection->GetSelectedObject();
+    if (!selectedObject)
+    {
+        LOG_CONSOLE("[AssetsWindow] ERROR: Selected object is null");
+        return;
+    }
+
+    // Generar nombre de archivo
+    std::string filename = prefabName;
+    if (filename.find(".prefab") == std::string::npos)
+    {
+        filename += ".prefab";
+    }
+
+    // Ruta completa en la carpeta actual
+    fs::path prefabPath = fs::path(currentPath) / filename;
+
+    // Verificar si ya existe
+    if (fs::exists(prefabPath))
+    {
+        LOG_CONSOLE("[AssetsWindow] WARNING: Prefab already exists, generating unique name");
+
+        std::string baseName = prefabName;
+        int counter = 1;
+
+        do {
+            filename = baseName + "_" + std::to_string(counter) + ".prefab";
+            prefabPath = fs::path(currentPath) / filename;
+            counter++;
+        } while (fs::exists(prefabPath));
+    }
+
+    // Crear prefab
+    if (CreatePrefabFromGameObject(selectedObject, prefabPath.string()))
+    {
+        LOG_CONSOLE("[AssetsWindow] Prefab created: %s", prefabPath.string().c_str());
+        RefreshAssets();
+    }
+    else
+    {
+        LOG_CONSOLE("[AssetsWindow] ERROR: Failed to create prefab");
+    }
+}
+
+bool AssetsWindow::CreatePrefabFromGameObject(GameObject* obj, const std::string& prefabPath)
+{
+    if (!obj)
+    {
+        LOG_CONSOLE("[AssetsWindow] ERROR: GameObject is null");
+        return false;
+    }
+
+    // Serialize GameObject to JSON
+    nlohmann::json prefabArray = nlohmann::json::array();
+    obj->Serialize(prefabArray);
+
+    if (prefabArray.empty())
+    {
+        LOG_CONSOLE("[AssetsWindow] ERROR: Failed to serialize GameObject");
+        return false;
+    }
+
+    // Get first element (the serialized GameObject)
+    nlohmann::json prefabData = prefabArray[0];
+
+    // Save to file
+    std::ofstream file(prefabPath);
+    if (!file.is_open())
+    {
+        LOG_CONSOLE("[AssetsWindow] ERROR: Cannot create prefab file: %s", prefabPath.c_str());
+        return false;
+    }
+
+    file << prefabData.dump(4);
+    file.close();
+
+    // Create .meta file
+    MetaFile meta;
+    meta.uid = MetaFile::GenerateUID();
+    meta.type = AssetType::PREFAB;
+    meta.originalPath = prefabPath;
+    meta.lastModified = MetaFileManager::GetFileTimestamp(prefabPath);
+
+    std::string metaPath = prefabPath + ".meta";
+    if (!meta.Save(metaPath))
+    {
+        LOG_CONSOLE("[AssetsWindow] WARNING: Failed to create .meta file");
+    }
+
+    // Register in ModuleResources
+    ModuleResources* resources = Application::GetInstance().resources.get();
+    if (resources)
+    {
+        Resource* prefabResource = resources->CreateNewResourceWithUID(
+            prefabPath.c_str(),
+            Resource::PREFAB,
+            meta.uid
+        );
+
+        if (prefabResource)
+        {
+            prefabResource->SetAssetFile(prefabPath);
+            prefabResource->SetLibraryFile(prefabPath);
+            LOG_DEBUG("[AssetsWindow] Prefab registered with UID: %llu", meta.uid);
+        }
     }
 
     return true;

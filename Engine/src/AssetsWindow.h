@@ -7,8 +7,10 @@
 #include <unordered_set>
 #include <imgui.h>
 #include "MetaFile.h"
+#include "GameObject.h"
 
 class MetaFile;
+class ScriptEditorWindow;  // Forward declaration
 namespace fs = std::filesystem;
 
 // Forward declarations
@@ -43,6 +45,8 @@ enum class DragDropAssetType
     FBX_MODEL,      // FBX completo (todas las meshes)
     MESH,           // Mesh individual
     TEXTURE,        // Texture (PNG, JPG, DDS, etc)
+    SCRIPT,         // Lua script
+    PREFAB
 };
 
 // Payload para drag & drop interno
@@ -97,8 +101,15 @@ private:
     bool ImportTextureToLibrary(const std::string& assetPath, const MetaFile& meta);
     bool ImportFBXToLibrary(const std::string& assetPath, const MetaFile& meta);
 
+    // Script management
+    void CreateNewScript(const std::string& scriptName);
+    std::string GetDefaultScriptTemplate();
+
     // Test function (temporal)
     bool TestImportSystem();
+
+    void HandlePrefabCreationDrop(const std::string& prefabName);
+    bool CreatePrefabFromGameObject(GameObject* obj, const std::string& prefabPath);
 
     std::string assetsRootPath;
     std::string currentPath;
@@ -108,13 +119,13 @@ private:
     AssetEntry* selectedAsset;
     float iconSize;
     bool showInMemoryOnly;
-    bool show3DPreviews;  // Nueva variable para controlar previews 3D en FBX
+    bool show3DPreviews;
 
     bool showDeleteConfirmation;
     AssetEntry assetToDelete;
 
-    // Para rastrear qué FBX están expandidos
     std::unordered_set<std::string> expandedFBXPaths;
 
     ImportSettingsWindow* importSettingsWindow;
+    ScriptEditorWindow* scriptEditorWindow;  
 };

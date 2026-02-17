@@ -23,6 +23,12 @@ struct TransparentObject
 
 class Renderer : public Module
 {
+    struct RenderLine {
+        glm::vec3 start;
+        glm::vec3 end;
+        glm::vec4 color;
+    };
+
 public:
     Renderer();
     ~Renderer();
@@ -102,6 +108,12 @@ public:
     bool IsShowingZBuffer() const { return showZBuffer; }
     void SetShowZBuffer(bool show) { showZBuffer = show; }
 
+    // Draw forms
+    void DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color);
+    void DrawArc(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB);
+    void DrawCircle(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB);
+    void DrawSphere(const glm::vec3& center, float radius, const glm::vec4& color, int segments = 16);
+
 private:
     // Internal rendering methods
     void DrawGameObjectIterative(GameObject* gameObject,
@@ -109,6 +121,7 @@ private:
         ComponentCamera* renderCamera,
         ComponentCamera* cullingCamera);
     void DrawGameObjectWithStencil(GameObject* gameObject);
+    void DrawLinesList(const ComponentCamera* camera);
     void ApplyRenderSettings();
 
     //Checkers
@@ -170,4 +183,6 @@ private:
     void DrawAABB(const glm::vec3& min, const glm::vec3& max,
         const glm::vec3& color);
     void DrawAllAABBs(GameObject* gameObject);
+
+    std::vector<RenderLine> linesList;
 };

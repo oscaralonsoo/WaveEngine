@@ -26,6 +26,11 @@ bool RenderContext::Start()
         std::cerr << "Failed to create OpenGL context" << std::endl;
         return false;
     }
+    
+    if (SDL_GL_SetSwapInterval(0) != 0) {
+        LOG_CONSOLE("Fallo al desactivar VSync: %s", SDL_GetError());
+    }
+
 
     if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
     {

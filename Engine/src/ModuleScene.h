@@ -19,6 +19,7 @@ public:
     bool Awake() override;
     bool Start() override;
     bool Update() override;
+    bool FixedUpdate() override;
     bool PostUpdate() override;
     bool CleanUp() override;
 
@@ -41,6 +42,7 @@ public:
     glm::vec3 lastRayOrigin = glm::vec3(0.0f);
     glm::vec3 lastRayDirection = glm::vec3(0.0f);
     float lastRayLength = 0.0f;
+    ComponentCamera* FindCameraInHierarchy(GameObject* obj);
 
 private:
     std::unique_ptr<Octree> octree;
@@ -50,5 +52,4 @@ private:
     Renderer* renderer = nullptr;
     FileSystem* filesystem = nullptr;
 
-    ComponentCamera* FindCameraInHierarchy(GameObject* obj);
 };

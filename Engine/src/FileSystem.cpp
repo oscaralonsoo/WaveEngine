@@ -39,6 +39,19 @@ bool FileSystem::Start()
         return false;
     }
 
+    // Load default scene
+    std::string defaultScenePath = "../Scene/scene.json";
+    if (fs::exists(defaultScenePath)) {
+        LOG_CONSOLE("[FileSystem] Loading default scene: %s", defaultScenePath.c_str());
+        if (Application::GetInstance().scene->LoadScene(defaultScenePath)) {
+            LOG_CONSOLE("[FileSystem] Default scene loaded successfully");
+            return true;
+        }
+        else {
+            LOG_CONSOLE("[FileSystem] WARNING: Failed to load default scene, using fallback geometry");
+        }
+    }
+
     // Usar las rutas de LibraryManager
     fs::path assetsPath = LibraryManager::GetAssetsRoot();
 

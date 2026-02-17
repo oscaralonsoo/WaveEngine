@@ -49,6 +49,7 @@ public:
     GameWindow* GetGameWindow() const { return gameWindow.get(); }
     ConfigurationWindow* GetConfigWindow() const { return configWindow.get(); }
     AssetsWindow* GetAssetsWindow() const { return assetsWindow.get(); }
+    ConsoleWindow* GetConsoleWindow() { return consoleWindow.get(); }
 
     ImVec2 sceneViewportPos = ImVec2(0, 0);
     ImVec2 sceneViewportSize = ImVec2(1280, 720);

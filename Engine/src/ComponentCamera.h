@@ -14,6 +14,9 @@ public:
     void Update() override;
     void OnEditor() override;
 
+    bool IsType(ComponentType type) override { return type == ComponentType::CAMERA; };
+    bool IsIncompatible(ComponentType type) override { return type == ComponentType::CAMERA; };
+
     // Serialization
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;

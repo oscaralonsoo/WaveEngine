@@ -4,12 +4,33 @@
 
 class GameObject;
 
+enum class GameObjectEvent;
+
 enum class ComponentType {
+
     TRANSFORM,
     MESH,
     MATERIAL,
     CAMERA,
     ROTATE,
+    SCRIPT,
+    PARTICLE,
+    RIGIDBODY,
+    COLLIDER,
+    BOX_COLLIDER,
+    SPHERE_COLLIDER,
+    CAPSULE_COLLIDER,
+    PLANE_COLLIDER,
+    INFINITE_PLANE_COLLIDER,
+    MESH_COLLIDER,
+    CONVEX_COLLIDER,
+    JOINT,
+    HINGE_JOINT,
+    DISTANCE_JOINT,
+    FIXED_JOINT,
+    D6_JOINT,
+    PRISMATIC_JOINT,
+    SPHERICAL_JOINT,
     UNKNOWN
 };
 
@@ -21,6 +42,7 @@ public:
 
     virtual void Enable() {};
     virtual void Update() {};
+    virtual void FixedUpdate() {};
     virtual void Disable() {};
     virtual void OnEditor() {};
 
@@ -29,8 +51,13 @@ public:
     virtual void Deserialize(const nlohmann::json& componentObj) {};
 
     ComponentType GetType() const { return type; }
+    virtual bool IsType(ComponentType type) = 0;
+    virtual bool IsIncompatible(ComponentType type) = 0;
+
     bool IsActive() const { return active; }
     void SetActive(bool active) { this->active = active; }
+
+    virtual void OnGameObjectEvent(GameObjectEvent event, Component* component) {};
 
 public:
     GameObject* owner;

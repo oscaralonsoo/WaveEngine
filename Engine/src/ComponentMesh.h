@@ -19,6 +19,9 @@ public:
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;
 
+    bool IsType(ComponentType type) override { return type == ComponentType::MESH; };
+    bool IsIncompatible(ComponentType type) override { return type == ComponentType::MESH /*|| type == ComponentType::SkinnedMeshRenderer*/; };
+
     // Load mesh from resource system by UID
     bool LoadMeshByUID(UID uid);
 
@@ -51,11 +54,22 @@ public:
         const Mesh& m = GetMesh();
         return static_cast<unsigned int>(m.vertices.size());
     }
+    
+    std::vector<Vertex> GetVertices() const {
+        const Mesh& m = GetMesh();
+        return m.vertices;
+    }
 
     unsigned int GetNumIndices() const {
         const Mesh& m = GetMesh();
         return static_cast<unsigned int>(m.indices.size());
     }
+
+    std::vector<unsigned int> GetIndices() const {
+        const Mesh& m = GetMesh();
+        return m.indices;
+    }
+
 
     unsigned int GetNumTriangles() const {
         return GetNumIndices() / 3;

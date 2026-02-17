@@ -5,7 +5,18 @@
 #include <nlohmann/json.hpp>
 
 class Component;
+class Transform;
 enum class ComponentType;
+
+enum class GameObjectEvent {
+    TRANSFORM_CHANGED,
+    TRANSFORM_SCALED,
+    COMPONENT_ADDED,
+    COMPONENT_REMOVED,
+    OBJECT_DESTROYED,
+    HIERARCHY_CHANGED,
+    MESH_CHANGED
+};
 
 class GameObject {
 public:
@@ -15,8 +26,11 @@ public:
     Component* CreateComponent(ComponentType type);
 
     Component* GetComponent(ComponentType type) const;
-
     std::vector<Component*> GetComponentsOfType(ComponentType type) const;
+    Component* GetComponentInChildren(ComponentType type);
+    void GetComponentsInChildren(ComponentType type, std::vector<Component*>& outlist);
+    Component* GetComponentInParent(ComponentType type);
+    void GetComponentsInParent(ComponentType type, std::vector<Component*>& outlist);
 
     void AddChild(GameObject* child);
     void RemoveChild(GameObject* child);
@@ -25,6 +39,7 @@ public:
     int GetChildIndex(GameObject* child) const;
 
     void Update();
+    void FixedUpdate();
 
     const std::string& GetName() const { return name; }
     void SetName(const std::string& newName) { name = newName; }
@@ -36,14 +51,20 @@ public:
 
     void MarkForDeletion() { markedForDeletion = true; }
     bool IsMarkedForDeletion() const { return markedForDeletion; }
+    void MarkCleaning() { isCleaning = true; };
+    bool IsCleaning() { return isCleaning; };
 
     // Serialization
     void Serialize(nlohmann::json& gameObjectArray) const;
     static GameObject* Deserialize(const nlohmann::json& gameObjectObj, GameObject* parent = nullptr);
 
+    //INTERNAL EVENTS
+    void PublishGameObjectEvent(GameObjectEvent event, Component* component = nullptr);
+
 public:
     std::string name;
     bool active = true;
+    Transform* transform = nullptr;
 
 private:
     GameObject* parent = nullptr;
@@ -53,5 +74,6 @@ private:
     std::vector<std::unique_ptr<Component>> componentOwners;
 
     bool markedForDeletion = false;
+    bool isCleaning = false;
 
 };

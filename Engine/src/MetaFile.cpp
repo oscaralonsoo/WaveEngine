@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <windows.h>
 #include "Log.h"
+#include "ResourceScript.h"
 
 // META FILE IMPLEMENTATION
 ///////////////////////////////
@@ -27,6 +28,8 @@ AssetType MetaFile::GetAssetType(const std::string& extension) {
     if (ext == ".dds") return AssetType::TEXTURE_DDS;
     if (ext == ".tga") return AssetType::TEXTURE_TGA;
     if (ext == ".glsl") return AssetType::SHADER_GLSL;
+    if (ext == ".lua") return AssetType::SCRIPT_LUA;
+    if (ext == ".prefab") return AssetType::PREFAB; 
 
     return AssetType::UNKNOWN;
 }
@@ -38,27 +41,31 @@ bool MetaFile::Save(const std::string& metaFilePath) const {
         return false;
     }
 
-    // Convert absolute paths to relative before saving
-    std::string relativeOriginalPath = MakeRelativeToProject(originalPath);
-
-    // Write data 
+    // Datos básicos (TODOS los tipos)
     file << "uid: " << uid << "\n";
     file << "type: " << static_cast<int>(type) << "\n";
     file << "lastModified: " << lastModified << "\n";
 
-    // Model settings
-    file << "importScale: " << importSettings.importScale << "\n";
-    file << "generateNormals: " << (importSettings.generateNormals ? "1" : "0") << "\n";
-    file << "flipUVs: " << (importSettings.flipUVs ? "1" : "0") << "\n";
-    file << "optimizeMeshes: " << (importSettings.optimizeMeshes ? "1" : "0") << "\n";
-    file << "upAxis: " << importSettings.upAxis << "\n";
-    file << "frontAxis: " << importSettings.frontAxis << "\n";
-
-    // Texture settings
-    file << "generateMipmaps: " << (importSettings.generateMipmaps ? "1" : "0") << "\n";
-    file << "filterMode: " << importSettings.filterMode << "\n";
-    file << "flipHorizontal: " << (importSettings.flipHorizontal ? "1" : "0") << "\n";
-    file << "maxTextureSize: " << importSettings.maxTextureSize << "\n";
+    // Solo guardar settings de importación para assets que lo necesitan
+    if (type == AssetType::MODEL_FBX) {
+        // Model settings
+        file << "importScale: " << importSettings.importScale << "\n";
+        file << "generateNormals: " << (importSettings.generateNormals ? "1" : "0") << "\n";
+        file << "flipUVs: " << (importSettings.flipUVs ? "1" : "0") << "\n";
+        file << "optimizeMeshes: " << (importSettings.optimizeMeshes ? "1" : "0") << "\n";
+        file << "upAxis: " << importSettings.upAxis << "\n";
+        file << "frontAxis: " << importSettings.frontAxis << "\n";
+    }
+    else if (type == AssetType::TEXTURE_PNG ||
+        type == AssetType::TEXTURE_JPG ||
+        type == AssetType::TEXTURE_DDS ||
+        type == AssetType::TEXTURE_TGA) {
+        // Texture settings
+        file << "generateMipmaps: " << (importSettings.generateMipmaps ? "1" : "0") << "\n";
+        file << "filterMode: " << importSettings.filterMode << "\n";
+        file << "flipHorizontal: " << (importSettings.flipHorizontal ? "1" : "0") << "\n";
+        file << "maxTextureSize: " << importSettings.maxTextureSize << "\n";
+    }
 
     file.close();
     return true;

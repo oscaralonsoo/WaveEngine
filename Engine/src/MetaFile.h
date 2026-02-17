@@ -15,7 +15,9 @@ enum class AssetType {
     TEXTURE_JPG = 3,
     TEXTURE_DDS = 4,
     TEXTURE_TGA = 5,
-    SHADER_GLSL = 6
+    SHADER_GLSL = 6,
+    SCRIPT_LUA = 7,
+    PREFAB = 8
 };
 
 struct ImportSettings {

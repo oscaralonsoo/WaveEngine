@@ -45,6 +45,12 @@ public:
 		return true;
 	}
 
+	// Called each physics loop iteration
+	virtual bool FixedUpdate()
+	{
+		return true;
+	}
+
 	// Called each loop iteration
 	virtual bool PostUpdate()
 	{
