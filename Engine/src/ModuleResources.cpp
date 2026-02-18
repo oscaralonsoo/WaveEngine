@@ -181,10 +181,6 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
                 registered++;
             }
             break;
-                resources[meta.uid] = resource;
-                registered++;
-            }
-            break;
 
         case AssetType::PREFAB:
             prefabsFound++;
@@ -288,8 +284,6 @@ UID ModuleResources::ImportFile(const char* newFileInAssets) {
     }
     case Resource::PREFAB: {
         importSuccess = ImportPrefab(resource, newFileInAssets);
-        break;
-    }
         break;
     }
     default:
@@ -450,7 +444,6 @@ Resource::Type ModuleResources::GetResourceTypeFromExtension(const std::string& 
     }
     if (ext == ".prefab") { 
         return Resource::PREFAB;
-    }
     }
 
     return Resource::UNKNOWN;
