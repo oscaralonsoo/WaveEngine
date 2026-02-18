@@ -1,14 +1,8 @@
 ﻿#pragma once
 #include "Module.h"
-#include "Octree.h"
-#include <memory>
-#include <vector>
-
-class GameObject;
-class FileSystem;
-class Renderer;
-class ComponentCamera;
-class SceneWindow;
+#include <cstdint>
+#include "NsCore/Ptr.h"
+#include "NsGui/IView.h"
 
 class UI : public Module
 {
@@ -17,10 +11,13 @@ public:
     ~UI();
 
     bool Start() override;
+    bool PreUpdate() override;
     bool Update() override;
     bool CleanUp() override;
-    bool PreUpdate() override;
+
+    void OnResize(uint32_t width, uint32_t height);
 
 private:
+    Noesis::Ptr<Noesis::IView> m_view;
 
 };

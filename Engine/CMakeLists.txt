@@ -167,6 +167,7 @@ set(NOESIS_APP_SOURCES
 
 set(NOESIS_RENDER_SOURCES
     "${NOESIS_SDK_DIR}/Src/Packages/Render/GLRenderDevice/Src/GLRenderDevice.cpp"
+    
 )
 
 target_sources(Engine PRIVATE
@@ -182,13 +183,16 @@ target_include_directories(Engine PRIVATE
     "${NOESIS_SDK_DIR}/Src/Packages/Render/GLRenderDevice/Src"
 )
 
-# Anular macros de DLL export para compilar los Providers estáticamente
+# Anular macros de DLL export para compilar los Providers estï¿½ticamente
 target_compile_definitions(Engine PRIVATE
     NS_APP_PROVIDERS_API=
     NS_APP_FRAMEWORK_API=
     NS_APP_INTERACTIVITY_API=
+    NS_RENDER_GLRENDERDEVICE_API=
 )
-
+if(MSVC)
+    target_compile_options(Engine PRIVATE /FS)
+endif()
 if(WIN32)
     set(NOESIS_LIB "${NOESIS_SDK_DIR}/Lib/windows_x86_64/Noesis.lib")
     set(NOESIS_DLL "${NOESIS_SDK_DIR}/Bin/windows_x86_64/Noesis.dll")
