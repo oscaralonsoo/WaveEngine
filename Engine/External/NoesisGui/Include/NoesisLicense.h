@@ -10,9 +10,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef NS_LICENSE_NAME
-    #define NS_LICENSE_NAME ""
+    #define NS_LICENSE_NAME "CITM Terrassa - Educational"
 #endif
 
 #ifndef NS_LICENSE_KEY
-    #define NS_LICENSE_KEY ""
+    #define NS_LICENSE_KEY "NpbR+UmW0/luMWwx2lWc55NIsc6AmHn2VPXFVTGMdZ6ChvHS"
 #endif

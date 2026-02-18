@@ -6,6 +6,7 @@
 #include "NsApp/LocalXamlProvider.h"
 #include "NsApp/LocalTextureProvider.h"
 
+
 UI::UI()
 {
 	LOG_DEBUG("UI Constructor");
@@ -25,6 +26,8 @@ bool UI::Start()
             const char* prefixes[] = { "T", "D", "I", "W", "E" };
             LOG_DEBUG("[NOESIS/%s] %s\n", prefixes[level], msg);
     });
+
+    Noesis::GUI::SetLicense(NS_LICENSE_NAME, NS_LICENSE_KEY);
 
     Noesis::GUI::Init();
 
