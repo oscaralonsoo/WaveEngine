@@ -155,8 +155,11 @@ set(GAME_SRC ${CORE_SRC} ${RENDERING_SRC} ${UTILS_SRC} ${GAMEOBJECTS_SRC} ${COMP
 
 add_executable(Game ${GAME_SRC})
 
-target_compile_definitions(Game PRIVATE WAVE_GAME)
+set_target_properties(Game PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/Game"
+)
 
+target_compile_definitions(Game PRIVATE WAVE_GAME)
 target_link_libraries(Game PRIVATE SDL3::SDL3)
 target_link_libraries(Game PRIVATE glad::glad)
 target_link_libraries(Game PRIVATE glm::glm)
