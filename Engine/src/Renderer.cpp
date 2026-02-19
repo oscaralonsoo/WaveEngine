@@ -1,10 +1,12 @@
-﻿#include "Renderer.h"
+#include "Renderer.h"
 #include "Application.h"
 #include "GameObject.h"
 #include "Transform.h"
 #include "ComponentMesh.h"
 #include "ComponentMaterial.h"
 #include "ModuleEditor.h"
+#include "ResourceShader.h"
+#include "ComponentParticleSystem.h"
 
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -19,6 +21,7 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
+
 }
 
 bool Renderer::Start()
@@ -52,7 +55,7 @@ bool Renderer::Start()
     // Initialize line shader for debug visualization
     lineShader = make_unique<Shader>();
 
-    if (!lineShader->CreateSimpleColor())
+    if (!lineShader->CreateLinesShader())
     {
         LOG_DEBUG("ERROR: Failed to create line shader");
         LOG_CONSOLE("ERROR: Failed to compile line shader");
@@ -77,6 +80,20 @@ bool Renderer::Start()
     {
         LOG_DEBUG("Outline shader created successfully - Program ID: %d", outlineShader->GetProgramID());
         LOG_CONSOLE("Outline shader compiled successfully");
+    }
+
+    // Initialize water shader
+    waterShader = make_unique<Shader>();
+    if (!waterShader->CreateWater())
+    {
+        LOG_DEBUG("ERROR: Failed to create water shader");
+        LOG_CONSOLE("ERROR: Failed to compile water shader");
+        return false;
+    }
+    else
+    {
+        LOG_DEBUG("Water shader created successfully - Program ID: %d", waterShader->GetProgramID());
+        LOG_CONSOLE("Water shader compiled successfully");
     }
 
     depthShader = make_unique<Shader>();
@@ -202,6 +219,7 @@ void Renderer::LoadTexture(const std::string& path)
 
 bool Renderer::PreUpdate()
 {
+    linesList.clear();
     return true;
 }
 
@@ -321,7 +339,9 @@ bool Renderer::Update()
         }
     }
 
+    DrawLinesList(camera);
     UnbindFramebuffer();
+
 
     // Game View //////////////
     ComponentCamera* sceneCamera = Application::GetInstance().camera->GetSceneCamera();
@@ -393,6 +413,11 @@ bool Renderer::CleanUp()
     if (depthShader)
     {
         depthShader->Delete();
+    }
+
+    if (waterShader)
+    {
+        waterShader->Delete();
     }
 
     if (normalLinesVAO != 0)
@@ -525,6 +550,10 @@ bool Renderer::HasTransparency(GameObject* gameObject)
 
     if (material && material->IsActive())
     {
+        return material->GetOpacity() < 1.0f || material->GetMaterialType() == MaterialType::WATER;
+    }
+
+    if (gameObject->GetComponent(ComponentType::PARTICLE)) {
         return true;
     }
 
@@ -667,6 +696,8 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
 
         for (GameObject* selectedObj : selectedObjects)
         {
+            if (!selectedObj || selectedObj->IsMarkedForDeletion())
+                continue;
             if (!selectedObj->IsActive())
                 continue;
             if (!IsGameObjectAndParentsActive(selectedObj))
@@ -714,10 +745,18 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
             return a.distanceToCamera > b.distanceToCamera;
         });
 
+    // Enable blending for transparent objects
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE); // Disable depth writing for transparency
+
     for (const auto& transparentObj : transparentObjects)
     {
         DrawGameObjectIterative(transparentObj.gameObject, true, renderCamera, cullingCamera);
     }
+
+    glDepthMask(GL_TRUE); // Re-enable depth writing
+    glDisable(GL_BLEND);
     //  THIRD PASS: Draw outlines for selected objects =====
     if (drawEditorFeatures)
     {
@@ -741,6 +780,8 @@ void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* culling
 
         for (GameObject* selectedObj : selectedObjects)
         {
+            if (!selectedObj || selectedObj->IsMarkedForDeletion())
+                continue;
             if (!selectedObj->IsActive())
                 continue;
             if (!IsGameObjectAndParentsActive(selectedObj))
@@ -894,7 +935,31 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
 
         const glm::mat4& modelMatrix = transform->GetGlobalMatrix();
 
-        Shader* currentShader = showZBuffer ? depthShader.get() : defaultShader.get();
+        Shader* currentShader = nullptr;
+        ComponentMaterial* material = static_cast<ComponentMaterial*>(
+            currentObj->GetComponent(ComponentType::MATERIAL));
+
+        if (showZBuffer) {
+             currentShader = depthShader.get();
+        } 
+        else {
+             if (material && material->GetShaderUID() != 0) {
+                 ResourceShader* resShader = static_cast<ResourceShader*>(
+                     Application::GetInstance().resources->GetResourceDirect(material->GetShaderUID()));
+                 if (resShader && resShader->GetShader()) {
+                     currentShader = resShader->GetShader();
+                 }
+             }
+
+             if (!currentShader) {
+                 if (material && (material->GetMaterialType() == MaterialType::WATER) && waterShader) {
+                     currentShader = waterShader.get();
+                 } else {
+                     currentShader = defaultShader.get();
+                 }
+             }
+        }
+
         currentShader->Use();
 
         glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "projection"),
@@ -904,9 +969,6 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
         glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "model"),
             1, GL_FALSE, glm::value_ptr(modelMatrix));
 
-        ComponentMaterial* material = static_cast<ComponentMaterial*>(
-            currentObj->GetComponent(ComponentType::MATERIAL));
-
         bool materialBound = false;
 
         if (showZBuffer)
@@ -914,43 +976,72 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
             depthShader->SetFloat("nearPlane", renderCamera->GetNearPlane());
             depthShader->SetFloat("farPlane", renderCamera->GetFarPlane());
         }
+        else if (currentShader == waterShader.get())
+        {
+            // Update time uniform for water animation (only when PLAYING)
+            float time = 0.0f;
+            if (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING) {
+                time = SDL_GetTicks() / 1000.0f;
+            }
+            
+            waterShader->SetFloat("u_Time", time);
+            waterShader->SetVec3("lightDir", glm::vec3(1.0f, -1.0f, -1.0f));
+            waterShader->SetVec3("viewPos", renderCamera->GetPosition());
+            waterShader->SetFloat("opacity", material ? material->GetOpacity() : 1.0f);
+
+            if (material) {
+                float speed = material->GetWaveSpeed();
+                float amp = material->GetWaveAmplitude();
+                float freq = material->GetWaveFrequency();
+
+                waterShader->SetFloat("waveSpeed", speed);
+                waterShader->SetFloat("waveAmplitude", amp);
+                waterShader->SetFloat("waveFrequency", freq);
+            }
+        }
         else
         {
-            defaultShader->SetVec3("tintColor", glm::vec3(1.0f));
+            currentShader->SetVec3("tintColor", glm::vec3(1.0f));
 
             bool hasTexture = (material && material->IsActive() && material->HasTexture());
 
             // Configure uniform hasTexture
-            defaultShader->SetInt("hasTexture", hasTexture ? 1 : 0);
+            currentShader->SetInt("hasTexture", hasTexture ? 1 : 0);
 
             // Configure light direction
-            defaultShader->SetVec3("lightDir", glm::vec3(1.0f, -1.0f, -1.0f));
+            currentShader->SetVec3("lightDir", lightDir);
+            currentShader->SetVec3("viewPos", renderCamera->GetPosition());
+            currentShader->SetFloat("opacity", material ? material->GetOpacity() : 1.0f);
 
             if (hasTexture)
             {
                 material->Use();  // Bind the material's texture
                 materialBound = true;
-                defaultShader->SetVec3("materialDiffuse", glm::vec3(1.0f));
+                currentShader->SetVec3("materialDiffuse", material->HasMaterialProperties() ? 
+                    glm::vec3(material->GetDiffuseColor()) : glm::vec3(1.0f));
             }
             else
             {
                 glBindTexture(GL_TEXTURE_2D, 0); // No texture
 
-                // Send diffuse colour of the material to the shader
                 if (material && material->HasMaterialProperties())
                 {
                     glm::vec4 diffuse = material->GetDiffuseColor();
-                    defaultShader->SetVec3("materialDiffuse", glm::vec3(diffuse.r, diffuse.g, diffuse.b));
+                    currentShader->SetVec3("materialDiffuse", glm::vec3(diffuse.r, diffuse.g, diffuse.b));
                 }
                 else
                 {
-                    // Default colour grey if no material is available
-                    defaultShader->SetVec3("materialDiffuse", glm::vec3(0.6f, 0.6f, 0.6f));
+                    currentShader->SetVec3("materialDiffuse", glm::vec3(0.6f, 0.6f, 0.6f));
                 }
             }
 
+            // Send lighting mode (0 = Vertex, 1 = Pixel)
+            int lightingMode = material ? material->GetLightingMode() : 1;
+            currentShader->SetInt("lightingMode", lightingMode);
+
             // Set the texture sampler uniform
-            glUniform1i(defaultUniforms.texture1, 0);
+            //  Use the correct uniform location or name based on shader
+            glUniform1i(glGetUniformLocation(currentShader->GetProgramID(), "texture1"), 0);
         }
 
         const std::vector<Component*>& meshComponents =
@@ -995,6 +1086,19 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
                     if (showVertex) DrawVertexNormals(mesh, modelMatrix);
                     if (showFace) DrawFaceNormals(mesh, modelMatrix);
                 }
+            }
+        }
+
+        if (renderTransparentOnly)
+        {
+            ComponentParticleSystem* particleSys = static_cast<ComponentParticleSystem*>(
+                currentObj->GetComponent(ComponentType::PARTICLE));
+
+            if (particleSys && particleSys->IsActive()) {
+                // Draw particles with OpenGL glBegin and glEnd
+                particleSys->Draw(renderCamera);
+                // Restore the Shader Program for the next object in the loop
+                currentShader->Use();
             }
         }
 
@@ -1167,6 +1271,60 @@ void Renderer::DrawFaceNormals(const Mesh& mesh, const glm::mat4& modelMatrix)
     glDeleteVertexArrays(1, &lineVAO);
 
     defaultShader->Use();
+}
+
+void Renderer::DrawLinesList(const ComponentCamera* camera)
+{
+    if (linesList.empty() || !camera) return;
+
+    GLuint lineVAO, lineVBO;
+    glGenVertexArrays(1, &lineVAO);
+    glGenBuffers(1, &lineVBO);
+
+    glBindVertexArray(lineVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
+
+    std::vector<float> vertexData;
+    vertexData.reserve(linesList.size() * 2 * 7);
+
+    for (const auto& line : linesList)
+    {
+        // Punto A
+        vertexData.push_back(line.start.x); vertexData.push_back(line.start.y); vertexData.push_back(line.start.z);
+        vertexData.push_back(line.color.r); vertexData.push_back(line.color.g); vertexData.push_back(line.color.b); vertexData.push_back(line.color.a);
+
+        // Punto B
+        vertexData.push_back(line.end.x); vertexData.push_back(line.end.y); vertexData.push_back(line.end.z);
+        vertexData.push_back(line.color.r); vertexData.push_back(line.color.g); vertexData.push_back(line.color.b); vertexData.push_back(line.color.a);
+    }
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    lineShader->Use();
+    GLuint shaderProgram = lineShader->GetProgramID();
+
+    glBindVertexArray(lineVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
+    glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_STREAM_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+
+    glDrawArrays(GL_LINES, 0, (GLsizei)linesList.size() * 2);
+
+    glBindVertexArray(0);
+    glUseProgram(0);
 }
 
 void Renderer::SetDepthTest(bool enabled)
@@ -1393,6 +1551,65 @@ void Renderer::DrawRay(const glm::vec3& origin, const glm::vec3& direction,
 
     defaultShader->Use();
 }
+
+void Renderer::DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color)
+{
+    linesList.push_back({ start, end, color });
+}
+
+void Renderer::DrawSphere(const glm::vec3& center, float radius, const glm::vec4& color, int segments)
+{
+    float step = 2.0f * glm::pi<float>() / (float)segments;
+
+    for (int i = 0; i < segments; ++i)
+    {
+        float a1 = i * step;
+        float a2 = (i + 1) * step;
+
+        DrawLine(center + glm::vec3(radius * cos(a1), radius * sin(a1), 0),
+            center + glm::vec3(radius * cos(a2), radius * sin(a2), 0), color);
+        DrawLine(center + glm::vec3(radius * cos(a1), 0, radius * sin(a1)),
+            center + glm::vec3(radius * cos(a2), 0, radius * sin(a2)), color);
+        DrawLine(center + glm::vec3(0, radius * cos(a1), radius * sin(a1)),
+            center + glm::vec3(0, radius * cos(a2), radius * sin(a2)), color);
+    }
+}
+
+void Renderer::DrawArc(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB)
+{
+    float angleStep = 3.14159f / segments;
+
+    for (int i = 0; i < segments; ++i)
+    {
+        float a1 = i * angleStep;
+        float a2 = (i + 1) * angleStep;
+
+        glm::vec3 p1 = center + (rotation * ((axisA * cos(a1) + axisB * sin(a1)) * r));
+        glm::vec3 p2 = center + (rotation * ((axisA * cos(a2) + axisB * sin(a2)) * r));
+
+        DrawLine(p1, p2, col);
+    }
+}
+
+void Renderer::DrawCircle(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB)
+{
+    float angleStep = (2.0f * 3.14159f) / segments;
+
+    for (int i = 0; i < segments; ++i)
+    {
+        float angle1 = i * angleStep;
+        float angle2 = (i + 1) * angleStep;
+
+        glm::vec3 p1_local = (axisA * cos(angle1) + axisB * sin(angle1)) * r;
+        glm::vec3 p2_local = (axisA * cos(angle2) + axisB * sin(angle2)) * r;
+
+        glm::vec3 p1_world = center + (rotation * p1_local);
+        glm::vec3 p2_world = center + (rotation * p2_local);
+
+        DrawLine(p1_world, p2_world, col);
+    }
+}
+
 
 // Método para dibujar AABB de un GameObject
 void Renderer::DrawAABB(const glm::vec3& min, const glm::vec3& max, const glm::vec3& color)

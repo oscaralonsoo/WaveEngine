@@ -438,6 +438,21 @@ void ConfigurationWindow::DrawRendererSettings()
 
     ImGui::Spacing();
     ImGui::Separator();
+    ImGui::Text("Global Light (Directional)");
+    
+    glm::vec3 lDir = renderer->GetLightDir();
+    float lightDirArr[3] = { lDir.x, lDir.y, lDir.z };
+    if (ImGui::SliderFloat3("Light Direction", lightDirArr, -1.0f, 1.0f))
+    {
+        renderer->SetLightDir(glm::vec3(lightDirArr[0], lightDirArr[1], lightDirArr[2]));
+    }
+    if (ImGui::Button("Reset Light"))
+    {
+        renderer->SetLightDir(glm::vec3(1.0f, -1.0f, -1.0f));
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
 
     if (ImGui::Button("Reset All Settings"))
     {

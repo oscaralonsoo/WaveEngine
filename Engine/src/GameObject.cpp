@@ -5,6 +5,22 @@
 #include "ComponentMaterial.h"
 #include "ComponentCamera.h"
 #include "ComponentRotate.h"
+#include "ComponentScript.h"
+#include "Rigidbody.h"
+#include "BoxCollider.h"
+#include "SphereCollider.h"
+#include "CapsuleCollider.h"
+#include "MeshCollider.h"
+#include "ConvexCollider.h"
+#include "PlaneCollider.h"
+#include "InfinitePlaneCollider.h"
+#include "FixedJoint.h"
+#include "DistanceJoint.h"
+#include "PrismaticJoint.h"
+#include "SphericalJoint.h"
+#include "D6Joint.h"
+#include "HingeJoint.h"
+#include "ComponentParticleSystem.h"
 #include <nlohmann/json.hpp>
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
@@ -12,6 +28,9 @@ GameObject::GameObject(const std::string& name) : name(name), active(true), pare
 }
 
 GameObject::~GameObject() {
+    
+    MarkCleaning();
+
     components.clear();
     componentOwners.clear();
 
@@ -22,6 +41,7 @@ GameObject::~GameObject() {
 }
 
 Component* GameObject::CreateComponent(ComponentType type) {
+    
     Component* newComponent = nullptr;
 
     switch (type) {
@@ -30,12 +50,11 @@ Component* GameObject::CreateComponent(ComponentType type) {
             return GetComponent(ComponentType::TRANSFORM);
         }
         newComponent = new Transform(this);
+        if (newComponent) transform = (Transform*)newComponent;
         break;
-
     case ComponentType::MESH:
         newComponent = new ComponentMesh(this);
         break;
-
     case ComponentType::MATERIAL:
         if (GetComponent(ComponentType::MATERIAL) != nullptr) {
             return GetComponent(ComponentType::MATERIAL);
@@ -48,11 +67,57 @@ Component* GameObject::CreateComponent(ComponentType type) {
         }
         newComponent = new ComponentCamera(this);
         break;
-
     case ComponentType::ROTATE:
         newComponent = new ComponentRotate(this);
         break;
-
+    case ComponentType::SCRIPT:
+        newComponent = new ComponentScript(this);
+        break;
+    case ComponentType::PARTICLE:
+        newComponent = new ComponentParticleSystem(this);
+        break;
+    case ComponentType::RIGIDBODY:
+        newComponent = new Rigidbody(this);
+        break;
+    case ComponentType::BOX_COLLIDER:
+        newComponent = new BoxCollider(this);
+        break;
+    case ComponentType::SPHERE_COLLIDER:
+        newComponent = new SphereCollider(this);
+        break;
+    case ComponentType::CAPSULE_COLLIDER:
+        newComponent = new CapsuleCollider(this);
+        break;
+    case ComponentType::CONVEX_COLLIDER:
+        newComponent = new ConvexCollider(this);
+        break;
+    case ComponentType::MESH_COLLIDER:
+        newComponent = new MeshCollider(this);
+        break;
+    case ComponentType::PLANE_COLLIDER:
+        newComponent = new PlaneCollider(this);
+        break;
+    case ComponentType::INFINITE_PLANE_COLLIDER:
+        newComponent = new InfinitePlaneCollider(this);
+        break;
+    case ComponentType::FIXED_JOINT:
+        newComponent = new FixedJoint(this);
+        break;
+    case ComponentType::HINGE_JOINT:
+        newComponent = new HingeJoint(this);
+        break;
+    case ComponentType::SPHERICAL_JOINT:
+        newComponent = new SphericalJoint(this);
+        break;
+    case ComponentType::PRISMATIC_JOINT:
+        newComponent = new PrismaticJoint(this);
+        break;
+    case ComponentType::D6_JOINT:
+        newComponent = new D6Joint(this);
+        break;
+    case ComponentType::DISTANCE_JOINT:
+        newComponent = new DistanceJoint(this);
+        break;
     default:
         LOG_DEBUG("ERROR: Unknown component type requested for GameObject '%s'", name.c_str());
         LOG_CONSOLE("Failed to create component");
@@ -69,7 +134,7 @@ Component* GameObject::CreateComponent(ComponentType type) {
 
 Component* GameObject::GetComponent(ComponentType type) const {
     for (auto* comp : components) {
-        if (comp->GetType() == type) {
+        if (comp->IsType(type)) {
             return comp;
         }
     }
@@ -79,11 +144,73 @@ Component* GameObject::GetComponent(ComponentType type) const {
 std::vector<Component*> GameObject::GetComponentsOfType(ComponentType type) const {
     std::vector<Component*> result;
     for (auto* comp : components) {
-        if (comp->GetType() == type) {
+        if (comp->IsType(type)) {
             result.push_back(comp);
         }
     }
     return result;
+}
+
+Component* GameObject::GetComponentInChildren(ComponentType type)
+{
+    Component* component = GetComponent(type);
+
+    if (component) return component;
+
+    for (GameObject* child : children)
+    {
+        if (child)
+        {
+            component = child->GetComponentInChildren(type);
+            if (component) return component;
+        }
+    }
+
+    return nullptr;
+}
+
+void GameObject::GetComponentsInChildren(ComponentType type, std::vector<Component*>& outList)
+{
+    for (Component* component : components)
+    {
+        if (component && component->IsType(type))
+        {
+            outList.push_back(component);
+        }
+    }
+
+    for (GameObject* child : children)
+    {
+        if (child) child->GetComponentsInChildren(type, outList);
+    }
+}
+
+Component* GameObject::GetComponentInParent(ComponentType type)
+{
+    Component* component = GetComponent(type);
+    if (component) return component;
+
+    if (parent != nullptr)
+    {
+        return parent->GetComponentInParent(type);
+    }
+
+    return nullptr;
+}
+
+void GameObject::GetComponentsInParent(ComponentType type, std::vector<Component*>& outList)
+{
+    std::vector<Component*> localComponents = GetComponentsOfType(type);
+
+    if (!localComponents.empty())
+    {
+        outList.insert(outList.end(), localComponents.begin(), localComponents.end());
+    }
+
+    if (parent != nullptr)
+    {
+        parent->GetComponentsInParent(type, outList);
+    }
 }
 
 void GameObject::AddChild(GameObject* child) {
@@ -139,16 +266,64 @@ int GameObject::GetChildIndex(GameObject* child) const {
 }
 
 void GameObject::Update() {
-    if (!active) return;
+    // Si este GameObject está marcado para eliminación, no actualizar
+    if (markedForDeletion) {
+        return;
+    }
+
+    //if (!active) return;
 
     for (auto* component : components) {
         if (component->IsActive()) {
             component->Update();
         }
+
+        // Si durante el Update del componente se marcó para eliminación, detener
+        if (markedForDeletion) {
+            return;
+        }
     }
 
-    for (auto* child : children) {
-        child->Update();
+    // Crear copia de children para iterar de forma segura
+    std::vector<GameObject*> childrenCopy = children;
+
+    for (auto* child : childrenCopy) {
+        // Verificar que el hijo todavía es válido y no está marcado para eliminación
+        if (child && !child->IsMarkedForDeletion()) {
+            child->Update();
+        }
+    }
+}
+
+void GameObject::FixedUpdate() {
+    // Si este GameObject está marcado para eliminación, no actualizar
+    if (markedForDeletion) {
+        return;
+    }
+
+    //if (!active) return;
+
+    for (auto* component : components) {
+        
+        if (component->IsActive()) {
+            component->FixedUpdate();
+        }
+
+        // Si durante el Update del componente se marcó para eliminación, detener
+        if (markedForDeletion) {
+            return;
+        }
+    }
+
+    // Crear copia de children para iterar de forma segura
+    std::vector<GameObject*> childrenCopy = children;
+
+    for (auto* child : childrenCopy) {
+        
+        // Verificar que el hijo todavía es válido y no está marcado para eliminación
+        if (child && !child->IsMarkedForDeletion()) {
+            child->FixedUpdate();
+        }
     }
 }
 
@@ -212,7 +387,8 @@ GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObj
             Component* component = nullptr;
             if (type == ComponentType::TRANSFORM) {
                 component = newObject->GetComponent(ComponentType::TRANSFORM);
-            } else {
+            }
+            else {
                 component = newObject->CreateComponent(type);
             }
 
@@ -232,6 +408,17 @@ GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObj
             Deserialize(childObj, newObject);
         }
     }
-
     return newObject;
+}
+
+
+void GameObject::PublishGameObjectEvent(GameObjectEvent event, Component* newComponent)
+{
+    for (Component* component : components)
+    {
+        if (component)
+        {
+            component->OnGameObjectEvent(event, newComponent);
+        }
+    }
 }

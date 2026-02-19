@@ -14,7 +14,10 @@ public:
     void Update() override;
     void OnEditor() override;
 
-    // Serialization
+    bool IsType(ComponentType type) override { return type == ComponentType::TRANSFORM; };
+    bool IsIncompatible(ComponentType type) override { return type == ComponentType::TRANSFORM; };
+
+    // SerializationGetPosition
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;
 
@@ -23,16 +26,29 @@ public:
     const glm::vec3& GetScale() const { return scale; }
     const glm::quat& GetRotationQuat() const { return rotationQuat; }
 
+    const glm::vec3 GetGlobalPosition();
+    const glm::vec3 GetGlobalRotation();
+    const glm::vec3 GetGlobalScale();
+    const glm::quat GetGlobalRotationQuat();
+
     void SetPosition(const glm::vec3& pos);
     void SetRotation(const glm::vec3& rot);
     void SetRotationQuat(const glm::quat& quat);
     void SetScale(const glm::vec3& scl);
+
+    void SetGlobalPosition(const glm::vec3& pos);
+    void SetGlobalRotation(const glm::vec3& rot);
+    void SetGlobalRotationQuat(const glm::quat& quat);
+    void SetGlobalScale(const glm::vec3& scl);
 
     const glm::mat4& GetLocalMatrix();
     const glm::mat4& GetGlobalMatrix();
 
     void UpdateLocalMatrix();
     void UpdateGlobalMatrix();
+
+    // Getter para el GameObject propietario (necesario para validaciones en Lua)
+    GameObject* GetOwner() const { return owner; }
 
 private:
     // Transforms

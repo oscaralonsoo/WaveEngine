@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <memory>
 #include <list>
@@ -14,8 +14,10 @@
 #include "ModuleEditor.h"
 #include "SelectionManager.h"
 #include "ModuleCamera.h" 
-#include "ModuleResources.h" 
 #include "UI.h"
+#include "ModuleResources.h"
+#include "ScriptManager.h"  
+#include "ModulePhysics.h"
 
 class Module;
 
@@ -33,6 +35,9 @@ public:
 
     // Called each loop iteration
     bool Update();
+    
+    // Called each physics loop iteration
+    bool FixedUpdate();
 
     // Called before quitting
     bool CleanUp();
@@ -67,6 +72,8 @@ public:
     std::shared_ptr<Grid> grid;
     std::shared_ptr<ModuleResources> resources;
     std::shared_ptr<UI> ui;
+    std::shared_ptr<ScriptManager> scripts; 
+    std::shared_ptr<ModulePhysics> physics; 
 
     SelectionManager* selectionManager;
 

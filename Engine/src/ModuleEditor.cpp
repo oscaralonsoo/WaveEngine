@@ -27,6 +27,7 @@
 #include "GameWindow.h"
 #include "AssetsWindow.h"
 #include "MetaFile.h"
+#include "ShaderEditorWindow.h"
 
 ModuleEditor::ModuleEditor() : Module()
 {
@@ -79,6 +80,7 @@ bool ModuleEditor::Start()
     sceneWindow = std::make_unique<SceneWindow>(inspectorWindow.get());
     gameWindow = std::make_unique<GameWindow>();
     assetsWindow = std::make_unique<AssetsWindow>();
+    shaderEditorWindow = std::make_unique<ShaderEditorWindow>();
 
     LOG_CONSOLE("Editor initialized");
 
@@ -149,6 +151,7 @@ bool ModuleEditor::Update()
     hierarchyWindow->Draw();
     inspectorWindow->Draw();
     assetsWindow->Draw();
+    shaderEditorWindow->Draw();
 
     if (showAbout) {
         DrawAboutWindow();
@@ -290,6 +293,12 @@ void ModuleEditor::ShowMenuBar()
             if (ImGui::MenuItem("Assets", NULL, &assetsOpen))
             {
                 assetsWindow->SetOpen(assetsOpen);
+            }
+
+            bool shaderEditorOpen = shaderEditorWindow->IsOpen();
+            if (ImGui::MenuItem("Shader Editor", NULL, &shaderEditorOpen))
+            {
+                shaderEditorWindow->SetOpen(shaderEditorOpen);
             }
 
             ImGui::Separator();
@@ -789,6 +798,10 @@ void ModuleEditor::UpdateCurrentWindow()
 
     if (assetsWindow && assetsWindow->IsHovered()) {
         lastHoveredWindow = EditorWindowType::ASSETS;
+    }
+
+    if (shaderEditorWindow && shaderEditorWindow->IsHovered()) {
+        lastHoveredWindow = EditorWindowType::SHADER_EDITOR;
     }
 
     if (lastHoveredWindow != EditorWindowType::NONE) {

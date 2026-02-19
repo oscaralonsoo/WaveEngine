@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Module.h"
 #include <string>
 #include <glm/glm.hpp>
@@ -67,6 +67,10 @@ public:
 	int GetMouseX() const { return mouseX; }
 	int GetMouseY() const { return mouseY; }
 
+	static bool IsKeyPressed(int scancode);
+	static bool IsKeyDown(int scancode);
+	static void GetMousePosition(int& x, int& y);
+
 private:
 	bool windowEvents[WE_COUNT];
 	KeyState* keyboard;
@@ -80,4 +84,7 @@ private:
 	bool droppedFile;
 	std::string droppedFilePath;
 	DroppedFileType droppedFileType;
+
+	static Input* instance;
+	friend class Application;
 };

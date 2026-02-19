@@ -2,7 +2,7 @@
 #include <glad/glad.h>
 #include <vector>
 #include "Application.h"
-#include "Shaders.h"
+#include "Shader.h"
 #include <glm/gtc/type_ptr.hpp>
 
 Grid::Grid() : Module(), VAO(0), VBO(0), numVertices(0), gridSize(20.0f), gridDivisions(5), enabled(true)

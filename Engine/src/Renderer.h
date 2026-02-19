@@ -1,7 +1,7 @@
 #pragma once
 #include "Module.h"
 #include "FileSystem.h"
-#include "Shaders.h"
+#include "Shader.h"
 #include "Texture.h"
 #include "Frustum.h"
 #include <memory>
@@ -18,11 +18,17 @@ struct TransparentObject
 
     TransparentObject(GameObject* obj, float dist)
         : gameObject(obj), distanceToCamera(dist) {
-    }
+    };
 };
 
 class Renderer : public Module
 {
+    struct RenderLine {
+        glm::vec3 start;
+        glm::vec3 end;
+        glm::vec4 color;
+    };
+
 public:
     Renderer();
     ~Renderer();
@@ -58,6 +64,7 @@ public:
 
     // Shader access
     Shader* GetDefaultShader() const { return defaultShader.get(); }
+    Shader* GetWaterShader() const { return waterShader.get(); }
     Shader* GetOutlineShader() const { return outlineShader.get(); }
     Shader* GetLineShader() const { return lineShader.get(); }
 
@@ -81,6 +88,9 @@ public:
     int GetCullFaceMode() const { return cullFaceMode; }
     void SetCullFaceMode(int mode); // 0=Back, 1=Front, 2=Both
 
+    void SetLightDir(const glm::vec3& dir) { lightDir = dir; }
+    glm::vec3 GetLightDir() const { return lightDir; }
+
 	// Framebuffer management (Scene window)
     void CreateFramebuffer(int width, int height);
     void ResizeFramebuffer(int width, int height);
@@ -98,6 +108,12 @@ public:
     bool IsShowingZBuffer() const { return showZBuffer; }
     void SetShowZBuffer(bool show) { showZBuffer = show; }
 
+    // Draw forms
+    void DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color);
+    void DrawArc(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB);
+    void DrawCircle(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB);
+    void DrawSphere(const glm::vec3& center, float radius, const glm::vec4& color, int segments = 16);
+
 private:
     // Internal rendering methods
     void DrawGameObjectIterative(GameObject* gameObject,
@@ -105,6 +121,7 @@ private:
         ComponentCamera* renderCamera,
         ComponentCamera* cullingCamera);
     void DrawGameObjectWithStencil(GameObject* gameObject);
+    void DrawLinesList(const ComponentCamera* camera);
     void ApplyRenderSettings();
 
     //Checkers
@@ -112,6 +129,7 @@ private:
 
     // Shaders
     std::unique_ptr<Shader> defaultShader;
+    std::unique_ptr<Shader> waterShader;
     std::unique_ptr<Shader> lineShader;
     std::unique_ptr<Shader> outlineShader;
     std::unique_ptr<Shader> depthShader;
@@ -128,6 +146,7 @@ private:
     float clearColorG = 0.25f;
     float clearColorB = 0.3f;
     int cullFaceMode = 0; // GL_BACK
+    glm::vec3 lightDir = glm::vec3(1.0f, -1.0f, -1.0f);
 
     // Normal visualization buffers (reused to avoid repeated allocations)
     GLuint normalLinesVAO = 0;
@@ -164,4 +183,6 @@ private:
     void DrawAABB(const glm::vec3& min, const glm::vec3& max,
         const glm::vec3& color);
     void DrawAllAABBs(GameObject* gameObject);
+
+    std::vector<RenderLine> linesList;
 };

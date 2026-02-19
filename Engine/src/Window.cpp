@@ -30,7 +30,8 @@ bool Window::Start()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
 
     // Use the core OpenGL profile (modern functions only)
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    // Particles System RGSEngine changed to compatibility so it allows glBegin/glEnd wich is much more modern version
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 
     // Enable double buffering to prevent flickering
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);

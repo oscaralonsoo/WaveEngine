@@ -6,7 +6,7 @@
 #include "SelectionManager.h"
 #include "ModuleScene.h"
 #include "Log.h"
-
+#include "ResourcePrefab.h"
 HierarchyWindow::HierarchyWindow()
     : EditorWindow("Hierarchy")
 {
@@ -156,7 +156,7 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* gameObject, int childIndex)
                 dragStarted = true;
             }
 
-            // Cancell drag
+            // Cancel drag
             if (ImGui::IsKeyPressed(ImGuiKey_Escape))
             {
                 dragCancelled = true;
@@ -190,7 +190,7 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* gameObject, int childIndex)
                 GameObject* draggedObject = *(GameObject**)payload->Data;
                 DropPosition dropPos = GetDropPosition(draggedObject, gameObject);
 
-				// Visual feedback
+                // Visual feedback
                 if (dropPos != DropPosition::NONE)
                 {
                     ImVec2 itemMin = ImGui::GetItemRectMin();
@@ -223,7 +223,7 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* gameObject, int childIndex)
                 if (dragCancelled)
                 {
                     LOG_DEBUG("Drop cancelled by user");
-                    dragCancelled = false; 
+                    dragCancelled = false;
                     ImGui::EndDragDropTarget();
                     return;
                 }

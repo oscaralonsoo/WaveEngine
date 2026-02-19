@@ -142,6 +142,8 @@ void ComponentMesh::SetMesh(const Mesh& mesh)
 
         glBindVertexArray(0);
     }
+
+    owner->PublishGameObjectEvent(GameObjectEvent::MESH_CHANGED, this);
 }
 
 const Mesh& ComponentMesh::GetMesh() const

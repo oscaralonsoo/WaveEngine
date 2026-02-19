@@ -1,11 +1,14 @@
 ﻿#include "ModuleResources.h"
 #include "ResourceTexture.h"
 #include "ResourceMesh.h"
+#include "ResourceShader.h"
 #include "LibraryManager.h"
 #include "MetaFile.h"
 #include "TextureImporter.h"
 #include "MeshImporter.h"
 #include "Log.h"
+#include "ResourceScript.h"
+#include "ResourcePrefab.h"
 #include <filesystem>
 #include <random>
 
@@ -79,6 +82,10 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
     int registered = 0;
     int skipped = 0;
 
+
+    int prefabsFound = 0;
+    int prefabsRegistered = 0;
+
     for (const auto& entry : std::filesystem::recursive_directory_iterator(assetsPath)) {
         if (!entry.is_regular_file()) continue;
 
@@ -88,10 +95,21 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
         if (extension == ".meta") continue;
 
         AssetType assetType = MetaFile::GetAssetType(extension);
+
+
+        if (extension == ".prefab") {
+            LOG_CONSOLE("[ModuleResources] Found .prefab file: %s", assetPath.c_str());
+            LOG_CONSOLE("[ModuleResources] AssetType: %d (7=PREFAB expected)", (int)assetType);
+        }
+
         if (assetType == AssetType::UNKNOWN) continue;
 
         std::string metaPath = assetPath + ".meta";
         if (!std::filesystem::exists(metaPath)) {
+
+            if (extension == ".prefab") {
+                LOG_CONSOLE("[ModuleResources] No .meta file for prefab: %s", assetPath.c_str());
+            }
             skipped++;
             continue;
         }
@@ -99,6 +117,10 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
         MetaFile meta = MetaFile::Load(metaPath);
 
         if (meta.uid == 0) {
+
+            if (extension == ".prefab") {
+                LOG_CONSOLE("[ModuleResources] Invalid UID in .meta for prefab: %s", assetPath.c_str());
+            }
             skipped++;
             continue;
         }
@@ -138,6 +160,44 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
             }
             break;
 
+        case AssetType::SHADER_GLSL:
+            resourceType = Resource::SHADER;
+            resource = new ResourceShader(meta.uid);
+            if (resource) {
+                resource->SetAssetFile(assetPath);
+                resource->SetLibraryFile("");
+                resources[meta.uid] = resource;
+                registered++;
+            }
+            break;
+
+        case AssetType::SCRIPT_LUA:
+            resourceType = Resource::SCRIPT;
+            resource = new ResourceScript(meta.uid);
+            if (resource) {
+                resource->SetAssetFile(assetPath);
+                resource->SetLibraryFile(assetPath);
+                resources[meta.uid] = resource;
+                registered++;
+            }
+            break;
+
+        case AssetType::PREFAB:
+            prefabsFound++;
+            LOG_CONSOLE("[ModuleResources] Processing prefab: %s", assetPath.c_str());
+            LOG_CONSOLE("[ModuleResources] Prefab UID: %llu", meta.uid);
+
+            resourceType = Resource::PREFAB;
+            resource = new ResourcePrefab(meta.uid);  
+
+            if (resource) {
+                resource->SetAssetFile(assetPath);
+                resource->SetLibraryFile(assetPath);
+                resources[meta.uid] = resource;
+                prefabsRegistered++;
+                registered++;
+            }
+            break;
         default:
             continue;
         }
@@ -145,7 +205,21 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
 
     LOG_CONSOLE("[ModuleResources] Resources registered: %d, skipped: %d",
         registered, skipped);
+
+
+    LOG_CONSOLE("[ModuleResources] Prefabs found: %d, registered: %d", prefabsFound, prefabsRegistered);
+
+
+    LOG_CONSOLE("[ModuleResources] LISTING ALL PREFABS");
+    for (const auto& [uid, res] : resources) {
+        if (res->GetType() == Resource::PREFAB) {
+            LOG_CONSOLE("[ModuleResources]   - Prefab: %s (UID: %llu)",
+                res->GetAssetFile().c_str(), uid);
+        }
+    }
+    LOG_CONSOLE("[ModuleResources] === END OF PREFAB LIST ===");
 }
+
 UID ModuleResources::Find(const char* fileInAssets) const {
     for (const auto& pair : resources) {
         if (pair.second->GetAssetFile() == fileInAssets) {
@@ -200,6 +274,18 @@ UID ModuleResources::ImportFile(const char* newFileInAssets) {
         importSuccess = ImportModel(resource, newFileInAssets);
         break;
     }
+    case Resource::SHADER: {
+        importSuccess = true; 
+        break;
+    }
+    case Resource::SCRIPT: {
+        importSuccess = ImportScript(resource, newFileInAssets);
+        break;
+    }
+    case Resource::PREFAB: {
+        importSuccess = ImportPrefab(resource, newFileInAssets);
+        break;
+    }
     default:
         LOG_CONSOLE("ERROR: Import not implemented for this type");
         break;
@@ -235,6 +321,15 @@ Resource* ModuleResources::CreateNewResourceWithUID(const char* assetsFile, Reso
         resource = new ResourceMesh(uid);
         break;
 
+    case Resource::SHADER:
+        resource = new ResourceShader(uid);
+        break;
+    case Resource::SCRIPT:  
+        resource = new ResourceScript(uid);
+        break;
+    case Resource::PREFAB:
+        resource = new ResourcePrefab(uid);
+        break;
     default:
         LOG_CONSOLE("ERROR: Unsupported resource type");
         return nullptr;
@@ -243,18 +338,23 @@ Resource* ModuleResources::CreateNewResourceWithUID(const char* assetsFile, Reso
     if (resource) {
         resource->SetAssetFile(assetsFile);
 
-        // Generate library path from UID based on type
-        if (type == Resource::TEXTURE) {
+        // Scripts NO van a Library
+        if (type == Resource::SCRIPT || type == Resource::PREFAB) {
+            resource->SetLibraryFile(assetsFile);
+        }
+        else if (type == Resource::TEXTURE) {
             resource->SetLibraryFile(LibraryManager::GetTexturePathFromUID(uid));
         }
         else if (type == Resource::MESH) {
             resource->SetLibraryFile(LibraryManager::GetMeshPathFromUID(uid));
         }
+
         resources[uid] = resource;
     }
 
     return resource;
 }
+
 UID ModuleResources::GenerateNewUID() {
     random_device rd;
     mt19937_64 gen(rd());
@@ -336,9 +436,18 @@ Resource::Type ModuleResources::GetResourceTypeFromExtension(const std::string& 
         return Resource::MESH;
     }
 
+    if (ext == ".glsl") {
+        return Resource::SHADER;
+    }
+    if (ext == ".lua") {  
+        return Resource::SCRIPT;
+    }
+    if (ext == ".prefab") { 
+        return Resource::PREFAB;
+    }
+
     return Resource::UNKNOWN;
 }
-
 Resource* ModuleResources::CreateNewResource(const char* assetsFile, Resource::Type type) {
     UID uid = GenerateNewUID();
     return CreateNewResourceWithUID(assetsFile, type, uid);
@@ -358,6 +467,8 @@ std::string ModuleResources::GenerateLibraryPath(Resource* resource) {
         return LibraryManager::GetMaterialPathFromUID(resource->GetUID());
     case Resource::ANIMATION:
         return LibraryManager::GetAnimationPathFromUID(resource->GetUID());
+    case Resource::SHADER:
+        return ""; // Shaders load directly from assets
     default:
         return "";
     }
@@ -515,4 +626,54 @@ const Resource* ModuleResources::GetResource(UID uid) const {
     }
 
     return it->second;
+}
+
+bool ModuleResources::ImportScript(Resource* resource, const std::string& assetPath) {
+    // Scripts don't need importing - they stay in Assets/
+    // Just verify the file exists
+    if (!std::filesystem::exists(assetPath)) {
+        LOG_CONSOLE("ERROR: Script file not found: %s", assetPath.c_str());
+        return false;
+    }
+
+    resource->SetAssetFile(assetPath);
+    resource->SetLibraryFile(assetPath);  // Scripts reference themselves
+
+    LOG_CONSOLE("[ModuleResources] Script registered: %s (UID: %llu)",
+        assetPath.c_str(), resource->GetUID());
+
+    return true;
+}
+
+bool ModuleResources::ImportPrefab(Resource* resource, const std::string& assetPath) {
+    if (!std::filesystem::exists(assetPath)) {
+        LOG_CONSOLE("ERROR: Prefab file not found: %s", assetPath.c_str());
+        return false;
+    }
+
+    // Try to parse JSON to verify it's valid
+    std::ifstream file(assetPath);
+    if (!file.is_open()) {
+        LOG_CONSOLE("ERROR: Cannot open prefab file: %s", assetPath.c_str());
+        return false;
+    }
+
+    try {
+        nlohmann::json testParse;
+        file >> testParse;
+        file.close();
+    }
+    catch (const std::exception& e) {
+        LOG_CONSOLE("ERROR: Invalid prefab JSON: %s - %s", assetPath.c_str(), e.what());
+        file.close();
+        return false;
+    }
+
+    resource->SetAssetFile(assetPath);
+    resource->SetLibraryFile(assetPath);  // Prefabs reference themselves
+
+    LOG_CONSOLE("[ModuleResources] Prefab registered: %s (UID: %llu)",
+        assetPath.c_str(), resource->GetUID());
+
+    return true;
 }

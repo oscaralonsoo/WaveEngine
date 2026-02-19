@@ -16,7 +16,10 @@ public:
         MESH,
         MODEL,
         MATERIAL,
-        ANIMATION
+        ANIMATION,
+        SHADER,
+        PREFAB,
+        SCRIPT
     };
 
     Resource(UID uid, Type type);
@@ -149,6 +152,7 @@ public:
             uid, resource->GetType());
     }
 
+    bool ImportScript(Resource* resource, const std::string& assetPath);
 private:
     // Create new resource by type
     Resource* CreateNewResource(const char* assetsFile, Resource::Type type);
@@ -169,7 +173,7 @@ private:
     bool ImportTexture(Resource* resource, const std::string& assetPath);
     bool ImportMesh(Resource* resource, const std::string& assetPath);
     bool ImportModel(Resource* resource, const std::string& assetPath);
-
+    bool ImportPrefab(Resource* resource, const std::string& assetPath);
 private:
     std::map<UID, Resource*> resources;  // UID -> Resource* map
     UID nextUID = 1;                     // UID counter

@@ -1,9 +1,13 @@
-﻿#pragma once
-
+#pragma once
 #include "Component.h"
 #include "ModuleResources.h"  
 #include <string>
 #include <glm/glm.hpp> 
+
+enum class MaterialType {
+    STANDARD,
+    WATER
+};
 
 class ComponentMaterial : public Component {
 public:
@@ -17,8 +21,14 @@ public:
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;
 
+    bool IsType(ComponentType type) override { return type == ComponentType::MATERIAL; };
+    bool IsIncompatible(ComponentType type) override { return type == ComponentType::MATERIAL; };
+
     bool LoadTextureByUID(UID uid);
     bool LoadTexture(const std::string& path);
+
+    bool LoadShaderByUID(UID uid);
+    bool LoadShader(const std::string& path);
 
     void CreateCheckerboardTexture();
     void RestoreOriginalTexture();
@@ -35,6 +45,9 @@ public:
 
     const std::string& GetTexturePath() const { return texturePath; }
     const std::string& GetOriginalTexturePath() const { return originalTexturePath; }
+
+    UID GetShaderUID() const { return shaderUID; }
+    const std::string& GetShaderPath() const { return shaderPath; }
 
     int GetTextureWidth() const;
     int GetTextureHeight() const;
@@ -59,20 +72,37 @@ public:
     float GetMetallic() const { return metallic; }
     float GetRoughness() const { return roughness; }
 
+    // Water parameters (Speed, Amplitude, Frequency)
+    void SetWaveSpeed(float speed) { waveSpeed = speed; }
+    void SetWaveAmplitude(float amplitude) { waveAmplitude = amplitude; }
+    void SetWaveFrequency(float frequency) { waveFrequency = frequency; }
+    
+    float GetWaveSpeed() const { return waveSpeed; }
+    float GetWaveAmplitude() const { return waveAmplitude; }
+    float GetWaveFrequency() const { return waveFrequency; }
+
+    MaterialType GetMaterialType() const { return materialType; }
+    void SetMaterialType(MaterialType type) { materialType = type; }
+
+    int GetLightingMode() const { return lightingMode; }
+
     bool HasMaterialProperties() const { return hasMaterialProperties; }
 
     void ReloadTexture();
 
 private:
     void ReleaseCurrentTexture();
+    void ReleaseCurrentShader();
 
 private:
     UID textureUID;
+    UID shaderUID = 0;
     UID originalTextureUID;
     bool useCheckerboard;
 
     std::string texturePath;
     std::string originalTexturePath;
+    std::string shaderPath;
 
     //  Material properties
     glm::vec4 diffuseColor = glm::vec4(1.0f);
@@ -84,6 +114,14 @@ private:
     float opacity = 1.0f;
     float metallic = 0.0f;
     float roughness = 0.5f;
+
+    // Water specific properties
+    float waveSpeed = 0.4f;
+    float waveAmplitude = 1.1f;
+    float waveFrequency = 8.2f;
+    int lightingMode = 1; // 0 = Per-Vertex, 1 = Per-Pixel
+
+    MaterialType materialType = MaterialType::STANDARD;
 
     bool hasMaterialProperties = false;
 };

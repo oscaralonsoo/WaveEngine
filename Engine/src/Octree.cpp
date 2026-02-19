@@ -8,7 +8,7 @@
 #include <functional>
 #include <glad/glad.h>
 #include "ComponentCamera.h"
-#include "Shaders.h"
+#include "Shader.h"
 #include "Application.h"
 #include <glm/gtc/type_ptr.hpp>
 

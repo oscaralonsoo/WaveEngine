@@ -156,6 +156,17 @@ bool ModuleScene::Update()
     return true;
 }
 
+bool ModuleScene::FixedUpdate()
+{
+    // Update all GameObjects
+    if (root)
+    {
+        root->FixedUpdate();
+    }
+
+    return true;
+}
+
 bool ModuleScene::PostUpdate()
 {
     // Full rebuild only if explicitly requested
@@ -222,6 +233,8 @@ void ModuleScene::CleanupMarkedObjects(GameObject* parent)
                 Application::GetInstance().camera->SetSceneCamera(nullptr);
             }
 
+            Application::GetInstance().selectionManager->RemoveFromSelection(child);
+
             parent->RemoveChild(child);
             delete child;
 
@@ -283,7 +296,8 @@ bool ModuleScene::LoadScene(const std::string& filepath)
 
     try {
         file >> document;
-    } catch (const nlohmann::json::parse_error& e) {
+    }
+    catch (const nlohmann::json::parse_error& e) {
         LOG_CONSOLE("ERROR: Failed to parse JSON file: %s", e.what());
         file.close();
         return false;
