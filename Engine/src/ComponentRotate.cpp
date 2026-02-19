@@ -7,7 +7,7 @@
 
 ComponentRotate::ComponentRotate(GameObject* owner)
     : Component(owner, ComponentType::ROTATE),
-      rotationSpeed(0.0f, 45.0f, 0.0f) 
+      rotationSpeed(0.0f, 0.0f, 0.0f) 
 {
     name = "Rotate";
 }
@@ -33,5 +33,5 @@ void ComponentRotate::Update()
 
 void ComponentRotate::OnEditor()
 {
-    ImGui::DragFloat3("Rotation Speed (deg/s)", &rotationSpeed.x, 1.0f, -360.0f, 360.0f);
+    //ImGui::DragFloat3("Rotation Speed (deg/s)", &rotationSpeed.x, 0.0f, 0.0f, 0.0f);
 }

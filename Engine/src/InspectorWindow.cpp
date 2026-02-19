@@ -10,6 +10,11 @@
 #include "ComponentRotate.h"
 #include "ResourceTexture.h"
 #include "ComponentParticleSystem.h"
+#include "AudioComponent.h"
+#include "AudioSource.h"
+#include "AudioListener.h"
+#include "ReverbZone.h"
+
 #include "Log.h"
 #include "ComponentScript.h"
 #include <filesystem>
@@ -17,6 +22,7 @@
 InspectorWindow::InspectorWindow()
     : EditorWindow("Inspector")
 {
+  
 }
 
 void InspectorWindow::Draw()
@@ -74,6 +80,32 @@ void InspectorWindow::Draw()
         return;
     }
 
+    ImGui::Spacing();
+    if (ImGui::Button("Add Component", ImVec2(-1, 0))) {
+        ImGui::OpenPopup("AddComponentPopup");
+    }
+
+    if (ImGui::BeginPopup("AddComponentPopup")) {
+        if (ImGui::MenuItem("Audio Source")) {
+            selectedObject->CreateComponent(ComponentType::AUDIOSOURCE);
+            LOG_CONSOLE("Added AudioSource to %s", selectedObject->GetName().c_str());
+        }
+        if (ImGui::MenuItem("Audio Listener")) {
+            selectedObject->CreateComponent(ComponentType::LISTENER);
+            LOG_CONSOLE("Added AudioListener to %s", selectedObject->GetName().c_str());
+        }
+        if (ImGui::MenuItem("Reverb Zone")) {
+            selectedObject->CreateComponent(ComponentType::REVERBZONE);
+            LOG_CONSOLE("Added ReverbZone to %s", selectedObject->GetName().c_str());
+        }
+        //if (ImGui::MenuItem("Move Component")) {
+        //    selectedObject->CreateComponent(ComponentType::MOVE);
+        //    LOG_CONSOLE("Added MoveComponent to %s", selectedObject->GetName().c_str());
+        //}
+        ImGui::EndPopup();
+    }
+    ImGui::Spacing();
+
     ImGui::Separator();
     DrawGizmoSettings();
     ImGui::Separator();
@@ -93,6 +125,13 @@ void InspectorWindow::Draw()
     ImGui::Spacing();
 
     DrawAddComponentButton(selectedObject);
+
+
+    DrawAudioSourceComponent(selectedObject);
+    DrawAudioListenerComponent(selectedObject);
+    DrawReverbZoneComponent(selectedObject);
+
+
 
     ImGui::End();
 }
@@ -802,6 +841,8 @@ void InspectorWindow::DrawRotateComponent(GameObject* selectedObject)
     }
 }
 
+
+
 void InspectorWindow::DrawParticleComponent(GameObject* selectedObject)
 {
     ComponentParticleSystem* particleComp = static_cast<ComponentParticleSystem*>(selectedObject->GetComponent(ComponentType::PARTICLE));
@@ -888,6 +929,34 @@ bool InspectorWindow::DrawGameObjectSection(GameObject* selectedObject)
     }
 
     return objectDeleted;
+}
+
+void InspectorWindow::DrawAudioSourceComponent(GameObject* selectedObject) {
+    AudioSource* source = static_cast<AudioSource*>(selectedObject->GetComponent(ComponentType::AUDIOSOURCE));
+    if (!source) return;
+
+    if (ImGui::CollapsingHeader("Audio Source", ImGuiTreeNodeFlags_DefaultOpen)) {
+        source->OnEditor(); 
+    }
+}
+
+void InspectorWindow::DrawAudioListenerComponent(GameObject* selectedObject) {
+    AudioListener* listener = static_cast<AudioListener*>(selectedObject->GetComponent(ComponentType::LISTENER));
+    if (!listener) return;
+
+    if (ImGui::CollapsingHeader("Audio Listener", ImGuiTreeNodeFlags_DefaultOpen)) {
+        listener->OnEditor(); 
+    }
+}
+
+void InspectorWindow::DrawReverbZoneComponent(GameObject* selectedObject)
+{
+    ReverbZone* zone = static_cast<ReverbZone*>(selectedObject->GetComponent(ComponentType::REVERBZONE));
+    if (!zone) return;
+
+    if (ImGui::CollapsingHeader("Reverb Zone", ImGuiTreeNodeFlags_DefaultOpen)) {
+        zone->OnEditor();
+    }
 }
 
 void InspectorWindow::GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects)

@@ -1,0 +1,861 @@
+{
+    "gameObjects": [
+        {
+            "active": true,
+            "children": [],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        1.0684151649475098,
+                        0.838699460029602,
+                        2.2739899158477783
+                    ],
+                    "rotation": [
+                        0.0,
+                        17.12986183166504,
+                        0.0
+                    ],
+                    "scale": [
+                        0.9999854564666748,
+                        1.0,
+                        0.9999854564666748
+                    ],
+                    "type": 0
+                },
+                {
+                    "active": true,
+                    "aspectRatio": 0.796407163143158,
+                    "farPlane": 500.0,
+                    "fov": 56.0,
+                    "frustumCullingEnabled": false,
+                    "nearPlane": 0.10000000149011612,
+                    "type": 3
+                },
+                {
+                    "active": true,
+                    "isDefault": true,
+                    "type": 5
+                }
+            ],
+            "name": "Camera"
+        },
+        {
+            "active": true,
+            "children": [
+                {
+                    "active": true,
+                    "children": [
+                        {
+                            "active": true,
+                            "children": [
+                                {
+                                    "active": true,
+                                    "children": [
+                                        {
+                                            "active": true,
+                                            "children": [
+                                                {
+                                                    "active": true,
+                                                    "children": [],
+                                                    "components": [
+                                                        {
+                                                            "active": true,
+                                                            "position": [
+                                                                -6.565601348876953,
+                                                                0.47716954350471497,
+                                                                9.187352180480957
+                                                            ],
+                                                            "rotation": [
+                                                                1.3277772268338595e-06,
+                                                                13.775279998779297,
+                                                                1.8689585203901515e-06
+                                                            ],
+                                                            "scale": [
+                                                                0.9999982118606567,
+                                                                1.0000001192092896,
+                                                                0.9999982118606567
+                                                            ],
+                                                            "type": 0
+                                                        },
+                                                        {
+                                                            "active": true,
+                                                            "meshUID": 15749766957058894736,
+                                                            "type": 1
+                                                        },
+                                                        {
+                                                            "active": true,
+                                                            "ambientColor": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0,
+                                                                1.0
+                                                            ],
+                                                            "diffuseColor": [
+                                                                0.5,
+                                                                0.5,
+                                                                0.5,
+                                                                1.0
+                                                            ],
+                                                            "emissiveColor": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0,
+                                                                1.0
+                                                            ],
+                                                            "hasMaterialProperties": true,
+                                                            "metallic": 0.0,
+                                                            "opacity": 1.0,
+                                                            "originalTextureUID": 11229024538862524309,
+                                                            "roughness": 0.5,
+                                                            "shininess": 32.0,
+                                                            "specularColor": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0,
+                                                                1.0
+                                                            ],
+                                                            "textureUID": 11229024538862524309,
+                                                            "type": 2,
+                                                            "useCheckerboard": false
+                                                        },
+                                                        {
+                                                            "active": true,
+                                                            "eventName": "Play_ACTalkingSFX",
+                                                            "playOnAwake": true,
+                                                            "type": 6,
+                                                            "volume": 80.0
+                                                        },
+                                                        {
+                                                            "active": true,
+                                                            "auxBusID": 2100234192,
+                                                            "auxBusName": "Reverb_InsideMyHead",
+                                                            "enabled": true,
+                                                            "extents": [
+                                                                5.0,
+                                                                5.0,
+                                                                5.0
+                                                            ],
+                                                            "presetIndex": 2,
+                                                            "priority": -2,
+                                                            "radius": 1.7999999523162842,
+                                                            "shape": 0,
+                                                            "type": 7,
+                                                            "wetLevel": 0.6100000143051147
+                                                        }
+                                                    ],
+                                                    "name": "Kadama"
+                                                }
+                                            ],
+                                            "components": [
+                                                {
+                                                    "active": true,
+                                                    "position": [
+                                                        0.07000000029802322,
+                                                        -0.07547716051340103,
+                                                        -1.3877787807814457e-17
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ],
+                                                    "type": 0
+                                                }
+                                            ],
+                                            "name": "Kadama_$AssimpFbx$_ScalingPivotInverse"
+                                        }
+                                    ],
+                                    "components": [
+                                        {
+                                            "active": true,
+                                            "position": [
+                                                -0.07000000029802322,
+                                                0.07547716051340103,
+                                                1.3877787807814457e-17
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "type": 0
+                                        }
+                                    ],
+                                    "name": "Kadama_$AssimpFbx$_ScalingPivot"
+                                }
+                            ],
+                            "components": [
+                                {
+                                    "active": true,
+                                    "position": [
+                                        0.07000000029802322,
+                                        -0.07547716051340103,
+                                        -1.3877787807814457e-17
+                                    ],
+                                    "rotation": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ],
+                                    "type": 0
+                                }
+                            ],
+                            "name": "Kadama_$AssimpFbx$_RotationPivotInverse"
+                        }
+                    ],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                -0.07000000029802322,
+                                0.07547716051340103,
+                                1.3877787807814457e-17
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "type": 0
+                        }
+                    ],
+                    "name": "Kadama_$AssimpFbx$_RotationPivot"
+                }
+            ],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        3.0377163887023926,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        -180.0,
+                        -24.344493865966797,
+                        -180.0
+                    ],
+                    "scale": [
+                        0.0559999942779541,
+                        0.0560000017285347,
+                        0.0559999942779541
+                    ],
+                    "type": 0
+                }
+            ],
+            "name": "Kodama"
+        },
+        {
+            "active": true,
+            "children": [
+                {
+                    "active": true,
+                    "children": [],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                100.0,
+                                100.0,
+                                100.0
+                            ],
+                            "type": 0
+                        },
+                        {
+                            "active": true,
+                            "meshUID": 10337345063303209956,
+                            "type": 1
+                        },
+                        {
+                            "active": true,
+                            "ambientColor": [
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0
+                            ],
+                            "diffuseColor": [
+                                0.800000011920929,
+                                0.800000011920929,
+                                0.800000011920929,
+                                1.0
+                            ],
+                            "emissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0
+                            ],
+                            "hasMaterialProperties": true,
+                            "metallic": 0.0,
+                            "opacity": 1.0,
+                            "originalTextureUID": 2723994056894044493,
+                            "roughness": 0.5,
+                            "shininess": 32.0,
+                            "specularColor": [
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0
+                            ],
+                            "textureUID": 2723994056894044493,
+                            "type": 2,
+                            "useCheckerboard": false
+                        }
+                    ],
+                    "name": "Chimney"
+                },
+                {
+                    "active": true,
+                    "children": [],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                100.0,
+                                100.0,
+                                100.0
+                            ],
+                            "type": 0
+                        },
+                        {
+                            "active": true,
+                            "meshUID": 10337345063303209957,
+                            "type": 1
+                        },
+                        {
+                            "active": true,
+                            "ambientColor": [
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0
+                            ],
+                            "diffuseColor": [
+                                0.800000011920929,
+                                0.800000011920929,
+                                0.800000011920929,
+                                1.0
+                            ],
+                            "emissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0
+                            ],
+                            "hasMaterialProperties": true,
+                            "metallic": 0.0,
+                            "opacity": 1.0,
+                            "originalTextureUID": 2723994056894044493,
+                            "roughness": 0.5,
+                            "shininess": 32.0,
+                            "specularColor": [
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0
+                            ],
+                            "textureUID": 2723994056894044493,
+                            "type": 2,
+                            "useCheckerboard": false
+                        },
+                        {
+                            "active": true,
+                            "eventName": "Play_ClubPenguin",
+                            "playOnAwake": true,
+                            "type": 6,
+                            "volume": 80.0
+                        }
+                    ],
+                    "name": "Baker_house"
+                }
+            ],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        -3.734360933303833,
+                        0.0,
+                        -2.810443878173828
+                    ],
+                    "rotation": [
+                        180.0,
+                        -63.3592529296875,
+                        180.0
+                    ],
+                    "scale": [
+                        0.012603139504790306,
+                        0.01260315626859665,
+                        0.012603139504790306
+                    ],
+                    "type": 0
+                }
+            ],
+            "name": "House"
+        },
+        {
+            "active": true,
+            "children": [
+                {
+                    "active": true,
+                    "children": [],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                735.88916015625,
+                                495.8309326171875,
+                                692.5791015625
+                            ],
+                            "rotation": [
+                                -157.231201171875,
+                                37.891685485839844,
+                                -145.65150451660156
+                            ],
+                            "scale": [
+                                100.0,
+                                100.00000762939453,
+                                100.0
+                            ],
+                            "type": 0
+                        }
+                    ],
+                    "name": "Camera"
+                },
+                {
+                    "active": true,
+                    "children": [],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                407.6245422363281,
+                                590.38623046875,
+                                -100.54539489746094
+                            ],
+                            "rotation": [
+                                -132.4664306640625,
+                                72.77922821044922,
+                                -169.25633239746094
+                            ],
+                            "scale": [
+                                100.00000762939453,
+                                100.00000762939453,
+                                100.0
+                            ],
+                            "type": 0
+                        }
+                    ],
+                    "name": "Light"
+                },
+                {
+                    "active": true,
+                    "children": [
+                        {
+                            "active": true,
+                            "children": [
+                                {
+                                    "active": true,
+                                    "children": [],
+                                    "components": [
+                                        {
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "type": 0
+                                        }
+                                    ],
+                                    "name": "node_Armature_Tunnel"
+                                }
+                            ],
+                            "components": [
+                                {
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ],
+                                    "type": 0
+                                }
+                            ],
+                            "name": "node_Armature"
+                        },
+                        {
+                            "active": true,
+                            "children": [
+                                {
+                                    "active": true,
+                                    "children": [
+                                        {
+                                            "active": true,
+                                            "children": [],
+                                            "components": [
+                                                {
+                                                    "active": true,
+                                                    "position": [
+                                                        3.1238086223602295,
+                                                        0.0,
+                                                        -3.6728529930114746
+                                                    ],
+                                                    "rotation": [
+                                                        -180.0,
+                                                        -66.5535659790039,
+                                                        -180.0
+                                                    ],
+                                                    "scale": [
+                                                        0.9999994039535522,
+                                                        1.0,
+                                                        0.9999994039535522
+                                                    ],
+                                                    "type": 0
+                                                },
+                                                {
+                                                    "active": true,
+                                                    "meshUID": 4972719092123592214,
+                                                    "type": 1
+                                                },
+                                                {
+                                                    "active": true,
+                                                    "ambientColor": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0,
+                                                        1.0
+                                                    ],
+                                                    "diffuseColor": [
+                                                        0.8499999642372131,
+                                                        0.8499999642372131,
+                                                        0.8499999642372131,
+                                                        1.0
+                                                    ],
+                                                    "emissiveColor": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0,
+                                                        1.0
+                                                    ],
+                                                    "hasMaterialProperties": true,
+                                                    "metallic": 0.0,
+                                                    "opacity": 1.0,
+                                                    "originalTextureUID": 4934191597282142032,
+                                                    "roughness": 0.5,
+                                                    "shininess": 32.0,
+                                                    "specularColor": [
+                                                        0.8499999642372131,
+                                                        0.8499999642372131,
+                                                        0.8499999642372131,
+                                                        1.0
+                                                    ],
+                                                    "textureUID": 4934191597282142032,
+                                                    "type": 2,
+                                                    "useCheckerboard": false
+                                                },
+                                                {
+                                                    "active": true,
+                                                    "eventName": "Play_Ambience",
+                                                    "playOnAwake": true,
+                                                    "type": 6,
+                                                    "volume": 100.0
+                                                },
+                                                {
+                                                    "active": true,
+                                                    "auxBusID": 2637049263,
+                                                    "auxBusName": "Reverb_LongDarkHall",
+                                                    "enabled": true,
+                                                    "extents": [
+                                                        3.299999952316284,
+                                                        2.4000000953674316,
+                                                        2.0
+                                                    ],
+                                                    "presetIndex": 4,
+                                                    "priority": 1,
+                                                    "radius": 4.0,
+                                                    "shape": 1,
+                                                    "type": 7,
+                                                    "wetLevel": 1.0
+                                                }
+                                            ],
+                                            "name": "node_Tunnel__Tunnel_mesh_mesh0"
+                                        }
+                                    ],
+                                    "components": [
+                                        {
+                                            "active": true,
+                                            "position": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "type": 0
+                                        }
+                                    ],
+                                    "name": "node_Tunnel__Tunnel_mesh"
+                                }
+                            ],
+                            "components": [
+                                {
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ],
+                                    "type": 0
+                                }
+                            ],
+                            "name": "node_Tunnel__Tunnel"
+                        }
+                    ],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                100.0,
+                                100.0,
+                                100.0
+                            ],
+                            "type": 0
+                        }
+                    ],
+                    "name": "node_881343c5_fc50_4ba7_9032_d5078f37e8c1"
+                }
+            ],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        0.012272294610738754,
+                        0.012272294610738754,
+                        0.012272294610738754
+                    ],
+                    "type": 0
+                }
+            ],
+            "name": "Tunnel"
+        },
+        {
+            "active": true,
+            "children": [
+                {
+                    "active": true,
+                    "children": [],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                -0.4152706563472748,
+                                -4.033446465712132e-09,
+                                -2.016723232856066e-09
+                            ],
+                            "rotation": [
+                                0.0,
+                                33.41220474243164,
+                                0.0
+                            ],
+                            "scale": [
+                                0.19447220861911774,
+                                0.19447201490402222,
+                                0.19447220861911774
+                            ],
+                            "type": 0
+                        },
+                        {
+                            "active": true,
+                            "meshUID": 15504556958811683514,
+                            "type": 1
+                        },
+                        {
+                            "active": true,
+                            "ambientColor": [
+                                0.20000000298023224,
+                                0.20000000298023224,
+                                0.20000000298023224,
+                                1.0
+                            ],
+                            "diffuseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "emissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0
+                            ],
+                            "hasMaterialProperties": true,
+                            "metallic": 0.0,
+                            "opacity": 1.0,
+                            "originalTextureUID": 11554878813355368001,
+                            "roughness": 0.5,
+                            "shininess": 32.0,
+                            "specularColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "textureUID": 11554878813355368001,
+                            "type": 2,
+                            "useCheckerboard": false
+                        },
+                        {
+                            "active": true,
+                            "eventName": "Play_RadioStatic",
+                            "playOnAwake": true,
+                            "type": 6,
+                            "volume": 100.0
+                        },
+                        {
+                            "active": true,
+                            "auxBusID": 3522965360,
+                            "auxBusName": "Reverb_Robotic",
+                            "enabled": true,
+                            "extents": [
+                                5.0,
+                                5.0,
+                                5.0
+                            ],
+                            "presetIndex": 7,
+                            "priority": 0,
+                            "radius": 2.0,
+                            "shape": 0,
+                            "type": 7,
+                            "wetLevel": 0.8029999732971191
+                        }
+                    ],
+                    "name": "g arial__u"
+                }
+            ],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        7.388798713684082,
+                        7.388798713684082,
+                        7.388798713684082
+                    ],
+                    "type": 0
+                }
+            ],
+            "name": "Radio"
+        }
+    ],
+    "version": 1
+}

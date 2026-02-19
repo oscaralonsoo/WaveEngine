@@ -316,7 +316,15 @@ bool ModuleScene::LoadScene(const std::string& filepath)
     if (root) {
         ComponentCamera* foundCamera = FindCameraInHierarchy(root);
         if (foundCamera) {
+            
             Application::GetInstance().camera->SetSceneCamera(foundCamera);
+            
+            
+            if (foundCamera->owner && !foundCamera->owner->GetComponent(ComponentType::LISTENER)) {
+                foundCamera->owner->CreateComponent(ComponentType::LISTENER);
+                LOG_DEBUG("AudioListener automatically attached to loaded Scene Camera");
+            }
+            
         }
     }
 

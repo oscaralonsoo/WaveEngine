@@ -1,6 +1,12 @@
-uid: 3739463053784122434
+uid: 3080215857715588274
 type: 2
-lastModified: 134154428701294462
+lastModified: 134154525335263629
+importScale: 1
+generateNormals: 1
+flipUVs: 1
+optimizeMeshes: 1
+upAxis: 0
+frontAxis: 0
 generateMipmaps: 1
 filterMode: 2
 flipHorizontal: 0

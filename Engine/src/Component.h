@@ -12,6 +12,9 @@ enum class ComponentType {
     ROTATE,
     SCRIPT,
     PARTICLE,
+    LISTENER,
+    AUDIOSOURCE,
+    REVERBZONE,
     UNKNOWN
 };
 

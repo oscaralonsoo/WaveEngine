@@ -164,4 +164,7 @@ private:
     void DrawAABB(const glm::vec3& min, const glm::vec3& max,
         const glm::vec3& color);
     void DrawAllAABBs(GameObject* gameObject);
+
+    void DrawReverbSphere(const glm::vec3& center, float radius, const glm::vec3& color, int segments = 48);
+    void DrawReverbBox(const glm::mat4& modelMatrix, const glm::vec3& extents, const glm::vec3& color);
 };

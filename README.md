@@ -1,4 +1,4 @@
-<h1 align="center">🌊 Wave Engine 🌊</h1>
+<h1 align="center">🌊 Wave Engine 🌊 Audio System 🌊</h1>
 
 <p align="center">
 This project is a custom 3D game engine developed in C++ using OpenGL as the main graphics API.  
@@ -11,7 +11,7 @@ The engine integrates several external libraries including Assimp (for 3D model 
 
 <p align="center">
 🔗 <strong>GitHub Repository:</strong> <a href="https://github.com/bottzo/Motor2025/tree/Scripting-HaoshengAna2">https://github.com/bottzo/Motor2025/tree/Scripting-HaoshengAna2</a>
-</p>
+
 
 <p align="center">
 📦 <strong>Latest Release:</strong> <a href="https://github.com/bottzo/Motor2025/releases/tag/Scripting2">https://github.com/bottzo/Motor2025/releases/tag/Scripting2</a>
@@ -27,7 +27,7 @@ The engine integrates several external libraries including Assimp (for 3D model 
 
 ---
 
-## 🎏 Team Members
+## 🎏 Core Engine Team Members
 
 - **Haosheng Li** — [GitHub: HaosLii](https://github.com/HaosLii)
 - **Ana Alcaraz** — [GitHub: Audra0000](https://github.com/Audra0000)
@@ -64,6 +64,9 @@ Entity-component system:
 - **ComponentMaterial:** Textures and materials
 - **ComponentCamera:** Game camera
 - **ComponentScript:** Lua scripts
+- **ComponentAudioSource**: Audio Sources (Wwise sound events)
+- **ComponentAudioListener**: Audio Listener 
+- **ComponentReverbZone**: Areas with audio effects
 
 ### **ModuleResources**
 Resource system with unique UIDs. Manages loading/unloading of:
@@ -209,6 +212,57 @@ ComponentScript serializes the associated Lua script's UID along with all public
 
 ---
 
+## 🎶 Audio High-Level System 
+
+## Wwise Integration
+The Audio System has been implemented through the Audiokinetic Wwise game audio middleware, which generates specialized audio resources called "soundbanks".
+
+It also provides a profiler tool to debug the engine audio events in real time.
+
+## Audio Components
+### **Audio Listener**
+Can be added to Game Objects in the Inspector, and will set the Game Object it has been attached to as the Main/Default Listener upon creation. 
+
+Additionally, an Audio Listener can be set as the Main/Default from the Inspector Window, and is serialized when saving the scene.
+
+### **Audio Source**
+
+Can be added to Game Objects in the Inspector, and in the component window, the Wwise event can be selected from a dropdown containing all the existing events. 
+The source's volume can be changed with a slider and it can be set to Play on Awake with a checkbox, so that the event immediately plays when Play Mode is active.
+All the properties mentioned are serialized/deserialized in the scene file.
+      
+![EnignesAudio_SourceCreation](https://github.com/user-attachments/assets/9688b6dd-f6be-4406-a2a2-fd2dd6b5ecd1)
+
+### **Reverb Zone**
+Creates a trigger area in which Roomverb Presets from Wwise are applied, distorting the sound while inside the zone. All its properties are serialized.
+
+It can be enabled/disabled via a checkbox toggle, its shape can be changed into a Sphere or Box, and there's sliders for modifying wet level and priority.
+
+The different effects are managed in Wwise through Individual Auxiliary Busses. The available presets can be selected via a dropdown in the Inspector, and include:
+    - Cathedral: A massive stone interior with long, shimmering decay and grand scale.
+    - Inside My Head: A tight, claustrophobic resonance that mimics internal dialogue or extreme proximity.
+    - Aluminum Tank: A high-frequency, ringing resonance typical of hollow metal containers or industrial pipes.
+    - Absorption: A deadened, muffled space that swallows high frequencies, perfect for padded rooms or thick carpets
+    - Large Plate: A classic, dense studio reverb that provides a smooth, metallic wash to any sound.
+    - Long Dark Hall: An eerie, expansive tunnel effect with a cold atmosphere and distant echoes.
+    - Robotic: A glitched, digitized reverb with metallic artifacts that sounds like an old, slightly malfunctioning robot
+    - Outside: A subtle, open-air ambience with natural reflections and zero "boxy" build-up.
+
+
+## Audio Features
+
+### Spatial Audio
+Both Audio Listener(s) and Audio Source(s) position are set for Wwise, allowing Spatial Audio adjusted and attenuated according to the Game Object's positions.
+
+### Interactive Music
+Wwise Events support music track mixing, layering and fading transitions, allowing for AudioSources to play interactive music.
+
+
+![EnignesAudio_ReverbCreation](https://github.com/user-attachments/assets/d0db756a-5ea7-4618-a65e-3ed5d6c27a9c)
+
+https://github.com/user-attachments/assets/da7769be-5b25-400d-b88d-4912b46e189f
+
+
 ## 🦀 Controls
 
 | Action | Key 1 | Key 2 |
@@ -272,12 +326,15 @@ This window is divided into **five tabs**:
    - Displays a summary of **camera controls**
    - Change current active camera
    - Displays current active camera 
-4. **Renderer:**  
+4. **Audio**
+   - Adjust General Music Volume
+   - Adjust General SFX Volume
+5. **Renderer:**  
    - Enable or disable **face culling** and choose its mode  
    - Toggle **wireframe mode**  
    - Change the **background color** of the scene
    - Toggle debug visualization for AABBs, octree, raycast, zBuffer  
-5. **Hardware:**  
+6. **Hardware:**  
    - Displays detailed information about the system hardware in use  
 
 ---
@@ -327,6 +384,23 @@ Provides detailed information and transformation options for the selected GameOb
   - Remove script
   - Reload script
   - Public variables editing
+- **Audio Source Component** (when selected):
+   - Select Wwise Event from drop-down
+   - Adjust Volume of the source
+   - Play on Awake toggle
+- **Audio Listener Component** (when selected):
+   - Set as Default Listener
+- **Reverb Zone Component** (when selected):
+   - Change Zone Shape from drop-down selection
+   - Change the Reverb Preset from drop-down selection
+   - Set the Zone's...
+      - If Zone Shape is Box :arrow_right: Half Extents
+      - If Zone Shape is Sphere :arrow_right: Radius
+   - Set the Aux Bus Name
+   - Change the Wet Level
+   - Set Priority
+   - Enable/Disable Toggle
+
 
 ---
 
@@ -355,5 +429,5 @@ Includes the following menu options:
 ---
 
 <p align="center">
-<sub>© 2025 Wave Engine — Developed by Haosheng Li & Ana Alcaraz — MIT License</sub>
+<sub>© 2025 Wave Engine  — MIT License</sub>
 </p>

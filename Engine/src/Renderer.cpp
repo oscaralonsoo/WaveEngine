@@ -6,7 +6,7 @@
 #include "ComponentMaterial.h"
 #include "ModuleEditor.h"
 #include "ComponentParticleSystem.h"
-
+#include "ReverbZone.h"
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <stack>
@@ -1033,9 +1033,38 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
 
         if (!showZBuffer)
         {
-            if (materialBound)
-                material->Unbind();
+            
+            ComponentCamera* editorCamera = Application::GetInstance().camera->GetActiveCamera();
+            if (renderCamera == editorCamera)
+            {
+                Component* reverbCompBase = currentObj->GetComponent(ComponentType::REVERBZONE);
+                if (reverbCompBase != nullptr)
+                {
+                    ReverbZone* zone = static_cast<ReverbZone*>(reverbCompBase);
+                    if (zone->enabled)
+                    {
+                        
+                        glm::vec3 worldCenter = glm::vec3(modelMatrix[3]);
+
+                        if (zone->shape == ReverbZone::Shape::SPHERE)
+                        {
+                            DrawReverbSphere(worldCenter, zone->radius, glm::vec3(1.0f, 0.4f, 0.8f));
+                        }
+                        else 
+                        {
+                            
+                            DrawReverbBox(modelMatrix, zone->extents, glm::vec3(1.0f, 0.4f, 0.8f));
+                        }
+                    }
+                }
+            }
         }
+
+        if (materialBound)
+            material->Unbind();
+        else
+            defaultTexture->Unbind();
+
 
 		// LIFO((Last In, First Out) to process children
         const auto& children = currentObj->GetChildren();
@@ -1468,7 +1497,7 @@ void Renderer::DrawAABB(const glm::vec3& min, const glm::vec3& max, const glm::v
         lineVertices.data(), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
     ComponentCamera* camera = GetCamera();
     if (!camera) return;
@@ -1484,11 +1513,8 @@ void Renderer::DrawAABB(const glm::vec3& min, const glm::vec3& max, const glm::v
         1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 
     GLint colorLoc = glGetUniformLocation(shaderProgram, "color");
-    if (colorLoc == -1)
-        colorLoc = glGetUniformLocation(shaderProgram, "tintColor");
-
-    if (colorLoc != -1)
-        glUniform3fv(colorLoc, 1, glm::value_ptr(color));
+    if (colorLoc == -1) colorLoc = glGetUniformLocation(shaderProgram, "tintColor");
+    if (colorLoc != -1) glUniform3fv(colorLoc, 1, glm::value_ptr(color));
 
     glLineWidth(2.0f);
     glDrawArrays(GL_LINES, 0, lineVertices.size() / 3);
@@ -1556,4 +1582,161 @@ void Renderer::BindGameFramebuffer()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, gameFbo);
     glViewport(0, 0, gameFramebufferWidth, gameFramebufferHeight);
+}
+
+void Renderer::DrawReverbSphere(const glm::vec3& center, float radius, const glm::vec3& color, int segments)
+{
+    if (segments < 4) segments = 4;
+
+    std::vector<float> verts;
+    verts.reserve(segments * 6 * 3); // three rings, segments lines (two points each), 3 floats
+
+    auto addCircle = [&](const glm::vec3& up, const glm::vec3& right, float r) {
+        for (int i = 0; i < segments; ++i)
+        {
+            float a0 = (float)i / segments * glm::two_pi<float>();
+            float a1 = (float)(i + 1) / segments * glm::two_pi<float>();
+
+            glm::vec3 p0 = center + (right * cosf(a0) + up * sinf(a0)) * r;
+            glm::vec3 p1 = center + (right * cosf(a1) + up * sinf(a1)) * r;
+
+            verts.insert(verts.end(), { p0.x, p0.y, p0.z, p1.x, p1.y, p1.z });
+        }
+    };
+
+    // Choose orthonormal axes for rings
+    glm::vec3 up(0.0f, 1.0f, 0.0f);
+    glm::vec3 right(1.0f, 0.0f, 0.0f);
+    glm::vec3 forward(0.0f, 0.0f, 1.0f);
+
+    // horizontal ring (XZ)
+    addCircle(right, forward, radius);
+    // vertical ring (XY)
+    addCircle(right, up, radius);
+    // vertical ring (YZ)
+    addCircle(forward, up, radius);
+
+    if (verts.empty()) return;
+
+    // Create temporary VAO/VBO
+    GLuint vao = 0, vbo = 0;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    ComponentCamera* camera = GetCamera();
+    if (!camera)
+    {
+        glBindVertexArray(0);
+        glDeleteBuffers(1, &vbo);
+        glDeleteVertexArrays(1, &vao);
+        return;
+    }
+
+    lineShader->Use();
+    GLuint program = lineShader->GetProgramID();
+    glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+
+    // set color uniform (some shaders use 'color' or 'tintColor')
+    GLint colorLoc = glGetUniformLocation(program, "color");
+    if (colorLoc == -1) colorLoc = glGetUniformLocation(program, "tintColor");
+    if (colorLoc != -1) glUniform3fv(colorLoc, 1, glm::value_ptr(color));
+
+    glLineWidth(2.0f);
+    glDrawArrays(GL_LINES, 0, (GLsizei)(verts.size() / 3));
+    glLineWidth(1.0f);
+
+    // cleanup
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &vbo);
+    glDeleteVertexArrays(1, &vao);
+
+    defaultShader->Use();
+}
+
+void Renderer::DrawReverbBox(const glm::mat4& modelMatrix, const glm::vec3& extents, const glm::vec3& color)
+{
+    // Build 8 local corners
+    glm::vec3 localCorners[8] = {
+        { -extents.x, -extents.y, -extents.z },
+        {  extents.x, -extents.y, -extents.z },
+        {  extents.x, -extents.y,  extents.z },
+        { -extents.x, -extents.y,  extents.z },
+        { -extents.x,  extents.y, -extents.z },
+        {  extents.x,  extents.y, -extents.z },
+        {  extents.x,  extents.y,  extents.z },
+        { -extents.x,  extents.y,  extents.z }
+    };
+
+    // Transform to world space using modelMatrix
+    glm::vec3 worldCorners[8];
+    for (int i = 0; i < 8; ++i)
+    {
+        glm::vec4 wc = modelMatrix * glm::vec4(localCorners[i], 1.0f);
+        worldCorners[i] = glm::vec3(wc);
+    }
+
+    // Build line list for edges (12 edges -> 24 points)
+    std::vector<float> verts;
+    auto pushEdge = [&](int a, int b) {
+        verts.insert(verts.end(), {
+            worldCorners[a].x, worldCorners[a].y, worldCorners[a].z,
+            worldCorners[b].x, worldCorners[b].y, worldCorners[b].z
+        });
+    };
+
+    // bottom
+    pushEdge(0,1); pushEdge(1,2); pushEdge(2,3); pushEdge(3,0);
+    // top
+    pushEdge(4,5); pushEdge(5,6); pushEdge(6,7); pushEdge(7,4);
+    // verticals
+    pushEdge(0,4); pushEdge(1,5); pushEdge(2,6); pushEdge(3,7);
+
+    if (verts.empty()) return;
+
+    GLuint vao = 0, vbo = 0;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(float), verts.data(), GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    ComponentCamera* camera = GetCamera();
+    if (!camera)
+    {
+        glBindVertexArray(0);
+        glDeleteBuffers(1, &vbo);
+        glDeleteVertexArrays(1, &vao);
+        return;
+    }
+
+    lineShader->Use();
+    GLuint program = lineShader->GetProgramID();
+    glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+
+    GLint colorLoc = glGetUniformLocation(program, "color");
+    if (colorLoc == -1) colorLoc = glGetUniformLocation(program, "tintColor");
+    if (colorLoc != -1) glUniform3fv(colorLoc, 1, glm::value_ptr(color));
+
+    glLineWidth(2.0f);
+    glDrawArrays(GL_LINES, 0, (GLsizei)(verts.size() / 3));
+    glLineWidth(1.0f);
+
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &vbo);
+    glDeleteVertexArrays(1, &vao);
+
+    defaultShader->Use();
 }

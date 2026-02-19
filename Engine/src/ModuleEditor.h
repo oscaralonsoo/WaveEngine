@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+
 class ConfigurationWindow;
 class HierarchyWindow;
 class InspectorWindow;
@@ -97,6 +98,8 @@ private:
 
     // About window state
     bool showAbout = false;
+
+
 
     // Window states
     EditorWindowType currentWindow = EditorWindowType::NONE;
