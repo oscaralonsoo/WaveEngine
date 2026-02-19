@@ -13,6 +13,7 @@ public:
     bool Start() override;
     bool PreUpdate() override;
     bool Update() override;
+    bool PostUpdate() override;
     bool CleanUp() override;
 
     void OnResize(uint32_t width, uint32_t height);

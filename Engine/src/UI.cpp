@@ -9,7 +9,6 @@
 #include "NsGui/IntegrationAPI.h"  
 #include "GLRenderDevice.h" 
 
-
 UI::UI() { LOG_DEBUG("UI Constructor"); }
 UI::~UI() {}
 
@@ -59,6 +58,13 @@ bool UI::PreUpdate()
 
 bool UI::Update()
 {
+    
+
+    return true;
+}
+
+bool UI::PostUpdate()
+{
     if (!m_view) return true;
     m_view->Update(0.0);
 
@@ -68,7 +74,6 @@ bool UI::Update()
     m_view->GetRenderer()->RenderOffscreen();
 
     m_view->GetRenderer()->Render();
-
     return true;
 }
 
