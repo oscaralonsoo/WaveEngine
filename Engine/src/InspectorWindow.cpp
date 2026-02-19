@@ -20,6 +20,8 @@
 #include "InfinitePlaneCollider.h"
 #include "Log.h"
 #include "ComponentScript.h"
+#include "ComponentNavigation.h"
+#include "NavMeshManager.h"
 #include <filesystem>
 
 InspectorWindow::InspectorWindow()
@@ -102,6 +104,7 @@ void InspectorWindow::Draw()
     DrawInfinitePlaneColliderComponent(selectedObject);
     DrawMeshColliderComponent(selectedObject);
     DrawConvexColliderComponent(selectedObject);
+    DrawNavigationSection(selectedObject);
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -685,6 +688,15 @@ void  InspectorWindow::DrawConvexColliderComponent(GameObject* selectedObject)
     }
 }
 
+void InspectorWindow::DrawNavigationSection(GameObject* selectedObject)
+{
+    ComponentNavigation* navComp = static_cast<ComponentNavigation*>(selectedObject->GetComponent(ComponentType::NAVIGATION));
+
+    if (navComp != nullptr)
+    {
+        navComp->OnEditor();
+    }
+}
 
 bool InspectorWindow::DrawGameObjectSection(GameObject* selectedObject)
 {
@@ -1390,6 +1402,33 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
             ImGui::BeginTooltip();
             ImGui::Text("Add a D6 Joint");
             ImGui::EndTooltip();
+        }
+
+        // Navigation Component
+        bool hasNavigation = (selectedObject->GetComponent(ComponentType::NAVIGATION) != nullptr);
+
+        if (hasNavigation) ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+        if (ImGui::Selectable("Navigation & AI", false, hasNavigation ? ImGuiSelectableFlags_Disabled : 0))
+        {
+            selectedObject->CreateComponent(ComponentType::NAVIGATION);
+            LOG_CONSOLE("[Inspector] Navigation component added to: %s", selectedObject->GetName().c_str());
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (hasNavigation) ImGui::PopStyleColor();
+
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            if (!hasNavigation) {
+                ImGui::Text("Add a Navigation component for NavMesh baking");
+            }
+            else {
+                ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Already has a Navigation component");
+            }
+            ImGui::EndTooltip();
+
         }
 
         ImGui::EndPopup();

@@ -20,6 +20,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     resources = std::make_shared<ModuleResources>();
     scripts = std::make_shared<ScriptManager>();  
     physics = std::make_shared<ModulePhysics>();  
+    navMesh = std::make_shared<ModuleNavMesh>();
 
     AddModule(std::static_pointer_cast<Module>(window));
     AddModule(std::static_pointer_cast<Module>(input));
@@ -29,7 +30,8 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     AddModule(std::static_pointer_cast<Module>(camera));
     AddModule(std::static_pointer_cast<Module>(editor));
     AddModule(std::static_pointer_cast<Module>(resources));
-    AddModule(std::static_pointer_cast<Module>(scripts));  
+    AddModule(std::static_pointer_cast<Module>(scripts)); 
+    AddModule(std::static_pointer_cast<Module>(navMesh));
     AddModule(std::static_pointer_cast<Module>(filesystem));
     AddModule(std::static_pointer_cast<Module>(time));
     AddModule(std::static_pointer_cast<Module>(grid));

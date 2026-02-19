@@ -17,6 +17,7 @@
 #include "ModuleResources.h"
 #include "ScriptManager.h"  
 #include "ModulePhysics.h"
+#include "NavMeshManager.h"
 
 class Module;
 
@@ -71,6 +72,7 @@ public:
     std::shared_ptr<Grid> grid;
     std::shared_ptr<ModuleResources> resources;
     std::shared_ptr<ScriptManager> scripts; 
+    std::shared_ptr<ModuleNavMesh> navMesh;
     std::shared_ptr<ModulePhysics> physics; 
 
     SelectionManager* selectionManager;

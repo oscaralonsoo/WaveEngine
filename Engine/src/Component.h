@@ -31,6 +31,7 @@ enum class ComponentType {
     D6_JOINT,
     PRISMATIC_JOINT,
     SPHERICAL_JOINT,
+    NAVIGATION,
     UNKNOWN
 };
 

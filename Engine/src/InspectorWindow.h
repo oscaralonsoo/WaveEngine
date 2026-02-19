@@ -44,7 +44,8 @@ private:
     void DrawInfinitePlaneColliderComponent(GameObject* selectedObject);
     void DrawMeshColliderComponent(GameObject* selectedObject);
     void DrawConvexColliderComponent(GameObject* selectedObject);
-	
+    void DrawNavigationSection(GameObject* selectedObject);
+
     // Helper methods
     void GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects);
     bool IsDescendantOf(GameObject* potentialDescendant, GameObject* potentialAncestor);
