@@ -83,6 +83,10 @@ private:
     // File Browser
     std::string OpenSaveFile(const std::string& defaultPath);
     std::string OpenLoadFile(const std::string& defaultPath);
+    std::string OpenFolderDialog();
+
+    // Build
+    void BuildGame();
 
     // Editor windows (owned by ModuleEditor)
     std::unique_ptr<ConfigurationWindow> configWindow;

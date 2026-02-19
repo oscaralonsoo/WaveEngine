@@ -1,6 +1,8 @@
 ﻿#include "Application.h"
 #include <iostream>
 #include <chrono>
+#include <filesystem>
+#include "LibraryManager.h"
 
 Application::Application() : isRunning(true), playState(PlayState::EDITING)
 {
@@ -97,7 +99,8 @@ bool Application::Start()
     // Load scene and start in play mode
     if (result)
     {
-        std::string scenePath = "../Scene/game_scene.json";
+		std::filesystem::path projectRoot = std::filesystem::path(LibraryManager::GetLibraryRoot()).parent_path(); // Example: /WaveEngine/Engine/Build then --> /WaveEngine/Engine
+		std::string scenePath = (projectRoot / "Scene" / "game_scene.json").string(); // Search Scene/game_scene.json   
         if (scene->LoadScene(scenePath))
         {
             LOG_CONSOLE("[Game] Loaded scene: %s", scenePath.c_str());
