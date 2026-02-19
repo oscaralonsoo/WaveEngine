@@ -1,7 +1,5 @@
 #pragma once
 #include <ctime>
-#include <iostream>
-#include <vector>
 #include <string>
 #include "Log.h"
 
