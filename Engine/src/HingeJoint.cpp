@@ -15,6 +15,7 @@ HingeJoint::HingeJoint(GameObject* owner) : Joint(owner)
 HingeJoint::~HingeJoint() {}
 
 void HingeJoint::CreateJoint() {
+
     auto* physics = Application::GetInstance().physics->GetPhysics();
 
     if (!physics || !bodyA || !bodyA->GetActor()) return;
@@ -129,6 +130,7 @@ void HingeJoint::SetDriveVelocity(float v) {
 //}
 
 void HingeJoint::OnEditor() {
+#ifndef WAVE_GAME
     OnEditorBase();
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -147,6 +149,7 @@ void HingeJoint::OnEditor() {
         if (ImGui::InputFloat("Velocity", &driveVelocity)) SetDriveVelocity(driveVelocity);
         ImGui::TreePop();
     }
+#endif 
 }
 
 void HingeJoint::DrawDebug() 

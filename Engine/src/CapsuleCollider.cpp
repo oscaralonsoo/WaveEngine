@@ -31,6 +31,7 @@ void CapsuleCollider::Update()
 
 void CapsuleCollider::OnEditor()
 {
+    #ifndef WAVE_GAME
     OnEditorBase();
 
     ImGui::Separator();
@@ -48,6 +49,7 @@ void CapsuleCollider::OnEditor()
     {
         SetHeight(h);
     }
+#endif
 }
 
 //void CapsuleCollider::Save(Config& config)

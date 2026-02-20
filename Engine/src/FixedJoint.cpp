@@ -70,8 +70,10 @@ void FixedJoint::CreateJoint() {
 //}
 
 void FixedJoint::OnEditor() {
+#ifndef WAVE_GAME
     
     OnEditorBase();
+#endif
 }
 
 void FixedJoint::DrawDebug() {

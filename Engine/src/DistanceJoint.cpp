@@ -178,6 +178,7 @@ void DistanceJoint::SetMinDistance(float m)
 
 void DistanceJoint::OnEditor()
 {
+#ifndef WAVE_GAME
     OnEditorBase();
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -224,6 +225,7 @@ void DistanceJoint::OnEditor()
 
         ImGui::TreePop();
     }
+#endif
 }
 
 void DistanceJoint::DrawDebug()

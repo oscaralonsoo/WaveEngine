@@ -69,6 +69,7 @@ void ConvexCollider::CookMesh() {
 }
 
 void ConvexCollider::OnEditor() {
+#ifndef WAVE_GAME
     OnEditorBase();
     ImGui::Separator();
 
@@ -85,6 +86,7 @@ void ConvexCollider::OnEditor() {
         CookMesh();
         if (attachedRigidbody) attachedRigidbody->CreateBody();
     }
+#endif
 }
 
 //void ConvexCollider::Save(Config& config)

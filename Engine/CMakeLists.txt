@@ -158,6 +158,8 @@ set(EDITOR_SRC
     src/ImportSettingsWindow.cpp 
     src/ShaderEditorWindow.h
     src/ShaderEditorWindow.cpp
+    src/ScriptEditorWindow.h
+    src/ScriptEditorWindow.cpp
 )
 
 set(IMPORTERS_SRC 
@@ -186,8 +188,6 @@ set(SCRIPTING_SRC
     src/ResourceScript.cpp
     src/ComponentScript.h
     src/ComponentScript.cpp
-    src/ScriptEditorWindow.h
-    src/ScriptEditorWindow.cpp
     src/EditorPreferences.h
     src/EditorPreferences.cpp
     src/Prefab.h

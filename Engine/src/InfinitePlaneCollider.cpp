@@ -23,7 +23,9 @@ void InfinitePlaneCollider::Update()
 
 void InfinitePlaneCollider::OnEditor() 
 {
+#ifndef WAVE_GAME
     OnEditorBase();
+#endif
 }
 
 //void InfinitePlaneCollider::Save(Config& config) {

@@ -57,6 +57,7 @@ void Collider::Disable()
 
 void Collider::OnEditorBase()
 {
+    #ifndef WAVE_GAME
     //ATRIBUTES
     ImGui::Text("Trigger");
     bool trigger = isTrigger;
@@ -92,6 +93,7 @@ void Collider::OnEditorBase()
     {
         SetRestitution(restitution);
     }
+    #endif
 }
 
 void Collider::SetCenter(glm::vec3 center)

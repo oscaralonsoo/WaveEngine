@@ -30,6 +30,7 @@ void BoxCollider::Update()
 
 void BoxCollider::OnEditor()
 {
+    #ifndef WAVE_GAME
     OnEditorBase();
     ImGui::Separator();
 
@@ -39,6 +40,7 @@ void BoxCollider::OnEditor()
     {
         SetSize(s);
     }
+    #endif
 }
 
 //void BoxCollider::Save(Config& config)

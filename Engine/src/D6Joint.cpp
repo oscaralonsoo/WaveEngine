@@ -153,6 +153,7 @@ void D6Joint::SetSwingLimit(float yAngle, float zAngle) {
 //}
 
 void D6Joint::OnEditor() {
+#ifndef WAVE_GAME
     OnEditorBase();
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth;
 
@@ -175,6 +176,7 @@ void D6Joint::OnEditor() {
         if (ImGui::DragFloat2("Swing Y/Z", &swingY, 1.0f, 0.0f, 180.0f)) SetSwingLimit(swingY, swingZ);
         ImGui::TreePop();
     }
+#endif
 }
 
 void D6Joint::DrawDebug() {
