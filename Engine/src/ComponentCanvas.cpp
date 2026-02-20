@@ -144,3 +144,20 @@ void ComponentCanvas::GenerateFramebuffer(int w, int h)
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+void ComponentCanvas::Serialize(nlohmann::json& componentObj) const
+{
+    componentObj["xamlPath"] = currentXAML;
+}
+
+void ComponentCanvas::Deserialize(const nlohmann::json& componentObj)
+{
+    if (componentObj.contains("xamlPath"))
+    {
+        std::string path = componentObj["xamlPath"];
+        if (!path.empty())
+        {
+            LoadXAML(path.c_str());
+        }
+    }
+}

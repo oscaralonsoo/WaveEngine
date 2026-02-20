@@ -1,5 +1,8 @@
 #include "GameWindow.h"
 #include "Application.h"
+#include "ModuleScene.h"
+#include "GameObject.h"
+#include "ComponentCanvas.h"
 #include <imgui.h>
 
 GameWindow::GameWindow()
@@ -29,6 +32,34 @@ void GameWindow::Draw()
     else
     {
         ImGui::InvisibleButton("GameView", gameViewportSize);
+    }
+
+    // Draw Canvases
+    if (Application::GetInstance().scene)
+    {
+        GameObject* root = Application::GetInstance().scene->GetRoot();
+        if (root)
+        {
+            std::vector<Component*> canvases;
+            root->GetComponentsInChildren(ComponentType::CANVAS, canvases);
+
+            for (Component* comp : canvases)
+            {
+                ComponentCanvas* canvas = static_cast<ComponentCanvas*>(comp);
+                if (canvas && canvas->IsActive() && canvas->GetOwner()->IsActive())
+                {
+                    if (Application::GetInstance().GetPlayState() == Application::PlayState::EDITING)
+                    {
+                        canvas->Update();
+                    }
+
+                    canvas->Resize((int)gameViewportSize.x, (int)gameViewportSize.y);
+                    canvas->RenderToTexture();
+                    ImGui::SetCursorScreenPos(gameViewportPos);
+                    ImGui::Image((ImTextureID)(uintptr_t)canvas->GetTextureID(), gameViewportSize, ImVec2(0, 1), ImVec2(1, 0));
+                }
+            }
+        }
     }
 
     ImGui::End();

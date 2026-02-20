@@ -729,7 +729,7 @@ void InspectorWindow::DrawCanvasComponent(GameObject* selectedObject)
         if (texID != 0)
         {
             ImGui::Text("Preview:");
-            ImGui::Image((ImTextureID)(uintptr_t)texID, ImVec2(256, 144));
+            ImGui::Image((ImTextureID)(uintptr_t)texID, ImVec2(256, 144), ImVec2(0, 1), ImVec2(1, 0));
         }
         else
         {

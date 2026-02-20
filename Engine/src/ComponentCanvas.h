@@ -23,6 +23,11 @@ public:
     void Resize(int width, int height);
 
     unsigned int GetTextureID() const { return textureID; }
+    GameObject* GetOwner() const { return owner; }
+
+    // Serialization
+    void Serialize(nlohmann::json& componentObj) const override;
+    void Deserialize(const nlohmann::json& componentObj) override;
 
 private:
     void GenerateFramebuffer(int width, int height);
