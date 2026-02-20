@@ -71,7 +71,7 @@ struct MetaFile {
     UID uid = 0;
     AssetType type = AssetType::UNKNOWN;
     std::string originalPath;
-    long long lastModified = 0;
+    uint32_t fileHash = 0;
     ImportSettings importSettings;
 
     static UID GenerateUID();
@@ -101,6 +101,7 @@ public:
     static UID GetUIDFromAsset(const std::string& assetPath);
     static std::string GetAssetFromUID(UID uid);
     static long long GetFileTimestamp(const std::string& filePath);
+    static uint32_t GetFileHash(const std::string& path);
 
 private:
     static std::string GetMetaPath(const std::string& assetPath);

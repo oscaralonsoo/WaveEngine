@@ -331,9 +331,9 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
     // 6. Update .meta ONLY if something changed
     bool metaChanged = false;
 
-    long long currentTimestamp = MetaFileManager::GetFileTimestamp(file_path);
-    if (meta.lastModified != currentTimestamp) {
-        meta.lastModified = currentTimestamp;
+    uint32_t currentFileHash = MetaFileManager::GetFileHash(file_path);
+    if (meta.fileHash != currentFileHash) {
+        meta.fileHash = currentFileHash;
         metaChanged = true;
         LOG_CONSOLE("[FileSystem] Updated timestamp for: %s", file_path.c_str());
     }

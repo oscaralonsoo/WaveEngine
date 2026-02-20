@@ -251,8 +251,7 @@ bool LibraryManager::ReimportAsset(const std::string& assetPath) {
         if (texture.IsValid()) {
             std::string filename = std::to_string(meta.uid) + ".texture";
             if (TextureImporter::SaveToCustomFormat(texture, filename)) {
-                meta.lastModified = std::filesystem::last_write_time(assetPath)
-                    .time_since_epoch().count();
+                meta.fileHash = MetaFileManager::GetFileHash(assetPath);
                 meta.Save(metaPath);
 
                 LOG_CONSOLE("[LibraryManager] Texture reimported successfully");
@@ -343,8 +342,7 @@ bool LibraryManager::ReimportAsset(const std::string& assetPath) {
                 }
             }
 
-            meta.lastModified = std::filesystem::last_write_time(assetPath)
-                .time_since_epoch().count();
+            meta.fileHash = MetaFileManager::GetFileHash(assetPath);
             meta.Save(metaPath);
 
             aiReleaseImport(scene);
@@ -400,12 +398,7 @@ void LibraryManager::RegenerateFromAssets() {
                 continue;
             }
 
-            auto assetTime = fs::last_write_time(assetPath);
-            long long currentAssetTimestamp = assetTime.time_since_epoch().count();
-
-            const long long tolerance = 20000000000;
-
-            bool assetModified = (std::abs(currentAssetTimestamp - meta.lastModified) > tolerance);
+            bool assetModified = (meta.fileHash != MetaFileManager::GetFileHash(assetPath.generic_string()));
 
             switch (type) {
             case AssetType::MODEL_FBX: {
@@ -457,7 +450,7 @@ void LibraryManager::RegenerateFromAssets() {
                         MeshImporter::SaveToCustomFormat(mesh, meshFilename);
                     }
 
-                    meta.lastModified = currentAssetTimestamp;
+                    meta.fileHash = MetaFileManager::GetFileHash(assetPath.generic_string());
                     meta.Save(metaPathStr);
 
                     aiReleaseImport(scene);
@@ -499,7 +492,7 @@ void LibraryManager::RegenerateFromAssets() {
                 if (texture.IsValid()) {
                     std::string filename = std::to_string(meta.uid) + ".texture";
                     if (TextureImporter::SaveToCustomFormat(texture, filename)) {
-                        meta.lastModified = currentAssetTimestamp;
+                        meta.fileHash = MetaFileManager::GetFileHash(fullPath);
                         meta.Save(metaPathStr);
                         processed++;
                     }

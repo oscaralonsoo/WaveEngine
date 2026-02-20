@@ -1,13 +1,5 @@
-uid: 11055729000941000855
-type: 6
-lastModified: 134134961623774659
-importScale: 1
-generateNormals: 1
-flipUVs: 1
-optimizeMeshes: 1
-upAxis: 0
-frontAxis: 0
-generateMipmaps: 1
-filterMode: 2
-flipHorizontal: 0
-maxTextureSize: 6
+{
+    "fileHash": 2378416173,
+    "type": 6,
+    "uid": 121721241525121245
+}

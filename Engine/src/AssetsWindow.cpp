@@ -2582,7 +2582,7 @@ bool AssetsWindow::ImportAssetToLibrary(const std::string& assetPath)
         meta.uid = MetaFile::GenerateUID();
         meta.type = MetaFile::GetAssetType(extension);
         meta.originalPath = assetPath;
-        meta.lastModified = MetaFileManager::GetFileTimestamp(assetPath);
+        meta.fileHash = MetaFileManager::GetFileHash(assetPath);
 
         if (meta.type == AssetType::MODEL_FBX)
         {
@@ -2636,7 +2636,7 @@ bool AssetsWindow::ImportAssetToLibrary(const std::string& assetPath)
 
     if (success)
     {
-        meta.lastModified = MetaFileManager::GetFileTimestamp(assetPath);
+        meta.fileHash = MetaFileManager::GetFileHash(assetPath);
         meta.Save(metaPath);
     }
 
@@ -2922,7 +2922,7 @@ void AssetsWindow::CreateNewScript(const std::string& scriptName)
     meta.uid = MetaFile::GenerateUID();
     meta.type = AssetType::SCRIPT_LUA;
     meta.originalPath = scriptPath.string();
-    meta.lastModified = MetaFileManager::GetFileTimestamp(scriptPath.string());
+    meta.fileHash = MetaFileManager::GetFileHash(scriptPath.string());
 
     std::string metaPath = scriptPath.string() + ".meta";
     meta.Save(metaPath);
@@ -3089,7 +3089,7 @@ bool AssetsWindow::CreatePrefabFromGameObject(GameObject* obj, const std::string
     meta.uid = MetaFile::GenerateUID();
     meta.type = AssetType::PREFAB;
     meta.originalPath = prefabPath;
-    meta.lastModified = MetaFileManager::GetFileTimestamp(prefabPath);
+    meta.fileHash = MetaFileManager::GetFileHash(prefabPath);
 
     std::string metaPath = prefabPath + ".meta";
     if (!meta.Save(metaPath))

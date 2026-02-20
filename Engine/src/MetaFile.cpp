@@ -7,6 +7,7 @@
 #include <windows.h>
 #include "Log.h"
 #include "ResourceScript.h"
+#include <nlohmann/json.hpp>
 
 // META FILE IMPLEMENTATION
 ///////////////////////////////
@@ -35,43 +36,49 @@ AssetType MetaFile::GetAssetType(const std::string& extension) {
 }
 
 bool MetaFile::Save(const std::string& metaFilePath) const {
+    
+    nlohmann::json meta;
+
+    meta["uid"] = uid;
+    meta["type"] = static_cast<int>(type);
+    meta["fileHash"] = fileHash;
+
+    if (type == AssetType::MODEL_FBX) {
+        meta["importSettings"] = {
+            {"importScale", importSettings.importScale},
+            {"generateNormals", importSettings.generateNormals},
+            {"flipUVs", importSettings.flipUVs},
+            {"optimizeMeshes", importSettings.optimizeMeshes},
+            {"upAxis", importSettings.upAxis},
+            {"frontAxis", importSettings.frontAxis}
+        };
+    }
+    else if (type == AssetType::TEXTURE_PNG ||
+        type == AssetType::TEXTURE_JPG ||
+        type == AssetType::TEXTURE_DDS ||
+        type == AssetType::TEXTURE_TGA) {
+        meta["importSettings"] = {
+            {"generateMipmaps", importSettings.generateMipmaps},
+            {"filterMode", importSettings.filterMode},
+            {"flipHorizontal", importSettings.flipHorizontal},
+            {"maxTextureSize", importSettings.maxTextureSize}
+        };
+    }
+
     std::ofstream file(metaFilePath);
     if (!file.is_open()) {
         std::cerr << "[MetaFile] ERROR: Cannot create .meta file: " << metaFilePath << std::endl;
         return false;
     }
 
-    // Datos básicos (TODOS los tipos)
-    file << "uid: " << uid << "\n";
-    file << "type: " << static_cast<int>(type) << "\n";
-    file << "lastModified: " << lastModified << "\n";
-
-    // Solo guardar settings de importación para assets que lo necesitan
-    if (type == AssetType::MODEL_FBX) {
-        // Model settings
-        file << "importScale: " << importSettings.importScale << "\n";
-        file << "generateNormals: " << (importSettings.generateNormals ? "1" : "0") << "\n";
-        file << "flipUVs: " << (importSettings.flipUVs ? "1" : "0") << "\n";
-        file << "optimizeMeshes: " << (importSettings.optimizeMeshes ? "1" : "0") << "\n";
-        file << "upAxis: " << importSettings.upAxis << "\n";
-        file << "frontAxis: " << importSettings.frontAxis << "\n";
-    }
-    else if (type == AssetType::TEXTURE_PNG ||
-        type == AssetType::TEXTURE_JPG ||
-        type == AssetType::TEXTURE_DDS ||
-        type == AssetType::TEXTURE_TGA) {
-        // Texture settings
-        file << "generateMipmaps: " << (importSettings.generateMipmaps ? "1" : "0") << "\n";
-        file << "filterMode: " << importSettings.filterMode << "\n";
-        file << "flipHorizontal: " << (importSettings.flipHorizontal ? "1" : "0") << "\n";
-        file << "maxTextureSize: " << importSettings.maxTextureSize << "\n";
-    }
-
+    file << meta.dump(4);
     file.close();
+
     return true;
 }
 
 MetaFile MetaFile::Load(const std::string& metaFilePath) {
+    
     MetaFile meta;
 
     std::ifstream file(metaFilePath);
@@ -79,80 +86,57 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
         return meta;
     }
 
-    std::string line;
+    try {
+        
+        nlohmann::json metaFile;
+        file >> metaFile;
 
-    while (std::getline(file, line)) {
-        size_t colonPos = line.find(':');
-        if (colonPos == std::string::npos) continue;
+        if (metaFile.contains("uid")) meta.uid = metaFile["uid"].get<UID>();
+        if (metaFile.contains("type")) meta.type = static_cast<AssetType>(metaFile["type"].get<int>());
+        if (metaFile.contains("fileHash")) meta.fileHash = metaFile["fileHash"].get<uint32_t>();
 
-        std::string key = line.substr(0, colonPos);
-        std::string value = line.substr(colonPos + 2);
+        if (metaFile.contains("originalPath")) {
+            meta.originalPath = MakeAbsoluteFromProject(metaFile["originalPath"].get<std::string>());
+        }
 
-        if (key == "uid") {
-            meta.uid = std::stoull(value);
+        if (metaFile.contains("importSettings")) {
+            const auto& settings = metaFile["importSettings"];
+
+            if (meta.type == AssetType::MODEL_FBX) {
+                if (settings.contains("importScale")) meta.importSettings.importScale = settings["importScale"].get<float>();
+                if (settings.contains("generateNormals")) meta.importSettings.generateNormals = settings["generateNormals"].get<bool>();
+                if (settings.contains("flipUVs")) meta.importSettings.flipUVs = settings["flipUVs"].get<bool>();
+                if (settings.contains("optimizeMeshes")) meta.importSettings.optimizeMeshes = settings["optimizeMeshes"].get<bool>();
+                if (settings.contains("upAxis")) meta.importSettings.upAxis = settings["upAxis"].get<int>();
+                if (settings.contains("frontAxis")) meta.importSettings.frontAxis = settings["frontAxis"].get<int>();
+            }
+            else if (meta.type == AssetType::TEXTURE_PNG ||
+                meta.type == AssetType::TEXTURE_JPG ||
+                meta.type == AssetType::TEXTURE_DDS ||
+                meta.type == AssetType::TEXTURE_TGA) {
+                if (settings.contains("generateMipmaps")) meta.importSettings.generateMipmaps = settings["generateMipmaps"].get<bool>();
+                if (settings.contains("filterMode")) meta.importSettings.filterMode = settings["filterMode"].get<int>();
+                if (settings.contains("flipHorizontal")) meta.importSettings.flipHorizontal = settings["flipHorizontal"].get<bool>();
+                if (settings.contains("maxTextureSize")) meta.importSettings.maxTextureSize = settings["maxTextureSize"].get<int>();
+            }
         }
-        else if (key == "type") {
-            meta.type = static_cast<AssetType>(std::stoi(value));
-        }
-        else if (key == "originalPath") {
-            meta.originalPath = MakeAbsoluteFromProject(value);
-        }
-        else if (key == "lastModified") {
-            meta.lastModified = std::stoll(value);
-        }
-        // Model settings
-        else if (key == "importScale") {
-            meta.importSettings.importScale = std::stof(value);
-        }
-        else if (key == "generateNormals") {
-            meta.importSettings.generateNormals = (value == "1");
-        }
-        else if (key == "flipUVs") {
-            meta.importSettings.flipUVs = (value == "1");
-        }
-        else if (key == "optimizeMeshes") {
-            meta.importSettings.optimizeMeshes = (value == "1");
-        }
-        else if (key == "upAxis") {
-            meta.importSettings.upAxis = std::stoi(value);
-        }
-        else if (key == "frontAxis") {
-            meta.importSettings.frontAxis = std::stoi(value);
-        }
-        // Texture settings
-        else if (key == "generateMipmaps") {
-            meta.importSettings.generateMipmaps = (value == "1");
-        }
-        else if (key == "filterMode") {
-            meta.importSettings.filterMode = std::stoi(value);
-        }
-        else if (key == "flipHorizontal") {
-            meta.importSettings.flipHorizontal = (value == "1");
-        }
-        else if (key == "maxTextureSize") {
-            meta.importSettings.maxTextureSize = std::stoi(value);
-        }
+    }
+    catch (const nlohmann::json::exception& e) {
+        LOG_CONSOLE( "[MetaFile] ERROR parsing JSON en %s", metaFilePath);
     }
 
     file.close();
-
     return meta;
 }
 
 bool MetaFile::NeedsReimport(const std::string& assetPath) const {
+    
     if (!std::filesystem::exists(assetPath)) {
         return false;
     }
 
-    long long currentTimestamp = std::filesystem::last_write_time(assetPath)
-        .time_since_epoch().count();
-
-    // Tolerance of a few seconds
-    const long long tolerance = 20000000000; 
-
-    long long diff = std::abs(currentTimestamp - lastModified);
-
-    return diff > tolerance;
+    if (fileHash != MetaFileManager::GetFileHash(assetPath))
+        return true;
 }
 
 std::string MetaFile::MakeRelativeToProject(const std::string& absolutePath) {
@@ -248,7 +232,7 @@ void MetaFileManager::ScanAssets() {
             meta.uid = MetaFile::GenerateUID();
             meta.type = type;
             meta.originalPath = assetPath;
-            meta.lastModified = GetFileTimestamp(assetPath);
+            meta.fileHash = GetFileHash(assetPath);
 
             if (meta.Save(metaPath)) {
                 metasCreated++;
@@ -358,7 +342,7 @@ void MetaFileManager::CheckForChanges() {
                 meta.uid = MetaFile::GenerateUID();
                 meta.type = type;
                 meta.originalPath = assetPath;
-                meta.lastModified = GetFileTimestamp(assetPath);
+                meta.fileHash = GetFileHash(assetPath);
 
                 if (meta.Save(metaPath)) {
                     LOG_CONSOLE("[MetaFileManager] Created .meta for new asset: %s", assetPath.c_str());
@@ -389,14 +373,13 @@ bool MetaFileManager::UpdateMetaIfModified(const std::string& assetPath) {
     // Load existing .meta
     MetaFile meta = MetaFile::Load(metaPath);
 
-    // Check if timestamp changed
-    long long currentTimestamp = GetFileTimestamp(assetPath);
+    uint32_t currentFileHash = GetFileHash(assetPath);
 
-    if (meta.lastModified != currentTimestamp) {
+    if (meta.fileHash != currentFileHash) {
         LOG_CONSOLE("[MetaFileManager] File modified, updating .meta: %s", assetPath.c_str());
 
         // Update timestamp
-        meta.lastModified = currentTimestamp;
+        meta.fileHash = currentFileHash;
 
         // Save changes
         if (meta.Save(metaPath)) {
@@ -434,7 +417,7 @@ MetaFile MetaFileManager::GetOrCreateMeta(const std::string& assetPath) {
     meta.uid = MetaFile::GenerateUID();
     meta.type = MetaFile::GetAssetType(std::filesystem::path(assetPath).extension().string());
     meta.originalPath = assetPath;
-    meta.lastModified = GetFileTimestamp(assetPath);
+    meta.fileHash = GetFileHash(assetPath);
 
     meta.Save(metaPath);
 
@@ -463,13 +446,12 @@ MetaFile MetaFileManager::LoadMeta(const std::string& assetPath) {
         return MetaFile::Load(metaPath);
     }
 
-    return MetaFile();  // Return empty meta if doesn't exist
+    return MetaFile();
 }
 
 UID MetaFileManager::GetUIDFromAsset(const std::string& assetPath) {
     MetaFile meta = LoadMeta(assetPath);
 
-    // If no UID, generate one and save
     if (meta.uid == 0 && std::filesystem::exists(assetPath)) {
         meta.uid = MetaFile::GenerateUID();
         std::string metaPath = GetMetaPath(assetPath);
@@ -513,6 +495,24 @@ long long MetaFileManager::GetFileTimestamp(const std::string& filePath) {
     }
 
     return std::filesystem::last_write_time(filePath).time_since_epoch().count();
+}
+
+uint32_t MetaFileManager::GetFileHash(const std::string& path)
+{
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) return 0;
+
+    std::vector<char> buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+    uint32_t crc = 0xFFFFFFFF;
+    for (char c : buffer) {
+        crc = crc ^ (unsigned char)c;
+        for (int i = 0; i < 8; i++) {
+            if (crc & 1) crc = (crc >> 1) ^ 0xEDB88320;
+            else         crc = crc >> 1;
+        }
+    }
+    return ~crc;
 }
 
 // Private Helpers

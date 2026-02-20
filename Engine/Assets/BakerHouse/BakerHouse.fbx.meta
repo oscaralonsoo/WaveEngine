@@ -1,9 +1,13 @@
-uid: 17224525814337071410
-type: 1
-lastModified: 134159958068187178
-importScale: 1
-generateNormals: 1
-flipUVs: 1
-optimizeMeshes: 1
-upAxis: 0
-frontAxis: 0
+{
+    "fileHash": 42654305,
+    "importSettings": {
+        "flipUVs": true,
+        "frontAxis": 0,
+        "generateNormals": true,
+        "importScale": 1.0,
+        "optimizeMeshes": true,
+        "upAxis": 0
+    },
+    "type": 1,
+    "uid": 9795493317860982421
+}

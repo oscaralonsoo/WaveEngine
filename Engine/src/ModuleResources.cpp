@@ -298,10 +298,9 @@ UID ModuleResources::ImportFile(const char* newFileInAssets) {
         return 0;
     }
 
-    // Update timestamp in meta
-    long long currentTimestamp = MetaFileManager::GetFileTimestamp(newFileInAssets);
-    if (meta.lastModified != currentTimestamp) {
-        meta.lastModified = currentTimestamp;
+    uint32_t fileHash = MetaFileManager::GetFileHash(newFileInAssets);
+    if (meta.fileHash != fileHash) {
+        meta.fileHash = fileHash;
         std::string metaPath = std::string(newFileInAssets) + ".meta";
         meta.Save(metaPath);
     }
