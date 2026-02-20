@@ -21,6 +21,7 @@
 ComponentCanvas::ComponentCanvas(GameObject* owner) : Component(owner, ComponentType::CANVAS)
 {
     name = "Canvas";
+    opacity = 1.0f;
     GenerateFramebuffer(width, height);
     Application::GetInstance().ui->RegisterCanvas(this);
 }
@@ -148,10 +149,16 @@ void ComponentCanvas::GenerateFramebuffer(int w, int h)
 void ComponentCanvas::Serialize(nlohmann::json& componentObj) const
 {
     componentObj["xamlPath"] = currentXAML;
+    componentObj["opacity"] = opacity;
 }
 
 void ComponentCanvas::Deserialize(const nlohmann::json& componentObj)
 {
+    if (componentObj.contains("opacity"))
+    {
+        opacity = componentObj["opacity"];
+    }
+
     if (componentObj.contains("xamlPath"))
     {
         std::string path = componentObj["xamlPath"];
@@ -160,4 +167,14 @@ void ComponentCanvas::Deserialize(const nlohmann::json& componentObj)
             LoadXAML(path.c_str());
         }
     }
+}
+
+void ComponentCanvas::SetOpacity(float alpha)
+{
+    opacity = (alpha < 0.0f) ? 0.0f : (alpha > 1.0f ? 1.0f : alpha);
+}
+
+float ComponentCanvas::GetOpacity() const
+{
+    return opacity;
 }

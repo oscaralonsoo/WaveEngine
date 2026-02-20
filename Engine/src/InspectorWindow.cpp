@@ -722,6 +722,14 @@ void InspectorWindow::DrawCanvasComponent(GameObject* selectedObject)
         }
 
         ImGui::Spacing();
+
+        float opacity = canvasComp->GetOpacity();
+        if (ImGui::SliderFloat("Opacity", &opacity, 0.0f, 1.0f))
+        {
+            canvasComp->SetOpacity(opacity);
+        }
+
+        ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
 

@@ -56,7 +56,7 @@ void GameWindow::Draw()
                     canvas->Resize((int)gameViewportSize.x, (int)gameViewportSize.y);
                     canvas->RenderToTexture();
                     ImGui::SetCursorScreenPos(gameViewportPos);
-                    ImGui::Image((ImTextureID)(uintptr_t)canvas->GetTextureID(), gameViewportSize, ImVec2(0, 1), ImVec2(1, 0));
+                    ImGui::Image((ImTextureID)(uintptr_t)canvas->GetTextureID(), gameViewportSize, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f), ImVec4(1.0f, 1.0f, 1.0f, canvas->GetOpacity()), ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
                 }
             }
         }

@@ -29,6 +29,10 @@ public:
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;
 
+    void SetOpacity(float alpha);
+    float GetOpacity() const;
+
+    float opacity;
 private:
     void GenerateFramebuffer(int width, int height);
 
