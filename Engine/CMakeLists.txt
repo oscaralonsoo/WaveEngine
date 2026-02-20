@@ -235,10 +235,41 @@ target_link_libraries(Engine PRIVATE ${LUA_LIBRARIES})
 
 target_include_directories(Engine PRIVATE ${LUA_INCLUDE_DIR})
 
-# ---- NoesisGUI ----
+
+# ============= NoesisGUI =============
+
+# AUTO-DOWNLOAD
+
 set(NOESIS_SDK_DIR "${CMAKE_SOURCE_DIR}/External/NoesisGUI")
 
-# --- Sources: glob por paquete completo ---
+if(NOT EXISTS "${NOESIS_SDK_DIR}/Lib/windows_x86/Noesis.lib")
+    message(STATUS "NoesisGUI SDK not found. Downloading...")
+    
+    file(DOWNLOAD 
+        "https://drive.usercontent.google.com/download?id=1KyGAq3gMaqE6nTexLKW_bBL8ZE7Qydbd&export=download&authuser=0&confirm=t&uuid=7d0cd1ad-694b-4b8d-831d-277f0019f001&at=APcXIO1GH_qglCnlDpFe4uf3p5hE%3A1771545574705"
+        "${CMAKE_BINARY_DIR}/NoesisGUI.zip"
+        SHOW_PROGRESS
+        STATUS DOWNLOAD_STATUS
+    )
+    
+    list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+    if(NOT STATUS_CODE EQUAL 0)
+        message(FATAL_ERROR "Failed to download NoesisGUI SDK. Please download manually from: [https://drive.usercontent.google.com/download?id=1KyGAq3gMaqE6nTexLKW_bBL8ZE7Qydbd&export=download&authuser=0&confirm=t&uuid=7d0cd1ad-694b-4b8d-831d-277f0019f001&at=APcXIO1GH_qglCnlDpFe4uf3p5hE%3A1771545574705]")
+    endif()
+    
+    message(STATUS "Extracting NoesisGUI SDK...")
+
+    file(ARCHIVE_EXTRACT 
+        INPUT "${CMAKE_BINARY_DIR}/NoesisGUI.zip"
+        DESTINATION "${NOESIS_SDK_DIR}"
+    )
+    
+    message(STATUS "NoesisGUI SDK installed!")
+endif()
+
+
+# INTEGRATION
+
 file(GLOB NOESIS_APP_PROVIDERS_SOURCES
     "${NOESIS_SDK_DIR}/Src/Packages/App/Providers/Src/*.cpp"
 )
@@ -259,7 +290,6 @@ target_sources(Engine PRIVATE
     ${NOESIS_MEDIAELEMENT_SOURCES}
 )
 
-# --- Includes: todos los paquetes de golpe ---
 file(GLOB NOESIS_PACKAGE_INCLUDE_DIRS
     LIST_DIRECTORIES true
     "${NOESIS_SDK_DIR}/Src/Packages/*/Include"
@@ -272,7 +302,6 @@ target_include_directories(Engine PRIVATE
     ${NOESIS_PACKAGE_INCLUDE_DIRS}
 )
 
-# --- Macros de compilación estática ---
 target_compile_definitions(Engine PRIVATE
     NS_APP_PROVIDERS_API=
     NS_APP_FRAMEWORK_API=
@@ -297,3 +326,4 @@ if(WIN32)
     )
 endif()
 
+# =========== End NoesisGUI ===========
