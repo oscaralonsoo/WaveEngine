@@ -15,7 +15,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     camera = std::make_shared<ModuleCamera>();
     audio = std::make_shared<ModuleAudio>();
     editor = std::make_shared<ModuleEditor>();
-    filesystem = std::make_shared<FileSystem>();
+    loader = std::make_shared<ModuleLoader>();
     time = std::make_shared<Time>();
     grid = std::make_shared<Grid>();
     resources = std::make_shared<ModuleResources>();
@@ -33,7 +33,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     AddModule(std::static_pointer_cast<Module>(editor));
     AddModule(std::static_pointer_cast<Module>(resources));
     AddModule(std::static_pointer_cast<Module>(scripts));  
-    AddModule(std::static_pointer_cast<Module>(filesystem));
+    AddModule(std::static_pointer_cast<Module>(loader));
     AddModule(std::static_pointer_cast<Module>(time));
     AddModule(std::static_pointer_cast<Module>(grid));
     AddModule(std::static_pointer_cast<Module>(renderer));
@@ -272,7 +272,7 @@ bool Application::CleanUp()
     renderer.reset();
     grid.reset();
     time.reset();
-    filesystem.reset();
+    loader.reset();
     scripts.reset();
     resources.reset();
     editor.reset();

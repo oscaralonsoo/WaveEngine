@@ -149,8 +149,8 @@ set(COMPONENTS_SRC
 set(LOADERS_SRC 
     src/Texture.h 
     src/Texture.cpp  
-    src/FileSystem.h  
-    src/FileSystem.cpp 
+    src/ModuleLoader.h
+    src/ModuleLoader.cpp 
 )
 
 set(EDITOR_SRC 
@@ -180,20 +180,30 @@ set(EDITOR_SRC
 set(IMPORTERS_SRC 
     src/MeshImporter.cpp 
     src/MeshImporter.h 
+    src/AnimationImporter.cpp 
+    src/AnimationImporter.h 
     src/LibraryManager.cpp 
     src/LibraryManager.h 
     src/MetaFile.cpp 
     src/MetaFile.h 
     src/TextureImporter.cpp 
     src/TextureImporter.h 
+    src/ModelImporter.cpp 
+    src/ModelImporter.h 
     src/ModuleResources.cpp 
     src/ModuleResources.h 
     src/ResourceMesh.cpp 
     src/ResourceMesh.h 
+    src/ResourceModel.cpp 
+    src/ResourceModel.h 
     src/ResourceTexture.cpp 
     src/ResourceTexture.h 
+    src/ResourceAnimation.cpp 
+    src/ResourceAnimation.h 
     src/ResourceShader.cpp
     src/ResourceShader.h
+    src/ResourceAnimation.cpp
+    src/ResourceAnimation.h
 )
 
 set(SCRIPTING_SRC 

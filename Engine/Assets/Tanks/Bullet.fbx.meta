@@ -8,6 +8,9 @@
         "optimizeMeshes": true,
         "upAxis": 0
     },
+    "meshes": {
+        "Icosphere": 14248598329124048538
+    },
     "type": 1,
-    "uid": 9222685125341642795
+    "uid": 3842878839983872848
 }

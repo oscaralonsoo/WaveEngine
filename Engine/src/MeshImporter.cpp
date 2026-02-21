@@ -3,7 +3,7 @@
 #include "MeshImporter.h"
 #include "LibraryManager.h"
 #include <filesystem>
-#include "FileSystem.h" 
+#include "ModuleLoader.h" 
 #include <assimp/mesh.h>
 #include <fstream>
 #include <sstream>
@@ -16,6 +16,7 @@ MeshImporter::~MeshImporter() {}
 
 // IMPORT: Assimp -> Our Mesh Structure
 Mesh MeshImporter::ImportFromAssimp(const aiMesh* assimpMesh) {
+    
     Mesh mesh;
 
     if (!assimpMesh) {
@@ -85,18 +86,11 @@ bool MeshImporter::SaveToCustomFormat(const Mesh& mesh, const std::string& filen
         return false;
     }
 
-    // 1. Build header
-    MeshHeader header;
-    header.numVertices = static_cast<unsigned int>(mesh.vertices.size());
-    header.numIndices = static_cast<unsigned int>(mesh.indices.size());
-    header.hasNormals = !mesh.vertices.empty();
-    header.hasTexCoords = !mesh.vertices.empty();
+    unsigned int numVertices = static_cast<unsigned int>(mesh.vertices.size());
+    unsigned int numIndices = static_cast<unsigned int>(mesh.indices.size());
 
-    // Calculate bounding box
-    CalculateBoundingBox(mesh, header.boundingBoxMin, header.boundingBoxMax);
-
-    // 2. Write header
-    file.write(reinterpret_cast<const char*>(&header), sizeof(MeshHeader));
+    file.write(reinterpret_cast<const char*>(&numVertices), sizeof(unsigned int));
+    file.write(reinterpret_cast<const char*>(&numIndices), sizeof(unsigned int));
 
     // 3. Write vertex data
     if (!mesh.vertices.empty()) {
@@ -119,10 +113,9 @@ bool MeshImporter::SaveToCustomFormat(const Mesh& mesh, const std::string& filen
     return true;
 }
 
-// LOAD: Custom Binary Format -> Our Mesh
 Mesh MeshImporter::LoadFromCustomFormat(const std::string& filename) {
-    std::string fullPath = LibraryManager::GetMeshPath(filename);
 
+    std::string fullPath = LibraryManager::GetMeshPath(filename);
     Mesh mesh;
 
     std::ifstream file(fullPath, std::ios::binary);
@@ -131,29 +124,32 @@ Mesh MeshImporter::LoadFromCustomFormat(const std::string& filename) {
         return mesh;
     }
 
-    // 1. Read header
-    MeshHeader header;
-    file.read(reinterpret_cast<char*>(&header), sizeof(MeshHeader));
+    unsigned int numVertices = 0;
+    unsigned int numIndices = 0;
 
-    // 2. Read vertex data
-    mesh.vertices.resize(header.numVertices);
-    if (header.numVertices > 0) {
+    file.read(reinterpret_cast<char*>(&numVertices), sizeof(unsigned int));
+    file.read(reinterpret_cast<char*>(&numIndices), sizeof(unsigned int));
+
+    if (numVertices > 0) {
+        mesh.vertices.resize(numVertices);
         file.read(
             reinterpret_cast<char*>(mesh.vertices.data()),
-            header.numVertices * sizeof(Vertex)
+            numVertices * sizeof(Vertex)
         );
     }
 
-    // 3. Read index data
-    mesh.indices.resize(header.numIndices);
-    if (header.numIndices > 0) {
+    if (numIndices > 0) {
+        mesh.indices.resize(numIndices);
         file.read(
             reinterpret_cast<char*>(mesh.indices.data()),
-            header.numIndices * sizeof(unsigned int)
+            numIndices * sizeof(unsigned int)
         );
     }
 
     file.close();
+
+    LOG_DEBUG("Mesh loaded from Library: %s (%u verts, %u indices)",
+        filename.c_str(), numVertices, numIndices);
 
     return mesh;
 }
@@ -172,10 +168,8 @@ std::string MeshImporter::GenerateMeshFilename(const std::string& originalName) 
         sanitized.end()
     );
 
-    // for consistency
     std::transform(sanitized.begin(), sanitized.end(), sanitized.begin(), ::tolower);
 
-    // generate hash
     std::hash<std::string> hasher;
     size_t hashValue = hasher(originalName);
 
@@ -183,25 +177,4 @@ std::string MeshImporter::GenerateMeshFilename(const std::string& originalName) 
     ss << sanitized << "_" << std::hex << hashValue << ".mesh";
 
     return ss.str();
-}
-
-void MeshImporter::CalculateBoundingBox(const Mesh& mesh, glm::vec3& minBounds, glm::vec3& maxBounds) {
-    if (mesh.vertices.empty()) {
-        minBounds = glm::vec3(0.0f);
-        maxBounds = glm::vec3(0.0f);
-        return;
-    }
-
-    minBounds = glm::vec3(std::numeric_limits<float>::max());
-    maxBounds = glm::vec3(std::numeric_limits<float>::lowest());
-
-    for (const auto& vertex : mesh.vertices) {
-        minBounds.x = std::min(minBounds.x, vertex.position.x);
-        minBounds.y = std::min(minBounds.y, vertex.position.y);
-        minBounds.z = std::min(minBounds.z, vertex.position.z);
-
-        maxBounds.x = std::max(maxBounds.x, vertex.position.x);
-        maxBounds.y = std::max(maxBounds.y, vertex.position.y);
-        maxBounds.z = std::max(maxBounds.z, vertex.position.z);
-    }
 }

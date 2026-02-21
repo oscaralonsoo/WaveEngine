@@ -7,7 +7,7 @@
 #include "Input.h"
 #include "RenderContext.h"
 #include "Renderer.h"
-#include "FileSystem.h"
+#include "ModuleLoader.h"
 #include "Time.h"
 #include "ModuleScene.h"
 #include "Grid.h"
@@ -65,7 +65,7 @@ public:
     std::shared_ptr<RenderContext> renderContext;
     std::shared_ptr<Renderer> renderer;
     
-    std::shared_ptr<FileSystem> filesystem;
+    std::shared_ptr<ModuleLoader> loader;
     
     std::shared_ptr<Time> time;
     std::shared_ptr<ModuleScene> scene;

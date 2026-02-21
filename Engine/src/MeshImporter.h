@@ -3,23 +3,12 @@
 #include <string>
 #include <vector>
 #include <glm/glm.hpp>
+#include "ResourceMesh.h"
 
 // Forward declarations
 struct Mesh;
 struct aiMesh;
 struct aiScene;
-
-// Header structure for custom mesh format
-struct MeshHeader {
-    unsigned int numVertices = 0;
-    unsigned int numIndices = 0;
-    bool hasNormals = false;
-    bool hasTexCoords = false;
-
-    // Pre-calculated data
-    glm::vec3 boundingBoxMin = glm::vec3(0.0f);
-    glm::vec3 boundingBoxMax = glm::vec3(0.0f);
-};
 
 class MeshImporter {
 public:
@@ -37,8 +26,4 @@ public:
 
     // Utility: Generate unique filename for mesh
     static std::string GenerateMeshFilename(const std::string& originalName);
-
-private:
-    // Calculate bounding box from mesh vertices
-    static void CalculateBoundingBox(const Mesh& mesh, glm::vec3& minBounds, glm::vec3& maxBounds);
 };

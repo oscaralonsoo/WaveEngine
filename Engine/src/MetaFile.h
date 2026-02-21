@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -73,6 +74,8 @@ struct MetaFile {
     std::string originalPath;
     uint32_t fileHash = 0;
     ImportSettings importSettings;
+    std::map<std::string, UID> meshes;
+    std::map<std::string, UID> animations;
 
     static UID GenerateUID();
     static AssetType GetAssetType(const std::string& extension);

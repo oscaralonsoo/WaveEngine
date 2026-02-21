@@ -8,6 +8,10 @@
         "optimizeMeshes": true,
         "upAxis": 0
     },
+    "meshes": {
+        "Baker_house": 15323657381393298197,
+        "Chimney": 2089204567326953221
+    },
     "type": 1,
-    "uid": 9795493317860982421
+    "uid": 509734922389634927
 }

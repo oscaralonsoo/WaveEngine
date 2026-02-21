@@ -71,7 +71,7 @@ public:
     UID Find(const char* fileInAssets) const;
 
     // Import new file and return its UID
-    UID ImportFile(const char* newFileInAssets);
+    UID ImportFile(const char* newFileInAssets, bool forceReimport = false);
 
     // Generate unique UID
     UID GenerateNewUID();

@@ -373,6 +373,7 @@ void GameObject::Serialize(nlohmann::json& gameObjectArray) const {
 }
 
 GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObject* parent) {
+    
     if (!gameObjectObj.is_object()) {
         return nullptr;
     }

@@ -8,6 +8,9 @@
         "optimizeMeshes": true,
         "upAxis": 0
     },
+    "meshes": {
+        "Kadama": 7465604858031829272
+    },
     "type": 1,
-    "uid": 8618381666166233160
+    "uid": 12599165742525804778
 }

@@ -1,10 +1,10 @@
 Engine/build/
 Engine/Library/
 Engine/CMakeUserPresets.json
-Engine/Scene/Editor Layout/editor_layout.ini
 Engine/External
 
 #wwise user-specific files
 *.prof
 *.validationcache
 *.wsettings
+*.ini

@@ -8,6 +8,9 @@
         "optimizeMeshes": true,
         "upAxis": 0
     },
+    "meshes": {
+        "g arial__u": 2973853670774452037
+    },
     "type": 1,
-    "uid": 9003831195100890910
+    "uid": 12459230239305830327
 }

@@ -8,6 +8,9 @@
         "optimizeMeshes": true,
         "upAxis": 0
     },
+    "meshes": {
+        "cannon": 3298048832231804783
+    },
     "type": 1,
-    "uid": 17980907461083312061
+    "uid": 8872776800274889651
 }

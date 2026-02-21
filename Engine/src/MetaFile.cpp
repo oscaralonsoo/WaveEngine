@@ -52,6 +52,12 @@ bool MetaFile::Save(const std::string& metaFilePath) const {
             {"upAxis", importSettings.upAxis},
             {"frontAxis", importSettings.frontAxis}
         };
+        if (!meshes.empty()) {
+            meta["meshes"] = meshes;
+        }
+        if (!animations.empty()) {
+            meta["animations"] = animations;
+        }
     }
     else if (type == AssetType::TEXTURE_PNG ||
         type == AssetType::TEXTURE_JPG ||
@@ -98,11 +104,17 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
         if (metaFile.contains("originalPath")) {
             meta.originalPath = MakeAbsoluteFromProject(metaFile["originalPath"].get<std::string>());
         }
-
-        if (metaFile.contains("importSettings")) {
-            const auto& settings = metaFile["importSettings"];
-
-            if (meta.type == AssetType::MODEL_FBX) {
+        
+        if (meta.type == AssetType::MODEL_FBX) {
+            
+            if (metaFile.contains("meshes")) {
+                meta.meshes = metaFile["meshes"].get<std::map<std::string, UID>>();
+            }
+            if (metaFile.contains("animations")) {
+                meta.animations = metaFile["animations"].get<std::map<std::string, UID>>();
+            }
+            if (metaFile.contains("importSettings")) {
+                const auto& settings = metaFile["importSettings"];
                 if (settings.contains("importScale")) meta.importSettings.importScale = settings["importScale"].get<float>();
                 if (settings.contains("generateNormals")) meta.importSettings.generateNormals = settings["generateNormals"].get<bool>();
                 if (settings.contains("flipUVs")) meta.importSettings.flipUVs = settings["flipUVs"].get<bool>();
@@ -110,10 +122,14 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
                 if (settings.contains("upAxis")) meta.importSettings.upAxis = settings["upAxis"].get<int>();
                 if (settings.contains("frontAxis")) meta.importSettings.frontAxis = settings["frontAxis"].get<int>();
             }
-            else if (meta.type == AssetType::TEXTURE_PNG ||
-                meta.type == AssetType::TEXTURE_JPG ||
-                meta.type == AssetType::TEXTURE_DDS ||
-                meta.type == AssetType::TEXTURE_TGA) {
+        }
+        else if (meta.type == AssetType::TEXTURE_PNG ||
+            meta.type == AssetType::TEXTURE_JPG ||
+            meta.type == AssetType::TEXTURE_DDS ||
+            meta.type == AssetType::TEXTURE_TGA) {
+
+            if (metaFile.contains("importSettings")) {
+                const auto& settings = metaFile["importSettings"];
                 if (settings.contains("generateMipmaps")) meta.importSettings.generateMipmaps = settings["generateMipmaps"].get<bool>();
                 if (settings.contains("filterMode")) meta.importSettings.filterMode = settings["filterMode"].get<int>();
                 if (settings.contains("flipHorizontal")) meta.importSettings.flipHorizontal = settings["flipHorizontal"].get<bool>();
@@ -122,7 +138,7 @@ MetaFile MetaFile::Load(const std::string& metaFilePath) {
         }
     }
     catch (const nlohmann::json::exception& e) {
-        LOG_CONSOLE( "[MetaFile] ERROR parsing JSON en %s", metaFilePath);
+        LOG_CONSOLE("[MetaFile] ERROR parsing JSON en %s: %s", metaFilePath.c_str(), e.what());
     }
 
     file.close();
@@ -200,6 +216,7 @@ void MetaFileManager::Initialize() {
 }
 
 void MetaFileManager::ScanAssets() {
+    
     std::string assetsPath = LibraryManager::GetAssetsRoot();
 
     if (!std::filesystem::exists(assetsPath)) {
@@ -212,6 +229,7 @@ void MetaFileManager::ScanAssets() {
 
     // Recursively iterate through Assets/
     for (const auto& entry : std::filesystem::recursive_directory_iterator(assetsPath)) {
+        
         if (!entry.is_regular_file()) continue;
 
         std::string assetPath = entry.path().string();
@@ -238,7 +256,8 @@ void MetaFileManager::ScanAssets() {
                 metasCreated++;
             }
         }
-        else {
+        else 
+        {
             metasExisting++;
         }
     }

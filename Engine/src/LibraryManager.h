@@ -20,6 +20,7 @@ public:
 
     // Legacy compatibility
     static std::string GetMeshPath(const std::string& filename);
+    static std::string GetAnimationPath(const std::string& filename);
     static std::string GetTexturePath(const std::string& filename);
     static std::string GetModelPath(const std::string& filename);
 

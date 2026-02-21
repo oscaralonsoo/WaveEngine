@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ModuleResources.h"
-#include "FileSystem.h"  // Para struct Mesh
+#include "ModuleLoader.h"  // Para struct Mesh
 
 class ResourceMesh : public Resource {
 public:

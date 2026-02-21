@@ -102,14 +102,12 @@ void SceneWindow::HandleAssetDropTarget()
             {
             case DragDropAssetType::FBX_MODEL:
             {
+
                 LOG_CONSOLE("Loading FBX model...");
-                GameObject* loadedModel = Application::GetInstance().filesystem->LoadFBXAsGameObject(dropData->assetPath);
+                bool loadedModel = Application::GetInstance().loader->LoadFbx(dropData->assetPath);
 
                 if (loadedModel)
                 {
-                    GameObject* root = Application::GetInstance().scene->GetRoot();
-                    root->AddChild(loadedModel);
-                    Application::GetInstance().scene->RebuildOctree();
                     LOG_CONSOLE("FBX model loaded successfully");
                 }
                 else

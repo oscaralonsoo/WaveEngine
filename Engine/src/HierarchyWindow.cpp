@@ -24,34 +24,36 @@ void HierarchyWindow::Draw()
 
     GameObject* root = Application::GetInstance().scene->GetRoot();
 
-    if (root != nullptr)
+    if (root)
     {
-        DrawGameObjectNode(root);
-
-        if (ImGui::BeginDragDropTarget())
+        for (GameObject* child : root->GetChildren())
         {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_GAMEOBJECT"))
+            if (child != nullptr)
             {
-                if (!dragCancelled)
+                DrawGameObjectNode(child);
+
+                if (ImGui::BeginDragDropTarget())
                 {
-                    GameObject* draggedObject = *(GameObject**)payload->Data;
-                    if (draggedObject != root)
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_GAMEOBJECT"))
                     {
-                        draggedObject->SetParent(root);
+                        if (!dragCancelled)
+                        {
+                            GameObject* draggedObject = *(GameObject**)payload->Data;
+                            if (draggedObject != root)
+                            {
+                                draggedObject->SetParent(root);
+                            }
+                        }
+                        else
+                        {
+                            LOG_DEBUG("Drop to root cancelled by user");
+                            dragCancelled = false;
+                        }
                     }
-                }
-                else
-                {
-                    LOG_DEBUG("Drop to root cancelled by user");
-                    dragCancelled = false; 
+                    ImGui::EndDragDropTarget();
                 }
             }
-            ImGui::EndDragDropTarget();
         }
-    }
-    else
-    {
-        ImGui::TextDisabled("No scene loaded");
     }
 
     ImGui::End();

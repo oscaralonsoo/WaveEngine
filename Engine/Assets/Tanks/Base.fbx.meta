@@ -8,6 +8,9 @@
         "optimizeMeshes": true,
         "upAxis": 0
     },
+    "meshes": {
+        "Cylinder.010": 5990807237215293768
+    },
     "type": 1,
-    "uid": 1626244874169486226
+    "uid": 11919514838122046447
 }

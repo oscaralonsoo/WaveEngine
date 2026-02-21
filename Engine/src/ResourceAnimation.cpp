@@ -1,0 +1,57 @@
+#include "ResourceAnimation.h"
+#include "ModuleResources.h"
+#include "AnimationImporter.h"
+#include "Log.h"
+#include <fstream>
+
+ResourceAnimation::ResourceAnimation(UID uid)
+    : Resource(uid, Resource::ANIMATION) {
+}
+
+ResourceAnimation::~ResourceAnimation() {
+    UnloadFromMemory();
+}
+
+bool ResourceAnimation::LoadInMemory() {
+    
+    Animation animation;
+    if (loadedInMemory)
+        return true;
+
+    if (libraryFile.empty()) {
+        LOG_DEBUG("[ResourceAnimation] ERROR: No library file specified");
+        return false;
+    }
+
+    //Extract file name from path
+    std::string filename = libraryFile;
+    size_t lastSlash = filename.find_last_of("/\\");
+    if (lastSlash != std::string::npos) {
+        filename = filename.substr(lastSlash + 1);
+    }
+
+    //Extract data from Library
+    animation = AnimationImporter::LoadFromCustomFormat(filename);
+
+    if (animation.IsValid())
+    {
+        animation.duration = animation.duration;
+        animation.ticksPerSecond = animation.ticksPerSecond;
+        animation.channels = animation.channels;
+
+        loadedInMemory = true;
+    }
+    else
+    {
+        LOG_DEBUG("[ResourceAnimation] Failed to load resourece %s", libraryFile);
+        return false;
+    }
+}
+
+void ResourceAnimation::UnloadFromMemory() {
+    
+    loadedInMemory = false;
+    animation.duration = 0.0;
+    animation.ticksPerSecond = 0.0;
+    animation.channels.clear();
+}

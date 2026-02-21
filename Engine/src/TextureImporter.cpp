@@ -27,6 +27,7 @@ void TextureImporter::InitDevIL() {
 }
 
 TextureData TextureImporter::ImportFromFile(const std::string& filepath) {
+    
     ImportSettings defaultSettings;
     defaultSettings.flipUVs = true;
     defaultSettings.flipHorizontal = false;
