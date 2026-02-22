@@ -25,10 +25,17 @@ public:
     unsigned int GetTextureID() const { return textureID; }
     GameObject* GetOwner() const { return owner; }
 
+	//Input handling
+    void OnMouseMove(int x, int y);
+    void OnMouseButtonDown(int x, int y, Noesis::MouseButton button);
+    void OnMouseButtonUp(int x, int y, Noesis::MouseButton button);
+    void OnMouseWheel(int x, int y, int delta);
+
     // Serialization
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;
 
+	//Opacity control
     void SetOpacity(float alpha);
     float GetOpacity() const;
 

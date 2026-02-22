@@ -15,7 +15,12 @@ public:
     bool Start() override;
     bool CleanUp() override;
     void OnResize(uint32_t width, uint32_t height);
-    void SetMousePoistion(int x, int y);
+
+    void SetMousePosition(int x, int y);
+    void OnMouseButtonDown(int x, int y, int sdlButton);
+    void OnMouseButtonUp(int x, int y, int sdlButton);
+    void OnMouseWheel(int x, int y, int delta);
+
     std::vector<ComponentCanvas*> GetCanvas() { return canvas; }
     Noesis::Ptr<Noesis::RenderDevice> GetRenderDevice() { return renderDevice; }
     void RegisterCanvas(ComponentCanvas* c) { canvas.push_back(c); }
@@ -26,4 +31,5 @@ public:
 private:
     Noesis::Ptr<Noesis::RenderDevice> renderDevice;
     std::vector<ComponentCanvas*> canvas;
+    int mouseX = 0, mouseY = 0;
 };

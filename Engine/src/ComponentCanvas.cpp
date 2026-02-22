@@ -146,6 +146,27 @@ void ComponentCanvas::GenerateFramebuffer(int w, int h)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void ComponentCanvas::OnMouseMove(int x, int y)
+{
+    if (!view) return;
+    view->MouseMove(x, y);
+}
+
+void ComponentCanvas::OnMouseButtonDown(int x, int y, Noesis::MouseButton button)
+{
+    if (!view) return;
+    view->MouseButtonDown(x, y, button);
+}
+
+void ComponentCanvas::OnMouseButtonUp(int x, int y, Noesis::MouseButton button)
+{
+    if (!view) return;
+    view->MouseButtonUp(x, y, button);
+}
+void ComponentCanvas::OnMouseWheel(int x, int y, int delta) {
+    if (!view) return;
+    view->MouseWheel(x, y, delta);
+}
 void ComponentCanvas::Serialize(nlohmann::json& componentObj) const
 {
     componentObj["xamlPath"] = currentXAML;

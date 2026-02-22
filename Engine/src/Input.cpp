@@ -2,6 +2,7 @@
 #include "Window.h"
 #include "UI.h"
 #include "Application.h"
+#include "ModuleEditor.h"
 #include <iostream>
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
@@ -56,7 +57,6 @@ bool IsMouseOverSceneWindow()
 
 	return editor->IsMouseOverScene();
 }
-
 bool Input::PreUpdate()
 {
 	static SDL_Event event;
@@ -115,6 +115,25 @@ bool Input::PreUpdate()
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		{
 			mouseButtons[event.button.button - 1] = KEY_DOWN;
+
+			// Send mouse button down to Noesis UI
+			{
+				float mx, my;
+				SDL_GetMouseState(&mx, &my);
+				int scale = Application::GetInstance().window.get()->GetScale();
+				int uiMx = (int)(mx / scale);
+				int uiMy = (int)(my / scale);
+
+				ModuleEditor* editor = Application::GetInstance().editor.get();
+				if (editor)
+				{
+					uiMx -= (int)editor->gameViewportPos.x;
+					uiMy -= (int)editor->gameViewportPos.y;
+				}
+
+				Application::GetInstance().ui.get()->OnMouseButtonDown(
+					uiMx, uiMy, event.button.button);
+			}
 
 			ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
 			if (!camera) break;
@@ -210,8 +229,27 @@ bool Input::PreUpdate()
 			break;
 		}
 		case SDL_EVENT_MOUSE_BUTTON_UP:
+		{
 			mouseButtons[event.button.button - 1] = KEY_UP;
+
+			// Send mouse button up to Noesis UI
+			float mx, my;
+			SDL_GetMouseState(&mx, &my);
+			int scale = Application::GetInstance().window.get()->GetScale();
+			int uiMx = (int)(mx / scale);
+			int uiMy = (int)(my / scale);
+
+			ModuleEditor* editor = Application::GetInstance().editor.get();
+			if (editor)
+			{
+				uiMx -= (int)editor->gameViewportPos.x;
+				uiMy -= (int)editor->gameViewportPos.y;
+			}
+
+			Application::GetInstance().ui.get()->OnMouseButtonUp(
+				uiMx, uiMy, event.button.button);
 			break;
+		}
 
 		case SDL_EVENT_MOUSE_MOTION:
 		{
@@ -221,7 +259,18 @@ bool Input::PreUpdate()
 			mouseX = static_cast<int>(event.motion.x / scale);
 			mouseY = static_cast<int>(event.motion.y / scale);
 
-			Application::GetInstance().ui.get()->SetMousePoistion(mouseX, mouseY);
+			int uiMouseX = mouseX;
+			int uiMouseY = mouseY;
+
+			ModuleEditor* editor = Application::GetInstance().editor.get();
+			if (editor)
+			{
+				uiMouseX -= (int)editor->gameViewportPos.x;
+				uiMouseY -= (int)editor->gameViewportPos.y;
+			}
+
+			// Send mouse move to Noesis UI
+			Application::GetInstance().ui.get()->SetMousePosition(uiMouseX, uiMouseY);
 
 			float mouseXf = static_cast<float>(event.motion.x) / static_cast<float>(scale);
 			float mouseYf = static_cast<float>(event.motion.y) / static_cast<float>(scale);
@@ -370,7 +419,6 @@ bool Input::PreUpdate()
 						glm::vec3 localMin = mesh->GetAABBMin();
 						glm::vec3 localMax = mesh->GetAABBMax();
 						glm::mat4 globalMatrix = transform->GetGlobalMatrix();
-
 						// Transform the 8 corners of the local AABB to world space
 						glm::vec3 corners[8] = {
 							glm::vec3(globalMatrix * glm::vec4(localMin.x, localMin.y, localMin.z, 1.0f)),

@@ -20,6 +20,7 @@
 #include "NsGui/IView.h"
 #include "NsGui/FrameworkElement.h"
 #include "NsGui/IntegrationAPI.h"
+#include "NsGui/InputEnums.h" 
 
 extern "C" void NsRegisterReflectionAppInteractivity();
 extern "C" void NsInitPackageAppInteractivity();
@@ -65,10 +66,41 @@ bool UI::CleanUp()
     return true;
 }
 
-void UI::OnResize(uint32_t width, uint32_t height)
+void UI::SetMousePosition(int x, int y)
 {
+    mouseX = x;
+    mouseY = y;
+    for (ComponentCanvas* c : canvas)
+        c->OnMouseMove(x, y);
 }
 
-void UI::SetMousePoistion(int x, int y)
+static Noesis::MouseButton SDLButtonToNoesis(int sdlButton)
 {
+    switch (sdlButton)
+    {
+    case SDL_BUTTON_LEFT:   return Noesis::MouseButton_Left;
+    case SDL_BUTTON_RIGHT:  return Noesis::MouseButton_Right;
+    case SDL_BUTTON_MIDDLE: return Noesis::MouseButton_Middle;
+    default:                return Noesis::MouseButton_Left;
+    }
+}
+
+void UI::OnMouseButtonDown(int x, int y, int sdlButton)
+{
+    for (ComponentCanvas* c : canvas)
+        c->OnMouseButtonDown(x, y, SDLButtonToNoesis(sdlButton));
+}
+
+void UI::OnMouseButtonUp(int x, int y, int sdlButton)
+{
+    for (ComponentCanvas* c : canvas)
+        c->OnMouseButtonUp(x, y, SDLButtonToNoesis(sdlButton));
+}
+void UI::OnMouseWheel(int x, int y, int delta) {
+    for (ComponentCanvas* c : canvas)
+        c->OnMouseWheel(x, y, delta);
+}
+void UI::OnResize(uint32_t width, uint32_t height) {
+    for (ComponentCanvas* c : canvas)
+        c->Resize((int)width, (int)height);
 }
