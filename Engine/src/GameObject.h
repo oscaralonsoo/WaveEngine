@@ -26,6 +26,11 @@ public:
     Component* CreateComponent(ComponentType type);
     void RemoveComponent(Component* comp);
 
+    //QOL
+    std::unique_ptr<Component> ExtractComponent(Component* comp);
+    void ReinsertComponentAt(std::unique_ptr<Component> comp, int index);
+    int GetComponentIndex(Component* comp) const;
+
     Component* GetComponent(ComponentType type) const;
     std::vector<Component*> GetComponentsOfType(ComponentType type) const;
     Component* GetComponentInChildren(ComponentType type);

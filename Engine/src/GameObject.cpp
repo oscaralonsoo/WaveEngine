@@ -457,3 +457,47 @@ void GameObject::PublishGameObjectEvent(GameObjectEvent event, Component* newCom
         }
     }
 }
+
+std::unique_ptr<Component> GameObject::ExtractComponent(Component* comp)
+{
+    auto it = std::find(components.begin(), components.end(), comp);
+    if (it != components.end())
+        components.erase(it);
+
+    auto ownerIt = std::find_if(componentOwners.begin(), componentOwners.end(),
+        [comp](const std::unique_ptr<Component>& p) { return p.get() == comp; });
+
+    if (ownerIt != componentOwners.end())
+    {
+        auto extracted = std::move(*ownerIt);
+        componentOwners.erase(ownerIt);
+        return extracted;
+    }
+
+    return nullptr;
+}
+
+void GameObject::ReinsertComponentAt(std::unique_ptr<Component> comp, int index)
+{
+    Component* raw = comp.get();
+
+    if (index < 0 || index >= static_cast<int>(componentOwners.size()))
+    {
+        componentOwners.push_back(std::move(comp));
+        components.push_back(raw);
+    }
+    else
+    {
+        componentOwners.insert(componentOwners.begin() + index, std::move(comp));
+        components.insert(components.begin() + index, raw);
+    }
+}
+
+int GameObject::GetComponentIndex(Component* comp) const
+{
+    for (int i = 0; i < static_cast<int>(components.size()); ++i)
+    {
+        if (components[i] == comp) return i;
+    }
+    return static_cast<int>(components.size());
+}

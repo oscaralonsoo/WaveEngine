@@ -24,6 +24,7 @@
 #include "ReverbZone.h"
 #include "TransformCommand.h"
 #include "ModuleEditor.h"
+#include "ComponentCommand.h"
 
 #include "Log.h"
 #include "ComponentScript.h"
@@ -122,11 +123,17 @@ void InspectorWindow::Draw()
 
     //handle components removal in inspector
     std::vector<Component*> componentsToRemove;
-    for (Component* comp : selectedObject->GetComponents()) {
+    for (Component* comp : selectedObject->GetComponents())
+    {
         if (comp->markedForRemoval) componentsToRemove.push_back(comp);
     }
-    for (Component* comp : componentsToRemove)  selectedObject->RemoveComponent(comp);
-    
+    for (Component* comp : componentsToRemove)
+    {
+        comp->markedForRemoval = false;
+        Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+            std::make_unique<RemoveComponentCommand>(selectedObject, comp)
+        );
+    }
 
     ImGui::End();
 }
@@ -1120,7 +1127,11 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         if (ImGui::Selectable("Script", false, hasScript ? ImGuiSelectableFlags_Disabled : 0))
         {
-            selectedObject->CreateComponent(ComponentType::SCRIPT);  
+            Component* newComp = selectedObject->CreateComponent(ComponentType::SCRIPT);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
 
             LOG_CONSOLE("[Inspector] Script component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
@@ -1154,7 +1165,11 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         if (ImGui::Selectable("Camera", false, hasCamera ? ImGuiSelectableFlags_Disabled : 0))
         {
-            selectedObject->CreateComponent(ComponentType::CAMERA);  
+            Component* newComp = selectedObject->CreateComponent(ComponentType::CAMERA);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
 
             LOG_CONSOLE("[Inspector] Camera component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
@@ -1188,7 +1203,11 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         if (ImGui::Selectable("Mesh Renderer", false, hasMesh ? ImGuiSelectableFlags_Disabled : 0))
         {
-            selectedObject->CreateComponent(ComponentType::MESH);  
+            Component* newComp = selectedObject->CreateComponent(ComponentType::MESH);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
 
             LOG_CONSOLE("[Inspector] Mesh component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
@@ -1222,7 +1241,11 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         if (ImGui::Selectable("Material", false, hasMaterial ? ImGuiSelectableFlags_Disabled : 0))
         {
-            selectedObject->CreateComponent(ComponentType::MATERIAL); 
+            Component* newComp = selectedObject->CreateComponent(ComponentType::MATERIAL);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
 
             LOG_CONSOLE("[Inspector] Material component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
@@ -1254,7 +1277,11 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         if (ImGui::Selectable("Particle System", false, hasParticles ? ImGuiSelectableFlags_Disabled : 0))
         {
-            selectedObject->CreateComponent(ComponentType::PARTICLE);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::PARTICLE);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Particle System component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
@@ -1280,7 +1307,11 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         if (ImGui::Selectable("Rigidbody", false, hasParticles ? ImGuiSelectableFlags_Disabled : 0))
         {
-            selectedObject->CreateComponent(ComponentType::RIGIDBODY);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::RIGIDBODY);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Rigidbody component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
@@ -1303,7 +1334,11 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         if (ImGui::Selectable("Box Collider", false))
         {
-            selectedObject->CreateComponent(ComponentType::BOX_COLLIDER);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::BOX_COLLIDER);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Box Collider component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
@@ -1317,166 +1352,214 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
         
         if (ImGui::Selectable("Sphere Collider", false))
         {
-            selectedObject->CreateComponent(ComponentType::SPHERE_COLLIDER);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::SPHERE_COLLIDER);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Sphere Collider component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a Sphere Collider");
             ImGui::EndTooltip();
         }
-        
+
         if (ImGui::Selectable("Capsule Collider", false))
         {
-            selectedObject->CreateComponent(ComponentType::CAPSULE_COLLIDER);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::CAPSULE_COLLIDER);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Capsule Collider component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a Capsule Collider");
             ImGui::EndTooltip();
         }
-        
+
         if (ImGui::Selectable("Plane Collider", false))
         {
-            selectedObject->CreateComponent(ComponentType::PLANE_COLLIDER);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::PLANE_COLLIDER);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Plane Collider component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a Plane Collider");
             ImGui::EndTooltip();
         }
-        
+
         if (ImGui::Selectable("Infinite Plane Collider", false))
         {
-            selectedObject->CreateComponent(ComponentType::INFINITE_PLANE_COLLIDER);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::INFINITE_PLANE_COLLIDER);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Infinite Plane Collider component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a Infinite Plane Collider");
             ImGui::EndTooltip();
         }
-        
+
         if (ImGui::Selectable("Mesh Collider", false))
         {
-            selectedObject->CreateComponent(ComponentType::MESH_COLLIDER);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::MESH_COLLIDER);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Mesh Collider component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a Mesh Collider");
             ImGui::EndTooltip();
         }
-        
+
         if (ImGui::Selectable("Convex Collider", false))
         {
-            selectedObject->CreateComponent(ComponentType::CONVEX_COLLIDER);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::CONVEX_COLLIDER);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Convex Collider component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a Convex Collider");
             ImGui::EndTooltip();
         }
-        
+
         if (ImGui::Selectable("Fixed Joint", false))
         {
-            selectedObject->CreateComponent(ComponentType::FIXED_JOINT);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::FIXED_JOINT);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Fixed Joint component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a Fixed Joint");
             ImGui::EndTooltip();
         }
-        
+
         if (ImGui::Selectable("Distance Joint", false))
         {
-            selectedObject->CreateComponent(ComponentType::DISTANCE_JOINT);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::DISTANCE_JOINT);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Distance Joint component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a Distance Joint");
             ImGui::EndTooltip();
         }
-        
+
         if (ImGui::Selectable("Hinge Joint", false))
         {
-            selectedObject->CreateComponent(ComponentType::HINGE_JOINT);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::HINGE_JOINT);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Hinge Joint component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a Hinge Joint");
             ImGui::EndTooltip();
         }
-        
+
         if (ImGui::Selectable("Spherical Joint", false))
         {
-            selectedObject->CreateComponent(ComponentType::SPHERICAL_JOINT);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::SPHERICAL_JOINT);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Spherical Joint component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a Spherical Joint");
             ImGui::EndTooltip();
         }
-        
+
         if (ImGui::Selectable("Prismatic Joint", false))
         {
-            selectedObject->CreateComponent(ComponentType::PRISMATIC_JOINT);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::PRISMATIC_JOINT);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Prismatic Joint component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a Prismatic Joint");
             ImGui::EndTooltip();
         }
-        
+
         if (ImGui::Selectable("D6 Joint", false))
         {
-            selectedObject->CreateComponent(ComponentType::D6_JOINT);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::D6_JOINT);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] D6 Joint component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
 
-        if (ImGui::IsItemHovered() )
+        if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
             ImGui::Text("Add a D6 Joint");
@@ -1485,7 +1568,11 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
         //Audio Source Component --> 0 to multiple per object
         if (ImGui::Selectable("Audio Source"))
         {
-            selectedObject->CreateComponent(ComponentType::AUDIOSOURCE);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::AUDIOSOURCE);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
 
             LOG_CONSOLE("[Inspector] AudioSource component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup(); // disappear automatically after selecting an option
@@ -1505,7 +1592,11 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         if (ImGui::Selectable("Audio Listener", false, hasListener ? ImGuiSelectableFlags_Disabled : 0))
         {
-            selectedObject->CreateComponent(ComponentType::LISTENER);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::LISTENER);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] Audio Listener component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
@@ -1527,7 +1618,11 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         //Reverb Zone Component
         if (ImGui::Selectable("Reverb Zone")) {
-            selectedObject->CreateComponent(ComponentType::REVERBZONE);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::REVERBZONE);
+            if (newComp)
+                Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    std::make_unique<AddComponentCommand>(selectedObject, newComp)
+                );
             LOG_CONSOLE("[Inspector] ReverbZone component added to: %s", selectedObject->GetName().c_str());
             ImGui::CloseCurrentPopup();
         }
@@ -1539,9 +1634,6 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
             ImGui::EndTooltip();
         }
 
-        
-
         ImGui::EndPopup();
     }
 }
-
