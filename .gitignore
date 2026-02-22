@@ -4,6 +4,7 @@ Engine/CMakeUserPresets.json
 
 Engine/External
 
+editor_layout.ini
 #wwise user-specific files
 *.prof
 *.validationcache
