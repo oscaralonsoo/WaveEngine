@@ -304,7 +304,7 @@ bool Input::PreUpdate()
 
 	const float cameraBaseSpeed = camera->GetMovementSpeed();
 	float speedMultiplier = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT] ? 2.0f : 1.0f;
-	float cameraSpeed = cameraBaseSpeed * speedMultiplier * Application::GetInstance().time->GetDeltaTime();
+	float cameraSpeed = cameraBaseSpeed * speedMultiplier * Application::GetInstance().time->GetRealDeltaTime();
 
 	Uint32 mouseState = SDL_GetMouseState(NULL, NULL);
 	bool rightMousePressed = (mouseState & SDL_BUTTON_RMASK) != 0;
