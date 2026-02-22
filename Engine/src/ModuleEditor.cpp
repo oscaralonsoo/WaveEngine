@@ -28,6 +28,7 @@
 #include "AssetsWindow.h"
 #include "MetaFile.h"
 #include "ShaderEditorWindow.h"
+#include "ScriptEditorWindow.h"
 #include "DeleteCommand.h"
 #include "CreateCommand.h"
 #include "CompositeCommand.h"
@@ -272,6 +273,18 @@ void ModuleEditor::ShowMenuBar()
 
         if (ImGui::BeginMenu("View"))
         {
+            bool sceneOpen = sceneWindow->IsOpen();
+            if (ImGui::MenuItem("Scene", NULL, &sceneOpen))
+            {
+                sceneWindow->SetOpen(sceneOpen);
+            }
+
+            bool gameOpen = gameWindow->IsOpen();
+            if (ImGui::MenuItem("Game", NULL, &gameOpen))
+            {
+                gameWindow->SetOpen(gameOpen);
+            }
+
             bool configOpen = configWindow->IsOpen();
             if (ImGui::MenuItem("Configuration", NULL, &configOpen))
             {
@@ -300,6 +313,15 @@ void ModuleEditor::ShowMenuBar()
             if (ImGui::MenuItem("Assets", NULL, &assetsOpen))
             {
                 assetsWindow->SetOpen(assetsOpen);
+            }
+
+            if (assetsWindow->scriptEditorWindow)
+            {
+                bool scriptEditorOpen = assetsWindow->scriptEditorWindow->IsOpen();
+                if (ImGui::MenuItem("Script Editor", NULL, &scriptEditorOpen))
+                {
+                    assetsWindow->scriptEditorWindow->SetOpen(scriptEditorOpen);
+                }
             }
 
             bool shaderEditorOpen = shaderEditorWindow->IsOpen();
