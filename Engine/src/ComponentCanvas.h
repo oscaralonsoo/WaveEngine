@@ -35,6 +35,9 @@ public:
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;
 
+    const std::string& GetCurrentXAML() const { return currentXAML; }
+    void UnloadXAML();
+
 	//Opacity control
     void SetOpacity(float alpha);
     float GetOpacity() const;

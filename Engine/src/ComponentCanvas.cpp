@@ -190,6 +190,16 @@ void ComponentCanvas::Deserialize(const nlohmann::json& componentObj)
     }
 }
 
+void ComponentCanvas::UnloadXAML()
+{
+    if (view)
+    {
+        view->GetRenderer()->Shutdown();
+        view.Reset();
+    }
+    currentXAML = "";
+}
+
 void ComponentCanvas::SetOpacity(float alpha)
 {
     opacity = (alpha < 0.0f) ? 0.0f : (alpha > 1.0f ? 1.0f : alpha);

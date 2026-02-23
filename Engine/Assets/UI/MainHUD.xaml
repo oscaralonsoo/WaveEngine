@@ -23,8 +23,8 @@
                 <GradientStop Offset="1" Color="#00123859"/>
             </LinearGradientBrush>
         </Grid.Background>
-        <Viewbox x:Name="Life_HUD" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Uniform" Margin="0,0,14,0">
-            <Image x:Name="Life_Image" Margin="1,0" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Top" Source="Life_HUD.png"/>
+        <Viewbox x:Name="Life_HUD" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Uniform" Margin="1,0,23,0">
+            <Image x:Name="Life_Image" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Top" Source="Life_HUD.png"/>
         </Viewbox>
         <Viewbox x:Name="Bottom_HUD" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2" Grid.Row="2" Stretch="Uniform">
             <Image Margin="0,56,0,0" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Source="Bottom_HUD.png"/>

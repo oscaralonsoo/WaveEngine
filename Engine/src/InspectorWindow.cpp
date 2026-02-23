@@ -803,32 +803,55 @@ void InspectorWindow::DrawCanvasComponent(GameObject* selectedObject)
 
     if (canvasComp == nullptr) return;
 
-    if (ImGui::CollapsingHeader("Canvas", ImGuiTreeNodeFlags_DefaultOpen))
+    bool open = ImGui::CollapsingHeader("Canvas", ImGuiTreeNodeFlags_DefaultOpen);
+    DrawComponentContextMenu(canvasComp); 
+    if (open)
     {
         ImGui::Text("XAML File:");
         ImGui::Spacing();
 
-        static char xamlPath[256] = "";
-
-        if (ImGui::InputText("##XAMLPath", xamlPath, sizeof(xamlPath)))
+        // Scan Assets/UI for .xaml files
+        std::vector<std::string> xamlFiles;
+        std::string uiPath = "../Assets/UI";
+        if (std::filesystem::exists(uiPath))
         {
+            for (const auto& entry : std::filesystem::directory_iterator(uiPath))
+            {
+                if (entry.is_regular_file() && entry.path().extension() == ".xaml")
+                    xamlFiles.push_back(entry.path().filename().string());
+            }
         }
 
-        ImGui::SameLine();
+        std::string currentXAML = canvasComp->GetCurrentXAML();
+        std::string currentName = currentXAML.empty() ? "None"
+            : std::filesystem::path(currentXAML).filename().string();
 
-        if (ImGui::Button("Load XAML"))
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::BeginCombo("##XAMLSelector", currentName.c_str()))
         {
-            if (strlen(xamlPath) > 0)
-            {
-                std::string path = xamlPath;
-                if (path.find(".xaml") == std::string::npos)
-                    path += ".xaml";
+            if (ImGui::Selectable("None", currentXAML.empty()))
+                canvasComp->UnloadXAML();
 
-                if (canvasComp->LoadXAML(path.c_str()))
-                    LOG_CONSOLE("[Inspector] XAML loaded: %s", path.c_str());
-                else
-                    LOG_CONSOLE("[Inspector] Failed to load XAML: %s", path.c_str());
+            for (const auto& file : xamlFiles)
+            {
+                bool isSelected = (currentName == file);
+                if (ImGui::Selectable(file.c_str(), isSelected))
+                {
+                    if (canvasComp->LoadXAML(file.c_str()))
+                        LOG_CONSOLE("[Inspector] XAML loaded: %s", file.c_str());
+                    else
+                        LOG_CONSOLE("[Inspector] Failed to load XAML: %s", file.c_str());
+                }
+                if (isSelected) ImGui::SetItemDefaultFocus();
             }
+
+            if (xamlFiles.empty())
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f),
+                    "No .xaml files found in Assets/UI");
+            }
+
+            ImGui::EndCombo();
         }
 
         ImGui::Spacing();
