@@ -40,7 +40,13 @@
 
 static nlohmann::json copiedComponentData;
 static ComponentType copiedComponentType = static_cast<ComponentType>(-1);
-
+//Helpers
+static glm::vec3 JointQuatToEuler(const glm::quat& q) {
+    return glm::degrees(glm::eulerAngles(q));
+}
+static glm::quat JointEulerToQuat(const glm::vec3& deg) {
+    return glm::quat(glm::radians(deg));
+}
 static void DrawComponentContextMenu(Component* component, bool canRemove = true)
 {
     if (ImGui::BeginPopupContextItem())
@@ -2133,10 +2139,3 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
     }
 }
 
-//Helpers
-static glm::vec3 JointQuatToEuler(const glm::quat& q) {
-    return glm::degrees(glm::eulerAngles(q));
-}
-static glm::quat JointEulerToQuat(const glm::vec3& deg) {
-    return glm::quat(glm::radians(deg));
-}
