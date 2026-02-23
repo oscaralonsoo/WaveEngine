@@ -2,9 +2,12 @@
 #pragma once
 #define _HAS_STD_BYTE 0
 
+
 #include <glm/glm.hpp>
+#include <glm/common.hpp> // To ensure glm::min/max are available
 #include <limits>
 #include <cmath>
+#include <algorithm> // For std::min/std::max
 
 static unsigned int Uint;
 static unsigned int uint;

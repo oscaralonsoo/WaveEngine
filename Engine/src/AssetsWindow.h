@@ -64,7 +64,8 @@ public:
     ~AssetsWindow();
 
     void Draw() override;
-
+    
+    ScriptEditorWindow* scriptEditorWindow;  
 private:
     void RefreshAssets();
     void ScanDirectory(const fs::path& directory, std::vector<AssetEntry>& outAssets);
@@ -127,5 +128,5 @@ private:
     std::unordered_set<std::string> expandedFBXPaths;
 
     ImportSettingsWindow* importSettingsWindow;
-    ScriptEditorWindow* scriptEditorWindow;  
+
 };

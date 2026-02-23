@@ -23,6 +23,8 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "TransformCommand.h"
+#include "ModuleEditor.h"
 
 namespace fs = std::filesystem;
 
@@ -375,6 +377,15 @@ void SceneWindow::DrawGizmo()
     // Update the flag indicating whether the gizmo is being used
     isGizmoActive = ImGuizmo::IsUsing();
 
+    //save transform
+    if (!wasUsingGizmo && isGizmoActive)
+    {
+        gizmoSnapshotPos = transform->GetPosition();
+        gizmoSnapshotRot = transform->GetRotation();
+        gizmoSnapshotScale = transform->GetScale();
+        gizmoSnapshotTaken = true;
+    }
+
     if (ImGuizmo::IsUsing())
     {
         GameObject* parent = selectedObject->GetParent();
@@ -383,10 +394,7 @@ void SceneWindow::DrawGizmo()
         {
             Transform* parentTransform = static_cast<Transform*>(parent->GetComponent(ComponentType::TRANSFORM));
             if (parentTransform)
-            {
-                const glm::mat4& parentGlobal = parentTransform->GetGlobalMatrix();
-                transformMatrix = glm::inverse(parentGlobal) * transformMatrix;
-            }
+                transformMatrix = glm::inverse(parentTransform->GetGlobalMatrix()) * transformMatrix;
         }
 
         glm::vec3 position, scale, skew;
@@ -402,6 +410,17 @@ void SceneWindow::DrawGizmo()
     else if (wasUsingGizmo)
     {
         // We just released the gizmo, mark for octree rebuild
+        if (gizmoSnapshotTaken)
+        {
+            CommandHistory* history = Application::GetInstance().editor->GetCommandHistory();
+            history->ExecuteCommand(std::make_unique<TransformCommand>(
+                selectedObject,
+                gizmoSnapshotPos, gizmoSnapshotRot, gizmoSnapshotScale,
+                transform->GetPosition(), transform->GetRotation(), transform->GetScale()
+            ));
+            gizmoSnapshotTaken = false;
+        }
+
         Application::GetInstance().scene->MarkOctreeForRebuild();
     }
 }

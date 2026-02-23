@@ -37,323 +37,262 @@ void ComponentMaterial::Update()
 
 void ComponentMaterial::OnEditor()
 {
-    if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+    // Unified Shader Selector
+    std::string currentSelection = "Standard";
+    if (shaderUID != 0) {
+        ModuleResources* resources = Application::GetInstance().resources.get();
+        const Resource* res = resources->GetResourceDirect(shaderUID);
+        if (res) {
+            currentSelection = res->GetAssetFile();
+            size_t lastSlash = currentSelection.find_last_of("/\\");
+            if (lastSlash != std::string::npos)
+                currentSelection = currentSelection.substr(lastSlash + 1);
+        }
+        else {
+            currentSelection = "Unknown Shader";
+        }
+    }
+    else if (materialType == MaterialType::WATER) {
+        currentSelection = "Water";
+    }
+
+    ImGui::Text("Shader:");
+    ImGui::SameLine();
+    if (ImGui::BeginCombo("##UnifiedShaderSelector", currentSelection.c_str()))
     {
-        // Unified Shader Selector
-        std::string currentSelection = "Standard";
-        if (shaderUID != 0) {
-            ModuleResources* resources = Application::GetInstance().resources.get();
-            const Resource* res = resources->GetResourceDirect(shaderUID);
-            if (res) {
-                currentSelection = res->GetAssetFile();
-                size_t lastSlash = currentSelection.find_last_of("/\\");
-                if (lastSlash != std::string::npos)
-                    currentSelection = currentSelection.substr(lastSlash + 1);
-            }
-            else {
-                currentSelection = "Unknown Shader";
-            }
+        bool isStandard = (materialType == MaterialType::STANDARD && shaderUID == 0);
+        if (ImGui::Selectable("Standard", isStandard)) {
+            materialType = MaterialType::STANDARD;
+            ReleaseCurrentShader();
         }
-        else if (materialType == MaterialType::WATER) {
-            currentSelection = "Water";
+        if (isStandard) ImGui::SetItemDefaultFocus();
+
+        bool isWater = (materialType == MaterialType::WATER && shaderUID == 0);
+        if (ImGui::Selectable("Water", isWater)) {
+            materialType = MaterialType::WATER;
+            ReleaseCurrentShader();
         }
+        if (isWater) ImGui::SetItemDefaultFocus();
 
-        ImGui::Text("Shader:");
-        ImGui::SameLine();
-        if (ImGui::BeginCombo("##UnifiedShaderSelector", currentSelection.c_str()))
-        {
-            // Option: Standard
-            bool isStandard = (materialType == MaterialType::STANDARD && shaderUID == 0);
-            if (ImGui::Selectable("Standard", isStandard)) {
-                materialType = MaterialType::STANDARD;
-                ReleaseCurrentShader();
-            }
-            if (isStandard) ImGui::SetItemDefaultFocus();
+        ImGui::Separator();
+        ImGui::TextDisabled("Custom Shaders");
 
-            // Option: Water
-            bool isWater = (materialType == MaterialType::WATER && shaderUID == 0);
-            if (ImGui::Selectable("Water", isWater)) {
-                materialType = MaterialType::WATER;
-                ReleaseCurrentShader();
-            }
-            if (isWater) ImGui::SetItemDefaultFocus();
+        ModuleResources* resources = Application::GetInstance().resources.get();
+        const auto& allResources = resources->GetAllResources();
 
-            ImGui::Separator();
-            ImGui::TextDisabled("Custom Shaders");
+        for (const auto& pair : allResources) {
+            if (pair.second->GetType() == Resource::SHADER) {
+                std::string name = pair.second->GetAssetFile();
+                size_t lastSlash = name.find_last_of("/\\");
+                if (lastSlash != std::string::npos) name = name.substr(lastSlash + 1);
 
-            // Option: Custom Shaders from Resources
-            ModuleResources* resources = Application::GetInstance().resources.get();
-            const auto& allResources = resources->GetAllResources();
-
-            for (const auto& pair : allResources) {
-                if (pair.second->GetType() == Resource::SHADER) {
-                    std::string name = pair.second->GetAssetFile();
-                    size_t lastSlash = name.find_last_of("/\\");
-                    if (lastSlash != std::string::npos) name = name.substr(lastSlash + 1);
-
-                    bool isSelected = (shaderUID == pair.first);
-                    if (ImGui::Selectable(name.c_str(), isSelected)) {
-                        LoadShaderByUID(pair.first);
-                        materialType = MaterialType::STANDARD; // Reset type when using custom shader
-                    }
-                    if (isSelected) ImGui::SetItemDefaultFocus();
+                bool isSelected = (shaderUID == pair.first);
+                if (ImGui::Selectable(name.c_str(), isSelected)) {
+                    LoadShaderByUID(pair.first);
+                    materialType = MaterialType::STANDARD;
                 }
-            }
-            ImGui::EndCombo();
-        }
-
-        if (shaderUID != 0 && ImGui::Button("Reload Shader")) {
-            LoadShaderByUID(shaderUID);
-        }
-
-        if (materialType == MaterialType::WATER)
-        {
-            ImGui::Separator();
-            ImGui::Text("Water Parameters");
-            
-            ImGui::DragFloat("Speed", &waveSpeed, 0.1f, 0.0f, 10.0f);
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::BeginTooltip();
-                ImGui::Text("Controls how fast the waves move across the surface.");
-                ImGui::EndTooltip();
-            }
-
-            ImGui::DragFloat("Amplitude", &waveAmplitude, 0.05f, 0.0f, 5.0f);
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::BeginTooltip();
-                ImGui::Text("Controls the height of the waves.");
-                ImGui::EndTooltip();
-            }
-
-            ImGui::DragFloat("Frequency", &waveFrequency, 0.1f, 0.0f, 10.0f);
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::BeginTooltip();
-                ImGui::Text("Controls how many waves appear on the surface (density).");
-                ImGui::EndTooltip();
+                if (isSelected) ImGui::SetItemDefaultFocus();
             }
         }
+        ImGui::EndCombo();
+    }
+
+    if (shaderUID != 0 && ImGui::Button("Reload Shader")) {
+        LoadShaderByUID(shaderUID);
+    }
+
+    if (materialType == MaterialType::WATER)
+    {
+        ImGui::Separator();
+        ImGui::Text("Water Parameters");
+
+        ImGui::DragFloat("Speed", &waveSpeed, 0.1f, 0.0f, 10.0f);
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Controls how fast the waves move across the surface.");
+            ImGui::EndTooltip();
+        }
+
+        ImGui::DragFloat("Amplitude", &waveAmplitude, 0.05f, 0.0f, 5.0f);
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Controls the height of the waves.");
+            ImGui::EndTooltip();
+        }
+
+        ImGui::DragFloat("Frequency", &waveFrequency, 0.1f, 0.0f, 10.0f);
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Controls how many waves appear on the surface (density).");
+            ImGui::EndTooltip();
+        }
+    }
+
+    ImGui::Separator();
+
+    ImGui::Text("Texture:");
+    ImGui::SameLine();
+
+    std::string currentTextureName = "None";
+    if (IsUsingCheckerboard()) {
+        currentTextureName = "[Checkerboard Pattern]";
+    }
+    else if (HasTexture()) {
+        UID currentUID = GetTextureUID();
+        ModuleResources* resources = Application::GetInstance().resources.get();
+        const Resource* res = resources->GetResourceDirect(currentUID);
+        if (res) {
+            currentTextureName = std::string(res->GetAssetFile());
+            size_t lastSlash = currentTextureName.find_last_of("/\\");
+            if (lastSlash != std::string::npos)
+                currentTextureName = currentTextureName.substr(lastSlash + 1);
+        }
+        else {
+            currentTextureName = "UID " + std::to_string(currentUID);
+        }
+    }
+
+    ImGui::SetNextItemWidth(-1);
+    if (ImGui::BeginCombo("##TextureSelector", currentTextureName.c_str()))
+    {
+        bool isCheckerboardSelected = IsUsingCheckerboard();
+        if (ImGui::Selectable("[Checkerboard Pattern]", isCheckerboardSelected))
+            CreateCheckerboardTexture();
+        if (isCheckerboardSelected) ImGui::SetItemDefaultFocus();
 
         ImGui::Separator();
 
-        // Texture handling
-        ImGui::Text("Texture:");
-        ImGui::SameLine();
+        ModuleResources* resources = Application::GetInstance().resources.get();
+        const std::map<UID, Resource*>& allResources = resources->GetAllResources();
 
-        std::string currentTextureName = "None";
+        for (const auto& pair : allResources)
+        {
+            const Resource* res = pair.second;
+            if (res->GetType() == Resource::TEXTURE)
+            {
+                std::string textureName = res->GetAssetFile();
+                size_t lastSlash = textureName.find_last_of("/\\");
+                if (lastSlash != std::string::npos) textureName = textureName.substr(lastSlash + 1);
+
+                UID texUID = res->GetUID();
+                bool isSelected = (!IsUsingCheckerboard() && HasTexture() && GetTextureUID() == texUID);
+
+                std::string displayName = textureName;
+                if (res->IsLoadedToMemory()) displayName += " [Loaded]";
+
+                const ResourceTexture* texRes = static_cast<const ResourceTexture*>(res);
+                unsigned int gpuID = texRes->GetGPU_ID();
+
+                if (ImGui::Selectable(displayName.c_str(), isSelected))
+                    if (LoadTextureByUID(texUID))
+                        LOG_DEBUG("Assigned texture '%s' (UID %llu)", textureName.c_str(), texUID);
+
+                if (isSelected) ImGui::SetItemDefaultFocus();
+
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    if (gpuID != 0) {
+                        float tooltipPreviewSize = 128.0f;
+                        float width = (float)texRes->GetWidth();
+                        float height = (float)texRes->GetHeight();
+                        float scale = tooltipPreviewSize / std::max(width, height);
+                        ImGui::Image((ImTextureID)(intptr_t)gpuID, ImVec2(width * scale, height * scale));
+                        ImGui::Separator();
+                    }
+                    ImGui::Text("%s", textureName.c_str());
+                    ImGui::EndTooltip();
+                }
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    if (HasTexture())
+    {
+        unsigned int gpuID = 0;
+        int texWidth = 0, texHeight = 0;
 
         if (IsUsingCheckerboard()) {
-            currentTextureName = "[Checkerboard Pattern]";
+            Renderer* renderer = Application::GetInstance().renderer.get();
+            if (renderer) {
+                Texture* defaultTex = renderer->GetDefaultTexture();
+                if (defaultTex) {
+                    gpuID = defaultTex->GetID();
+                    texWidth = defaultTex->GetWidth();
+                    texHeight = defaultTex->GetHeight();
+                }
+            }
         }
-        else if (HasTexture())
-        {
+        else {
             UID currentUID = GetTextureUID();
             ModuleResources* resources = Application::GetInstance().resources.get();
             const Resource* res = resources->GetResourceDirect(currentUID);
-            if (res)
-            {
-                currentTextureName = std::string(res->GetAssetFile());
-                size_t lastSlash = currentTextureName.find_last_of("/\\");
-                if (lastSlash != std::string::npos)
-                    currentTextureName = currentTextureName.substr(lastSlash + 1);
-            }
-            else
-            {
-                currentTextureName = "UID " + std::to_string(currentUID);
+            if (res && res->GetType() == Resource::TEXTURE) {
+                const ResourceTexture* texRes = static_cast<const ResourceTexture*>(res);
+                gpuID = texRes->GetGPU_ID();
+                texWidth = texRes->GetWidth();
+                texHeight = texRes->GetHeight();
             }
         }
 
-        ImGui::SetNextItemWidth(-1);
-        if (ImGui::BeginCombo("##TextureSelector", currentTextureName.c_str()))
+        if (gpuID != 0)
         {
-            bool isCheckerboardSelected = IsUsingCheckerboard();
-            if (ImGui::Selectable("[Checkerboard Pattern]", isCheckerboardSelected))
-            {
-                CreateCheckerboardTexture();
-            }
-
-            if (isCheckerboardSelected)
-            {
-                ImGui::SetItemDefaultFocus();
-            }
-
+            ImGui::Text("Texture Preview:");
+            float previewMaxSize = 256.0f;
+            float scale = previewMaxSize / std::max((float)texWidth, (float)texHeight);
+            ImVec2 previewSize(texWidth * scale, texHeight * scale);
+            float offsetX = (ImGui::GetContentRegionAvail().x - previewSize.x) * 0.5f;
+            if (offsetX > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+            ImGui::Image((ImTextureID)(intptr_t)gpuID, previewSize);
+            ImGui::Spacing();
             ImGui::Separator();
-
-            ModuleResources* resources = Application::GetInstance().resources.get();
-            const std::map<UID, Resource*>& allResources = resources->GetAllResources();
-
-            for (const auto& pair : allResources)
-            {
-                const Resource* res = pair.second;
-                if (res->GetType() == Resource::TEXTURE)
-                {
-                    std::string textureName = res->GetAssetFile();
-
-                    size_t lastSlash = textureName.find_last_of("/\\");
-                    if (lastSlash != std::string::npos) textureName = textureName.substr(lastSlash + 1);
-
-                    UID texUID = res->GetUID();
-                    bool isSelected = (!IsUsingCheckerboard() &&
-                        HasTexture() &&
-                        GetTextureUID() == texUID);
-
-                    std::string displayName = textureName;
-                    if (res->IsLoadedToMemory())
-                    {
-                        displayName += " [Loaded]";
-                    }
-
-                    const ResourceTexture* texRes = static_cast<const ResourceTexture*>(res);
-                    unsigned int gpuID = texRes->GetGPU_ID();
-
-                    if (ImGui::Selectable(displayName.c_str(), isSelected))
-                    {
-                        if (LoadTextureByUID(texUID))
-                        {
-                            LOG_DEBUG("Assigned texture '%s' (UID %llu)", textureName.c_str(), texUID);
-                        }
-                    }
-
-                    if (isSelected)
-                    {
-                        ImGui::SetItemDefaultFocus();
-                    }
-
-                    if (ImGui::IsItemHovered())
-                    {
-                        ImGui::BeginTooltip();
-
-                        if (gpuID != 0)
-                        {
-                            float tooltipPreviewSize = 128.0f;
-                            float width = (float)texRes->GetWidth();
-                            float height = (float)texRes->GetHeight();
-                            float scale = tooltipPreviewSize / std::max(width, height);
-                            ImVec2 tooltipSize(width * scale, height * scale);
-
-                            ImGui::Image((ImTextureID)(intptr_t)gpuID, tooltipSize);
-                            ImGui::Separator();
-                        }
-
-                        ImGui::Text("%s", textureName.c_str());
-                        ImGui::EndTooltip();
-                    }
-                }
-            }
-
-            ImGui::EndCombo();
+            ImGui::Spacing();
         }
 
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        if (HasTexture())
-        {
-            unsigned int gpuID = 0;
-            int texWidth = 0;
-            int texHeight = 0;
-
-            if (IsUsingCheckerboard())
-            {
-                Renderer* renderer = Application::GetInstance().renderer.get();
-                if (renderer)
-                {
-                    Texture* defaultTex = renderer->GetDefaultTexture();
-                    if (defaultTex)
-                    {
-                        gpuID = defaultTex->GetID();
-                        texWidth = defaultTex->GetWidth();
-                        texHeight = defaultTex->GetHeight();
-                    }
-                }
-            }
-            else
-            {
-                UID currentUID = GetTextureUID();
-                ModuleResources* resources = Application::GetInstance().resources.get();
-                const Resource* res = resources->GetResourceDirect(currentUID);
-
-                if (res && res->GetType() == Resource::TEXTURE)
-                {
-                    const ResourceTexture* texRes = static_cast<const ResourceTexture*>(res);
-                    gpuID = texRes->GetGPU_ID();
-                    texWidth = texRes->GetWidth();
-                    texHeight = texRes->GetHeight();
-                }
-            }
-
-            if (gpuID != 0)
-            {
-                ImGui::Text("Texture Preview:");
-
-                float previewMaxSize = 256.0f;
-                float width = (float)texWidth;
-                float height = (float)texHeight;
-
-                float scale = previewMaxSize / std::max(width, height);
-                ImVec2 previewSize(width * scale, height * scale);
-
-                float windowWidth = ImGui::GetContentRegionAvail().x;
-                float offsetX = (windowWidth - previewSize.x) * 0.5f;
-                if (offsetX > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
-
-                ImGui::Image((ImTextureID)(intptr_t)gpuID, previewSize);
-
-                ImGui::Spacing();
-                ImGui::Separator();
-                ImGui::Spacing();
-            }
-
-            ImGui::Text("Size: %d x %d pixels", GetTextureWidth(), GetTextureHeight());
-        }
-
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        ImGui::Text("Actions:");
-        ImGui::Spacing();
-
-        if (ImGui::Button("Apply Checkerboard", ImVec2(-1, 0)))
-        {
-            CreateCheckerboardTexture();
-        }
-
-        if (ImGui::Button("Remove Texture", ImVec2(-1, 0))) {
-            ReleaseCurrentTexture();
-        }
-
-        ImGui::Spacing();
-        
-        ImGui::Separator();
-        
-        // Material Properties
-        ImGui::Text("Properties:");
-        
-        bool changed = false;
-        
-        glm::vec4 diffuse = diffuseColor;
-        if (ImGui::ColorEdit4("Diffuse Color", &diffuse.r)) {
-            SetDiffuseColor(diffuse);
-            changed = true;
-        }
-
-        float alpha = opacity;
-        if (ImGui::SliderFloat("Opacity", &alpha, 0.0f, 1.0f)) {
-            SetOpacity(alpha);
-            changed = true;
-        }
-
-        ImGui::Separator();
-        ImGui::Text("Lighting Mode:");
-        const char* modes[] = { "Vertex (Gouraud - Faceted)", "Pixel (Blinn-Phong - Smooth)" };
-        if (ImGui::Combo("##LightingMode", &lightingMode, modes, IM_ARRAYSIZE(modes))) {
-            changed = true;
-        }
+        ImGui::Text("Size: %d x %d pixels", GetTextureWidth(), GetTextureHeight());
     }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    ImGui::Text("Actions:");
+    ImGui::Spacing();
+
+    if (ImGui::Button("Apply Checkerboard", ImVec2(-1, 0)))
+        CreateCheckerboardTexture();
+
+    if (ImGui::Button("Remove Texture", ImVec2(-1, 0)))
+        ReleaseCurrentTexture();
+
+    ImGui::Spacing();
+    ImGui::Separator();
+
+    ImGui::Text("Properties:");
+    bool changed = false;
+
+    glm::vec4 diffuse = diffuseColor;
+    if (ImGui::ColorEdit4("Diffuse Color", &diffuse.r)) {
+        SetDiffuseColor(diffuse);
+        changed = true;
+    }
+
+    float alpha = opacity;
+    if (ImGui::SliderFloat("Opacity", &alpha, 0.0f, 1.0f)) {
+        SetOpacity(alpha);
+        changed = true;
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Lighting Mode:");
+    const char* modes[] = { "Vertex (Gouraud - Faceted)", "Pixel (Blinn-Phong - Smooth)" };
+    if (ImGui::Combo("##LightingMode", &lightingMode, modes, IM_ARRAYSIZE(modes)))
+        changed = true;
 }
 
 void ComponentMaterial::ReleaseCurrentTexture()

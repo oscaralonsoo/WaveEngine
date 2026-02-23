@@ -28,6 +28,10 @@
 #include "AssetsWindow.h"
 #include "MetaFile.h"
 #include "ShaderEditorWindow.h"
+#include "ScriptEditorWindow.h"
+#include "DeleteCommand.h"
+#include "CreateCommand.h"
+#include "CompositeCommand.h"
 
 ModuleEditor::ModuleEditor() : Module()
 {
@@ -81,6 +85,7 @@ bool ModuleEditor::Start()
     gameWindow = std::make_unique<GameWindow>();
     assetsWindow = std::make_unique<AssetsWindow>();
     shaderEditorWindow = std::make_unique<ShaderEditorWindow>();
+    commandHistory = std::make_unique<CommandHistory>();
 
     LOG_CONSOLE("Editor initialized");
 
@@ -159,6 +164,7 @@ bool ModuleEditor::Update()
 
 
     HandleDeleteKey();
+    HandleUndoRedo();
 
     if (sceneWindow)
     {
@@ -208,6 +214,8 @@ bool ModuleEditor::CleanUp()
 {
     LOG_DEBUG("Cleaning up Editor");
 
+    commandHistory->Clear();
+
     // Save if auto save is enabled
     if (autoSaveLayout && ImGui::GetIO().IniFilename != nullptr)
     {
@@ -230,6 +238,11 @@ void ModuleEditor::ShowMenuBar()
     {
         if (ImGui::BeginMenu("File"))
         {
+            if (ImGui::MenuItem("New Scene"))
+            {
+                Application::GetInstance().scene->NewScene();
+            }
+
             if (ImGui::MenuItem("Save Scene"))
             {
                 std::string filepath = OpenSaveFile("../Scene/scene.json");
@@ -263,6 +276,18 @@ void ModuleEditor::ShowMenuBar()
 
         if (ImGui::BeginMenu("View"))
         {
+            bool sceneOpen = sceneWindow->IsOpen();
+            if (ImGui::MenuItem("Scene", NULL, &sceneOpen))
+            {
+                sceneWindow->SetOpen(sceneOpen);
+            }
+
+            bool gameOpen = gameWindow->IsOpen();
+            if (ImGui::MenuItem("Game", NULL, &gameOpen))
+            {
+                gameWindow->SetOpen(gameOpen);
+            }
+
             bool configOpen = configWindow->IsOpen();
             if (ImGui::MenuItem("Configuration", NULL, &configOpen))
             {
@@ -291,6 +316,15 @@ void ModuleEditor::ShowMenuBar()
             if (ImGui::MenuItem("Assets", NULL, &assetsOpen))
             {
                 assetsWindow->SetOpen(assetsOpen);
+            }
+
+            if (assetsWindow->scriptEditorWindow)
+            {
+                bool scriptEditorOpen = assetsWindow->scriptEditorWindow->IsOpen();
+                if (ImGui::MenuItem("Script Editor", NULL, &scriptEditorOpen))
+                {
+                    assetsWindow->scriptEditorWindow->SetOpen(scriptEditorOpen);
+                }
             }
 
             bool shaderEditorOpen = shaderEditorWindow->IsOpen();
@@ -383,7 +417,8 @@ void ModuleEditor::ShowMenuBar()
 
         if (ImGui::BeginMenu("GameObject"))
         {
-            if (ImGui::BeginMenu("Create Primitive"))
+
+            if (ImGui::BeginMenu("3D Primitives"))
             {
                 if (ImGui::MenuItem("Cube"))
                 {
@@ -421,7 +456,15 @@ void ModuleEditor::ShowMenuBar()
 				}
                 ImGui::EndMenu();
             }
+
+            ImGui::Separator();
  
+            if (ImGui::MenuItem("Empty GameObject"))
+            {
+                GameObject* empty = Application::GetInstance().scene->CreateGameObject("GameObject");
+                Application::GetInstance().selectionManager->SetSelectedObject(empty);
+            }
+            
             ImGui::Separator();
 
             if (ImGui::MenuItem("Add Auto Rotate Component"))
@@ -520,6 +563,7 @@ void ModuleEditor::ShowPlayToolbar()
     }
 
     if (ImGui::Button("Play", ImVec2(40, 0))) {
+        commandHistory->Clear();
         app.Play();
         // Focus the Game window when entering play mode
         if (gameWindow && gameWindow->IsOpen()) {
@@ -551,6 +595,7 @@ void ModuleEditor::ShowPlayToolbar()
 
     // Stop button
     if (ImGui::Button("Stop", ImVec2(40, 0))) {
+        commandHistory->Clear();
         app.Stop();
         if (sceneWindow && sceneWindow->IsOpen()) {
             ImGui::SetWindowFocus("Scene");
@@ -705,6 +750,7 @@ void ModuleEditor::CreatePrimitiveGameObject(const std::string& name, Mesh mesh)
 
     GameObject* root = Application::GetInstance().scene->GetRoot();
     root->AddChild(Object);
+    commandHistory->ExecuteCommand(std::make_unique<CreateCommand>(Object));
 
     Application::GetInstance().scene->RebuildOctree();
 
@@ -721,26 +767,50 @@ void ModuleEditor::HandleDeleteKey()
         std::vector<GameObject*> selectedObjects =
             Application::GetInstance().selectionManager->GetSelectedObjects();
 
-        if (!selectedObjects.empty())
+        std::vector<GameObject*> candidates;
+        GameObject* sceneRoot = Application::GetInstance().scene->GetRoot();
+        for (GameObject* obj : selectedObjects)
         {
-            int deletedCount = 0;
-
-            for (GameObject* obj : selectedObjects)
-            {
-                if (obj != nullptr && obj != Application::GetInstance().scene->GetRoot())
-                {
-                    obj->MarkForDeletion();
-                    deletedCount++;
-                }
-            }
-
-            Application::GetInstance().selectionManager->ClearSelection();
-
-            if (deletedCount > 0)
-            {
-                LOG_CONSOLE("GameObject deleted: %d", deletedCount);
-            }
+            if (obj && obj != sceneRoot && obj->GetParent())
+                candidates.push_back(obj);
         }
+
+        if (candidates.empty()) return;
+
+        auto IsAncestorSelected = [&](GameObject* obj) -> bool
+            {
+                GameObject* current = obj->GetParent();
+                while (current && current != sceneRoot)
+                {
+                    for (GameObject* candidate : candidates)
+                    {
+                        if (candidate == current) return true;
+                    }
+                    current = current->GetParent();
+                }
+                return false;
+            };
+
+        std::vector<GameObject*> toDelete;
+        for (GameObject* obj : candidates)
+        {
+            if (!IsAncestorSelected(obj))
+                toDelete.push_back(obj);
+        }
+
+        if (toDelete.empty()) return;
+
+        Application::GetInstance().selectionManager->ClearSelection();
+
+        auto composite = std::make_unique<CompositeCommand>();
+        for (GameObject* obj : toDelete)
+        {
+            composite->AddCommand(std::make_unique<DeleteCommand>(obj));
+        }
+
+        commandHistory->ExecuteCommand(std::move(composite));
+
+        LOG_CONSOLE("GameObject(s) deleted: %d", (int)toDelete.size());
     }
 }
 
@@ -959,4 +1029,16 @@ std::string ModuleEditor::OpenLoadFile(const std::string& defaultPath)
     }
 
     return ""; // User cancelled
+}
+
+void ModuleEditor::HandleUndoRedo()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantTextInput) return;
+
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z, false))
+        commandHistory->Undo();
+
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y, false))
+        commandHistory->Redo();
 }

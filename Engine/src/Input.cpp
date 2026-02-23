@@ -356,7 +356,7 @@ bool Input::PreUpdate()
 
 	const float cameraBaseSpeed = camera->GetMovementSpeed();
 	float speedMultiplier = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT] ? 2.0f : 1.0f;
-	float cameraSpeed = cameraBaseSpeed * speedMultiplier * Application::GetInstance().time->GetDeltaTime();
+	float cameraSpeed = cameraBaseSpeed * speedMultiplier * Application::GetInstance().time->GetRealDeltaTime();
 
 	Uint32 mouseState = SDL_GetMouseState(NULL, NULL);
 	bool rightMousePressed = (mouseState & SDL_BUTTON_RMASK) != 0;
@@ -500,44 +500,34 @@ GameObject* FindClosestObjectToRayOptimized(GameObject* root, const glm::vec3& r
 		return nullptr;
 	}
 
-	Octree* octree = scene->GetOctree();
-
-	if (octree)
-	{
-		Ray ray(rayOrigin, rayDir);
-		float distance;
-		GameObject* picked = octree->RayPick(ray, distance);
-
-		if (picked)
-		{
-			minDist = distance;
-			scene->lastRayOrigin = rayOrigin;
-			scene->lastRayDirection = rayDir;
-			scene->lastRayLength = distance;
-
-			return picked;
-		}
-		else
-		{
-			scene->lastRayOrigin = rayOrigin;
-			scene->lastRayDirection = rayDir;
-			scene->lastRayLength = 100.0f;
-
-			float fallbackDist = std::numeric_limits<float>::max();
-			GameObject* fallbackResult = FindClosestObjectToRay(root, rayOrigin, rayDir, fallbackDist);
-
-			if (fallbackResult)
-			{
-				minDist = fallbackDist;
-				return fallbackResult;
-			}
-		}
-
-		return picked;
-	}
-
 	GameObject* result = FindClosestObjectToRay(root, rayOrigin, rayDir, minDist);
 	return result;
+}
+
+bool RayIntersectsTriangle(const glm::vec3& rayOrigin, const glm::vec3& rayDir,
+	const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2,
+	float& t)
+{
+	const float EPSILON = 0.0000001f;
+	glm::vec3 edge1, edge2, h, s, q;
+	float a, f, u, v;
+	edge1 = v1 - v0;
+	edge2 = v2 - v0;
+	h = glm::cross(rayDir, edge2);
+	a = glm::dot(edge1, h);
+	if (a > -EPSILON && a < EPSILON)
+		return false;
+	f = 1.0f / a;
+	s = rayOrigin - v0;
+	u = f * glm::dot(s, h);
+	if (u < 0.0f || u > 1.0f)
+		return false;
+	q = glm::cross(s, edge1);
+	v = f * glm::dot(rayDir, q);
+	if (v < 0.0f || u + v > 1.0f)
+		return false;
+	t = f * glm::dot(edge2, q);
+	return t > EPSILON;
 }
 
 GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin,
@@ -582,8 +572,55 @@ GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin,
 			{
 				if (dist < minDist)
 				{
-					minDist = dist;
+				// Check against actual mesh triangles for precision
+				const Mesh& m = mesh->GetMesh();
+				bool hitMesh = false;
+				float localMinDist = std::numeric_limits<float>::max();
+
+				if (!m.indices.empty())
+				{
+					for (size_t i = 0; i < m.indices.size(); i += 3)
+					{
+						glm::vec3 v0 = glm::vec3(globalMatrix * glm::vec4(m.vertices[m.indices[i]].position, 1.0f));
+						glm::vec3 v1 = glm::vec3(globalMatrix * glm::vec4(m.vertices[m.indices[i + 1]].position, 1.0f));
+						glm::vec3 v2 = glm::vec3(globalMatrix * glm::vec4(m.vertices[m.indices[i + 2]].position, 1.0f));
+
+						float t_tri;
+						if (RayIntersectsTriangle(rayOrigin, rayDir, v0, v1, v2, t_tri))
+						{
+							if (t_tri < localMinDist)
+							{
+								localMinDist = t_tri;
+								hitMesh = true;
+							}
+						}
+					}
+				}
+				else
+				{
+					for (size_t i = 0; i < m.vertices.size(); i += 3)
+					{
+						glm::vec3 v0 = glm::vec3(globalMatrix * glm::vec4(m.vertices[i].position, 1.0f));
+						glm::vec3 v1 = glm::vec3(globalMatrix * glm::vec4(m.vertices[i + 1].position, 1.0f));
+						glm::vec3 v2 = glm::vec3(globalMatrix * glm::vec4(m.vertices[i + 2].position, 1.0f));
+
+						float t_tri;
+						if (RayIntersectsTriangle(rayOrigin, rayDir, v0, v1, v2, t_tri))
+						{
+							if (t_tri < localMinDist)
+							{
+								localMinDist = t_tri;
+								hitMesh = true;
+							}
+						}
+					}
+				}
+
+				if (hitMesh && localMinDist < minDist)
+				{
+					minDist = localMinDist;
 					closest = obj;
+				}
 				}
 			}
 		}

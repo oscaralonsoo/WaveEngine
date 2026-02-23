@@ -327,7 +327,15 @@ bool ModuleScene::LoadScene(const std::string& filepath)
     if (root) {
         ComponentCamera* foundCamera = FindCameraInHierarchy(root);
         if (foundCamera) {
+            
             Application::GetInstance().camera->SetSceneCamera(foundCamera);
+            
+            
+            if (foundCamera->owner && !foundCamera->owner->GetComponent(ComponentType::LISTENER)) {
+                foundCamera->owner->CreateComponent(ComponentType::LISTENER);
+                LOG_DEBUG("AudioListener automatically attached to loaded Scene Camera");
+            }
+            
         }
     }
 
@@ -336,6 +344,24 @@ bool ModuleScene::LoadScene(const std::string& filepath)
 
     LOG_CONSOLE("Scene loaded successfully");
     return true;
+}
+
+void ModuleScene::NewScene()
+{
+    ClearScene();
+
+    if (root)
+    {
+        Transform* transform = static_cast<Transform*>(root->GetComponent(ComponentType::TRANSFORM));
+        if (transform)
+        {
+            transform->SetPosition(glm::vec3(0.0f));
+            transform->SetRotation(glm::vec3(0.0f));
+            transform->SetScale(glm::vec3(1.0f));
+        }
+    }
+
+    LOG_CONSOLE("New Scene created");
 }
 
 void ModuleScene::ClearScene()

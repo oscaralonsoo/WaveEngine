@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Module.h"
+#include "CommandHistory.h"
 #include <imgui.h>
 #include <memory>
 #include <string>
 #include <vector>
+
 
 class ConfigurationWindow;
 class HierarchyWindow;
@@ -50,6 +52,7 @@ public:
     ConfigurationWindow* GetConfigWindow() const { return configWindow.get(); }
     AssetsWindow* GetAssetsWindow() const { return assetsWindow.get(); }
     ConsoleWindow* GetConsoleWindow() { return consoleWindow.get(); }
+    CommandHistory* GetCommandHistory() { return commandHistory.get(); }
 
     ImVec2 sceneViewportPos = ImVec2(0, 0);
     ImVec2 sceneViewportSize = ImVec2(1280, 720);
@@ -100,6 +103,8 @@ private:
     // About window state
     bool showAbout = false;
 
+
+
     // Window states
     EditorWindowType currentWindow = EditorWindowType::NONE;
     bool isMouseOverSceneViewport = false;
@@ -116,4 +121,7 @@ private:
     float metaFileCheckTimer = 0.0f;
     const float metaFileCheckInterval = 2.0f;
 
+    // QOL
+    std::unique_ptr<CommandHistory> commandHistory;
+    void HandleUndoRedo();
 };

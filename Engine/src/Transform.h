@@ -44,11 +44,19 @@ public:
     const glm::mat4& GetLocalMatrix();
     const glm::mat4& GetGlobalMatrix();
 
+    //for audio coords
+    glm::mat4 GetWorldMatrixRecursive();
+
     void UpdateLocalMatrix();
     void UpdateGlobalMatrix();
 
+
     // Getter para el GameObject propietario (necesario para validaciones en Lua)
     GameObject* GetOwner() const { return owner; }
+
+    glm::vec3 GetForward() const { return rotationQuat * glm::vec3(0.0f, 0.0f, 1.0f); }
+    glm::vec3 GetUp() const { return rotationQuat * glm::vec3(0.0f, 1.0f, 0.0f); }
+
 
 private:
     // Transforms

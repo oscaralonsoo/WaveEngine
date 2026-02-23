@@ -3,6 +3,8 @@
 #include "EditorWindow.h"
 #include <imgui.h>
 #include <ImGuizmo.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 class InspectorWindow;
 class GameObject; 
@@ -36,4 +38,10 @@ private:
     GameObject* GetGameObjectUnderMouse();
 
     bool isGizmoActive = false;
+
+    //QOL
+    bool gizmoSnapshotTaken = false;
+    glm::vec3 gizmoSnapshotPos;
+    glm::vec3 gizmoSnapshotRot;
+    glm::vec3 gizmoSnapshotScale;
 };

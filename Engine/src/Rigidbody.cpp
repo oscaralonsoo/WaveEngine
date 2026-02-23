@@ -765,6 +765,7 @@ void Rigidbody::OnGameObjectEvent(GameObjectEvent event, Component* component)
 
 void Rigidbody::OnEditor()
 {
+    
     const char* bodyTypes[] = { "Static", "Dynamic", "Kinematic" };
     int currentType = (int)this->type;
     ImGui::Text("Body Type:");

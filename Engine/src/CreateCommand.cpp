@@ -1,0 +1,34 @@
+#include "CreateCommand.h"
+#include "GameObject.h"
+#include "Application.h"
+#include "SelectionManager.h"
+#include "ModuleScene.h"
+
+CreateCommand::CreateCommand(GameObject* object)
+    : m_Object(object)
+{
+    m_Parent = object->GetParent();
+    m_ChildIndex = m_Parent ? m_Parent->GetChildIndex(object) : -1;
+}
+
+void CreateCommand::Undo()
+{
+    if (!m_Object || !m_Parent) return;
+
+    Application::GetInstance().selectionManager->RemoveFromSelection(m_Object);
+
+    m_Parent->RemoveChild(m_Object);
+    m_OwnedObject.reset(m_Object);
+
+    Application::GetInstance().scene->MarkOctreeForRebuild();
+}
+
+void CreateCommand::Execute()
+{
+    if (!m_OwnedObject || !m_Parent) return;
+
+    m_Parent->InsertChildAt(m_OwnedObject.get(), m_ChildIndex);
+    m_OwnedObject.release();
+
+    Application::GetInstance().scene->MarkOctreeForRebuild();
+}

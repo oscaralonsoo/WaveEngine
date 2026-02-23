@@ -22,6 +22,11 @@
 #include "D6Joint.h"
 #include "HingeJoint.h"
 #include "ComponentParticleSystem.h"
+#include "ComponentRotate.h"
+#include "AudioComponent.h"
+#include "AudioSource.h"
+#include "AudioListener.h"
+#include "ReverbZone.h"
 #include <nlohmann/json.hpp>
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
@@ -62,6 +67,12 @@ Component* GameObject::CreateComponent(ComponentType type) {
         }
         newComponent = new ComponentMaterial(this);
         break;
+    case ComponentType::AUDIOSOURCE:
+        newComponent = new AudioSource(this);
+        break;
+    case ComponentType::LISTENER:
+        newComponent = new AudioListener(this);
+        break;
     case ComponentType::CAMERA:
         if (GetComponent(ComponentType::CAMERA) != nullptr) {
             return GetComponent(ComponentType::CAMERA);
@@ -70,6 +81,9 @@ Component* GameObject::CreateComponent(ComponentType type) {
         break;
     case ComponentType::ROTATE:
         newComponent = new ComponentRotate(this);
+        break;
+    case ComponentType::REVERBZONE:
+        newComponent = new ReverbZone(this);
         break;
     case ComponentType::SCRIPT:
         newComponent = new ComponentScript(this);
@@ -134,6 +148,27 @@ Component* GameObject::CreateComponent(ComponentType type) {
     }
 
     return newComponent;
+}
+
+void GameObject::RemoveComponent(Component* comp) {
+    
+    if (!comp) return;
+
+    auto it = std::find(components.begin(), components.end(), comp);
+    if (it != components.end()) {
+        components.erase(it);
+    }
+
+    auto ownerIt = std::find_if(componentOwners.begin(), componentOwners.end(), 
+        [comp](const std::unique_ptr<Component>& ptr) {
+            return ptr.get() == comp;
+        });
+
+    if (ownerIt != componentOwners.end()) {
+        componentOwners.erase(ownerIt);
+    }
+    
+    
 }
 
 Component* GameObject::GetComponent(ComponentType type) const {
@@ -425,4 +460,48 @@ void GameObject::PublishGameObjectEvent(GameObjectEvent event, Component* newCom
             component->OnGameObjectEvent(event, newComponent);
         }
     }
+}
+
+std::unique_ptr<Component> GameObject::ExtractComponent(Component* comp)
+{
+    auto it = std::find(components.begin(), components.end(), comp);
+    if (it != components.end())
+        components.erase(it);
+
+    auto ownerIt = std::find_if(componentOwners.begin(), componentOwners.end(),
+        [comp](const std::unique_ptr<Component>& p) { return p.get() == comp; });
+
+    if (ownerIt != componentOwners.end())
+    {
+        auto extracted = std::move(*ownerIt);
+        componentOwners.erase(ownerIt);
+        return extracted;
+    }
+
+    return nullptr;
+}
+
+void GameObject::ReinsertComponentAt(std::unique_ptr<Component> comp, int index)
+{
+    Component* raw = comp.get();
+
+    if (index < 0 || index >= static_cast<int>(componentOwners.size()))
+    {
+        componentOwners.push_back(std::move(comp));
+        components.push_back(raw);
+    }
+    else
+    {
+        componentOwners.insert(componentOwners.begin() + index, std::move(comp));
+        components.insert(components.begin() + index, raw);
+    }
+}
+
+int GameObject::GetComponentIndex(Component* comp) const
+{
+    for (int i = 0; i < static_cast<int>(components.size()); ++i)
+    {
+        if (components[i] == comp) return i;
+    }
+    return static_cast<int>(components.size());
 }
