@@ -297,9 +297,10 @@ void SceneWindow::DrawGizmo()
 {
     // First check if the gizmo was being used in the previous frame
     bool wasUsingGizmo = isGizmoActive;
+    std::vector<GameObject*> selectedObjects = Application::GetInstance().selectionManager->GetSelectedObjects();
 
-    GameObject* selectedObject = Application::GetInstance().selectionManager->GetSelectedObject();
-    if (!selectedObject)
+    //GameObject* selectedObject = Application::GetInstance().selectionManager->GetSelectedObject();
+    if (selectedObjects.empty())
     {
         isGizmoActive = false;
 
@@ -310,7 +311,11 @@ void SceneWindow::DrawGizmo()
         }
         return;
     }
-
+    else if (!selectedObjects[0]->GetChildren().empty())
+    {
+        selectedObjects.clear();
+        selectedObjects.push_back(Application::GetInstance().selectionManager->GetSelectedObject());
+    }
     ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
     if (!camera)
     {
@@ -322,19 +327,22 @@ void SceneWindow::DrawGizmo()
         }
         return;
     }
-
-    Transform* transform = static_cast<Transform*>(selectedObject->GetComponent(ComponentType::TRANSFORM));
-    if (!transform)
+    std::vector<Transform*> transforms;
+    for (auto& selectedObject : selectedObjects)
     {
-        isGizmoActive = false;
-
-        if (wasUsingGizmo)
+        Transform* transform = static_cast<Transform*>(selectedObject->GetComponent(ComponentType::TRANSFORM));
+        if (!transform)
         {
-            Application::GetInstance().scene->MarkOctreeForRebuild();
-        }
-        return;
-    }
+            isGizmoActive = false;
 
+            if (wasUsingGizmo)
+            {
+                Application::GetInstance().scene->MarkOctreeForRebuild();
+            }
+            return;
+        }
+        transforms.push_back(transform);
+    }
     if (sceneViewportSize.y <= 0.0f)
     {
         isGizmoActive = false;
@@ -361,7 +369,14 @@ void SceneWindow::DrawGizmo()
 
     glm::mat4 viewMatrix = camera->GetViewMatrix();
     glm::mat4 projectionMatrix = camera->GetProjectionMatrix();
-    glm::mat4 transformMatrix = transform->GetGlobalMatrix();
+    //glm::mat4 transformMatrix = transforms[0]->GetGlobalMatrix();
+    glm::vec3 pivot(0.0f);
+    for (auto* t : transforms)
+        pivot += t->GetGlobalPosition();
+    pivot /= transforms.size();
+
+    glm::mat4 originalPivotMatrix = glm::translate(glm::mat4(1.0f), pivot);
+    glm::mat4 gizmoMatrix = originalPivotMatrix;
 
     ImGuizmo::OPERATION currentOp = inspectorWindow->GetCurrentGizmoOperation();
     ImGuizmo::MODE currentMode = inspectorWindow->GetCurrentGizmoMode();
@@ -371,57 +386,65 @@ void SceneWindow::DrawGizmo()
         glm::value_ptr(projectionMatrix),
         currentOp,
         currentMode,
-        glm::value_ptr(transformMatrix)
+        glm::value_ptr(gizmoMatrix)
     );
 
     // Update the flag indicating whether the gizmo is being used
     isGizmoActive = ImGuizmo::IsUsing();
-
-    //save transform
     if (!wasUsingGizmo && isGizmoActive)
     {
-        gizmoSnapshotPos = transform->GetPosition();
-        gizmoSnapshotRot = transform->GetRotation();
-        gizmoSnapshotScale = transform->GetScale();
+        gizmoSnapshotPos = transforms[0]->GetPosition();
+        gizmoSnapshotRot = transforms[0]->GetRotation();
+        gizmoSnapshotScale = transforms[0]->GetScale();
         gizmoSnapshotTaken = true;
     }
 
-    if (ImGuizmo::IsUsing())
+    glm::mat4 deltaMatrix = glm::inverse(originalPivotMatrix) * gizmoMatrix;
+
+    //save transform
+    for (int cnt = 0; selectedObjects.size() > cnt;cnt++)
     {
-        GameObject* parent = selectedObject->GetParent();
-
-        if (parent)
+        if (ImGuizmo::IsUsing())
         {
-            Transform* parentTransform = static_cast<Transform*>(parent->GetComponent(ComponentType::TRANSFORM));
-            if (parentTransform)
-                transformMatrix = glm::inverse(parentTransform->GetGlobalMatrix()) * transformMatrix;
+            glm::mat4 originalGlobal = transforms[cnt]->GetGlobalMatrix();
+            glm::mat4 newGlobal =originalPivotMatrix *deltaMatrix *glm::inverse(originalPivotMatrix) * originalGlobal;
+
+            GameObject* parent = selectedObjects[cnt]->GetParent();
+
+            if (parent)
+            {
+                Transform* parentTransform = static_cast<Transform*>(parent->GetComponent(ComponentType::TRANSFORM));
+                if (parentTransform)
+                    newGlobal = glm::inverse(parentTransform->GetGlobalMatrix()) * newGlobal;
+            }
+
+            glm::vec3 position, scale, skew;
+            glm::vec4 perspective;
+            glm::quat rotation;
+
+            glm::decompose(newGlobal, scale, rotation, position, skew, perspective);
+
+            transforms[cnt]->SetPosition(position);
+            transforms[cnt]->SetRotationQuat(rotation);
+            //TODO ARREGLAR LAS TRANSFORMACIONES DE ESCALA
+            transforms[cnt]->SetScale(scale);
         }
-
-        glm::vec3 position, scale, skew;
-        glm::vec4 perspective;
-        glm::quat rotation;
-
-        glm::decompose(transformMatrix, scale, rotation, position, skew, perspective);
-
-        transform->SetPosition(position);
-        transform->SetRotationQuat(rotation);
-        transform->SetScale(scale);
-    }
-    else if (wasUsingGizmo)
-    {
-        // We just released the gizmo, mark for octree rebuild
-        if (gizmoSnapshotTaken)
+        else if (wasUsingGizmo)
         {
-            CommandHistory* history = Application::GetInstance().editor->GetCommandHistory();
-            history->ExecuteCommand(std::make_unique<TransformCommand>(
-                selectedObject,
-                gizmoSnapshotPos, gizmoSnapshotRot, gizmoSnapshotScale,
-                transform->GetPosition(), transform->GetRotation(), transform->GetScale()
-            ));
-            gizmoSnapshotTaken = false;
-        }
+            // We just released the gizmo, mark for octree rebuild
+            if (gizmoSnapshotTaken)
+            {
+                CommandHistory* history = Application::GetInstance().editor->GetCommandHistory();
+                history->ExecuteCommand(std::make_unique<TransformCommand>(
+                    selectedObjects[cnt],
+                    gizmoSnapshotPos, gizmoSnapshotRot, gizmoSnapshotScale,
+                    transforms[cnt]->GetPosition(), transforms[cnt]->GetRotation(), transforms[cnt]->GetScale()
+                ));
+                gizmoSnapshotTaken = false;
+            }
 
-        Application::GetInstance().scene->MarkOctreeForRebuild();
+            Application::GetInstance().scene->MarkOctreeForRebuild();
+        }
     }
 }
 

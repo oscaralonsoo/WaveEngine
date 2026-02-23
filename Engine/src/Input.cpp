@@ -334,8 +334,8 @@ bool Input::PreUpdate()
 
 		if (keys[SDL_SCANCODE_SPACE])
 			cameraPos += cameraUp * cameraSpeed;
-		if (keys[SDL_SCANCODE_LCTRL] || keys[SDL_SCANCODE_RCTRL])
-			cameraPos -= cameraUp * cameraSpeed;
+		//if (keys[SDL_SCANCODE_LCTRL] || keys[SDL_SCANCODE_RCTRL])
+		//	cameraPos -= cameraUp * cameraSpeed;
 
 		cameraTransform->SetPosition(cameraPos);
 	}

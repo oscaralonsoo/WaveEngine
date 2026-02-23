@@ -63,7 +63,6 @@ GameObject* SelectionManager::GetSelectedObject() const
 {
 	return selectedObjects.empty() ? nullptr : selectedObjects[0];
 }
-
 bool SelectionManager::IsSelected(GameObject* obj) const
 {
 	return std::find(selectedObjects.begin(), selectedObjects.end(), obj) != selectedObjects.end();
