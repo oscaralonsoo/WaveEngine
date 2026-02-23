@@ -25,6 +25,7 @@
 #include <assimp/postprocess.h>
 #include "TransformCommand.h"
 #include "ModuleEditor.h"
+#include "CreateCommand.h"
 
 namespace fs = std::filesystem;
 
@@ -111,6 +112,9 @@ void SceneWindow::HandleAssetDropTarget()
                 {
                     GameObject* root = Application::GetInstance().scene->GetRoot();
                     root->AddChild(loadedModel);
+                    Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                        std::make_unique<CreateCommand>(loadedModel)
+                    );
                     Application::GetInstance().scene->RebuildOctree();
                     LOG_CONSOLE("FBX model loaded successfully");
                 }
@@ -163,6 +167,9 @@ void SceneWindow::HandleAssetDropTarget()
 
                     GameObject* root = Application::GetInstance().scene->GetRoot();
                     root->AddChild(meshObject);
+                    Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                        std::make_unique<CreateCommand>(meshObject)
+                    );
                     Application::GetInstance().scene->RebuildOctree();
                     LOG_CONSOLE("Mesh loaded successfully (UID: %llu)", dropData->assetUID);
                 }
