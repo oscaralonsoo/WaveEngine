@@ -13,14 +13,18 @@ public:
     void EnableLimits(bool b);
     void SetMinLimit(float m);
     void SetMaxLimit(float m);
-
     void EnableSoftLimit(bool b);
     void SetStiffness(float s);
     void SetDamping(float d);
 
-    //void Save(Config& config) override;
-    //void Load(Config& config) override;
-    void OnEditor() override;
+    float GetMinLimit() const { return minLimit; }
+    float GetMaxLimit() const { return maxLimit; }
+    bool GetLimitsEnabled() const { return limitsEnabled; }
+    float GetStiffness() const { return stiffness; }
+    float GetDamping() const { return damping; }
+    bool GetSoftLimitEnabled() const { return softLimitEnabled; }
+
+    void OnEditor() override {}
     void DrawDebug() override;
 
 private:

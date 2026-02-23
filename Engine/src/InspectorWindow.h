@@ -29,15 +29,18 @@ public:
 private:
     bool DrawGameObjectSection(GameObject* selectedObject);
     void DrawGizmoSettings();
+    void DrawAddComponentButton(GameObject* selectedObject);
+
     void DrawTransformComponent(GameObject* selectedObject);
     void DrawCameraComponent(GameObject* selectedObject);
     void DrawMeshComponent(GameObject* selectedObject);
     void DrawMaterialComponent(GameObject* selectedObject);
     void DrawRotateComponent(GameObject* selectedObject);
+
     void DrawScriptComponent(GameObject* selectedObject);
-    void DrawAddComponentButton(GameObject* selectedObject);
-    
+ 
     void DrawParticleComponent(GameObject* selectedObject);
+
     void DrawRigidodyComponent(GameObject* selectedObject);
     void DrawBoxColliderComponent(GameObject* selectedObject);
     void DrawSphereColliderComponent(GameObject* selectedObject);
@@ -46,6 +49,13 @@ private:
     void DrawInfinitePlaneColliderComponent(GameObject* selectedObject);
     void DrawMeshColliderComponent(GameObject* selectedObject);
     void DrawConvexColliderComponent(GameObject* selectedObject);
+    void DrawFixedJointComponent(GameObject* selectedObject);
+    void DrawDistanceJointComponent(GameObject* selectedObject);
+    void DrawHingeJointComponent(GameObject* selectedObject);
+    void DrawSphericalJointComponent(GameObject* selectedObject);
+    void DrawPrismaticJointComponent(GameObject* selectedObject);
+    void DrawD6JointComponent(GameObject* selectedObject);
+
     void DrawCanvasComponent(GameObject* selectedObject);
 
     void DrawAudioSourceComponent(GameObject* selectedObject);

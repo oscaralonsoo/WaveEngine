@@ -10,8 +10,5 @@ public:
 
     void CreateJoint() override;
 
-    //void Save(Config& config) override;
-    //void Load(Config& config) override;
-    void OnEditor() override;
     void DrawDebug() override;
 };

@@ -13,9 +13,10 @@ public:
     void EnableLimits(bool b);
     void SetConeLimit(float angle);
 
-    //void Save(Config& config) override;
-    //void Load(Config& config) override;
-    void OnEditor() override;
+    float GetLimitAngle() const { return limitAngle; }
+    bool GetLimitsEnabled() const { return limitsEnabled; }
+
+    void OnEditor() override {}
     void DrawDebug() override;
 
 private:

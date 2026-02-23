@@ -5,12 +5,11 @@
 #include "glm/glm.hpp"
 #include <glm/gtc/quaternion.hpp>
 
-
 class Rigidbody;
 
 class Joint : public Component {
 public:
-    
+
     enum class JointBody {
         Self = 0,
         Target = 1
@@ -40,20 +39,22 @@ public:
     void SetAnchorPosition(JointBody jointBodyType, const glm::vec3& position);
     void SetAnchorRotation(JointBody jointBodyType, const glm::quat& rotation);
     void SetBreakForce(float force = INFINITY_PHYSIC);
-    void SetBreakTorque(float torque= INFINITY_PHYSIC);
+    void SetBreakTorque(float torque = INFINITY_PHYSIC);
 
-    //virtual void Save(Config& componentNode) {}
-    //void SaveBase(Config& config);
-    //virtual void Load(Config& componentNode) {}
-    //void LoadBase(Config& config);
-    //void ResolveReferences() override;
+    // Getters for Inspector
+    Rigidbody* GetBodyA() const { return bodyA; }
+    Rigidbody* GetBodyB() const { return bodyB; }
+    glm::vec3 GetLocalPosA() const { return localPosA; }
+    glm::vec3 GetLocalPosB() const { return localPosB; }
+    glm::quat GetLocalRotA() const { return localRotA; }
+    glm::quat GetLocalRotB() const { return localRotB; }
+    float GetBreakForce() const { return breakForce; }
+    float GetBreakTorque() const { return breakTorque; }
 
-    void OnEditorBase();
     void OnGameObjectEvent(GameObjectEvent event, Component* component) override;
 
-
 protected:
-    
+
     uint32_t bUID;
 
     Rigidbody* bodyA = nullptr;

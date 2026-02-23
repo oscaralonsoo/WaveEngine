@@ -1,12 +1,8 @@
 #include "DistanceJoint.h"
 #include "Rigidbody.h"
-
 #include "Application.h"
 #include "ModulePhysics.h"
 #include "Renderer.h"
-
-
-#include "imgui.h"
 
 DistanceJoint::DistanceJoint(GameObject* owner) : Joint(owner)
 {
@@ -15,33 +11,18 @@ DistanceJoint::DistanceJoint(GameObject* owner) : Joint(owner)
     RefreshJoint();
 }
 
-DistanceJoint::~DistanceJoint()
-{
-
-}
+DistanceJoint::~DistanceJoint() {}
 
 void DistanceJoint::CreateJoint() {
 
     auto* physics = Application::GetInstance().physics->GetPhysics();
-
-    if (!physics) {
-        /*LOG(LogType::LOG_ERROR, "Joint Error: PhysX Physics pointer is NULL");*/
-        return;
-    }
-
-    if (!bodyA || !bodyA->GetActor()) {
-        /*LOG(LogType::LOG_ERROR, "Joint Error: BodyA or its PhysX Actor is NULL");*/
-        return;
-    }
+    if (!physics) return;
+    if (!bodyA || !bodyA->GetActor()) return;
 
     bool isADynamic = (bodyA->GetBodyType() == Rigidbody::Type::DYNAMIC);
-
     bool isBDynamic = (bodyB != nullptr) && (bodyB->GetBodyType() == Rigidbody::Type::DYNAMIC);
 
-    if (!isADynamic && !isBDynamic) {
-        /*LOG(LogType::LOG_WARNING, "Distance Joint ignored: At least one body must be DYNAMIC.");*/
-        return;
-    }
+    if (!isADynamic && !isBDynamic) return;
 
     physx::PxRigidActor* actorA = bodyA->GetActor();
     physx::PxRigidActor* actorB = (bodyB) ? bodyB->GetActor() : nullptr;
@@ -57,22 +38,15 @@ void DistanceJoint::CreateJoint() {
     );
 
     pxJoint = physx::PxDistanceJointCreate(*physics, actorA, localA, actorB, localB);
-
-    if (pxJoint == nullptr) {
-        /*LOG(LogType::LOG_ERROR, "Joint Error: PhysX failed to create PxDistanceJoint");*/
-        return;
-    }
+    if (pxJoint == nullptr) return;
 
     pxJoint->setBreakForce(breakForce, breakTorque);
 
     auto* dJoint = static_cast<physx::PxDistanceJoint*>(pxJoint);
-
     dJoint->setMaxDistance(maxDistance);
     dJoint->setDistanceJointFlag(physx::PxDistanceJointFlag::eMAX_DISTANCE_ENABLED, maxDistanceEnabled);
-
     dJoint->setMinDistance(minDistance);
     dJoint->setDistanceJointFlag(physx::PxDistanceJointFlag::eMIN_DISTANCE_ENABLED, minDistance > 0.0f);
-
     dJoint->setStiffness(stiffness);
     dJoint->setDamping(damping);
     dJoint->setDistanceJointFlag(physx::PxDistanceJointFlag::eSPRING_ENABLED, springEnabled);
@@ -82,8 +56,7 @@ void DistanceJoint::EnableSpring(bool b)
 {
     springEnabled = b;
     auto* dJoint = static_cast<physx::PxDistanceJoint*>(pxJoint);
-    if (dJoint)
-    {
+    if (dJoint) {
         dJoint->setDistanceJointFlag(physx::PxDistanceJointFlag::eSPRING_ENABLED, springEnabled);
         if (bodyA) bodyA->WakeUp();
         if (bodyB) bodyB->WakeUp();
@@ -94,8 +67,7 @@ void DistanceJoint::EnableMaxDistance(bool b)
 {
     maxDistanceEnabled = b;
     auto* dJoint = static_cast<physx::PxDistanceJoint*>(pxJoint);
-    if (dJoint)
-    {
+    if (dJoint) {
         dJoint->setDistanceJointFlag(physx::PxDistanceJointFlag::eMAX_DISTANCE_ENABLED, maxDistanceEnabled);
         if (bodyA) bodyA->WakeUp();
         if (bodyB) bodyB->WakeUp();
@@ -106,8 +78,7 @@ void DistanceJoint::SetDamping(float d)
 {
     damping = glm::clamp(d, 0.0f, INFINITY);
     auto* dJoint = static_cast<physx::PxDistanceJoint*>(pxJoint);
-    if (dJoint)
-    {
+    if (dJoint) {
         dJoint->setDamping(damping);
         if (bodyA) bodyA->WakeUp();
         if (bodyB) bodyB->WakeUp();
@@ -118,12 +89,11 @@ void DistanceJoint::SetStiffness(float s)
 {
     stiffness = glm::clamp(s, 0.0f, INFINITY);
     auto* dJoint = static_cast<physx::PxDistanceJoint*>(pxJoint);
-    if (dJoint)
-    {
+    if (dJoint) {
         dJoint->setStiffness(stiffness);
         if (bodyA) bodyA->WakeUp();
         if (bodyB) bodyB->WakeUp();
-    }   
+    }
 }
 
 void DistanceJoint::SetMaxDistance(float m)
@@ -141,88 +111,12 @@ void DistanceJoint::SetMaxDistance(float m)
 void DistanceJoint::SetMinDistance(float m)
 {
     minDistance = glm::clamp(m, 0.0f, maxDistance);
-
     auto* dJoint = static_cast<physx::PxDistanceJoint*>(pxJoint);
-    if (dJoint)
-    {
+    if (dJoint) {
         dJoint->setMinDistance(minDistance);
         dJoint->setDistanceJointFlag(physx::PxDistanceJointFlag::eMIN_DISTANCE_ENABLED, minDistance > 0.0f);
-
         if (bodyA) bodyA->WakeUp();
         if (bodyB) bodyB->WakeUp();
-    }
-}
-
-//void DistanceJoint::Save(Config& config)
-//{
-//    SaveBase(config);
-//    config.SetBool("EnableMaxDistance", maxDistanceEnabled);
-//    config.SetFloat("MaxDistance", maxDistance);
-//    config.SetFloat("MinDistance", minDistance);
-//    config.SetBool("EnableSpring", springEnabled);
-//    config.SetFloat("Stifness", stiffness);
-//    config.SetFloat("Damping", damping);
-//
-//}
-//
-//void DistanceJoint::Load(Config& config)
-//{
-//    LoadBase(config);
-//    EnableMaxDistance(config.GetBool("EnableMaxDistance"));
-//    SetMaxDistance(config.GetFloat("MaxDistance"));
-//    SetMinDistance(config.GetFloat("MinDistance"));
-//    EnableSpring(config.GetBool("EnableSpring"));
-//    SetStiffness(config.GetFloat("Stifness"));
-//    SetDamping(config.GetFloat("Damping"));
-//}
-
-void DistanceJoint::OnEditor()
-{
-    OnEditorBase();
-
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-    bool isNodeOpen = ImGui::TreeNodeEx("Distance Settings", flags);
-
-    if (isNodeOpen)
-    {
-        if (ImGui::Checkbox("Enable Max Distance", &maxDistanceEnabled)) {
-            EnableMaxDistance(maxDistanceEnabled);
-        }
-
-        if (maxDistanceEnabled) {
-            ImGui::Text("Max Distance");
-            if (ImGui::InputFloat("##Max Distance", &maxDistance)) {
-                SetMaxDistance(maxDistance);
-            }
-        }
-
-        ImGui::Text("Min Distance");
-        if (ImGui::InputFloat("##Min Distance", &minDistance)) {
-            SetMinDistance(minDistance);
-        }
-
-        ImGui::TreePop();
-    }
-
-    isNodeOpen = ImGui::TreeNodeEx("Spring Settings", flags);
-
-    if (isNodeOpen)
-    {
-        if (ImGui::Checkbox("Enable Spring", &springEnabled)) {
-            EnableSpring(springEnabled);
-        }
-
-        ImGui::Text("Stiffness");
-        if (ImGui::InputFloat("##Stiffness", &stiffness)) {
-            SetStiffness(stiffness);
-        }
-        ImGui::Text("Damping");
-        if (ImGui::InputFloat("##Damping", &damping)) {
-            SetDamping(damping);
-        }
-
-        ImGui::TreePop();
     }
 }
 
@@ -233,7 +127,6 @@ void DistanceJoint::DrawDebug()
     physx::PxTransform poseA = bodyA->GetActor()->getGlobalPose();
     physx::PxTransform localA = pxJoint->getLocalPose(physx::PxJointActorIndex::eACTOR0);
     physx::PxTransform worldA = poseA.transform(localA);
-
     glm::vec3 pA(worldA.p.x, worldA.p.y, worldA.p.z);
 
     glm::vec3 pB;

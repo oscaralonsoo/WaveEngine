@@ -11,14 +11,18 @@ public:
     void CreateJoint() override;
 
     void SetMotion(physx::PxD6Axis::Enum axis, physx::PxD6Motion::Enum motion);
-
     void SetLinearLimit(float extent);
     void SetTwistLimit(float minAngle, float maxAngle);
     void SetSwingLimit(float yAngle, float zAngle);
 
-    //void Save(Config& config) override;
-    //void Load(Config& config) override;
-    void OnEditor() override;
+    physx::PxD6Motion::Enum GetMotion(int axis) const { return motions[axis]; }
+    float GetLinearLimit() const { return linearLimit; }
+    float GetTwistMin() const { return twistMin; }
+    float GetTwistMax() const { return twistMax; }
+    float GetSwingY() const { return swingY; }
+    float GetSwingZ() const { return swingZ; }
+
+    void OnEditor() override {}
     void DrawDebug() override;
 
 private:

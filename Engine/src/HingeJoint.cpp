@@ -3,7 +3,6 @@
 #include "Application.h"
 #include "ModulePhysics.h"
 #include "Renderer.h"
-#include "imgui.h"
 
 HingeJoint::HingeJoint(GameObject* owner) : Joint(owner)
 {
@@ -16,18 +15,12 @@ HingeJoint::~HingeJoint() {}
 
 void HingeJoint::CreateJoint() {
     auto* physics = Application::GetInstance().physics->GetPhysics();
-
     if (!physics || !bodyA || !bodyA->GetActor()) return;
 
-
     bool isADynamic = (bodyA->GetBodyType() == Rigidbody::Type::DYNAMIC);
-
     bool isBDynamic = (bodyB != nullptr) && (bodyB->GetBodyType() == Rigidbody::Type::DYNAMIC);
 
-    if (!isADynamic && !isBDynamic) {
-        /*LOG(LogType::LOG_WARNING, "Hinge Joint ignored: At least one body must be DYNAMIC.");*/
-        return;
-    }
+    if (!isADynamic && !isBDynamic) return;
 
     physx::PxRigidActor* actorA = bodyA->GetActor();
     physx::PxRigidActor* actorB = (bodyB) ? bodyB->GetActor() : nullptr;
@@ -43,21 +36,15 @@ void HingeJoint::CreateJoint() {
     );
 
     pxJoint = physx::PxRevoluteJointCreate(*physics, actorA, localA, actorB, localB);
-
-    if (pxJoint == nullptr) {
-        /*LOG(LogType::LOG_ERROR, "Joint Error: PhysX failed to create PxHingeJoint");*/
-        return;
-    }
+    if (pxJoint == nullptr) return;
 
     pxJoint->setBreakForce(breakForce, breakTorque);
 
     auto* rJoint = static_cast<physx::PxRevoluteJoint*>(pxJoint);
 
     physx::PxJointAngularLimitPair limitPair(glm::radians(minAngle), glm::radians(maxAngle));
-   
     rJoint->setLimit(limitPair);
     rJoint->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eLIMIT_ENABLED, limitsEnabled);
-
     rJoint->setDriveVelocity(driveVelocity);
     rJoint->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eDRIVE_ENABLED, motorEnabled);
 }
@@ -110,46 +97,7 @@ void HingeJoint::SetDriveVelocity(float v) {
     }
 }
 
-//void HingeJoint::Save(Config& config) {
-//    SaveBase(config);
-//    config.SetBool("EnableLimits", limitsEnabled);
-//    config.SetFloat("MinAngle", minAngle);
-//    config.SetFloat("MaxAngle", maxAngle);
-//    config.SetBool("EnableMotor", motorEnabled);
-//    config.SetFloat("DriveVelocity", driveVelocity);
-//}
-//
-//void HingeJoint::Load(Config& config) {
-//    LoadBase(config);
-//    EnableLimits(config.GetBool("EnableLimits"));
-//    SetMinAngle(config.GetFloat("MinAngle"));
-//    SetMaxAngle(config.GetFloat("MaxAngle"));
-//    EnableMotor(config.GetBool("EnableMotor"));
-//    SetDriveVelocity(config.GetFloat("DriveVelocity"));
-//}
-
-void HingeJoint::OnEditor() {
-    OnEditorBase();
-
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-    bool isNodeOpen = ImGui::TreeNodeEx("Hinge Limits", flags);
-    if (isNodeOpen) {
-        if (ImGui::Checkbox("Enable Limits", &limitsEnabled)) EnableLimits(limitsEnabled);
-        if (ImGui::SliderFloat("Min Angle", &minAngle, -179.9f, 0.0f)) SetMinAngle(minAngle);
-        if (ImGui::SliderFloat("Max Angle", &maxAngle, 0.0f, 179.9)) SetMaxAngle(maxAngle);
-        ImGui::TreePop();
-    }
-
-    isNodeOpen = ImGui::TreeNodeEx("Motor Settings", flags);
-    if (isNodeOpen) {
-        if (ImGui::Checkbox("Enable Motor", &motorEnabled)) EnableMotor(motorEnabled);
-        if (ImGui::InputFloat("Velocity", &driveVelocity)) SetDriveVelocity(driveVelocity);
-        ImGui::TreePop();
-    }
-}
-
-void HingeJoint::DrawDebug() 
+void HingeJoint::DrawDebug()
 {
     if (!bodyA || !pxJoint) return;
 
@@ -158,7 +106,6 @@ void HingeJoint::DrawDebug()
     physx::PxTransform worldRef = poseRef.transform(localRef);
 
     glm::vec3 pRef(worldRef.p.x, worldRef.p.y, worldRef.p.z);
-
     physx::PxVec3 bX = worldRef.q.getBasisVector0();
     physx::PxVec3 bY = worldRef.q.getBasisVector1();
     physx::PxVec3 bZ = worldRef.q.getBasisVector2();
@@ -169,14 +116,12 @@ void HingeJoint::DrawDebug()
 
     auto* render = Application::GetInstance().renderer.get();
     float radius = 1.0f;
-
     glm::vec4 color = glm::vec4(1, 1, 1, 1);
 
     render->DrawLine(pRef - dirX * 0.5f, pRef + dirX * 0.5f, color);
     render->DrawSphere(pRef, 0.05f, color);
 
     if (limitsEnabled) {
-
         float radMin = glm::radians(minAngle);
         glm::vec3 pMin = pRef + (dirY * cos(radMin) - dirZ * sin(radMin)) * radius;
         render->DrawLine(pRef, pMin, color);
@@ -191,19 +136,13 @@ void HingeJoint::DrawDebug()
 
         for (int i = 1; i <= segments; ++i) {
             float currentRad = radMin + step * i;
-
             glm::vec3 nextPoint = pRef + (dirY * cos(currentRad) - dirZ * sin(currentRad)) * radius;
             render->DrawLine(prevPoint, nextPoint, color);
             prevPoint = nextPoint;
         }
 
-        physx::PxTransform poseA = bodyA->GetActor()->getGlobalPose();
-        physx::PxTransform localA = pxJoint->getLocalPose(physx::PxJointActorIndex::eACTOR0);
-        physx::PxTransform worldA = poseA.transform(localA);
-
         auto* rJoint = static_cast<physx::PxRevoluteJoint*>(pxJoint);
         float currentAngle = rJoint->getAngle();
-
         glm::vec3 dirNeedle = dirY * cos(currentAngle) - dirZ * sin(currentAngle);
         render->DrawLine(pRef, pRef + dirNeedle * (radius * 0.8f), glm::vec4(1, 1, 0, 1));
     }

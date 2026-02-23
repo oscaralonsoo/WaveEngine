@@ -26,7 +26,13 @@
 #include "TransformCommand.h"
 #include "ModuleEditor.h"
 #include "ComponentCommand.h"
-
+#include "Joint.h"
+#include "FixedJoint.h"
+#include "DistanceJoint.h"
+#include "HingeJoint.h"
+#include "SphericalJoint.h"
+#include "PrismaticJoint.h"
+#include "D6Joint.h"
 #include "Log.h"
 #include "ComponentScript.h"
 #include <filesystem>
@@ -65,12 +71,7 @@ static void DrawComponentContextMenu(Component* component, bool canRemove = true
     }
 }
 
-InspectorWindow::InspectorWindow()
-    : EditorWindow("Inspector")
-{
-
-  
-}
+InspectorWindow::InspectorWindow() : EditorWindow("Inspector"){ }
 
 void InspectorWindow::Draw()
 {
@@ -150,6 +151,12 @@ void InspectorWindow::Draw()
     DrawAudioSourceComponent(selectedObject);
     DrawAudioListenerComponent(selectedObject);
     DrawReverbZoneComponent(selectedObject);
+    DrawFixedJointComponent(selectedObject);
+    DrawDistanceJointComponent(selectedObject);
+    DrawHingeJointComponent(selectedObject);
+    DrawSphericalJointComponent(selectedObject);
+    DrawPrismaticJointComponent(selectedObject);
+    DrawD6JointComponent(selectedObject);
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -763,6 +770,7 @@ void  InspectorWindow::DrawPlaneColliderComponent(GameObject* selectedObject)
         if (open) Collider->OnEditor();
     }
 }
+
 void  InspectorWindow::DrawInfinitePlaneColliderComponent(GameObject* selectedObject)
 {
     InfinitePlaneCollider* Collider = static_cast<InfinitePlaneCollider*>(selectedObject->GetComponent(ComponentType::INFINITE_PLANE_COLLIDER));
@@ -774,6 +782,7 @@ void  InspectorWindow::DrawInfinitePlaneColliderComponent(GameObject* selectedOb
         if (open) Collider->OnEditor();
     }
 }
+
 void  InspectorWindow::DrawMeshColliderComponent(GameObject* selectedObject)
 {
     MeshCollider* Collider = static_cast<MeshCollider*>(selectedObject->GetComponent(ComponentType::MESH_COLLIDER));
@@ -785,6 +794,7 @@ void  InspectorWindow::DrawMeshColliderComponent(GameObject* selectedObject)
         if (open) Collider->OnEditor();
     }
 }
+
 void  InspectorWindow::DrawConvexColliderComponent(GameObject* selectedObject)
 {
     ConvexCollider* Collider = static_cast<ConvexCollider*>(selectedObject->GetComponent(ComponentType::CONVEX_COLLIDER));
@@ -794,6 +804,330 @@ void  InspectorWindow::DrawConvexColliderComponent(GameObject* selectedObject)
         bool open = ImGui::CollapsingHeader("Convex Collider", ImGuiTreeNodeFlags_DefaultOpen);
         DrawComponentContextMenu(Collider);
         if (open) Collider->OnEditor();
+    }
+}
+
+static void DrawJointBaseSection(Joint* joint)
+{
+    ImGui::Text("Connections:");
+    ImGui::Separator();
+
+    if (ImGui::BeginTable("JointConnections", 2, ImGuiTableFlags_SizingStretchProp))
+    {
+        ImGui::TableSetupColumn("Labels", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Values", ImGuiTableColumnFlags_WidthStretch);
+
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn(); ImGui::Text("Body A:");
+        ImGui::TableNextColumn();
+        if (joint->GetBodyA())
+            ImGui::Text("%s", joint->GetBodyA()->owner->name.c_str());
+        else
+            ImGui::TextDisabled("None");
+
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn(); ImGui::Text("Body B:");
+        ImGui::TableNextColumn();
+        if (joint->GetBodyB())
+            ImGui::Button(joint->GetBodyB()->owner->name.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 20));
+        else
+            ImGui::Button("None (World)", ImVec2(ImGui::GetContentRegionAvail().x, 20));
+
+        ImGui::EndTable();
+    }
+
+    if (ImGui::Button("Clear Target"))
+        joint->SetTarget(nullptr);
+
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+    if (ImGui::TreeNodeEx("Body A Settings", flags))
+    {
+        glm::vec3 posA = joint->GetLocalPosA();
+        ImGui::Text("Offset Position");
+        if (ImGui::InputFloat3("##PosA", &posA.x))
+            joint->SetAnchorPosition(Joint::JointBody::Self, posA);
+
+        glm::vec3 eulerA = JointQuatToEuler(joint->GetLocalRotA());
+        ImGui::Text("Offset Rotation");
+        if (ImGui::InputFloat3("##RotA", &eulerA.x))
+            joint->SetAnchorRotation(Joint::JointBody::Self, JointEulerToQuat(eulerA));
+
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNodeEx("Body B Settings", flags))
+    {
+        glm::vec3 posB = joint->GetLocalPosB();
+        ImGui::Text("Offset Position");
+        if (ImGui::InputFloat3("##PosB", &posB.x))
+            joint->SetAnchorPosition(Joint::JointBody::Target, posB);
+
+        glm::vec3 eulerB = JointQuatToEuler(joint->GetLocalRotB());
+        ImGui::Text("Offset Rotation");
+        if (ImGui::InputFloat3("##RotB", &eulerB.x))
+            joint->SetAnchorRotation(Joint::JointBody::Target, JointEulerToQuat(eulerB));
+
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNodeEx("Break Settings", flags))
+    {
+        float breakForce = joint->GetBreakForce();
+        float breakTorque = joint->GetBreakTorque();
+
+        const char* forceFormat = (breakForce >= INFINITY_PHYSIC) ? "INFINITY" : "%.3f";
+        const char* torqueFormat = (breakTorque >= INFINITY_PHYSIC) ? "INFINITY" : "%.3f";
+
+        ImGui::Text("Break Force");
+        if (ImGui::InputFloat("##BreakForce", &breakForce, 0.0f, 0.0f, forceFormat))
+            joint->SetBreakForce(breakForce);
+
+        ImGui::Text("Break Torque");
+        if (ImGui::InputFloat("##BreakTorque", &breakTorque, 0.0f, 0.0f, torqueFormat))
+            joint->SetBreakTorque(breakTorque);
+
+        if (breakForce < INFINITY_PHYSIC || breakTorque < INFINITY_PHYSIC)
+        {
+            if (ImGui::Button("Reset##BreakReset"))
+            {
+                joint->SetBreakForce(INFINITY_PHYSIC);
+                joint->SetBreakTorque(INFINITY_PHYSIC);
+            }
+        }
+
+        ImGui::TreePop();
+    }
+}
+
+void InspectorWindow::DrawFixedJointComponent(GameObject* selectedObject)
+{
+    FixedJoint* joint = static_cast<FixedJoint*>(selectedObject->GetComponent(ComponentType::FIXED_JOINT));
+    if (!joint) return;
+
+    bool open = ImGui::CollapsingHeader("Fixed Joint", ImGuiTreeNodeFlags_DefaultOpen);
+    DrawComponentContextMenu(joint);
+    if (open)
+        DrawJointBaseSection(joint);
+}
+
+void InspectorWindow::DrawDistanceJointComponent(GameObject* selectedObject)
+{
+    DistanceJoint* joint = static_cast<DistanceJoint*>(selectedObject->GetComponent(ComponentType::DISTANCE_JOINT));
+    if (!joint) return;
+
+    bool open = ImGui::CollapsingHeader("Distance Joint", ImGuiTreeNodeFlags_DefaultOpen);
+    DrawComponentContextMenu(joint);
+    if (!open) return;
+
+    DrawJointBaseSection(joint);
+
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+    if (ImGui::TreeNodeEx("Distance Settings", flags))
+    {
+        bool maxEnabled = joint->GetMaxDistanceEnabled();
+        if (ImGui::Checkbox("Enable Max Distance", &maxEnabled))
+            joint->EnableMaxDistance(maxEnabled);
+
+        if (maxEnabled) {
+            float maxDist = joint->GetMaxDistance();
+            ImGui::Text("Max Distance");
+            if (ImGui::InputFloat("##MaxDist", &maxDist))
+                joint->SetMaxDistance(maxDist);
+        }
+
+        float minDist = joint->GetMinDistance();
+        ImGui::Text("Min Distance");
+        if (ImGui::InputFloat("##MinDist", &minDist))
+            joint->SetMinDistance(minDist);
+
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNodeEx("Spring Settings", flags))
+    {
+        bool springEnabled = joint->GetSpringEnabled();
+        if (ImGui::Checkbox("Enable Spring", &springEnabled))
+            joint->EnableSpring(springEnabled);
+
+        float stiffness = joint->GetStiffness();
+        ImGui::Text("Stiffness");
+        if (ImGui::InputFloat("##Stiffness", &stiffness))
+            joint->SetStiffness(stiffness);
+
+        float damping = joint->GetDamping();
+        ImGui::Text("Damping");
+        if (ImGui::InputFloat("##Damping", &damping))
+            joint->SetDamping(damping);
+
+        ImGui::TreePop();
+    }
+}
+
+void InspectorWindow::DrawHingeJointComponent(GameObject* selectedObject)
+{
+    HingeJoint* joint = static_cast<HingeJoint*>(selectedObject->GetComponent(ComponentType::HINGE_JOINT));
+    if (!joint) return;
+
+    bool open = ImGui::CollapsingHeader("Hinge Joint", ImGuiTreeNodeFlags_DefaultOpen);
+    DrawComponentContextMenu(joint);
+    if (!open) return;
+
+    DrawJointBaseSection(joint);
+
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+    if (ImGui::TreeNodeEx("Hinge Limits", flags))
+    {
+        bool limitsEnabled = joint->GetLimitsEnabled();
+        if (ImGui::Checkbox("Enable Limits", &limitsEnabled))
+            joint->EnableLimits(limitsEnabled);
+
+        float minAngle = joint->GetMinAngle();
+        if (ImGui::SliderFloat("Min Angle", &minAngle, -179.9f, 0.0f))
+            joint->SetMinAngle(minAngle);
+
+        float maxAngle = joint->GetMaxAngle();
+        if (ImGui::SliderFloat("Max Angle", &maxAngle, 0.0f, 179.9f))
+            joint->SetMaxAngle(maxAngle);
+
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNodeEx("Motor Settings", flags))
+    {
+        bool motorEnabled = joint->GetMotorEnabled();
+        if (ImGui::Checkbox("Enable Motor", &motorEnabled))
+            joint->EnableMotor(motorEnabled);
+
+        float velocity = joint->GetDriveVelocity();
+        if (ImGui::InputFloat("Velocity", &velocity))
+            joint->SetDriveVelocity(velocity);
+
+        ImGui::TreePop();
+    }
+}
+
+void InspectorWindow::DrawSphericalJointComponent(GameObject* selectedObject)
+{
+    SphericalJoint* joint = static_cast<SphericalJoint*>(selectedObject->GetComponent(ComponentType::SPHERICAL_JOINT));
+    if (!joint) return;
+
+    bool open = ImGui::CollapsingHeader("Spherical Joint", ImGuiTreeNodeFlags_DefaultOpen);
+    DrawComponentContextMenu(joint);
+    if (!open) return;
+
+    DrawJointBaseSection(joint);
+
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+    if (ImGui::TreeNodeEx("Cone Limit Settings", flags))
+    {
+        bool limitsEnabled = joint->GetLimitsEnabled();
+        if (ImGui::Checkbox("Enable Cone Limit", &limitsEnabled))
+            joint->EnableLimits(limitsEnabled);
+
+        float limitAngle = joint->GetLimitAngle();
+        if (ImGui::SliderFloat("Limit Angle", &limitAngle, 0.0f, 180.0f))
+            joint->SetConeLimit(limitAngle);
+
+        ImGui::TreePop();
+    }
+}
+
+void InspectorWindow::DrawPrismaticJointComponent(GameObject* selectedObject)
+{
+    PrismaticJoint* joint = static_cast<PrismaticJoint*>(selectedObject->GetComponent(ComponentType::PRISMATIC_JOINT));
+    if (!joint) return;
+
+    bool open = ImGui::CollapsingHeader("Prismatic Joint", ImGuiTreeNodeFlags_DefaultOpen);
+    DrawComponentContextMenu(joint);
+    if (!open) return;
+
+    DrawJointBaseSection(joint);
+
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+    if (ImGui::TreeNodeEx("Limit Settings", flags))
+    {
+        bool limitsEnabled = joint->GetLimitsEnabled();
+        if (ImGui::Checkbox("Enable Limits", &limitsEnabled))
+            joint->EnableLimits(limitsEnabled);
+
+        float minLimit = joint->GetMinLimit();
+        if (ImGui::InputFloat("Min Limit", &minLimit))
+            joint->SetMinLimit(minLimit);
+
+        float maxLimit = joint->GetMaxLimit();
+        if (ImGui::InputFloat("Max Limit", &maxLimit))
+            joint->SetMaxLimit(maxLimit);
+
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNodeEx("Soft Limit (Spring)", flags))
+    {
+        bool softEnabled = joint->GetSoftLimitEnabled();
+        if (ImGui::Checkbox("Enable Soft Limit", &softEnabled))
+            joint->EnableSoftLimit(softEnabled);
+
+        float stiffness = joint->GetStiffness();
+        if (ImGui::InputFloat("Stiffness", &stiffness))
+            joint->SetStiffness(stiffness);
+
+        float damping = joint->GetDamping();
+        if (ImGui::InputFloat("Damping", &damping))
+            joint->SetDamping(damping);
+
+        ImGui::TreePop();
+    }
+}
+
+void InspectorWindow::DrawD6JointComponent(GameObject* selectedObject)
+{
+    D6Joint* joint = static_cast<D6Joint*>(selectedObject->GetComponent(ComponentType::D6_JOINT));
+    if (!joint) return;
+
+    bool open = ImGui::CollapsingHeader("D6 Joint", ImGuiTreeNodeFlags_DefaultOpen);
+    DrawComponentContextMenu(joint);
+    if (!open) return;
+
+    DrawJointBaseSection(joint);
+
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+    const char* axisNames[] = { "X", "Y", "Z", "Twist (Rot X)", "Swing Y", "Swing Z" };
+    const char* motionNames[] = { "Locked", "Limited", "Free" };
+
+    if (ImGui::TreeNodeEx("Motions", flags))
+    {
+        for (int i = 0; i < 6; ++i)
+        {
+            int current = (int)joint->GetMotion(i);
+            if (ImGui::Combo(axisNames[i], &current, motionNames, 3))
+                joint->SetMotion((physx::PxD6Axis::Enum)i, (physx::PxD6Motion::Enum)current);
+        }
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNodeEx("Limits", flags))
+    {
+        float linearLimit = joint->GetLinearLimit();
+        if (ImGui::DragFloat("Linear Extent", &linearLimit, 0.1f, 0.0f, 100.0f))
+            joint->SetLinearLimit(linearLimit);
+
+        float twistMin = joint->GetTwistMin();
+        float twistMax = joint->GetTwistMax();
+        if (ImGui::DragFloat2("Twist Min/Max", &twistMin, 1.0f, -180.0f, 180.0f))
+            joint->SetTwistLimit(twistMin, twistMax);
+
+        float swingY = joint->GetSwingY();
+        float swingZ = joint->GetSwingZ();
+        if (ImGui::DragFloat2("Swing Y/Z", &swingY, 1.0f, 0.0f, 180.0f))
+            joint->SetSwingLimit(swingY, swingZ);
+
+        ImGui::TreePop();
     }
 }
 
@@ -911,114 +1245,6 @@ void InspectorWindow::DrawReverbZoneComponent(GameObject* selectedObject)
     if (open) {
         zone->OnEditor();
     }
-}
-
-bool InspectorWindow::DrawGameObjectSection(GameObject* selectedObject)
-{
-    bool objectDeleted = false;
-
-    if (ImGui::CollapsingHeader("GameObject", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-        ImGui::Text("Actions:");
-        ImGui::Spacing();
-
-        // Delete button
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.1f, 0.1f, 1.0f));
-
-        if (ImGui::Button("Delete GameObject", ImVec2(-1, 0)))
-        {
-            if (selectedObject != Application::GetInstance().scene->GetRoot())
-            {
-                selectedObject->MarkForDeletion();
-                LOG_DEBUG("GameObject '%s' marked for deletion", selectedObject->GetName().c_str());
-                LOG_CONSOLE("GameObject '%s' marked for deletion", selectedObject->GetName().c_str());
-
-                Application::GetInstance().selectionManager->ClearSelection();
-                objectDeleted = true;
-            }
-            else
-            {
-                LOG_CONSOLE("Cannot delete Root GameObject!");
-            }
-        }
-
-        ImGui::PopStyleColor(3);
-
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::BeginTooltip();
-            ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Delete GameObject");
-            ImGui::Separator();
-            ImGui::Text("Marks this GameObject for deletion");
-            ImGui::Text("Shortcut: Backspace key");
-            ImGui::EndTooltip();
-        }
-
-        ImGui::Spacing();
-
-        // Create empty child button
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.3f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.1f, 1.0f));
-
-        if (ImGui::Button("Create Empty Child", ImVec2(-1, 0)))
-        {
-            GameObject* newChild = Application::GetInstance().scene->CreateGameObject("Empty");
-            newChild->SetParent(selectedObject);
-
-            Application::GetInstance().selectionManager->SetSelectedObject(newChild);
-
-            LOG_DEBUG("Created empty child for '%s'", selectedObject->GetName().c_str());
-            LOG_CONSOLE("Created empty child '%s' under '%s'", newChild->GetName().c_str(), selectedObject->GetName().c_str());
-        }
-
-        ImGui::PopStyleColor(3);
-
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::BeginTooltip();
-            ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Create Empty Child");
-            ImGui::Separator();
-            ImGui::Text("Creates a new empty GameObject as a child");
-            ImGui::Text("of this GameObject");
-            ImGui::EndTooltip();
-        }
-    }
-
-    return objectDeleted;
-}
-
-
-void InspectorWindow::GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects)
-{
-    if (root == nullptr)
-        return;
-
-    outObjects.push_back(root);
-
-    const std::vector<GameObject*>& children = root->GetChildren();
-    for (GameObject* child : children)
-    {
-        GetAllGameObjects(child, outObjects);
-    }
-}
-
-bool InspectorWindow::IsDescendantOf(GameObject* potentialDescendant, GameObject* potentialAncestor)
-{
-    if (potentialDescendant == nullptr || potentialAncestor == nullptr)
-        return false;
-
-    GameObject* current = potentialDescendant->GetParent();
-    while (current != nullptr)
-    {
-        if (current == potentialAncestor)
-            return true;
-        current = current->GetParent();
-    }
-
-    return false;
 }
 
 void InspectorWindow::DrawScriptComponent(GameObject* selectedObject)
@@ -1219,6 +1445,113 @@ void InspectorWindow::DrawScriptComponent(GameObject* selectedObject)
 
         ImGui::Unindent();
     }
+}
+
+bool InspectorWindow::DrawGameObjectSection(GameObject* selectedObject)
+{
+    bool objectDeleted = false;
+
+    if (ImGui::CollapsingHeader("GameObject", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Text("Actions:");
+        ImGui::Spacing();
+
+        // Delete button
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.1f, 0.1f, 1.0f));
+
+        if (ImGui::Button("Delete GameObject", ImVec2(-1, 0)))
+        {
+            if (selectedObject != Application::GetInstance().scene->GetRoot())
+            {
+                selectedObject->MarkForDeletion();
+                LOG_DEBUG("GameObject '%s' marked for deletion", selectedObject->GetName().c_str());
+                LOG_CONSOLE("GameObject '%s' marked for deletion", selectedObject->GetName().c_str());
+
+                Application::GetInstance().selectionManager->ClearSelection();
+                objectDeleted = true;
+            }
+            else
+            {
+                LOG_CONSOLE("Cannot delete Root GameObject!");
+            }
+        }
+
+        ImGui::PopStyleColor(3);
+
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Delete GameObject");
+            ImGui::Separator();
+            ImGui::Text("Marks this GameObject for deletion");
+            ImGui::Text("Shortcut: Backspace key");
+            ImGui::EndTooltip();
+        }
+
+        ImGui::Spacing();
+
+        // Create empty child button
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.3f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.1f, 1.0f));
+
+        if (ImGui::Button("Create Empty Child", ImVec2(-1, 0)))
+        {
+            GameObject* newChild = Application::GetInstance().scene->CreateGameObject("Empty");
+            newChild->SetParent(selectedObject);
+
+            Application::GetInstance().selectionManager->SetSelectedObject(newChild);
+
+            LOG_DEBUG("Created empty child for '%s'", selectedObject->GetName().c_str());
+            LOG_CONSOLE("Created empty child '%s' under '%s'", newChild->GetName().c_str(), selectedObject->GetName().c_str());
+        }
+
+        ImGui::PopStyleColor(3);
+
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Create Empty Child");
+            ImGui::Separator();
+            ImGui::Text("Creates a new empty GameObject as a child");
+            ImGui::Text("of this GameObject");
+            ImGui::EndTooltip();
+        }
+    }
+
+    return objectDeleted;
+}
+
+void InspectorWindow::GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects)
+{
+    if (root == nullptr)
+        return;
+
+    outObjects.push_back(root);
+
+    const std::vector<GameObject*>& children = root->GetChildren();
+    for (GameObject* child : children)
+    {
+        GetAllGameObjects(child, outObjects);
+    }
+}
+
+bool InspectorWindow::IsDescendantOf(GameObject* potentialDescendant, GameObject* potentialAncestor)
+{
+    if (potentialDescendant == nullptr || potentialAncestor == nullptr)
+        return false;
+
+    GameObject* current = potentialDescendant->GetParent();
+    while (current != nullptr)
+    {
+        if (current == potentialAncestor)
+            return true;
+        current = current->GetParent();
+    }
+
+    return false;
 }
 
 void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
@@ -1798,4 +2131,12 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         ImGui::EndPopup();
     }
+}
+
+//Helpers
+static glm::vec3 JointQuatToEuler(const glm::quat& q) {
+    return glm::degrees(glm::eulerAngles(q));
+}
+static glm::quat JointEulerToQuat(const glm::vec3& deg) {
+    return glm::quat(glm::radians(deg));
 }

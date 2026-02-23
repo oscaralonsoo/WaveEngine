@@ -23,12 +23,8 @@ public:
     void SetDamping(float d);
     float GetDamping() const { return damping; }
 
-    //void Save(Config& componentNode) override;
-    //void Load(Config& componentNode) override;
-
+    void OnEditor() override {}
     void DrawDebug() override;
-    void OnEditor() override;
-
 
 private:
     float maxDistance = 10.0f;

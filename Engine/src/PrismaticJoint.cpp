@@ -3,7 +3,6 @@
 #include "Application.h"
 #include "ModulePhysics.h"
 #include "Renderer.h"
-#include "imgui.h"
 
 PrismaticJoint::PrismaticJoint(GameObject* owner) : Joint(owner) {
     name = "Prismatic Joint";
@@ -15,17 +14,12 @@ PrismaticJoint::~PrismaticJoint() {}
 
 void PrismaticJoint::CreateJoint() {
     auto* physics = Application::GetInstance().physics->GetPhysics();
-   
     if (!physics || !bodyA || !bodyA->GetActor()) return;
 
     bool isADynamic = (bodyA->GetBodyType() == Rigidbody::Type::DYNAMIC);
-
     bool isBDynamic = (bodyB != nullptr) && (bodyB->GetBodyType() == Rigidbody::Type::DYNAMIC);
 
-    if (!isADynamic && !isBDynamic) {
-        /*LOG(LogType::LOG_WARNING, "Prismatic Joint ignored: At least one body must be DYNAMIC.");*/
-        return;
-    }
+    if (!isADynamic && !isBDynamic) return;
 
     physx::PxRigidActor* actorA = bodyA->GetActor();
     physx::PxRigidActor* actorB = (bodyB) ? bodyB->GetActor() : nullptr;
@@ -45,11 +39,6 @@ void PrismaticJoint::CreateJoint() {
     pxJoint->setBreakForce(breakForce, breakTorque);
 
     auto* pJoint = static_cast<physx::PxPrismaticJoint*>(pxJoint);
-
-    if (pxJoint == nullptr) {
-        /*LOG(LogType::LOG_ERROR, "Joint Error: PhysX failed to create PxPrismaticJoint");*/
-        return;
-    }
 
     physx::PxTolerancesScale scale;
     physx::PxJointLinearLimitPair limit(scale, minLimit, maxLimit);
@@ -76,17 +65,13 @@ void PrismaticJoint::EnableSoftLimit(bool b) {
     softLimitEnabled = b;
     auto* pJoint = static_cast<physx::PxPrismaticJoint*>(pxJoint);
     if (pJoint) {
-
         physx::PxTolerancesScale scale;
         physx::PxJointLinearLimitPair limit(scale, minLimit, maxLimit);
-
         if (softLimitEnabled) {
             limit.stiffness = stiffness;
             limit.damping = damping;
         }
-
         pJoint->setLimit(limit);
-
         if (bodyA) bodyA->WakeUp();
         if (bodyB) bodyB->WakeUp();
     }
@@ -94,18 +79,13 @@ void PrismaticJoint::EnableSoftLimit(bool b) {
 
 void PrismaticJoint::SetStiffness(float s) {
     stiffness = glm::max(0.0f, s);
-    if (softLimitEnabled) {
-        EnableSoftLimit(true);
-    }
+    if (softLimitEnabled) EnableSoftLimit(true);
 }
 
 void PrismaticJoint::SetDamping(float d) {
     damping = glm::max(0.0f, d);
-    if (softLimitEnabled) {
-        EnableSoftLimit(true);
-    }
+    if (softLimitEnabled) EnableSoftLimit(true);
 }
-
 
 void PrismaticJoint::SetMinLimit(float m) {
     minLimit = m;
@@ -130,46 +110,6 @@ void PrismaticJoint::SetMaxLimit(float m) {
         limit.damping = damping;
         pJoint->setLimit(limit);
         if (bodyA) bodyA->WakeUp();
-    }
-}
-
-//void PrismaticJoint::Save(Config& config) {
-//    SaveBase(config);
-//    config.SetBool("LimitsEnabled", limitsEnabled);
-//    config.SetFloat("MinLimit", minLimit);
-//    config.SetFloat("MaxLimit", maxLimit);
-//    config.SetBool("SoftLimit", softLimitEnabled);
-//    config.SetFloat("Stiffness", stiffness);
-//    config.SetFloat("Damping", damping);
-//}
-//
-//void PrismaticJoint::Load(Config& config) {
-//    LoadBase(config);
-//    EnableLimits(config.GetBool("LimitsEnabled"));
-//    SetMinLimit(config.GetFloat("MinLimit", -5.0f));
-//    SetMaxLimit(config.GetFloat("MaxLimit", 5.0f));
-//    EnableSoftLimit(config.GetBool("SoftLimit"));
-//    SetStiffness(config.GetFloat("Stiffness"));
-//    SetDamping(config.GetFloat("Damping"));
-//}
-
-void PrismaticJoint::OnEditor() {
-    OnEditorBase();
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-    if (ImGui::TreeNodeEx("Limit Settings", flags)) {
-        if (ImGui::Checkbox("Enable Limits", &limitsEnabled)) EnableLimits(limitsEnabled);
-        if (ImGui::InputFloat("Min Limit", &minLimit)) SetMinLimit(minLimit);
-        if (ImGui::InputFloat("Max Limit", &maxLimit)) SetMaxLimit(maxLimit);
-        ImGui::TreePop();
-    }
-
-    if (ImGui::TreeNodeEx("Soft Limit (Spring)", flags)) {
-        if (ImGui::Checkbox("Enable Soft Limit", &softLimitEnabled)) RefreshJoint();
-        ImGui::InputFloat("Stiffness", &stiffness);
-        ImGui::InputFloat("Damping", &damping);
-        if (ImGui::IsItemDeactivatedAfterEdit()) RefreshJoint();
-        ImGui::TreePop();
     }
 }
 
