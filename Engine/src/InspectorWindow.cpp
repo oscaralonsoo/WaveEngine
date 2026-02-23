@@ -25,6 +25,7 @@
 #include "TransformCommand.h"
 #include "ModuleEditor.h"
 #include "ComponentCommand.h"
+#include "ComponentStateCommand.h"
 
 #include "Log.h"
 #include "ComponentScript.h"
@@ -129,6 +130,42 @@ void InspectorWindow::Draw()
     ImGui::Separator();
     DrawGizmoSettings();
     ImGui::Separator();
+
+    bool isAnyActive = ImGui::IsAnyItemActive();
+
+    if (isAnyActive && !m_WasAnyItemActive)
+    {
+        m_ComponentSnapshots.clear();
+        for (Component* comp : selectedObject->GetComponents())
+        {
+            if (comp->GetType() == ComponentType::TRANSFORM) continue;
+            nlohmann::json snap;
+            comp->Serialize(snap);
+            m_ComponentSnapshots[comp] = snap;
+        }
+    }
+    else if (!isAnyActive && m_WasAnyItemActive)
+    {
+        for (Component* comp : selectedObject->GetComponents())
+        {
+            auto it = m_ComponentSnapshots.find(comp);
+            if (it == m_ComponentSnapshots.end()) continue;
+
+            nlohmann::json after;
+            comp->Serialize(after);
+
+            if (it->second != after)
+            {
+                Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+                    std::make_unique<ComponentStateCommand>(comp, it->second, after)
+                );
+            }
+        }
+        m_ComponentSnapshots.clear();
+    }
+
+    m_WasAnyItemActive = isAnyActive;
+
 
     DrawTransformComponent(selectedObject);
     DrawCameraComponent(selectedObject);

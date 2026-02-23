@@ -187,6 +187,7 @@ set(EDITOR_SRC
     src/Transformcommand.h
     src/Reparentcommand.h
     src/Componentcommand.h
+    src/Componentstatecommand.h
 )
 
 set(IMPORTERS_SRC 
