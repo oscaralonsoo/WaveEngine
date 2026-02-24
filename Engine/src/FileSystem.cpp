@@ -271,8 +271,10 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
 
     LOG_CONSOLE("Found %d meshes, %d materials", scene->mNumMeshes, scene->mNumMaterials);
 
+
     int meshCounter = 0;
     GameObject* rootObj = ProcessNode(scene->mRootNode, scene, directory, meta.uid, meshCounter);
+    
 
     glm::vec3 minBounds(std::numeric_limits<float>::max());
     glm::vec3 maxBounds(std::numeric_limits<float>::lowest());
@@ -352,18 +354,36 @@ GameObject* FileSystem::LoadFBXAsGameObject(const std::string& file_path)
 
 GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const std::string& directory, UID baseUID, int& meshCounter)
 {
+    aiMatrix4x4 accumulatedTransform;
+    /*const aiNode* node = node;*/
+
+    if (std::string(node->mName.C_Str()).find("RootNode") == std::string::npos) {
+        while (std::string(node->mName.C_Str()).find("_$AssimpFbx$_") != std::string::npos) {
+            accumulatedTransform = accumulatedTransform * node->mTransformation;
+            if (node->mNumChildren > 1) {
+                LOG_CONSOLE("WARNING: FBX dummy node has multiple children");
+            }
+            node = node->mChildren[0];
+        }
+    }
+    
+    
+   
+
     std::string nodeName = node->mName.C_Str();
     if (nodeName.empty()) nodeName = "Unnamed";
 
     GameObject* gameObject = new GameObject(nodeName);
-
     Transform* transform = static_cast<Transform*>(gameObject->GetComponent(ComponentType::TRANSFORM));
+    
+    // Combine transforms
+    aiMatrix4x4 localTransform = accumulatedTransform * node->mTransformation;
 
     if (transform != nullptr)
     {
         aiVector3D position, scaling;
         aiQuaternion rotation;
-        node->mTransformation.Decompose(scaling, rotation, position);
+        localTransform.Decompose(scaling, rotation, position);
 
         transform->SetPosition(glm::vec3(position.x, position.y, position.z));
         transform->SetScale(glm::vec3(scaling.x, scaling.y, scaling.z));
@@ -375,10 +395,10 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
     {
         unsigned int meshIndex = node->mMeshes[i];
         aiMesh* aiMesh = scene->mMeshes[meshIndex];
-
+        
         UID meshUID = ProcessMesh(aiMesh, scene, baseUID, meshCounter);
         meshCounter++; // Next mesh
-
+        
         if (meshUID != 0)
         {
             ComponentMesh* meshComponent = static_cast<ComponentMesh*>(
@@ -482,9 +502,13 @@ GameObject* FileSystem::ProcessNode(aiNode* node, const aiScene* scene, const st
                 bool loaded = false;
                 for (const auto& path : searchPaths)
                 {
-                    if (std::filesystem::exists(path))
+                    //transforms "\\" paths into "/" paths, but both work so this is optional
+                    std::filesystem::path p = std::filesystem::u8path(path);
+                    std::string normalized = p.lexically_normal().generic_string();
+
+                    if (std::filesystem::exists(normalized))
                     {
-                        if (matComponent->LoadTexture(path))
+                        if (matComponent->LoadTexture(normalized))
                         {
                             loaded = true;
                             LOG_DEBUG("Loaded diffuse texture: %s", fileName.c_str());

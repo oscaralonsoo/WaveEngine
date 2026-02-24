@@ -60,7 +60,7 @@ bool ReverbZone::ContainsPoint(const glm::vec3& worldPoint) const
     }
     
     else { // BOX: transform point into local space ignoring scale
-        // 1. get the world position (translation)
+        
         glm::vec3 zonePos = glm::vec3(worldMat[3]);
 
         // 2. extract rotation (normalize the columns of the world matrix to remove scale)
@@ -118,6 +118,7 @@ void ReverbZone::Serialize(nlohmann::json& componentObj) const
     componentObj["shape"] = static_cast<int>(shape);
     componentObj["radius"] = radius;
     componentObj["extents"] = { extents.x, extents.y, extents.z };
+    componentObj["centerOffset"] = { centerOffset.x, centerOffset.y, centerOffset.z };
     componentObj["auxBusID"] = auxBusID;
     componentObj["auxBusName"] = GetBusNameFromID(auxBusID);
     componentObj["presetIndex"] = presetIndex;
@@ -134,7 +135,10 @@ void ReverbZone::Deserialize(const nlohmann::json& componentObj)
         auto e = componentObj["extents"];
         extents = glm::vec3(e[0].get<float>(), e[1].get<float>(), e[2].get<float>());
     }
-    
+    if (componentObj.contains("centerOffset")) {
+        auto c = componentObj["centerOffset"];
+        centerOffset = glm::vec3(c[0].get<float>(), c[1].get<float>(), c[2].get<float>());
+    }
     if (componentObj.contains("auxBusName")) auxBusName = componentObj["auxBusName"].get<std::string>();
     if (componentObj.contains("auxBusID")) auxBusID = GetIDFromBusName(auxBusName);
     if (componentObj.contains("presetIndex")) {
@@ -168,7 +172,12 @@ void ReverbZone::OnEditor()
     else {
         ImGui::DragFloat3("Half Extents", &extents[0], 0.1f, 0.0f, 10000.0f);
         if (ImGui::IsItemHovered()) ImGui::SetTooltip("Half extents (local space) for box shape");
+
+        
     }
+
+    ImGui::DragFloat3("Center Offset", &centerOffset[0], 0.1f, -10000.0f, 10000.0f);
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Reverb zone center relative to the object's center");
 
     static std::vector<const char*> presetLabels;
 
@@ -183,10 +192,7 @@ void ReverbZone::OnEditor()
     if (ImGui::Combo("Reverb Preset", &presetIndex, presetLabels.data(), static_cast<int>(presetLabels.size()))) {
 
         auxBusID = reverbPresets[presetIndex].busID;
-        /*auxBusName = reverbPresets[presetIndex].name;*/
     }
-
-    
 
     char buf[256];
     strncpy(buf, auxBusName.c_str(), sizeof(buf) - 1);

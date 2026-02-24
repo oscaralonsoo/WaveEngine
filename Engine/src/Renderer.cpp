@@ -1124,18 +1124,18 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
                         ReverbZone* zone = static_cast<ReverbZone*>(comp);
                         if (zone != nullptr)
                         {
-                            if (zone->enabled)
+                            if (zone->enabled && selectionMgr->IsSelected(currentObj))
                             {
                                 glm::vec3 worldCenter = glm::vec3(modelMatrix[3]);
 
                                 if (zone->shape == ReverbZone::Shape::SPHERE)
                                 {
-                                    DrawReverbSphere(worldCenter, zone->radius, glm::vec4(0.2f, 0.4f, 0.5f, 1.0f));
+                                    DrawReverbSphere(worldCenter, zone->radius, zone->centerOffset, glm::vec4(0.2f, 0.4f, 0.5f, 1.0f));
                                 }
                                 else
                                 {
 
-                                    DrawReverbBox(modelMatrix, zone->extents, glm::vec4(0.2f, 0.5f, 0.4f, 1.0f));
+                                    DrawReverbBox(modelMatrix, zone->extents, zone->centerOffset, glm::vec4(0.2f, 0.5f, 0.4f, 1.0f));
                                 }
                             }
                         }
@@ -1783,7 +1783,7 @@ void Renderer::BindGameFramebuffer()
     glViewport(0, 0, gameFramebufferWidth, gameFramebufferHeight);
 }
 
-void Renderer::DrawReverbSphere(const glm::vec3& center, float radius, const glm::vec4& color, int segments)
+void Renderer::DrawReverbSphere(const glm::vec3& center, float radius, const glm::vec3& offset, const glm::vec4& color, int segments)
 {
     if (segments < 4) segments = 4;
 
@@ -1796,8 +1796,8 @@ void Renderer::DrawReverbSphere(const glm::vec3& center, float radius, const glm
             float a0 = (float)i / segments * glm::two_pi<float>();
             float a1 = (float)(i + 1) / segments * glm::two_pi<float>();
 
-            glm::vec3 p0 = center + (right * cosf(a0) + up * sinf(a0)) * r;
-            glm::vec3 p1 = center + (right * cosf(a1) + up * sinf(a1)) * r;
+            glm::vec3 p0 = (center + offset) + (right * cosf(a0) + up * sinf(a0)) * r;
+            glm::vec3 p1 = (center + offset) + (right * cosf(a1) + up * sinf(a1)) * r;
 
             verts.insert(verts.end(), { p0.x, p0.y, p0.z, p1.x, p1.y, p1.z });
         }
@@ -1863,7 +1863,7 @@ void Renderer::DrawReverbSphere(const glm::vec3& center, float radius, const glm
     defaultShader->Use();
 }
 
-void Renderer::DrawReverbBox(const glm::mat4& modelMatrix, const glm::vec3& extents, const glm::vec4& color)
+void Renderer::DrawReverbBox(const glm::mat4& modelMatrix, const glm::vec3& extents, const glm::vec3& offset, const glm::vec4& color)
 {
     // Build 8 local corners
     glm::vec3 localCorners[8] = {
@@ -1877,12 +1877,15 @@ void Renderer::DrawReverbBox(const glm::mat4& modelMatrix, const glm::vec3& exte
         { -extents.x,  extents.y,  extents.z }
     };
 
+
     // Transform to world space using modelMatrix
     glm::vec3 worldCorners[8];
     for (int i = 0; i < 8; ++i)
     {
+        
         glm::vec4 wc = modelMatrix * glm::vec4(localCorners[i], 1.0f);
         worldCorners[i] = glm::vec3(wc);
+        worldCorners[i] += offset;
     }
 
     // Build line list for edges (12 edges -> 24 points)

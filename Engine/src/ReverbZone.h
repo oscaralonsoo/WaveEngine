@@ -44,10 +44,11 @@ public:
     int presetIndex = 1;
     float radius = 1.0f;
     glm::vec3 extents = glm::vec3(5.0f);
+    glm::vec3 centerOffset = glm::vec3(0.0f);
 
     std::string auxBusName = "Reverb_Cathedral";
     AkUniqueID auxBusID = AK::AUX_BUSSES::REVERB_CATHEDRAL;
-    //std::string reverbPresetName = "Cathedral";
+    
     float wetLevel = 1.0f;
     int priority = 0;
     bool enabled = true;

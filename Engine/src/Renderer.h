@@ -186,6 +186,6 @@ private:
 
     std::vector<RenderLine> linesList;
     
-    void DrawReverbSphere(const glm::vec3& center, float radius, const glm::vec4& color, int segments = 48);
-    void DrawReverbBox(const glm::mat4& modelMatrix, const glm::vec3& extents, const glm::vec4& color);
+    void DrawReverbSphere(const glm::vec3& center, float radius, const glm::vec3& offset, const glm::vec4& color, int segments = 48);
+    void DrawReverbBox(const glm::mat4& modelMatrix, const glm::vec3& extents, const glm::vec3& offset, const glm::vec4& color);
 };
