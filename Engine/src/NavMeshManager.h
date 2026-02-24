@@ -35,10 +35,20 @@ private:
     void CalculateAABB(const std::vector<float>& verts, float* minBounds, float* maxBounds);
 
     rcPolyMesh* m_polyMesh = nullptr;
-    dtNavMesh* m_navMesh = nullptr;
+ /*   dtNavMesh* m_navMesh = nullptr;
     dtNavMeshQuery* m_navQuery = nullptr;
 
     rcHeightfield* bakedGroundData = nullptr;
 
-    GameObject* lastBakedObject = nullptr;
+    GameObject* lastBakedObject = nullptr;*/
+
+    struct NavMeshData
+    {
+        rcHeightfield* heightfield = nullptr;
+        dtNavMesh* navMesh = nullptr;
+        dtNavMeshQuery* navQuery = nullptr;
+        GameObject* owner = nullptr;
+    };
+
+    std::vector<NavMeshData> navMeshes;
 };
