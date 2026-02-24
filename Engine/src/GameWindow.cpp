@@ -19,17 +19,17 @@ void GameWindow::Draw()
     gameViewportPos = ImGui::GetCursorScreenPos();
     gameViewportSize = ImGui::GetContentRegionAvail();
 
-    // Get the game texture from the renderer
-    GLuint gameTexture = Application::GetInstance().renderer->GetGameTexture();
-    if (gameTexture != 0 && gameViewportSize.x > 0 && gameViewportSize.y > 0)
-    {
-        ImTextureID texID = (ImTextureID)(uintptr_t)gameTexture;
-        ImGui::Image(texID, gameViewportSize, ImVec2(0, 1), ImVec2(1, 0));
-    }
-    else
-    {
-        ImGui::InvisibleButton("GameView", gameViewportSize);
-    }
+    //// Get the game texture from the renderer
+    //GLuint gameTexture = Application::GetInstance().renderer->GetGameTexture();
+    //if (gameTexture != 0 && gameViewportSize.x > 0 && gameViewportSize.y > 0)
+    //{
+    //    ImTextureID texID = (ImTextureID)(uintptr_t)gameTexture;
+    //    ImGui::Image(texID, gameViewportSize, ImVec2(0, 1), ImVec2(1, 0));
+    //}
+    //else
+    //{
+    //    ImGui::InvisibleButton("GameView", gameViewportSize);
+    //}
 
     ImGui::End();
     ImGui::PopStyleVar();

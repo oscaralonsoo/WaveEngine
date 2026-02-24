@@ -8,6 +8,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     LOG_CONSOLE("Starting engine...");
 
     window = std::make_shared<Window>();
+    events = std::make_shared<ModuleEvents>();
     input = std::make_shared<Input>();
     renderContext = std::make_shared<RenderContext>();
     renderer = std::make_shared<Renderer>();
@@ -24,19 +25,20 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
 
     
     AddModule(std::static_pointer_cast<Module>(window));
+    AddModule(std::static_pointer_cast<Module>(events));
     AddModule(std::static_pointer_cast<Module>(input));
     AddModule(std::static_pointer_cast<Module>(physics));
     AddModule(std::static_pointer_cast<Module>(renderContext));
     AddModule(std::static_pointer_cast<Module>(scene));
     AddModule(std::static_pointer_cast<Module>(camera));
     AddModule(std::static_pointer_cast<Module>(audio));
-    AddModule(std::static_pointer_cast<Module>(editor));
     AddModule(std::static_pointer_cast<Module>(resources));
     AddModule(std::static_pointer_cast<Module>(scripts));  
     AddModule(std::static_pointer_cast<Module>(loader));
     AddModule(std::static_pointer_cast<Module>(time));
     AddModule(std::static_pointer_cast<Module>(grid));
     AddModule(std::static_pointer_cast<Module>(renderer));
+    AddModule(std::static_pointer_cast<Module>(editor));
 
 
     selectionManager = new SelectionManager();

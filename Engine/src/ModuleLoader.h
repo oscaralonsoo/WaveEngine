@@ -24,7 +24,6 @@ public:
 
     bool Awake() override;
     bool Start() override;
-    bool Update() override;
     bool CleanUp() override;
     
     bool LoadTextureToGameObject(GameObject* obj, const std::string& texturePath);

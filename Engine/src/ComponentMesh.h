@@ -5,7 +5,10 @@
 #include "ResourceMesh.h"
 #include <glm/glm.hpp>
 
+#include "AABB.h"
+
 class ComponentMaterial;
+class AABB;
 
 class ComponentMesh : public Component {
 public:
@@ -81,37 +84,53 @@ public:
         return static_cast<unsigned int>(m.textures.size());
     }
 
+    // Attached Material
+    ComponentMaterial* GetAttachedMaterial() { return attachedMaterial; }
 
     // AABB methods
-    glm::vec3 GetAABBMin() const;
-    glm::vec3 GetAABBMax() const;
-
-    // World space AABB (transformed by GameObject's global matrix)
-    void GetWorldAABB(glm::vec3& outMin, glm::vec3& outMax) const;
+    const AABB& GetAABB() const;
+    const AABB& GetGlobalAABB() const;
+    void UpdateStaticAABB();
+    virtual void UpdateDynamicAABB() {}
 
     //SKINNING
     virtual void UpdateSkinningMatrices() {}
-    virtual void UpdateDynamicAABB() {}
+
     virtual bool HasSkinning() const { return false; }
     virtual const std::vector<glm::mat4>& GetBoneMatrices() const { static std::vector<glm::mat4> empty; return empty; }
+
+    //DEBUG
+    void SetDrawStencil(bool b) { drawStencil = b; };
+    void SetDrawMesh(bool b) { drawMesh = b; };
+    void SetDrawNormals(bool b) { drawNormals = b; };
+    bool GetDrawStencil() { return drawStencil; }
+    bool GetDrawMesh() { return drawMesh; }
+    bool GetDrawNormals() { return drawNormals; }
 
 private:
     void OnGameObjectEvent(GameObjectEvent event, Component* component);
 
+
 protected:
 
     UID meshUID = 0;
-    // Release current mesh resource
     void ReleaseCurrentMesh();
 
-    // Direct mesh (for primitives)
-    Mesh directMesh;                        // Direct mesh data (for primitives)
-    bool hasDirectMesh;                     // True if using direct mesh instead of resource
+    Mesh directMesh;
+    bool hasDirectMesh;
     std::string primitiveType;       
     
+    AABB staticAABB;
+    AABB dynamicAABB;
+
     //MATERIAL
     ComponentMaterial* attachedMaterial;
 
     //ANIMATION
     bool cachedBones = false;   
+
+    //DEBUG
+    bool drawStencil = false;
+    bool drawMesh = false;
+    bool drawNormals = false;
 };

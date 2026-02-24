@@ -15,6 +15,8 @@
 #include "AssetsWindow.h"
 #include "ComponentMesh.h"
 #include "ComponentMaterial.h"
+#include "EditorCamera.h"
+#include "CameraLens.h"
 #include "Log.h"
 #include "MetaFile.h"
 #include "LibraryManager.h"
@@ -62,11 +64,19 @@ void SceneWindow::Draw()
 
     sceneViewportPos = ImGui::GetCursorScreenPos();
     sceneViewportSize = ImGui::GetContentRegionAvail();
-
-    GLuint sceneTexture = Application::GetInstance().renderer->GetSceneTexture();
-    if (sceneTexture != 0 && sceneViewportSize.x > 0 && sceneViewportSize.y > 0)
+    
+    CameraLens* camera = Application::GetInstance().editor->GetEditorCamera()->GetCameraLens();
+    if (sceneViewportSize.x != camera->textureWidth || sceneViewportSize.y != camera->textureHeight)
     {
-        ImTextureID texID = (ImTextureID)(uintptr_t)sceneTexture;
+        camera->SetRenderTarget((int)sceneViewportSize.x, (int)sceneViewportSize.y);
+        camera->SetPerspective(camera->GetFov(), sceneViewportSize.x / sceneViewportSize.y, camera->GetNearPlane(), camera->GetFarPlane());
+    }
+    
+    unsigned int textureID = camera->textureID;
+
+    if (textureID != 0 && sceneViewportSize.x > 0 && sceneViewportSize.y > 0)
+    {
+        ImTextureID texID = (ImTextureID)(uintptr_t)textureID;
         ImGui::Image(texID, sceneViewportSize, ImVec2(0, 1), ImVec2(1, 0));
 
         HandleAssetDropTarget();
@@ -102,7 +112,6 @@ void SceneWindow::HandleAssetDropTarget()
             {
             case DragDropAssetType::FBX_MODEL:
             {
-
                 LOG_CONSOLE("Loading FBX model...");
                 bool loadedModel = Application::GetInstance().loader->LoadFbx(dropData->assetPath);
 
@@ -559,33 +568,34 @@ void SceneWindow::ApplyMeshTransformFromFBX(GameObject* meshObject, unsigned lon
 
 GameObject* SceneWindow::GetGameObjectUnderMouse()
 {
-    // Get mouse position relative to scene viewport
-    ImVec2 mousePos = ImGui::GetMousePos();
-    float relativeX = mousePos.x - sceneViewportPos.x;
-    float relativeY = mousePos.y - sceneViewportPos.y;
-    // Verify that the mouse is inside the viewport
-    if (relativeX < 0 || relativeX > sceneViewportSize.x ||
-        relativeY < 0 || relativeY > sceneViewportSize.y)
-    {
-        return nullptr;
-    }
-    // Get the active camera
-    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-    if (!camera)
-    {
-        return nullptr;
-    }
-    // Generate ray from the camera
-    glm::vec3 rayOrigin = camera->GetPosition();
-    glm::vec3 rayDir = camera->ScreenToWorldRay(
-        static_cast<int>(relativeX),
-        static_cast<int>(relativeY),
-        static_cast<int>(sceneViewportSize.x),
-        static_cast<int>(sceneViewportSize.y)
-    );
-    // Perform ray picking
-    GameObject* root = Application::GetInstance().scene->GetRoot();
-    float minDist = std::numeric_limits<float>::max();
-    GameObject* hitObject = FindClosestObjectToRayOptimized(root, rayOrigin, rayDir, minDist);
-    return hitObject;
+    //// Get mouse position relative to scene viewport
+    //ImVec2 mousePos = ImGui::GetMousePos();
+    //float relativeX = mousePos.x - sceneViewportPos.x;
+    //float relativeY = mousePos.y - sceneViewportPos.y;
+    //// Verify that the mouse is inside the viewport
+    //if (relativeX < 0 || relativeX > sceneViewportSize.x ||
+    //    relativeY < 0 || relativeY > sceneViewportSize.y)
+    //{
+    //    return nullptr;
+    //}
+    //// Get the active camera
+    //ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
+    //if (!camera)
+    //{
+    //    return nullptr;
+    //}
+    //// Generate ray from the camera
+    //glm::vec3 rayOrigin = camera->GetPosition();
+    //glm::vec3 rayDir = camera->ScreenToWorldRay(
+    //    static_cast<int>(relativeX),
+    //    static_cast<int>(relativeY),
+    //    static_cast<int>(sceneViewportSize.x),
+    //    static_cast<int>(sceneViewportSize.y)
+    //);
+    //// Perform ray picking
+    //GameObject* root = Application::GetInstance().scene->GetRoot();
+    //float minDist = std::numeric_limits<float>::max();
+    //GameObject* hitObject = FindClosestObjectToRayOptimized(root, rayOrigin, rayDir, minDist);
+    //return hitObject;
+    return nullptr;
 }

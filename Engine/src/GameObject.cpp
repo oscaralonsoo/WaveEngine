@@ -150,6 +150,8 @@ Component* GameObject::CreateComponent(ComponentType type) {
         componentOwners.push_back(std::unique_ptr<Component>(newComponent));
         components.push_back(newComponent);
     }
+    
+    PublishGameObjectEvent(GameObjectEvent::COMPONENT_ADDED, newComponent);
 
     return newComponent;
 }

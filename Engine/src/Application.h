@@ -18,6 +18,7 @@
 #include "ScriptManager.h"  
 #include "ModulePhysics.h"
 #include "ModuleAudio.h"
+#include "ModuleEvents.h"
 
 class Module;
 
@@ -64,6 +65,7 @@ public:
     std::shared_ptr<Input> input;
     std::shared_ptr<RenderContext> renderContext;
     std::shared_ptr<Renderer> renderer;
+    std::shared_ptr<ModuleEvents> events;
     
     std::shared_ptr<ModuleLoader> loader;
     

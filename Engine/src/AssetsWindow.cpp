@@ -2425,38 +2425,38 @@ unsigned int AssetsWindow::RenderMultipleMeshesToTexture(const std::vector<const
 
 void AssetsWindow::HandleExternalDragDrop()
 {
-    // Manejar archivos externos (desde fuera de la aplicación)
-    if (Application::GetInstance().input->HasDroppedFile())
-    {
-        ImVec2 mousePos = ImGui::GetMousePos();
-        ImVec2 windowPos = ImGui::GetWindowPos();
-        ImVec2 windowSize = ImGui::GetWindowSize();
+    //// Manejar archivos externos (desde fuera de la aplicación)
+    //if (Application::GetInstance().input->HasDroppedFile())
+    //{
+    //    ImVec2 mousePos = ImGui::GetMousePos();
+    //    ImVec2 windowPos = ImGui::GetWindowPos();
+    //    ImVec2 windowSize = ImGui::GetWindowSize();
 
-        bool isMouseOverWindow = (mousePos.x >= windowPos.x &&
-            mousePos.x <= windowPos.x + windowSize.x &&
-            mousePos.y >= windowPos.y &&
-            mousePos.y <= windowPos.y + windowSize.y);
+    //    bool isMouseOverWindow = (mousePos.x >= windowPos.x &&
+    //        mousePos.x <= windowPos.x + windowSize.x &&
+    //        mousePos.y >= windowPos.y &&
+    //        mousePos.y <= windowPos.y + windowSize.y);
 
-        bool windowActive = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) ||
-            ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
+    //    bool windowActive = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) ||
+    //        ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
 
-        if (isMouseOverWindow || windowActive)
-        {
-            std::string droppedPath = Application::GetInstance().input->GetDroppedFilePath();
-            Application::GetInstance().input->ClearDroppedFile();
+    //    if (isMouseOverWindow || windowActive)
+    //    {
+    //        std::string droppedPath = Application::GetInstance().input->GetDroppedFilePath();
+    //        Application::GetInstance().input->ClearDroppedFile();
 
-            LOG_CONSOLE("[AssetsWindow] File dropped on Assets window: %s", droppedPath.c_str());
+    //        LOG_CONSOLE("[AssetsWindow] File dropped on Assets window: %s", droppedPath.c_str());
 
-            if (ProcessDroppedFile(droppedPath))
-            {
-                RefreshAssets();
-            }
-            else
-            {
-                LOG_CONSOLE("[AssetsWindow] Failed to import: %s", droppedPath.c_str());
-            }
-        }
-    }
+    //        if (ProcessDroppedFile(droppedPath))
+    //        {
+    //            RefreshAssets();
+    //        }
+    //        else
+    //        {
+    //            LOG_CONSOLE("[AssetsWindow] Failed to import: %s", droppedPath.c_str());
+    //        }
+    //    }
+    //}
 }
 bool AssetsWindow::ProcessDroppedFile(const std::string& sourceFilePath)
 {

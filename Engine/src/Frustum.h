@@ -8,30 +8,42 @@ struct Plane
     glm::vec3 normal;
     float distance;
 
-    Plane();
-    Plane(const glm::vec3& n, float d);
+    Plane::Plane()
+    {
+        normal = glm::vec3(0.0f, 1.0f, 0.0f);
+        distance = 0.0f;
+    }
 
-    void Normalize();
-    float DistanceToPoint(const glm::vec3& point) const;
-    bool IsOnPositiveSide(const glm::vec3& point) const;
+    Plane::Plane(const glm::vec3& n, float d)
+    {
+        normal = n;
+        distance = d;
+    }
+
+    void Plane::Normalize()
+    {
+        float length = glm::length(normal);
+        normal /= length;
+        distance /= length;
+    }
+
+    float Plane::DistanceToPoint(const glm::vec3& point) const
+    {
+        return glm::dot(normal, point) + distance;
+    }
+    
+    bool Plane::IsOnPositiveSide(const glm::vec3& point) const
+    {
+        return DistanceToPoint(point) >= 0.0f;
+    }
 };
 
 class Frustum
 {
 public:
 
-    Frustum();
-    ~Frustum();
-
-    Frustum::Frustum()
-    {
-        planes = {};
-    }
-
-    Frustum::~Frustum()
-    {
-        planes = {};
-    }
+    Frustum() = default;
+    ~Frustum() = default;
 
     void Frustum::Update(const glm::mat4& viewProjMatrix)
     {

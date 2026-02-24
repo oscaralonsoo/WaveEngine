@@ -31,9 +31,16 @@ set(CORE_SRC
     src/Window.h
 )
 
+set(EVENTS_SRC 
+    src/ModuleEvents.h 
+    src/ModuleEvents.cpp
+	src/Event.h
+	src/EventListener.h
+)
+
 set(RENDERING_SRC 
-    src/Camera.h 
-    src/Camera.cpp
+    src/EditorCamera.h 
+    src/EditorCamera.cpp
     src/Primitives.cpp 
     src/Primitives.h 
     src/RenderContext.h 
@@ -237,6 +244,7 @@ set(SCRIPTING_SRC
 
 
 source_group("Source\\Core" FILES ${CORE_SRC})
+source_group("Source\\Events" FILES ${EVENTS_SRC})
 source_group("Source\\Rendering" FILES ${RENDERING_SRC})
 source_group("Source\\Rendering\\VFX" FILES ${VFX_SRC})
 source_group("Source\\Audio" FILES ${AUDIO_SRC})
@@ -249,7 +257,7 @@ source_group("Source\\Loaders\\Importers" FILES ${IMPORTERS_SRC})
 source_group("Scripting" FILES ${SCRIPTING_SRC})
 source_group("Source\\Physics" FILES ${PHYSICS_SRC})
 
-set(SRCS ${CORE_SRC} ${RENDERING_SRC} ${VFX_SRC} ${AUDIO_SRC} ${UTILS_SRC} ${EDITOR_SRC} ${GAMEOBJECTS_SRC} ${COMPONENTS_SRC} ${LOADERS_SRC} ${IMPORTERS_SRC} ${SCRIPTING_SRC} ${PHYSICS_SRC})
+set(SRCS ${CORE_SRC} ${RENDERING_SRC} ${VFX_SRC} ${AUDIO_SRC} ${UTILS_SRC} ${EDITOR_SRC} ${GAMEOBJECTS_SRC} ${COMPONENTS_SRC} ${LOADERS_SRC} ${IMPORTERS_SRC} ${SCRIPTING_SRC} ${PHYSICS_SRC} ${EVENTS_SRC})
 
 add_executable(Engine ${SRCS})
 

@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include "AABB.h"
 
 class GameObject;
 class Frustum;
@@ -34,8 +35,7 @@ public:
 
     // Debug
     void DebugDraw() const;
-    const glm::vec3& GetMin() const { return box_min; }
-    const glm::vec3& GetMax() const { return box_max; }
+    const AABB& GetAABB() const { return box; }
 
 private:
     void Subdivide();
@@ -50,8 +50,8 @@ private:
     friend class Octree;
 
 private:
-    glm::vec3 box_min;
-    glm::vec3 box_max;
+    
+    AABB box;
 
     std::vector<GameObject*> objects;
     OctreeNode* children[8];  // 8 children for octree
@@ -102,7 +102,7 @@ void OctreeNode::CollectIntersections(std::vector<GameObject*>& objects_out, con
 template<>
 inline void OctreeNode::CollectIntersections(std::vector<GameObject*>& objects_out, const Frustum& frustum) const
 {
-    if (frustum.InFrustum(box_min, box_max))
+    if (frustum.InFrustum(box))
     {
         return; // Node completely outside frustum, skip
     }

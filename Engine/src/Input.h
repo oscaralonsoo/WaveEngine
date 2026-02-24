@@ -1,12 +1,15 @@
 ﻿#pragma once
+
 #include "Module.h"
-#include <string>
-#include <glm/glm.hpp>
-#include "Globals.h"
+#include "SDL3/SDL.h"
+#include "SDL3/SDL_rect.h"
+#include <vector>
+#include <functional>
+#include "glm/glm.hpp"
 
-class GameObject;
-
+#define MAX_KEYS SDL_SCANCODE_COUNT
 #define NUM_MOUSE_BUTTONS 5
+#define MAX_GAMEPAD_BUTTONS SDL_GAMEPAD_BUTTON_COUNT
 
 enum EventWindow
 {
@@ -24,27 +27,22 @@ enum KeyState
 	KEY_UP
 };
 
-enum DroppedFileType
-{
-	DROPPED_NONE = 0,
-	DROPPED_FBX,
-	DROPPED_TEXTURE
-};
-
-GameObject* FindClosestObjectToRay(GameObject* obj, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& minDist);
-GameObject* FindClosestObjectToRayOptimized(GameObject* obj, const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& minDist);
-
 class Input : public Module
 {
+
 public:
 
 	Input();
+
 	~Input();
 
-	bool Awake() override;
-	bool Start() override;
-	bool PreUpdate() override;
-	bool CleanUp() override;
+	bool Awake();
+
+	bool Start();
+
+	bool PreUpdate();
+
+	bool CleanUp();
 
 	KeyState GetKey(int id) const
 	{
@@ -58,20 +56,26 @@ public:
 
 	bool GetWindowEvent(EventWindow ev);
 
-	// Drag and Drop functions
-	bool HasDroppedFile() const { return droppedFile; }
-	const std::string& GetDroppedFilePath() const { return droppedFilePath; }
-	DroppedFileType GetDroppedFileType() const { return droppedFileType; }
-	void ClearDroppedFile() { droppedFile = false; droppedFilePath.clear(); droppedFileType = DROPPED_NONE; }
+	glm::vec2 GetMousePosition();
 
-	int GetMouseX() const { return mouseX; }
-	int GetMouseY() const { return mouseY; }
+	glm::vec2 GetMouseMotion();
 
-	static bool IsKeyPressed(int scancode);
-	static bool IsKeyDown(int scancode);
-	static void GetMousePosition(int& x, int& y);
+	float GetMouseWheelY();
+
+	using InputListener = std::function<void(SDL_Event*)>;
+
+
+
+public:
+
+	KeyState gamepadButtons[MAX_GAMEPAD_BUTTONS] = {};
+
+	SDL_Gamepad* controller = nullptr;
+
+	KeyState GetGamepadButton(SDL_GamepadButton button) const;
 
 private:
+
 	bool windowEvents[WE_COUNT];
 	KeyState* keyboard;
 	KeyState mouseButtons[NUM_MOUSE_BUTTONS];
@@ -79,12 +83,6 @@ private:
 	int mouseMotionY;
 	int mouseX;
 	int mouseY;
-
-	// Drag and Drop
-	bool droppedFile;
-	std::string droppedFilePath;
-	DroppedFileType droppedFileType;
-
-	static Input* instance;
-	friend class Application;
+	int scale;
+	float mouseWheelY;
 };

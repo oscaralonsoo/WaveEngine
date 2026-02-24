@@ -572,16 +572,19 @@ void InspectorWindow::DrawMeshComponent(GameObject* selectedObject)
             ImGui::Separator();
             ImGui::Spacing();
 
-            ImGui::Text("Normals Visualization:");
-
-            if (ImGui::Checkbox("Show Vertex Normals", &showVertexNormals))
+            ImGui::Text("Debug Visualization:");
+            bool showNormals = meshComp->GetDrawNormals();
+            if (ImGui::Checkbox("Show Normals", &showNormals))
             {
-                LOG_DEBUG("Vertex normals visualization: %s", showVertexNormals ? "ON" : "OFF");
+                meshComp->SetDrawNormals(showNormals);
+                LOG_DEBUG("Vertex normals visualization: %s", showNormals ? "ON" : "OFF");
             }
 
-            if (ImGui::Checkbox("Show Face Normals", &showFaceNormals))
+            bool showMesh = meshComp->GetDrawMesh();
+            if (ImGui::Checkbox("Show Mesh", &showMesh))
             {
-                LOG_DEBUG("Face normals visualization: %s", showFaceNormals ? "ON" : "OFF");
+                meshComp->SetDrawMesh(showNormals);
+                LOG_DEBUG("Face normals visualization: %s", showMesh ? "ON" : "OFF");
             }
         }
     }
@@ -707,22 +710,23 @@ void InspectorWindow::DrawSkinnedMeshComponent(GameObject* selectedObject)
                 meshComp->LinkBones();
             }
 
-
-
             ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
 
-            ImGui::Text("Normals Visualization:");
-
-            if (ImGui::Checkbox("Show Vertex Normals", &showVertexNormals))
+            ImGui::Text("Debug Visualization:");
+            bool showNormals = meshComp->GetDrawNormals();
+            if (ImGui::Checkbox("Show Normals", &showNormals))
             {
-                LOG_DEBUG("Vertex normals visualization: %s", showVertexNormals ? "ON" : "OFF");
+                meshComp->SetDrawNormals(showNormals);
+                LOG_DEBUG("Vertex normals visualization: %s", showNormals ? "ON" : "OFF");
             }
 
-            if (ImGui::Checkbox("Show Face Normals", &showFaceNormals))
+            bool showMesh = meshComp->GetDrawMesh();
+            if (ImGui::Checkbox("Show Mesh", &showMesh))
             {
-                LOG_DEBUG("Face normals visualization: %s", showFaceNormals ? "ON" : "OFF");
+                meshComp->SetDrawMesh(showMesh);
+                LOG_DEBUG("Face normals visualization: %s", showMesh ? "ON" : "OFF");
             }
         }
     }

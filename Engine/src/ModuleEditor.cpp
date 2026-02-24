@@ -17,6 +17,7 @@
 #include "ComponentMesh.h"
 #include "Transform.h"           
 #include "ComponentCamera.h"   
+#include "EditorCamera.h"   
 #include "ComponentMaterial.h"
 
 #include "ConfigurationWindow.h"
@@ -82,6 +83,10 @@ bool ModuleEditor::Start()
     assetsWindow = std::make_unique<AssetsWindow>();
     shaderEditorWindow = std::make_unique<ShaderEditorWindow>();
 
+    editorCamera = new EditorCamera();
+
+    Application::GetInstance().events->Subscribe(Event::Type::EventSDL, this);
+
     LOG_CONSOLE("Editor initialized");
 
     return true;
@@ -117,6 +122,9 @@ bool ModuleEditor::PreUpdate()
 
 bool ModuleEditor::Update()
 {
+    if (editorCamera)
+        editorCamera->Update();
+
     // Create fullscreen dockspace window
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
@@ -159,6 +167,8 @@ bool ModuleEditor::Update()
 
 
     HandleDeleteKey();
+
+
 
     if (sceneWindow)
     {
@@ -208,6 +218,11 @@ bool ModuleEditor::PostUpdate()
 
 bool ModuleEditor::CleanUp()
 {
+    Application::GetInstance().events->UnsubscribeAll(this);
+
+    delete editorCamera;
+    editorCamera = nullptr;
+
     LOG_DEBUG("Cleaning up Editor");
 
     // Save if auto save is enabled
@@ -947,4 +962,44 @@ std::string ModuleEditor::OpenLoadFile(const std::string& defaultPath)
     }
 
     return ""; // User cancelled
+
+
+}
+
+
+void ModuleEditor::OnEvent(const Event& event)
+{
+    switch (event.type)
+    {
+    case Event::Type::EventSDL:
+    {
+        ImGui_ImplSDL3_ProcessEvent(event.data.event.event);
+        break;
+    }
+    case Event::Type::CastRay:
+    {
+        //startLastRay = event.data.ray.ray->origin;
+        //endLastRay = event.data.ray.ray->origin + (event.data.ray.ray->direction * 100.0f);
+        break;
+    }
+    case Event::Type::SceneCleared:
+    {
+        /*selectedGameObjects.clear();*/
+        break;
+    }
+    case Event::Type::GameObjectDestroyed:
+    {
+        /*GameObject* destroyedGO = event.data.gameObject.gameObject;
+
+        auto it = std::remove(selectedGameObjects.begin(), selectedGameObjects.end(), destroyedGO);
+
+        if (it != selectedGameObjects.end())
+        {
+            selectedGameObjects.erase(it, selectedGameObjects.end());
+        }
+        break;*/
+    }
+    default:
+        break;
+    }
 }

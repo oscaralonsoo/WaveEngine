@@ -3,6 +3,7 @@
 #include "GameObject.h"
 #include "Transform.h"
 #include "ComponentMesh.h"
+#include "ComponentSkinnedMesh.h"
 #include "ComponentMaterial.h"
 #include "ModuleEditor.h"
 #include "ResourceShader.h"
@@ -95,6 +96,32 @@ bool Renderer::Start()
         LOG_DEBUG("Water shader created successfully - Program ID: %d", waterShader->GetProgramID());
         LOG_CONSOLE("Water shader compiled successfully");
     }
+    
+    normalsShader = make_unique<Shader>();
+    if (!normalsShader->CreateNormalShader())
+    {
+        LOG_DEBUG("ERROR: Failed to create normals shader");
+        LOG_CONSOLE("ERROR: Failed to compile normals shader");
+        return false;
+    }
+    else
+    {
+        LOG_DEBUG("normals shader created successfully - Program ID: %d", normalsShader->GetProgramID());
+        LOG_CONSOLE("normals shader compiled successfully");
+    }
+    
+    meshShader = make_unique<Shader>();
+    if (!meshShader->CreateMeshShader())
+    {
+        LOG_DEBUG("ERROR: Failed to create mesh shader");
+        LOG_CONSOLE("ERROR: Failed to compile mesh shader");
+        return false;
+    }
+    else
+    {
+        LOG_DEBUG("mesh shader created successfully - Program ID: %d", meshShader->GetProgramID());
+        LOG_CONSOLE("mesh shader compiled successfully");
+    }
 
     depthShader = make_unique<Shader>();
     if (!depthShader->CreateDepthVisualization())
@@ -103,6 +130,17 @@ bool Renderer::Start()
         LOG_CONSOLE("ERROR: Failed to compile depth shader");
         return false;
     }
+
+    glGenBuffers(1, &ssboBones);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboBones);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssboBones);
+
+    glGenBuffers(1, &uboMatrices);
+    glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, uboMatrices);
 
     // Generate default checkerboard texture for untextured objects
     defaultTexture = make_unique<Texture>();
@@ -121,12 +159,6 @@ bool Renderer::Start()
     outlineUniforms.projection = glGetUniformLocation(outlineShader->GetProgramID(), "projection");
     outlineUniforms.view = glGetUniformLocation(outlineShader->GetProgramID(), "view");
     outlineUniforms.model = glGetUniformLocation(outlineShader->GetProgramID(), "model");
-
-	// Create framebuffer (Scene window)
-    CreateFramebuffer(framebufferWidth, framebufferHeight);
-
-    // Create framebuffer (Game window)
-    CreateGameFramebuffer(gameFramebufferWidth, gameFramebufferHeight);
 
     return true;
 }
@@ -164,6 +196,12 @@ void Renderer::LoadMesh(Mesh& mesh)
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
 
+    glEnableVertexAttribArray(3);
+    glVertexAttribIPointer(3, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, boneIDs));
+
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, weights));
+
     // Upload index data
     glGenBuffers(1, &mesh.EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO);
@@ -172,20 +210,6 @@ void Renderer::LoadMesh(Mesh& mesh)
     glBindVertexArray(0);
 
     LOG_DEBUG("Mesh loaded - VAO: %d, Vertices: %d, Indices: %d", mesh.VAO, mesh.vertices.size(), mesh.indices.size());
-}
-
-void Renderer::DrawMesh(const Mesh& mesh)
-{
-    if (mesh.VAO == 0)
-    {
-        LOG_DEBUG("ERROR: Trying to draw mesh without VAO");
-        LOG_CONSOLE("Render error: Invalid mesh");
-        return;
-    }
-
-    glBindVertexArray(mesh.VAO);
-    glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, nullptr);
-    glBindVertexArray(0);
 }
 
 void Renderer::UnloadMesh(Mesh& mesh)
@@ -209,6 +233,65 @@ void Renderer::UnloadMesh(Mesh& mesh)
     }
 }
 
+void Renderer::DrawMesh(const ComponentMesh* meshComp)
+{
+    if (meshComp->GetMesh().VAO == 0) return;
+
+    GLint currentProgram;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+
+    if (meshComp->HasSkinning())
+    {
+        ComponentSkinnedMesh* skinnedComp = (ComponentSkinnedMesh*)meshComp;
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, skinnedComp->GetSSBOGlobal());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, skinnedComp->GetSSBOOffset());
+
+        glUniform1i(glGetUniformLocation(currentProgram, "hasBones"), true);
+
+        glUniformMatrix4fv(glGetUniformLocation(currentProgram, "meshInverse"), 1, GL_FALSE,
+            glm::value_ptr(skinnedComp->GetMeshInverse()));
+    }
+    else
+    {
+        glUniform1i(glGetUniformLocation(currentProgram, "hasBones"), false);
+    }
+
+    glBindVertexArray(meshComp->GetMesh().VAO);
+    glDrawElements(GL_TRIANGLES, (GLsizei)meshComp->GetNumIndices(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+
+    if (meshComp->HasSkinning())
+    {
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+    }
+}
+
+void Renderer::AddMesh(ComponentMesh* mesh) {
+    meshes.push_back(mesh);
+}
+
+void Renderer::RemoveMesh(ComponentMesh* mesh) {
+    auto it = std::find(meshes.begin(), meshes.end(), mesh);
+    if (it != meshes.end()) {
+        *it = meshes.back();
+        meshes.pop_back();
+    }
+}
+
+void Renderer::AddCamera(CameraLens* camera)
+{
+    activeCameras.push_back(camera);
+}
+
+void Renderer::RemoveCamera(CameraLens* camera)
+{
+    auto it = std::remove(activeCameras.begin(), activeCameras.end(), camera);
+    activeCameras.erase(it, activeCameras.end());
+}
+
+
 void Renderer::LoadTexture(const std::string& path)
 {
     LOG_DEBUG("Renderer: Loading new texture");
@@ -229,19 +312,13 @@ void Renderer::LoadTexture(const std::string& path)
     }
 }
 
-bool Renderer::PreUpdate()
-{
-    linesList.clear();
-    return true;
-}
-
 bool Renderer::PostUpdate()
 {
     bool ret = true;
 
     for (CameraLens* camera : activeCameras)
     {
-        DrawScene(camera);
+        RenderScene(camera);
     }
 
     int width = 0;
@@ -256,165 +333,9 @@ bool Renderer::PostUpdate()
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+    return ret;
 }
 
-bool Renderer::PostUpdate()
-{
-    ZoneScopedN("RendererUpdate");
-
-    ModuleEditor* editor = Application::GetInstance().editor.get();
-    ImVec2 viewportSize = editor->sceneViewportSize;
-
-    if (viewportSize.x > 0 && viewportSize.y > 0)
-    {
-        ResizeFramebuffer((int)viewportSize.x, (int)viewportSize.y);
-    }
-
-    BindFramebuffer();
-
-    // Clear buffers
-    glClearColor(clearColorR, clearColorG, clearColorB, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    if (showZBuffer)
-    {
-        depthShader->Use();
-    }
-    else
-    {
-        defaultShader->Use();
-    }
-
-    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-    if (!camera) return true;
-
-    // Update projection matrix with current aspect ratio
-    float aspectRatio = viewportSize.x / viewportSize.y;
-    if (viewportSize.x > 0 && viewportSize.y > 0)
-    {
-        camera->SetAspectRatio(aspectRatio);
-    }
-    Shader* currentShader = showZBuffer ? depthShader.get() : defaultShader.get();
-    GLuint shaderProgram = currentShader->GetProgramID();
-
-    // Update camera matrices
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-
-    if (showZBuffer)
-    {
-        depthShader->SetFloat("nearPlane", camera->GetNearPlane());
-        depthShader->SetFloat("farPlane", camera->GetFarPlane());
-    }
-    else
-    {
-        glActiveTexture(GL_TEXTURE0);
-        glUniform1i(defaultUniforms.texture1, 0);
-    }
-
-    GameObject* root = Application::GetInstance().scene->GetRoot();
-
-    if (!showZBuffer && Application::GetInstance().grid)
-    {
-        Application::GetInstance().grid->Draw();
-    }
-
-    if (root != nullptr && root->GetChildren().size() > 0)
-    {
-        DrawScene();
-    }
-
-    if (!showZBuffer)
-    {
-        defaultTexture->Unbind();
-    }
-
-    if (!showZBuffer && editor)
-    {
-        // Draw AABBs if enabled
-        if (editor->ShouldShowAABB())
-        {
-            DrawAllAABBs(root);
-        }
-
-        // Draw Octree if enabled
-        if (editor->ShouldShowOctree())
-        {
-            Octree* octree = Application::GetInstance().scene->GetOctree();
-            if (octree)
-            {
-                octree->DebugDraw();
-            }
-            else
-            {
-                LOG_DEBUG(" Octree is NULL!");
-            }
-        }
-
-        // Draw Raycast if enabled
-        if (editor->ShouldShowRaycast())
-        {
-            ModuleScene* scene = Application::GetInstance().scene.get();
-            if (scene && scene->lastRayLength > 0.0f)
-            {
-                LOG_DEBUG("Drawing raycast: origin(%.2f,%.2f,%.2f) length %.2f",
-                    scene->lastRayOrigin.x, scene->lastRayOrigin.y, scene->lastRayOrigin.z,
-                    scene->lastRayLength);
-                DrawRay(scene->lastRayOrigin,
-                    scene->lastRayDirection,
-                    scene->lastRayLength,
-                    glm::vec3(1.0f, 0.0f, 1.0f));
-            }
-            else
-            {
-                LOG_DEBUG("No ray to draw (lastRayLength = %.2f)",
-                    scene ? scene->lastRayLength : -1.0f);
-            }
-        }
-    }
-
-    DrawLinesList(camera);
-    UnbindFramebuffer();
-
-
-    // Game View //////////////
-    ComponentCamera* sceneCamera = Application::GetInstance().camera->GetSceneCamera();
-    ImVec2 gameViewportSize = editor->gameViewportSize;
-
-    if (sceneCamera && gameViewportSize.x > 0 && gameViewportSize.y > 0)
-    {
-        ResizeGameFramebuffer((int)gameViewportSize.x, (int)gameViewportSize.y);
-
-        BindGameFramebuffer();
-
-        glClearColor(clearColorR, clearColorG, clearColorB, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-        defaultShader->Use();
-
-        float gameAspectRatio = gameViewportSize.x / gameViewportSize.y;
-        sceneCamera->SetAspectRatio(gameAspectRatio);
-
-        // Update camera matrices 
-        GLuint gameShaderProgram = defaultShader->GetProgramID();
-        glUniformMatrix4fv(glGetUniformLocation(gameShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(sceneCamera->GetProjectionMatrix()));
-        glUniformMatrix4fv(glGetUniformLocation(gameShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(sceneCamera->GetViewMatrix()));
-
-        glActiveTexture(GL_TEXTURE0);
-        glUniform1i(defaultUniforms.texture1, 0);
-
-            if (root != nullptr && root->GetChildren().size() > 0)
-        {
-            DrawScene(sceneCamera, sceneCamera, false);
-        }
-
-        defaultTexture->Unbind();
-
-        UnbindFramebuffer();
-    }
-
-    return true;
-}
 
 bool Renderer::RenderScene(CameraLens* camera)
 {
@@ -440,10 +361,11 @@ bool Renderer::RenderScene(CameraLens* camera)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glClearStencil(0);
 
-    //UPDATE CAM MATRIX
-    
+    //UPDATE CAM MATRIX 
     UpdateViewMatrix(camera->GetViewMatrix());
     UpdateProjectionMatrix(camera->GetProjectionMatrix());
+    
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, uboMatrices);
 
     //CLEAN LIST AND BUILD NEWS
     opaqueList.clear();
@@ -451,8 +373,18 @@ bool Renderer::RenderScene(CameraLens* camera)
 
     BuildRenderLists(camera);
 
+    if (showZBuffer)
+    {
+        depthShader->Use();
+        depthShader->SetFloat("nearPlane", camera->GetNearPlane());
+        depthShader->SetFloat("farPlane", camera->GetFarPlane());
+    }
+    else
+    {
+        defaultShader->Use();
+    }
+
     //CONFIG OPENGL
-    glUseProgram(shaderProgram);
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
@@ -473,8 +405,8 @@ bool Renderer::RenderScene(CameraLens* camera)
     {
         DrawStencilList(camera);
         DrawNormalsList(camera);
-        DrawLinesList(camera);
         DrawMeshLinesList(camera);
+        DrawLinesList(camera);
     }
 
     //RESET STATES
@@ -507,12 +439,9 @@ void Renderer::BuildRenderLists(const CameraLens* camera)
 
         glm::mat4 globalModelMatrix = mesh->owner->transform->GetGlobalMatrix();
 
-        mesh->UpdateDynamicAABB();
-        AABB globalAABB;
-        globalAABB.max = mesh->GetAABBMax();
-        globalAABB.min = mesh->GetAABBMin();
+        const AABB& globalAABB = mesh->GetGlobalAABB();
 
-        if (camera->GetFrustum()->InFrustum(globalAABB))
+        if (/*camera->GetFrustum()->InFrustum(mesh->GetGlobalAABB())*/true)
         {
             mesh->UpdateSkinningMatrices();
 
@@ -521,19 +450,187 @@ void Renderer::BuildRenderLists(const CameraLens* camera)
             glm::vec3 aabbCenter = (globalAABB.min + globalAABB.max) * 0.5f;
             float distanceToCamera = glm::distance(aabbCenter, camera->position);
 
-            //if (mesh->GetTransparent())
-            //{
-            //    transparentList.emplace(distanceToCamera, renderObject);
-            //}
-            //else
-            //{
-                  opaqueList.emplace(distanceToCamera, renderObject);
-            //}
-
-            //if (mesh->drawNormals) normalsList.push_back(renderObject);
-            //if (mesh->drawMesh) meshLinesList.push_back(renderObject);
+            if (mesh->GetAttachedMaterial() && mesh->GetAttachedMaterial()->IsActive() && mesh->GetAttachedMaterial()->GetOpacity() < 1.0f)
+            {
+                transparentList.emplace(distanceToCamera, renderObject);
+            }
+            else
+            {
+                opaqueList.emplace(distanceToCamera, renderObject);
+            }
         }
     }
+}
+
+void Renderer::DrawRenderList(const std::multimap<float, RenderObject>& map, const CameraLens* camera)
+{
+    for (auto pair = map.rbegin(); pair != map.rend(); ++pair)
+    {
+        RenderObject renderObject = pair->second;
+        ComponentMesh* meshComp = renderObject.mesh;
+
+        if (meshComp->GetDrawNormals()) normalsList.push_back(renderObject);
+        if (meshComp->GetDrawMesh()) meshLinesList.push_back(renderObject);
+        if (meshComp->GetDrawStencil()) {
+            stencilList.push_back(renderObject);
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            glStencilMask(0xFF);
+        }
+        else {
+            glStencilFunc(GL_ALWAYS, 0, 0xFF);
+            glStencilMask(0x00);
+        }
+        
+        ComponentMaterial* materialComp = meshComp->GetAttachedMaterial();
+        materialComp->Use();
+
+        GLint currentProgram;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+        glUniform3fv(glGetUniformLocation(currentProgram, "lightDir"), 1, glm::value_ptr(lightDir));
+        glUniform3fv(glGetUniformLocation(currentProgram, "viewPos"), 1, glm::value_ptr(camera->position));
+
+        glUniform1i(glGetUniformLocation(currentProgram, "texture1"), 0);
+        glUniform1i(glGetUniformLocation(currentProgram, "hasTexture"), true);
+        glUniformMatrix4fv(glGetUniformLocation(currentProgram, "model"), 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+
+        if (materialComp) {
+            glUniform3fv(glGetUniformLocation(currentProgram, "materialDiffuse"), 1, glm::value_ptr(materialComp->GetDiffuseColor()));
+            glUniform1f(glGetUniformLocation(currentProgram, "opacity"), materialComp->GetOpacity());
+        }
+
+        DrawMesh(meshComp);
+    }
+}
+
+void Renderer::DrawStencilList(const CameraLens* camera)
+{
+    glEnable(GL_STENCIL_TEST);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    for (RenderObject renderObject : stencilList)
+    {
+        ComponentMesh* meshComp = renderObject.mesh;
+
+        outlineShader->Use();
+
+        glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+        glUniformMatrix4fv(outlineUniforms.view, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+
+        outlineShader->SetVec3("outlineColor", glm::vec3(1.0f, 0.41f, 0.71f));
+        outlineShader->SetFloat("outlineThickness", 0.04f);
+
+        glUniformMatrix4fv(outlineUniforms.model, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDepthMask(GL_FALSE);
+        glDepthFunc(GL_LEQUAL);
+
+        DrawMesh(meshComp);
+
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+        glStencilFunc(GL_ALWAYS, 2, 0xFF);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+        glStencilMask(0xFF);
+
+        DrawMesh(meshComp);
+
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glDepthFunc(GL_GREATER);
+        glStencilFunc(GL_NOTEQUAL, 2, 0xFF);
+        glStencilMask(0x00);
+
+        DrawMesh(meshComp);
+
+        if (meshComp->HasSkinning())
+        {
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+        }
+    }
+
+    glDepthFunc(GL_LESS);
+    glDepthMask(GL_TRUE);
+    glStencilMask(0xFF);
+    glDisable(GL_BLEND);
+    glDisable(GL_STENCIL_TEST);
+}
+
+void Renderer::DrawNormalsList(const CameraLens* camera)
+{
+    if (normalsList.empty()) return;
+
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+
+    normalsShader->Use();
+    normalsShader->SetVec4("lineColor", glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+
+    for (RenderObject renderObject : normalsList)
+    {
+        ComponentMesh* meshComp = renderObject.mesh;
+
+        glUniformMatrix4fv(glGetUniformLocation(normalsShader->GetProgramID(), "model"),
+            1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+
+        if (meshComp->HasSkinning())
+        {
+            ComponentSkinnedMesh* skinned = (ComponentSkinnedMesh*)meshComp;
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, skinned->GetSSBOGlobal());
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, skinned->GetSSBOOffset());
+            normalsShader->SetBool("hasBones", true);
+            normalsShader->SetMat4("meshInverse", skinned->GetMeshInverse());
+        }
+        else
+        {
+            normalsShader->SetBool("hasBones", false);
+        }
+
+        glBindVertexArray(meshComp->GetMesh().VAO);
+        glDrawArrays(GL_POINTS, 0, (GLsizei)meshComp->GetMesh().vertices.size());
+
+        glBindVertexArray(0);
+    }
+}
+
+void Renderer::DrawMeshLinesList(const CameraLens* camera)
+{
+    if (meshLinesList.empty()) return;
+
+    meshShader->Use();
+    meshShader->SetVec4("lineColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glEnable(GL_POLYGON_OFFSET_LINE);
+    glPolygonOffset(-1.0f, -1.0f);
+
+    for (RenderObject renderObject : meshLinesList)
+    {
+        ComponentMesh* meshComp = renderObject.mesh;
+
+        meshShader->SetMat4("model", renderObject.globalModelMatrix);
+
+        if (meshComp->HasSkinning()) {
+            ComponentSkinnedMesh* skinned = (ComponentSkinnedMesh*)meshComp;
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, skinned->GetSSBOGlobal());
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, skinned->GetSSBOOffset());
+            meshShader->SetBool("hasBones", true);
+            meshShader->SetMat4("meshInverse", skinned->GetMeshInverse());
+        }
+        else {
+            meshShader->SetBool("hasBones", false);
+        }
+
+        glBindVertexArray(meshComp->GetMesh().VAO);
+        glDrawElements(GL_TRIANGLES, (GLsizei)meshComp->GetNumIndices(), GL_UNSIGNED_INT, 0);
+    }
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_POLYGON_OFFSET_LINE);
+    glBindVertexArray(0);
 }
 
 bool Renderer::CleanUp()
@@ -620,740 +717,6 @@ bool Renderer::CleanUp()
     return true;
 }
 
-void Renderer::CreateFramebuffer(int width, int height)
-{
-    framebufferWidth = width;
-    framebufferHeight = height;
-
-	glGenFramebuffers(1, &fbo); // Create framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-	// Creating a texture for a framebuffer
-    glGenTextures(1, &sceneTexture);
-    glBindTexture(GL_TEXTURE_2D, sceneTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // Attach texture to framebuffer
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sceneTexture, 0);
-
-    // Renderbuffer objects
-    glGenRenderbuffers(1, &rbo); // Create renderbuffer
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height); // Used to create depth and stencil buffer
-    // Attach renderbuffer to framebuffer
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-
-    // Check framebuffer completeness
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        LOG_DEBUG("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
-        LOG_CONSOLE("ERROR: Failed to create scene framebuffer");
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void Renderer::ResizeFramebuffer(int width, int height)
-{
-    if (width <= 0 || height <= 0)
-        return;
-
-    if (framebufferWidth == width && framebufferHeight == height)
-        return;
-
-    framebufferWidth = width;
-    framebufferHeight = height;
-
-    // Delete old framebuffer resources
-    if (sceneTexture != 0)
-        glDeleteTextures(1, &sceneTexture);
-    if (rbo != 0)
-        glDeleteRenderbuffers(1, &rbo);
-    if (fbo != 0)
-        glDeleteFramebuffers(1, &fbo);
-
-    CreateFramebuffer(width, height);
-
-}
-
-void Renderer::BindFramebuffer()
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glViewport(0, 0, framebufferWidth, framebufferHeight);
-}
-
-void Renderer::UnbindFramebuffer()
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    int width, height;
-    Application::GetInstance().window->GetWindowSize(width, height);
-    glViewport(0, 0, width, height);
-}
-
-bool Renderer::HasTransparency(GameObject* gameObject)
-{
-    ComponentMaterial* material = static_cast<ComponentMaterial*>(
-        gameObject->GetComponent(ComponentType::MATERIAL));
-
-    if (material && material->IsActive())
-    {
-        return material->GetOpacity() < 1.0f || material->GetMaterialType() == MaterialType::WATER;
-    }
-
-    if (gameObject->GetComponent(ComponentType::PARTICLE)) {
-        return true;
-    }
-
-    return false;
-}
-
-void Renderer::CollectTransparentObjects(GameObject* gameObject,
-    std::vector<TransparentObject>& transparentObjects)
-{
-    if (!gameObject->IsActive())
-        return;
-
-    Transform* transform = static_cast<Transform*>(
-        gameObject->GetComponent(ComponentType::TRANSFORM));
-
-    if (transform != nullptr && HasTransparency(gameObject))
-    {
-        ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-        if (camera)
-        {
-            glm::vec3 objectPos = glm::vec3(transform->GetGlobalMatrix()[3]);
-            float distance = glm::length(camera->GetPosition() - objectPos);
-
-            transparentObjects.emplace_back(gameObject, distance);
-        }
-    }
-
-    for (GameObject* child : gameObject->GetChildren())
-    {
-        CollectTransparentObjects(child, transparentObjects);
-    }
-}
-bool Renderer::ShouldCullGameObject(GameObject* gameObject, const Frustum& frustum)
-{
-    const std::vector<Component*>& meshComponents =
-        gameObject->GetComponentsOfType(ComponentType::MESH);
-
-    if (meshComponents.empty())
-        return false;
-
-    for (Component* comp : meshComponents)
-    {
-        ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
-
-        if (meshComp->IsActive() && meshComp->HasMesh())
-        {
-            glm::vec3 worldMin, worldMax;
-            meshComp->GetWorldAABB(worldMin, worldMax);
-
-            FrustumTestResult result = frustum.ContainsAABB(worldMin, worldMax);
-
-            if (gameObject->GetName() == "Chimney")
-            {
-                static int debugCounter = 0;
-                if (debugCounter++ % 60 == 0)
-                {
-                    // Display the 6 planes of the frustum
-                    LOG_DEBUG("Frustum planes:");
-                    for (int i = 0; i < 6; i++)
-                    {
-                        const auto& plane = frustum.GetPlane(i);
-                        const char* names[] = { "NEAR", "FAR", "LEFT", "RIGHT", "TOP", "BOTTOM" };
-                        LOG_DEBUG("  %s: n(%.3f, %.3f, %.3f) d=%.3f",
-                            names[i],
-                            plane.normal.x, plane.normal.y, plane.normal.z,
-                            plane.distance);
-                    }
-
-                    // Display camera position
-                    ComponentCamera* cam = Application::GetInstance().camera->GetSceneCamera();
-                    if (cam)
-                    {
-                        glm::vec3 camPos = cam->GetPosition();
-                        glm::vec3 camFront = cam->GetFront();
-                        LOG_DEBUG("Camera: pos(%.2f, %.2f, %.2f) front(%.2f, %.2f, %.2f)",
-                            camPos.x, camPos.y, camPos.z,
-                            camFront.x, camFront.y, camFront.z);
-                        LOG_DEBUG("Camera: FOV=%.1f Near=%.2f Far=%.2f",
-                            cam->GetFov(), cam->GetNearPlane(), cam->GetFarPlane());
-                    }
-                }
-            }
-
-            if (result != FrustumTestResult::FRUSTUM_OUT)
-                return false;
-        }
-    }
-
-    return true;
-}
-void Renderer::DrawScene()
-{
-    ComponentCamera* renderCamera = Application::GetInstance().camera->GetActiveCamera();
-    ComponentCamera* cullingCamera = Application::GetInstance().camera->GetSceneCamera();
-
-    if (cullingCamera == nullptr)
-    {
-        cullingCamera = renderCamera;
-    }
-
-    DrawScene(renderCamera, cullingCamera, true);
-}
-
-void Renderer::DrawScene(ComponentCamera* renderCamera, ComponentCamera* cullingCamera, bool drawEditorFeatures)
-{
-    ZoneScoped;
-    GameObject* root = Application::GetInstance().scene->GetRoot();
-    if (root == nullptr)
-        return;
-
-    if (!renderCamera)
-        return;
-
-    SelectionManager* selectionMgr = Application::GetInstance().selectionManager;
-    const std::vector<GameObject*>& selectedObjects = selectionMgr->GetSelectedObjects();
-
-    if (cullingCamera == nullptr)
-    {
-        cullingCamera = renderCamera;
-    }
-
-    // FIRST PASS: Render opaque objects and mark stencil for selected objects =====
-    glEnable(GL_STENCIL_TEST);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-
-    // Clear stencil buffer
-    glClear(GL_STENCIL_BUFFER_BIT);
-
-    // Draw all opaque objects, marking selected ones in stencil
-    DrawGameObjectIterative(root, false, renderCamera, cullingCamera);
-
-    // Only process selection highlighting if editor features are enabled
-    if (drawEditorFeatures)
-    {
-        // Mark selected objects in stencil buffer
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilMask(0xFF);
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-        glDepthMask(GL_FALSE);
-
-        for (GameObject* selectedObj : selectedObjects)
-        {
-            if (!selectedObj || selectedObj->IsMarkedForDeletion())
-                continue;
-            if (!selectedObj->IsActive())
-                continue;
-            if (!IsGameObjectAndParentsActive(selectedObj))
-                continue;
-
-            Transform* transform = static_cast<Transform*>(selectedObj->GetComponent(ComponentType::TRANSFORM));
-            if (transform == nullptr) continue;
-
-            const std::vector<Component*>& meshComponents =
-                selectedObj->GetComponentsOfType(ComponentType::MESH);
-
-            for (Component* comp : meshComponents)
-            {
-                ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
-                if (meshComp->IsActive() && meshComp->HasMesh())
-                {
-                    const Mesh& mesh = meshComp->GetMesh();
-                    glm::mat4 globalMatrix = transform->GetGlobalMatrix();
-
-                    defaultShader->Use();
-                    glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "model"),
-                        1, GL_FALSE, glm::value_ptr(globalMatrix));
-                    glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "view"),
-                        1, GL_FALSE, glm::value_ptr(renderCamera->GetViewMatrix()));
-                    glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "projection"),
-                        1, GL_FALSE, glm::value_ptr(renderCamera->GetProjectionMatrix()));
-
-                    DrawMesh(mesh);
-                }
-            }
-        }
-
-        // Restore color and depth writing
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        glDepthMask(GL_TRUE);
-        glStencilMask(0x00);
-    }
-
-    //  SECOND PASS: Render transparent objects back-to-front =====
-    std::vector<TransparentObject> transparentObjects;
-    CollectTransparentObjects(root, transparentObjects);
-
-    std::sort(transparentObjects.begin(), transparentObjects.end(),
-        [](const TransparentObject& a, const TransparentObject& b) {
-            return a.distanceToCamera > b.distanceToCamera;
-        });
-
-    // Enable blending for transparent objects
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE); // Disable depth writing for transparency
-
-    for (const auto& transparentObj : transparentObjects)
-    {
-        DrawGameObjectIterative(transparentObj.gameObject, true, renderCamera, cullingCamera);
-    }
-
-    glDepthMask(GL_TRUE); // Re-enable depth writing
-    glDisable(GL_BLEND);
-    //  THIRD PASS: Draw outlines for selected objects =====
-    if (drawEditorFeatures)
-    {
-        // Draw outline where stencil != 1 (around the selected object)
-        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-        glStencilMask(0x00);
-
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);  
-        glDepthMask(GL_FALSE);   
-
-        outlineShader->Use();
-        glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE,
-            glm::value_ptr(renderCamera->GetProjectionMatrix()));
-        glUniformMatrix4fv(outlineUniforms.view, 1, GL_FALSE,
-            glm::value_ptr(renderCamera->GetViewMatrix()));
-        outlineShader->SetVec3("outlineColor", glm::vec3(1.0f, 0.41f, 0.71f));
-
-        float outlineThickness = 0.04f;
-        outlineShader->SetFloat("outlineThickness", outlineThickness);
-
-        for (GameObject* selectedObj : selectedObjects)
-        {
-            if (!selectedObj || selectedObj->IsMarkedForDeletion())
-                continue;
-            if (!selectedObj->IsActive())
-                continue;
-            if (!IsGameObjectAndParentsActive(selectedObj))
-                continue;
-
-            Transform* transform = static_cast<Transform*>(selectedObj->GetComponent(ComponentType::TRANSFORM));
-            if (transform == nullptr) continue;
-
-            const std::vector<Component*>& meshComponents =
-                selectedObj->GetComponentsOfType(ComponentType::MESH);
-
-            for (Component* comp : meshComponents)
-            {
-                ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
-                if (meshComp->IsActive() && meshComp->HasMesh())
-                {
-                    const Mesh& mesh = meshComp->GetMesh();
-                    glm::mat4 globalMatrix = transform->GetGlobalMatrix();
-
-                    glUniformMatrix4fv(outlineUniforms.model, 1, GL_FALSE,
-                        glm::value_ptr(globalMatrix));
-
-                    DrawMesh(mesh);
-                }
-            }
-        }
-    }
-
-    // Restore render state
-    glStencilMask(0xFF);
-    glStencilFunc(GL_ALWAYS, 0, 0xFF);
-    glDepthMask(GL_TRUE);      
-    glDepthFunc(GL_LESS);      
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_STENCIL_TEST);
-
-    defaultShader->Use();
-}
-
-void Renderer::DrawAllAABBs(GameObject* gameObject)
-{
-    if (!gameObject || !gameObject->IsActive())
-        return;
-
-    ComponentMesh* meshComp = static_cast<ComponentMesh*>(
-        gameObject->GetComponent(ComponentType::MESH));
-
-    if (meshComp && meshComp->IsActive() && meshComp->HasMesh())
-    {
-        glm::vec3 worldMin, worldMax;
-        meshComp->GetWorldAABB(worldMin, worldMax);
-        DrawAABB(worldMin, worldMax, glm::vec3(0.0f, 1.0f, 0.0f));
-    }
-
-    for (GameObject* child : gameObject->GetChildren())
-    {
-        DrawAllAABBs(child);
-    }
-}
-
-void Renderer::DrawGameObjectWithStencil(GameObject* gameObject)
-{
-    if (!gameObject->IsActive())
-        return;
-
-    Transform* transform = static_cast<Transform*>(gameObject->GetComponent(ComponentType::TRANSFORM));
-    if (transform == nullptr) return;
-
-    const glm::mat4& modelMatrix = transform->GetGlobalMatrix();
-    glUniformMatrix4fv(defaultUniforms.model, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-
-    defaultShader->SetVec3("tintColor", glm::vec3(1.0f));
-
-    ComponentMaterial* material = static_cast<ComponentMaterial*>(
-        gameObject->GetComponent(ComponentType::MATERIAL));
-
-    bool materialBound = false;
-    if (material && material->IsActive())
-    {
-        material->Use();
-        materialBound = true;
-    }
-    else
-    {
-        defaultTexture->Bind();
-    }
-
-    const std::vector<Component*>& meshComponents =
-        gameObject->GetComponentsOfType(ComponentType::MESH);
-
-    for (Component* comp : meshComponents)
-    {
-        ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
-
-        if (meshComp->IsActive() && meshComp->HasMesh())
-        {
-            const Mesh& mesh = meshComp->GetMesh();
-            DrawMesh(mesh);
-        }
-    }
-
-    if (materialBound)
-        material->Unbind();
-    else
-        defaultTexture->Unbind();
-}
-
-
-void Renderer::DrawGameObjectIterative(GameObject* gameObject,
-    bool renderTransparentOnly,
-    ComponentCamera* renderCamera,
-    ComponentCamera* cullingCamera)
-{
-    std::stack<GameObject*> gameObjectStack;
-    gameObjectStack.push(gameObject);
-
-    while (!gameObjectStack.empty())
-    {
-        GameObject* currentObj = gameObjectStack.top();
-        gameObjectStack.pop();
-
-        if (!currentObj->IsActive())
-            continue;
-
-        Transform* transform = static_cast<Transform*>(
-            currentObj->GetComponent(ComponentType::TRANSFORM));
-        if (transform == nullptr) continue;
-
-        if (cullingCamera &&
-            cullingCamera->IsActive() &&
-            cullingCamera->IsFrustumCullingEnabled())
-        {
-            if (ShouldCullGameObject(currentObj, cullingCamera->GetFrustum()))
-            {
-                continue;
-            }
-        }
-
-        bool isTransparent = HasTransparency(currentObj);
-
-        if (renderTransparentOnly != isTransparent)
-        {
-            // LIFO (Last In, First Out) to process children
-            const auto& children = currentObj->GetChildren();
-            for (auto it = children.rbegin(); it != children.rend(); ++it)
-            {
-                gameObjectStack.push(*it);
-            }
-            continue;
-        }
-
-        const glm::mat4& modelMatrix = transform->GetGlobalMatrix();
-
-        Shader* currentShader = nullptr;
-        ComponentMaterial* material = static_cast<ComponentMaterial*>(
-            currentObj->GetComponent(ComponentType::MATERIAL));
-
-        if (showZBuffer) {
-             currentShader = depthShader.get();
-        } 
-        else {
-             if (material && material->GetShaderUID() != 0) {
-                 ResourceShader* resShader = static_cast<ResourceShader*>(
-                     Application::GetInstance().resources->GetResourceDirect(material->GetShaderUID()));
-                 if (resShader && resShader->GetShader()) {
-                     currentShader = resShader->GetShader();
-                 }
-             }
-
-             if (!currentShader) {
-                 if (material && (material->GetMaterialType() == MaterialType::WATER) && waterShader) {
-                     currentShader = waterShader.get();
-                 } else {
-                     currentShader = defaultShader.get();
-                 }
-             }
-        }
-
-        currentShader->Use();
-
-        glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "projection"),
-            1, GL_FALSE, glm::value_ptr(renderCamera->GetProjectionMatrix()));
-        glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "view"),
-            1, GL_FALSE, glm::value_ptr(renderCamera->GetViewMatrix()));
-        glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgramID(), "model"),
-            1, GL_FALSE, glm::value_ptr(modelMatrix));
-
-        bool materialBound = false;
-
-        if (showZBuffer)
-        {
-            depthShader->SetFloat("nearPlane", renderCamera->GetNearPlane());
-            depthShader->SetFloat("farPlane", renderCamera->GetFarPlane());
-        }
-        else if (currentShader == waterShader.get())
-        {
-            // Update time uniform for water animation (only when PLAYING)
-            float time = 0.0f;
-            if (Application::GetInstance().GetPlayState() == Application::PlayState::PLAYING) {
-                time = SDL_GetTicks() / 1000.0f;
-            }
-            
-            waterShader->SetFloat("u_Time", time);
-            waterShader->SetVec3("lightDir", glm::vec3(1.0f, -1.0f, -1.0f));
-            waterShader->SetVec3("viewPos", renderCamera->GetPosition());
-            waterShader->SetFloat("opacity", material ? material->GetOpacity() : 1.0f);
-
-            if (material) {
-                float speed = material->GetWaveSpeed();
-                float amp = material->GetWaveAmplitude();
-                float freq = material->GetWaveFrequency();
-
-                waterShader->SetFloat("waveSpeed", speed);
-                waterShader->SetFloat("waveAmplitude", amp);
-                waterShader->SetFloat("waveFrequency", freq);
-            }
-        }
-        else
-        {
-            currentShader->SetVec3("tintColor", glm::vec3(1.0f));
-
-            bool hasTexture = (material && material->IsActive() && material->HasTexture());
-
-            // Configure uniform hasTexture
-            currentShader->SetInt("hasTexture", hasTexture ? 1 : 0);
-
-            // Configure light direction
-            currentShader->SetVec3("lightDir", lightDir);
-            currentShader->SetVec3("viewPos", renderCamera->GetPosition());
-            currentShader->SetFloat("opacity", material ? material->GetOpacity() : 1.0f);
-
-            if (hasTexture)
-            {
-                material->Use();  // Bind the material's texture
-                materialBound = true;
-                currentShader->SetVec3("materialDiffuse", material->HasMaterialProperties() ? 
-                    glm::vec3(material->GetDiffuseColor()) : glm::vec3(1.0f));
-            }
-            else
-            {
-                glBindTexture(GL_TEXTURE_2D, 0); // No texture
-
-                if (material && material->HasMaterialProperties())
-                {
-                    glm::vec4 diffuse = material->GetDiffuseColor();
-                    currentShader->SetVec3("materialDiffuse", glm::vec3(diffuse.r, diffuse.g, diffuse.b));
-                }
-                else
-                {
-                    currentShader->SetVec3("materialDiffuse", glm::vec3(0.6f, 0.6f, 0.6f));
-                }
-            }
-
-            // Send lighting mode (0 = Vertex, 1 = Pixel)
-            int lightingMode = material ? material->GetLightingMode() : 1;
-            currentShader->SetInt("lightingMode", lightingMode);
-
-            // Set the texture sampler uniform
-            //  Use the correct uniform location or name based on shader
-            glUniform1i(glGetUniformLocation(currentShader->GetProgramID(), "texture1"), 0);
-        }
-
-        const std::vector<Component*>& meshComponents =
-            currentObj->GetComponentsOfType(ComponentType::MESH);
-
-        ModuleEditor* editor = Application::GetInstance().editor.get();
-        SelectionManager* selectionMgr = Application::GetInstance().selectionManager;
-
-        bool shouldDrawNormals = false;
-        if (editor && selectionMgr->IsSelected(currentObj))
-        {
-            shouldDrawNormals = true;
-        }
-        else if (editor)
-        {
-            GameObject* parent = currentObj->GetParent();
-            while (parent)
-            {
-                if (selectionMgr->IsSelected(parent))
-                {
-                    shouldDrawNormals = true;
-                    break;
-                }
-                parent = parent->GetParent();
-            }
-        }
-
-        bool showVertex = editor && editor->ShouldShowVertexNormals();
-        bool showFace = editor && editor->ShouldShowFaceNormals();
-
-        for (Component* comp : meshComponents)
-        {
-            ComponentMesh* meshComp = static_cast<ComponentMesh*>(comp);
-
-            if (meshComp->IsActive() && meshComp->HasMesh())
-            {
-                const Mesh& mesh = meshComp->GetMesh();
-                DrawMesh(mesh);
-
-                if (shouldDrawNormals)
-                {
-                    if (showVertex) DrawVertexNormals(mesh, modelMatrix);
-                    if (showFace) DrawFaceNormals(mesh, modelMatrix);
-                }
-            }
-        }
-
-        if (renderTransparentOnly)
-        {
-            ComponentParticleSystem* particleSys = static_cast<ComponentParticleSystem*>(
-                currentObj->GetComponent(ComponentType::PARTICLE));
-
-            if (particleSys && particleSys->IsActive()) {
-                // Draw particles with OpenGL glBegin and glEnd
-                particleSys->Draw(renderCamera);
-                // Restore the Shader Program for the next object in the loop
-                currentShader->Use();
-            }
-        }
-
-        if (!renderTransparentOnly)
-        {
-            ComponentCamera* cam = static_cast<ComponentCamera*>(
-                currentObj->GetComponent(ComponentType::CAMERA));
-
-            if (cam && cam->IsActive() && cam->ShouldDrawFrustum())
-            {
-                glm::vec3 color = (cam == cullingCamera) ?
-                    glm::vec3(0.0f, 1.0f, 0.0f) :
-                    glm::vec3(1.0f, 1.0f, 0.0f);
-
-                DrawCameraFrustum(cam, color);
-            }
-        }
-
-
-        if (materialBound)
-            material->Unbind();
-        else
-            defaultTexture->Unbind();
-
-
-		// LIFO((Last In, First Out) to process children
-        const auto& children = currentObj->GetChildren();
-        for (auto it = children.rbegin(); it != children.rend(); ++it)
-        {
-            gameObjectStack.push(*it);
-        }
-    }
-}
-
-void Renderer::DrawVertexNormals(const Mesh& mesh, const glm::mat4& modelMatrix)
-{
-    if (!mesh.IsValid() || mesh.vertices.empty())
-        return;
-
-    std::vector<float> lineVertices;
-    lineVertices.reserve(mesh.vertices.size() * 6);
-
-    const float normalLength = 0.2f;
-    const glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
-
-    // Generate line endpoints for each vertex normal
-    for (const auto& vertex : mesh.vertices)
-    {
-        glm::vec4 worldPos = modelMatrix * glm::vec4(vertex.position, 1.0f);
-        glm::vec3 worldNormal = glm::normalize(normalMatrix * vertex.normal);
-        glm::vec3 endPoint = glm::vec3(worldPos) + worldNormal * normalLength;
-
-        lineVertices.insert(lineVertices.end(), {
-            worldPos.x, worldPos.y, worldPos.z,
-            endPoint.x, endPoint.y, endPoint.z
-            });
-    }
-
-    // Create or reuse VAO/VBO
-    if (normalLinesVAO == 0)
-    {
-        glGenVertexArrays(1, &normalLinesVAO);
-        glGenBuffers(1, &normalLinesVBO);
-
-        glBindVertexArray(normalLinesVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, normalLinesVBO);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    }
-    else
-    {
-        glBindVertexArray(normalLinesVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, normalLinesVBO);
-    }
-
-    // Upload data (reallocate only if needed)
-    size_t requiredSize = lineVertices.size() * sizeof(float);
-    if (requiredSize > normalLinesCapacity)
-    {
-        glBufferData(GL_ARRAY_BUFFER, requiredSize, lineVertices.data(), GL_DYNAMIC_DRAW);
-        normalLinesCapacity = requiredSize;
-    }
-    else
-    {
-        glBufferSubData(GL_ARRAY_BUFFER, 0, requiredSize, lineVertices.data());
-    }
-
-    // Render normals
-    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-    if (!camera) return;
-
-    lineShader->Use();
-    glUniformMatrix4fv(glGetUniformLocation(lineShader->GetProgramID(), "projection"),
-        1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(lineShader->GetProgramID(), "view"),
-        1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(lineShader->GetProgramID(), "model"),
-        1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-
-    lineShader->SetVec3("tintColor", glm::vec3(0.0f, 0.5f, 1.0f));
-    glDrawArrays(GL_LINES, 0, lineVertices.size() / 3);
-
-    glBindVertexArray(0);
-    defaultShader->Use();
-}
 
 void Renderer::CreateSkinningSSBOs(unsigned int& ssboGlobal, unsigned int& ssboOffset, const std::vector<glm::mat4>& offsets)
 {
@@ -1390,76 +753,8 @@ void Renderer::DeleteSSBO(unsigned int& ssbo)
     }
 }
 
-void Renderer::DrawFaceNormals(const Mesh& mesh, const glm::mat4& modelMatrix)
-{
-    if (!mesh.IsValid() || mesh.vertices.empty() || mesh.indices.empty())
-        return;
 
-    std::vector<float> lineVertices;
-    float normalLength = 0.3f;
-
-    // Calculate face normals from triangle data
-    for (size_t i = 0; i < mesh.indices.size(); i += 3)
-    {
-        const Vertex& v0 = mesh.vertices[mesh.indices[i]];
-        const Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
-        const Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
-
-        glm::vec4 worldPos0 = modelMatrix * glm::vec4(v0.position, 1.0f);
-        glm::vec4 worldPos1 = modelMatrix * glm::vec4(v1.position, 1.0f);
-        glm::vec4 worldPos2 = modelMatrix * glm::vec4(v2.position, 1.0f);
-
-        glm::vec3 faceCenter = (glm::vec3(worldPos0) + glm::vec3(worldPos1) + glm::vec3(worldPos2)) / 3.0f;
-
-        glm::vec3 edge1 = glm::vec3(worldPos1) - glm::vec3(worldPos0);
-        glm::vec3 edge2 = glm::vec3(worldPos2) - glm::vec3(worldPos0);
-        glm::vec3 faceNormal = glm::normalize(glm::cross(edge1, edge2));
-
-        glm::vec3 endPoint = faceCenter + faceNormal * normalLength;
-
-        lineVertices.push_back(faceCenter.x);
-        lineVertices.push_back(faceCenter.y);
-        lineVertices.push_back(faceCenter.z);
-
-        lineVertices.push_back(endPoint.x);
-        lineVertices.push_back(endPoint.y);
-        lineVertices.push_back(endPoint.z);
-    }
-
-    // Create temporary buffers (face normals rendered less frequently)
-    GLuint lineVAO, lineVBO;
-    glGenVertexArrays(1, &lineVAO);
-    glGenBuffers(1, &lineVBO);
-
-    glBindVertexArray(lineVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
-    glBufferData(GL_ARRAY_BUFFER, lineVertices.size() * sizeof(float), lineVertices.data(), GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-    if (!camera) return;
-
-    lineShader->Use();
-    GLuint shaderProgram = lineShader->GetProgramID();
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-
-    lineShader->SetVec3("tintColor", glm::vec3(0.0f, 1.0f, 0.5f));
-
-    glDrawArrays(GL_LINES, 0, lineVertices.size() / 3);
-
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &lineVBO);
-    glDeleteVertexArrays(1, &lineVAO);
-
-    defaultShader->Use();
-}
-
-void Renderer::DrawLinesList(const ComponentCamera* camera)
+void Renderer::DrawLinesList(const CameraLens* camera)
 {
     if (linesList.empty() || !camera) return;
 
@@ -1583,161 +878,6 @@ ComponentCamera* Renderer::GetCamera() {
     return Application::GetInstance().camera->GetActiveCamera();
 }
 
-void Renderer::DrawCameraFrustum(ComponentCamera* camera, const glm::vec3& color)
-{
-    if (!camera || !camera->ShouldDrawFrustum())
-        return;
-
-    // Get frustum corners
-    glm::vec3 corners[8];
-    camera->GetFrustumCorners(corners);
-
-    // Build line vertices for the frustum wireframe
-    std::vector<float> lineVertices;
-    lineVertices.reserve(24 * 3); // 12 edges * 2 points * 3 floats
-
-    // Near plane (4 edges)
-    for (int i = 0; i < 4; ++i)
-    {
-        int next = (i + 1) % 4;
-        lineVertices.insert(lineVertices.end(), {
-            corners[i].x, corners[i].y, corners[i].z,
-            corners[next].x, corners[next].y, corners[next].z
-            });
-    }
-
-    // Far plane (4 edges)
-    for (int i = 4; i < 8; ++i)
-    {
-        int next = 4 + ((i - 4 + 1) % 4);
-        lineVertices.insert(lineVertices.end(), {
-            corners[i].x, corners[i].y, corners[i].z,
-            corners[next].x, corners[next].y, corners[next].z
-            });
-    }
-
-    // Connecting edges (4 edges from near to far)
-    for (int i = 0; i < 4; ++i)
-    {
-        lineVertices.insert(lineVertices.end(), {
-            corners[i].x, corners[i].y, corners[i].z,
-            corners[i + 4].x, corners[i + 4].y, corners[i + 4].z
-            });
-    }
-
-    // Create temporary VAO and VBO for frustum lines
-    GLuint frustumVAO, frustumVBO;
-    glGenVertexArrays(1, &frustumVAO);
-    glGenBuffers(1, &frustumVBO);
-
-    glBindVertexArray(frustumVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, frustumVBO);
-    glBufferData(GL_ARRAY_BUFFER, lineVertices.size() * sizeof(float),
-        lineVertices.data(), GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-
-    // Get active camera for rendering
-    ComponentCamera* activeCamera = GetCamera();
-    if (!activeCamera) return;
-
-    // Use line shader
-    lineShader->Use();
-    GLuint shaderProgram = lineShader->GetProgramID();
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
-        1, GL_FALSE, glm::value_ptr(activeCamera->GetProjectionMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
-        1, GL_FALSE, glm::value_ptr(activeCamera->GetViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),
-        1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-
-    lineShader->SetVec3("color", color);
-
-    // Draw the frustum
-    glLineWidth(2.0f);
-    glDrawArrays(GL_LINES, 0, lineVertices.size() / 3);
-    glLineWidth(1.0f);
-
-    // Cleanup
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &frustumVBO);
-    glDeleteVertexArrays(1, &frustumVAO);
-
-    defaultShader->Use();
-}
-bool Renderer::IsGameObjectAndParentsActive(GameObject* gameObject) const
-{
-    if (gameObject == nullptr)
-        return false;
-
-    if (!gameObject->IsActive())
-        return false;
-
-    GameObject* parent = gameObject->GetParent();
-    while (parent != nullptr)
-    {
-        if (!parent->IsActive())
-            return false;
-        parent = parent->GetParent();
-    }
-
-    return true;
-}
-
-void Renderer::DrawRay(const glm::vec3& origin, const glm::vec3& direction,
-    float length, const glm::vec3& color)
-{
-    glm::vec3 endPoint = origin + direction * length;
-
-    std::vector<float> lineVertices = {
-        origin.x, origin.y, origin.z,
-        endPoint.x, endPoint.y, endPoint.z
-    };
-
-    GLuint rayVAO, rayVBO;
-    glGenVertexArrays(1, &rayVAO);
-    glGenBuffers(1, &rayVBO);
-
-    glBindVertexArray(rayVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, rayVBO);
-    glBufferData(GL_ARRAY_BUFFER, lineVertices.size() * sizeof(float),
-        lineVertices.data(), GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-
-    ComponentCamera* camera = GetCamera();
-    if (!camera) return;
-
-    lineShader->Use();
-    GLuint shaderProgram = lineShader->GetProgramID();
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
-        1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
-        1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),
-        1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-
-    GLint colorLoc = glGetUniformLocation(shaderProgram, "color");
-    if (colorLoc == -1)
-        colorLoc = glGetUniformLocation(shaderProgram, "tintColor");
-
-    if (colorLoc != -1)
-        glUniform3fv(colorLoc, 1, glm::value_ptr(color));
-
-    glLineWidth(3.0f);
-    glDrawArrays(GL_LINES, 0, 2);
-    glLineWidth(1.0f);
-
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &rayVBO);
-    glDeleteVertexArrays(1, &rayVAO);
-
-    defaultShader->Use();
-}
 
 void Renderer::DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color)
 {
@@ -1795,150 +935,6 @@ void Renderer::DrawCircle(glm::vec3 center, glm::quat rotation, float r, int seg
 
         DrawLine(p1_world, p2_world, col);
     }
-}
-
-
-// Método para dibujar AABB de un GameObject
-void Renderer::DrawAABB(const glm::vec3& min, const glm::vec3& max, const glm::vec3& color)
-{
-    glm::vec3 corners[8] = {
-        glm::vec3(min.x, min.y, min.z), // 0
-        glm::vec3(max.x, min.y, min.z), // 1
-        glm::vec3(max.x, min.y, max.z), // 2
-        glm::vec3(min.x, min.y, max.z), // 3
-        glm::vec3(min.x, max.y, min.z), // 4
-        glm::vec3(max.x, max.y, min.z), // 5
-        glm::vec3(max.x, max.y, max.z), // 6
-        glm::vec3(min.x, max.y, max.z)  // 7
-    };
-
-    std::vector<float> lineVertices;
-    lineVertices.reserve(24 * 3);
-
-    // Bottom face
-    for (int i = 0; i < 4; ++i)
-    {
-        int next = (i + 1) % 4;
-        lineVertices.insert(lineVertices.end(), {
-            corners[i].x, corners[i].y, corners[i].z,
-            corners[next].x, corners[next].y, corners[next].z
-            });
-    }
-
-    // Top face
-    for (int i = 4; i < 8; ++i)
-    {
-        int next = 4 + ((i - 4 + 1) % 4);
-        lineVertices.insert(lineVertices.end(), {
-            corners[i].x, corners[i].y, corners[i].z,
-            corners[next].x, corners[next].y, corners[next].z
-            });
-    }
-
-    // Vertical edges
-    for (int i = 0; i < 4; ++i)
-    {
-        lineVertices.insert(lineVertices.end(), {
-            corners[i].x, corners[i].y, corners[i].z,
-            corners[i + 4].x, corners[i + 4].y, corners[i + 4].z
-            });
-    }
-
-    GLuint aabbVAO, aabbVBO;
-    glGenVertexArrays(1, &aabbVAO);
-    glGenBuffers(1, &aabbVBO);
-
-    glBindVertexArray(aabbVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, aabbVBO);
-    glBufferData(GL_ARRAY_BUFFER, lineVertices.size() * sizeof(float),
-        lineVertices.data(), GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-    ComponentCamera* camera = GetCamera();
-    if (!camera) return;
-
-    lineShader->Use();
-    GLuint shaderProgram = lineShader->GetProgramID();
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
-        1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
-        1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),
-        1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-
-    GLint colorLoc = glGetUniformLocation(shaderProgram, "color");
-    if (colorLoc == -1) colorLoc = glGetUniformLocation(shaderProgram, "tintColor");
-    if (colorLoc != -1) glUniform3fv(colorLoc, 1, glm::value_ptr(color));
-
-    glLineWidth(2.0f);
-    glDrawArrays(GL_LINES, 0, lineVertices.size() / 3);
-    glLineWidth(1.0f);
-
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &aabbVBO);
-    glDeleteVertexArrays(1, &aabbVAO);
-
-    defaultShader->Use();
-}
-
-void Renderer::CreateGameFramebuffer(int width, int height)
-{
-    gameFramebufferWidth = width;
-    gameFramebufferHeight = height;
-
-    glGenFramebuffers(1, &gameFbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, gameFbo);
-
-    glGenTextures(1, &gameTexture);
-    glBindTexture(GL_TEXTURE_2D, gameTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gameTexture, 0);
-
-    glGenRenderbuffers(1, &gameRbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, gameRbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, gameRbo);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        LOG_DEBUG("ERROR::FRAMEBUFFER:: Game framebuffer is not complete!");
-        LOG_CONSOLE("ERROR: Failed to create game framebuffer");
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void Renderer::ResizeGameFramebuffer(int width, int height)
-{
-    if (width <= 0 || height <= 0)
-        return;
-
-    if (gameFramebufferWidth == width && gameFramebufferHeight == height)
-        return;
-
-    gameFramebufferWidth = width;
-    gameFramebufferHeight = height;
-
-    // Delete old framebuffer resources
-    if (gameTexture != 0)
-        glDeleteTextures(1, &gameTexture);
-    if (gameRbo != 0)
-        glDeleteRenderbuffers(1, &gameRbo);
-    if (gameFbo != 0)
-        glDeleteFramebuffers(1, &gameFbo);
-
-    CreateGameFramebuffer(width, height);
-}
-
-void Renderer::BindGameFramebuffer()
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, gameFbo);
-    glViewport(0, 0, gameFramebufferWidth, gameFramebufferHeight);
 }
 
 void Renderer::UpdateProjectionMatrix(glm::mat4 pm) {

@@ -9,14 +9,14 @@ public:
     Shader();
     ~Shader();
 
-    bool Create();
     bool CreateSimpleColor();
-    bool CreateWithDiscard();
     bool CreateSingleColor();
     bool CreateDepthVisualization();
     bool CreateNoTexture(); 
     bool CreateWater();
     bool CreateLinesShader(); 
+    bool CreateNormalShader(); 
+    bool CreateMeshShader(); 
 
     bool LoadFromSource(const char* vSource, const char* fSource, const char* gSource = nullptr);
 
@@ -37,4 +37,8 @@ private:
     unsigned int CompileShader(unsigned int type, const char* source);
 
     unsigned int shaderProgram;
+
+    const char* shaderHeader;
+    const char* skinningDeclarations;
+    const char* skinningFunction;
 };

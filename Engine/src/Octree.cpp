@@ -15,8 +15,7 @@
 // OctreeNode Implementation
 
 OctreeNode::OctreeNode(const glm::vec3& min, const glm::vec3& max, int maxObjects, int maxDepth, int currentDepth)
-    : box_min(min)
-    , box_max(max)
+    : box(AABB{ min, max })
     , max_objects(maxObjects)
     , max_depth(maxDepth)
     , current_depth(currentDepth)
@@ -44,8 +43,8 @@ bool OctreeNode::GetObjectWorldAABB(GameObject* obj, glm::vec3& outMin, glm::vec
         return false;
 
     // Get AABB in local space
-    glm::vec3 localMin = mesh->GetAABBMin();
-    glm::vec3 localMax = mesh->GetAABBMax();
+    glm::vec3 localMin = mesh->GetAABB().min;
+    glm::vec3 localMax = mesh->GetAABB().max;
 
     // Transform to world space (transform all 8 corners and recalculate AABB)
     glm::mat4 globalMatrix = transform->GetGlobalMatrix();
@@ -98,9 +97,9 @@ bool OctreeNode::Insert(GameObject* obj)
         return false;
 
     // Check if object is completely outside this node
-    if (worldMax.x < box_min.x || worldMin.x > box_max.x ||
-        worldMax.y < box_min.y || worldMin.y > box_max.y ||
-        worldMax.z < box_min.z || worldMin.z > box_max.z)
+    if (worldMax.x < box.min.x || worldMin.x > box.max.x ||
+        worldMax.y < box.min.y || worldMin.y > box.max.y ||
+        worldMax.z < box.min.z || worldMin.z > box.max.z)
     {
         return false; // Object is outside this node
     }
@@ -256,56 +255,56 @@ void OctreeNode::CollapseIfPossible()
 
 void OctreeNode::Subdivide()
 {
-    glm::vec3 center = (box_min + box_max) * 0.5f;
+    glm::vec3 center = (box.min + box.max) * 0.5f;
 
     // Create 8 children
     // Bottom 4 (lower half in Y)
     children[0] = new OctreeNode(
-        glm::vec3(box_min.x, box_min.y, box_min.z),
+        glm::vec3(box.min.x, box.min.y, box.min.z),
         glm::vec3(center.x, center.y, center.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[1] = new OctreeNode(
-        glm::vec3(center.x, box_min.y, box_min.z),
-        glm::vec3(box_max.x, center.y, center.z),
+        glm::vec3(center.x, box.min.y, box.min.z),
+        glm::vec3(box.max.x, center.y, center.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[2] = new OctreeNode(
-        glm::vec3(box_min.x, box_min.y, center.z),
-        glm::vec3(center.x, center.y, box_max.z),
+        glm::vec3(box.min.x, box.min.y, center.z),
+        glm::vec3(center.x, center.y, box.max.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[3] = new OctreeNode(
-        glm::vec3(center.x, box_min.y, center.z),
-        glm::vec3(box_max.x, center.y, box_max.z),
+        glm::vec3(center.x, box.min.y, center.z),
+        glm::vec3(box.max.x, center.y, box.max.z),
         max_objects, max_depth, current_depth + 1
     );
 
     // Top 4 (upper half in Y)
     children[4] = new OctreeNode(
-        glm::vec3(box_min.x, center.y, box_min.z),
-        glm::vec3(center.x, box_max.y, center.z),
+        glm::vec3(box.min.x, center.y, box.min.z),
+        glm::vec3(center.x, box.max.y, center.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[5] = new OctreeNode(
-        glm::vec3(center.x, center.y, box_min.z),
-        glm::vec3(box_max.x, box_max.y, center.z),
+        glm::vec3(center.x, center.y, box.min.z),
+        glm::vec3(box.max.x, box.max.y, center.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[6] = new OctreeNode(
-        glm::vec3(box_min.x, center.y, center.z),
-        glm::vec3(center.x, box_max.y, box_max.z),
+        glm::vec3(box.min.x, center.y, center.z),
+        glm::vec3(center.x, box.max.y, box.max.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[7] = new OctreeNode(
         glm::vec3(center.x, center.y, center.z),
-        glm::vec3(box_max.x, box_max.y, box_max.z),
+        glm::vec3(box.max.x, box.max.y, box.max.z),
         max_objects, max_depth, current_depth + 1
     );
 }
@@ -458,7 +457,7 @@ GameObject* OctreeNode::RayPick(const Ray& ray, float& outDistance) const
 {
     // Check if ray intersects this node's AABB
     float distance;
-    if (!RayIntersectsAABB(ray.origin, ray.direction, box_min, box_max, distance))
+    if (!RayIntersectsAABB(ray.origin, ray.direction, box.min, box.max, distance))
     {
         return nullptr;
     }
@@ -522,15 +521,15 @@ void OctreeNode::DebugDraw() const
     // Crear las 8 esquinas del AABB
     glm::vec3 corners[8] = {
         // Bottom face
-        glm::vec3(box_min.x, box_min.y, box_min.z), // 0
-        glm::vec3(box_max.x, box_min.y, box_min.z), // 1
-        glm::vec3(box_max.x, box_min.y, box_max.z), // 2
-        glm::vec3(box_min.x, box_min.y, box_max.z), // 3
+        glm::vec3(box.min.x, box.min.y, box.min.z), // 0
+        glm::vec3(box.max.x, box.min.y, box.min.z), // 1
+        glm::vec3(box.max.x, box.min.y, box.max.z), // 2
+        glm::vec3(box.min.x, box.min.y, box.max.z), // 3
         // Top face
-        glm::vec3(box_min.x, box_max.y, box_min.z), // 4
-        glm::vec3(box_max.x, box_max.y, box_min.z), // 5
-        glm::vec3(box_max.x, box_max.y, box_max.z), // 6
-        glm::vec3(box_min.x, box_max.y, box_max.z)  // 7
+        glm::vec3(box.min.x, box.max.y, box.min.z), // 4
+        glm::vec3(box.max.x, box.max.y, box.min.z), // 5
+        glm::vec3(box.max.x, box.max.y, box.max.z), // 6
+        glm::vec3(box.min.x, box.max.y, box.max.z)  // 7
     };
 
     std::vector<float> lineVertices;

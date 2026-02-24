@@ -37,12 +37,12 @@ CameraLens::~CameraLens()
 
 }
 
-void CameraLens::SetPerspective(float fov, float aspect, float near, float far)
+void CameraLens::SetPerspective(float fov, float aspect, float zNear, float zFar)
 {
     this->fov = fov;
     this->aspectRatio = aspect;
-    this->zNear = near;
-    this->zFar = far;
+    this->zNear = zNear;
+    this->zFar = zFar;
 
     projectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, zNear, zFar);
 

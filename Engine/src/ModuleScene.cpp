@@ -37,7 +37,6 @@ bool ModuleScene::Awake()
 bool ModuleScene::Start()
 {
     LOG_DEBUG("Initializing Scene");
-    renderer->DrawScene();
     root = new GameObject("Root");
     LOG_CONSOLE("Scene ready");
 
@@ -48,8 +47,8 @@ void ModuleScene::RebuildOctree()
 {
     LOG_DEBUG("[ModuleScene] Starting full octree rebuild");
 
-    glm::vec3 sceneMin(std::numeric_limits<float>::max());
-    glm::vec3 sceneMax(std::numeric_limits<float>::lowest());
+    AABB sceneAABB;
+    sceneAABB.SetNegativeInfinity();
 
     bool hasObjects = false;
 
@@ -60,11 +59,11 @@ void ModuleScene::RebuildOctree()
         ComponentMesh* mesh = static_cast<ComponentMesh*>(obj->GetComponent(ComponentType::MESH));
         if (mesh && mesh->IsActive() && mesh->HasMesh())
         {
-            glm::vec3 objMin, objMax;
-            mesh->GetWorldAABB(objMin, objMax);
+            AABB objectAABB;
+            mesh->GetGlobalAABB();
 
-            sceneMin = glm::min(sceneMin, objMin);
-            sceneMax = glm::max(sceneMax, objMax);
+            sceneAABB.min = glm::min(sceneAABB.min, objectAABB.min);
+            sceneAABB.max = glm::max(sceneAABB.max, objectAABB.max);
             hasObjects = true;
         }
 
@@ -82,26 +81,26 @@ void ModuleScene::RebuildOctree()
     // If no objects with mesh, use default bounds
     if (!hasObjects)
     {
-        sceneMin = glm::vec3(-10.0f, -10.0f, -10.0f);
-        sceneMax = glm::vec3(10.0f, 10.0f, 10.0f);
+        sceneAABB.min = glm::vec3(-10.0f, -10.0f, -10.0f);
+        sceneAABB.max = glm::vec3(10.0f, 10.0f, 10.0f);
     }
     else
     {
         // Expand bounds significantly (50% margin)
-        glm::vec3 size = sceneMax - sceneMin;
+        glm::vec3 size = sceneAABB.max - sceneAABB.min;
         glm::vec3 margin = size * 0.5f;
-        sceneMin -= margin;
-        sceneMax += margin;
+        sceneAABB.min -= margin;
+        sceneAABB.max += margin;
     }
 
     if (!octree)
     {
-        octree = std::make_unique<Octree>(sceneMin, sceneMax, 4, 5);
+        octree = std::make_unique<Octree>(sceneAABB.min, sceneAABB.max, 4, 5);
     }
     else
     {
         octree->Clear();
-        octree->Create(sceneMin, sceneMax, 4, 5);
+        octree->Create(sceneAABB.min, sceneAABB.max, 4, 5);
     }
 
     // Insert all game objects

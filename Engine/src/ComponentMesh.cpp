@@ -1,4 +1,5 @@
-﻿#include "ComponentMesh.h"
+﻿#include "AABB.h"
+#include "ComponentMesh.h"
 #include "ComponentMaterial.h"
 #include "GameObject.h"
 #include "Application.h"
@@ -15,12 +16,14 @@ ComponentMesh::ComponentMesh(GameObject* owner, ComponentType type)
 {
     attachedMaterial = (ComponentMaterial*)owner->GetComponent(ComponentType::MATERIAL);
     name = "Mesh";
+    Application::GetInstance().renderer->AddMesh(this);
 }
 
 ComponentMesh::~ComponentMesh()
 {
     attachedMaterial = nullptr;
     ReleaseCurrentMesh();
+    Application::GetInstance().renderer->RemoveMesh(this);
 
     // Clean up direct mesh GPU resources if present
     if (hasDirectMesh && directMesh.VAO != 0) {
@@ -139,6 +142,8 @@ void ComponentMesh::SetMesh(const Mesh& mesh)
         glBindVertexArray(0);
     }
 
+    UpdateStaticAABB();
+
     owner->PublishGameObjectEvent(GameObjectEvent::MESH_CHANGED, this);
 }
 
@@ -226,78 +231,26 @@ void ComponentMesh::Draw()
     }
 }
 
-glm::vec3 ComponentMesh::GetAABBMin() const
+const AABB& ComponentMesh::GetGlobalAABB() const
 {
-    const Mesh& mesh = GetMesh();
-
-    if (mesh.vertices.empty()) {
-        return glm::vec3(0.0f);
-    }
-
-    glm::vec3 minBounds(std::numeric_limits<float>::max());
-
-    for (const auto& vertex : mesh.vertices) {
-        minBounds.x = std::min(minBounds.x, vertex.position.x);
-        minBounds.y = std::min(minBounds.y, vertex.position.y);
-        minBounds.z = std::min(minBounds.z, vertex.position.z);
-    }
-
-    return minBounds;
+    return staticAABB.GetGlobalAABB(owner->transform->GetGlobalMatrix());
 }
 
-glm::vec3 ComponentMesh::GetAABBMax() const
+
+const AABB& ComponentMesh::GetAABB() const
 {
-    const Mesh& mesh = GetMesh();
-
-    if (mesh.vertices.empty()) {
-        return glm::vec3(0.0f);
-    }
-
-    glm::vec3 maxBounds(std::numeric_limits<float>::lowest());
-
-    for (const auto& vertex : mesh.vertices) {
-        maxBounds.x = std::max(maxBounds.x, vertex.position.x);
-        maxBounds.y = std::max(maxBounds.y, vertex.position.y);
-        maxBounds.z = std::max(maxBounds.z, vertex.position.z);
-    }
-
-    return maxBounds;
+    return staticAABB;
 }
 
-void ComponentMesh::GetWorldAABB(glm::vec3& outMin, glm::vec3& outMax) const
+void ComponentMesh::UpdateStaticAABB()
 {
-    glm::vec3 localMin = GetAABBMin();
-    glm::vec3 localMax = GetAABBMax();
+    staticAABB.SetNegativeInfinity();
+    
+    const Mesh& mesh = GetMesh();
+    if (!mesh.IsValid() || mesh.vertices.empty()) return;
 
-    Transform* transform = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
-
-    if (!transform) {
-        outMin = localMin;
-        outMax = localMax;
-        return;
-    }
-
-    // Transform all eight corners to world space
-    glm::mat4 globalMatrix = transform->GetGlobalMatrix();
-
-    glm::vec3 corners[8] = {
-        glm::vec3(globalMatrix * glm::vec4(localMin.x, localMin.y, localMin.z, 1.0f)),
-        glm::vec3(globalMatrix * glm::vec4(localMax.x, localMin.y, localMin.z, 1.0f)),
-        glm::vec3(globalMatrix * glm::vec4(localMin.x, localMax.y, localMin.z, 1.0f)),
-        glm::vec3(globalMatrix * glm::vec4(localMax.x, localMax.y, localMin.z, 1.0f)),
-        glm::vec3(globalMatrix * glm::vec4(localMin.x, localMin.y, localMax.z, 1.0f)),
-        glm::vec3(globalMatrix * glm::vec4(localMax.x, localMin.y, localMax.z, 1.0f)),
-        glm::vec3(globalMatrix * glm::vec4(localMin.x, localMax.y, localMax.z, 1.0f)),
-        glm::vec3(globalMatrix * glm::vec4(localMax.x, localMax.y, localMax.z, 1.0f))
-    };
-
-    // Compute world-space AABB from transformed corners
-    outMin = corners[0];
-    outMax = corners[0];
-
-    for (int i = 1; i < 8; ++i) {
-        outMin = glm::min(outMin, corners[i]);
-        outMax = glm::max(outMax, corners[i]);
+    for (const auto& vertex : mesh.vertices) {
+        staticAABB.Enclose(vertex.position);
     }
 }
 

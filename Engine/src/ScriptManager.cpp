@@ -21,6 +21,7 @@
 #include "EditorWindow.h"
 #include "ModuleEditor.h"
 #include "ConsoleWindow.h"
+#include "Application.h"
 
 #include <filesystem>
 #include <cmath>            
@@ -193,13 +194,13 @@ static int Lua_Input_GetKey(lua_State* L) {
 
     bool pressed = false;
 
-    if (strcmp(keyName, "W") == 0) pressed = Input::IsKeyPressed(SDL_SCANCODE_W);
-    else if (strcmp(keyName, "A") == 0) pressed = Input::IsKeyPressed(SDL_SCANCODE_A);
-    else if (strcmp(keyName, "S") == 0) pressed = Input::IsKeyPressed(SDL_SCANCODE_S);
-    else if (strcmp(keyName, "D") == 0) pressed = Input::IsKeyPressed(SDL_SCANCODE_D);
-    else if (strcmp(keyName, "Space") == 0) pressed = Input::IsKeyPressed(SDL_SCANCODE_SPACE);
-    else if (strcmp(keyName, "Q") == 0) pressed = Input::IsKeyPressed(SDL_SCANCODE_Q);
-    else if (strcmp(keyName, "E") == 0) pressed = Input::IsKeyPressed(SDL_SCANCODE_E);
+    if (strcmp(keyName, "W") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_W) == KEY_REPEAT;
+    else if (strcmp(keyName, "A") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT;
+    else if (strcmp(keyName, "S") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_S) == KEY_REPEAT;
+    else if (strcmp(keyName, "D") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_D) == KEY_REPEAT;
+    else if (strcmp(keyName, "Space") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_REPEAT;
+    else if (strcmp(keyName, "Q") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_Q) == KEY_REPEAT;
+    else if (strcmp(keyName, "E") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_E) == KEY_REPEAT;
 
     lua_pushboolean(L, pressed);
     return 1;
@@ -210,21 +211,23 @@ static int Lua_Input_GetKeyDown(lua_State* L) {
 
     bool pressed = false;
 
-    if (strcmp(keyName, "Space") == 0) pressed = Input::IsKeyDown(SDL_SCANCODE_SPACE);
-    else if (strcmp(keyName, "W") == 0) pressed = Input::IsKeyDown(SDL_SCANCODE_W);
-    else if (strcmp(keyName, "A") == 0) pressed = Input::IsKeyDown(SDL_SCANCODE_A);
-    else if (strcmp(keyName, "S") == 0) pressed = Input::IsKeyDown(SDL_SCANCODE_S);
-    else if (strcmp(keyName, "D") == 0) pressed = Input::IsKeyDown(SDL_SCANCODE_D);
-    else if (strcmp(keyName, "Q") == 0) pressed = Input::IsKeyDown(SDL_SCANCODE_Q);
-    else if (strcmp(keyName, "E") == 0) pressed = Input::IsKeyDown(SDL_SCANCODE_E);
+    if (strcmp(keyName, "Space") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN;
+    else if (strcmp(keyName, "W") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_W) == KEY_DOWN;
+    else if (strcmp(keyName, "A") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_A) == KEY_DOWN;
+    else if (strcmp(keyName, "S") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_S) == KEY_DOWN;
+    else if (strcmp(keyName, "D") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_D) == KEY_DOWN;
+    else if (strcmp(keyName, "Q") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_Q) == KEY_DOWN;
+    else if (strcmp(keyName, "E") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_E) == KEY_DOWN;
 
     lua_pushboolean(L, pressed);
     return 1;
 }
 
 static int Lua_Input_GetMousePosition(lua_State* L) {
-    int rawX, rawY;
-    Input::GetMousePosition(rawX, rawY);
+    
+    glm::vec2 raw = Application::GetInstance().input.get()->GetMousePosition();
+    int rawX = raw.x;
+    int rawY = raw.y;
 
     auto& app = Application::GetInstance();
 

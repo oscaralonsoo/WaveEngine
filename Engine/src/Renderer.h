@@ -14,17 +14,6 @@ class GameObject;
 class ComponentMesh;
 class CameraLens;
 
-// Transparent objects must be sorted and rendered back-to-front
-struct TransparentObject
-{
-    GameObject* gameObject;
-    float distanceToCamera;
-
-    TransparentObject(GameObject* obj, float dist)
-        : gameObject(obj), distanceToCamera(dist) {
-    };
-};
-
 class Renderer : public Module
 {
     struct RenderObject
@@ -52,26 +41,22 @@ public:
 
     // Mesh management
     void LoadMesh(Mesh& mesh);
-    void DrawMesh(const Mesh& mesh);
     void UnloadMesh(Mesh& mesh);
+    
+    void AddMesh(ComponentMesh* mesh);
+    void RemoveMesh(ComponentMesh* mesh);
+    void DrawMesh(const ComponentMesh* meshComp);
+
+    // Camera management
+    void AddCamera(CameraLens* camera);
+    void RemoveCamera(CameraLens* camera);
+
+    // Textures Management
     void LoadTexture(const std::string& path);
 
-    // Scene rendering
-    void DrawScene();
+    // Scene Rendering
     bool RenderScene(CameraLens* renderCamera);
-    void DrawScene(ComponentCamera* renderCamera, ComponentCamera* cullingCamera, bool drawEditorFeatures = true);
 
-    // Transparency handling
-    bool HasTransparency(GameObject* gameObject);
-    void CollectTransparentObjects(GameObject* gameObject,
-        std::vector<TransparentObject>& transparentObjects);
-
-    // Frustum culling
-    bool ShouldCullGameObject(GameObject* gameObject, const Frustum& frustum);
-
-    // Debug visualization
-    void DrawVertexNormals(const Mesh& mesh, const glm::mat4& modelMatrix);
-    void DrawFaceNormals(const Mesh& mesh, const glm::mat4& modelMatrix);
 
     void CreateSkinningSSBOs(unsigned int& ssboGlobal, unsigned int& ssboOffset, const std::vector<glm::mat4>& offsets);
     void UploadGlobalMatricesToGPU(unsigned int ssbo, const std::vector<glm::mat4>& globalMatrices);
@@ -84,8 +69,6 @@ public:
     Shader* GetLineShader() const { return lineShader.get(); }
 
     ComponentCamera* GetCamera();
-
-    void DrawCameraFrustum(ComponentCamera* camera, const glm::vec3& color);
 
     // Render configuration
     bool IsDepthTestEnabled() const { return depthTestEnabled; }
@@ -106,19 +89,6 @@ public:
     void SetLightDir(const glm::vec3& dir) { lightDir = dir; }
     glm::vec3 GetLightDir() const { return lightDir; }
 
-	// Framebuffer management (Scene window)
-    void CreateFramebuffer(int width, int height);
-    void ResizeFramebuffer(int width, int height);
-    void BindFramebuffer();
-    void UnbindFramebuffer();
-    GLuint GetSceneTexture() const { return sceneTexture; }
-
-    // Framebuffer management (Game window)
-    void CreateGameFramebuffer(int width, int height);
-    void ResizeGameFramebuffer(int width, int height);
-    void BindGameFramebuffer();
-    GLuint GetGameTexture() const { return gameTexture; }
-
     // zBuffer visualization
     bool IsShowingZBuffer() const { return showZBuffer; }
     void SetShowZBuffer(bool show) { showZBuffer = show; }
@@ -134,13 +104,7 @@ public:
     void UpdateViewMatrix(glm::mat4 viewMatrix);
 
 private:
-    // Internal rendering methods
-    void DrawGameObjectIterative(GameObject* gameObject,
-        bool renderTransparentOnly,
-        ComponentCamera* renderCamera,
-        ComponentCamera* cullingCamera);
-    void DrawGameObjectWithStencil(GameObject* gameObject);
-    void DrawLinesList(const ComponentCamera* camera);
+
     void ApplyRenderSettings();
 
     // Draw Functions
@@ -151,15 +115,14 @@ private:
     void DrawMeshLinesList(const CameraLens* camera);
     void BuildRenderLists(const CameraLens* camera);
 
-    //Checkers
-    bool IsGameObjectAndParentsActive(GameObject* gameObject) const;
-
     // Shaders
     std::unique_ptr<Shader> defaultShader;
     std::unique_ptr<Shader> waterShader;
     std::unique_ptr<Shader> lineShader;
     std::unique_ptr<Shader> outlineShader;
     std::unique_ptr<Shader> depthShader;
+    std::unique_ptr<Shader> normalsShader;
+    std::unique_ptr<Shader> meshShader;
 
     // Default assets
     std::unique_ptr<Texture> defaultTexture;
@@ -186,6 +149,8 @@ private:
         GLint view = -1;
         GLint model = -1;
         GLint texture1 = -1;
+        GLint hasBonesLoc = -1;
+        GLint meshInverseLoc = -1;
     } defaultUniforms, lineUniforms, outlineUniforms;
 
     // Framebuffer (Scene window)
@@ -205,18 +170,13 @@ private:
     // zBuffer visualization
     bool showZBuffer = false;
 
-    void DrawRay(const glm::vec3& origin, const glm::vec3& direction,
-        float length, const glm::vec3& color);
-    void DrawAABB(const glm::vec3& min, const glm::vec3& max,
-        const glm::vec3& color);
-    void DrawAllAABBs(GameObject* gameObject);
 
  
-    //SHADERS
+    // SHADERS
     unsigned int uboMatrices;
     unsigned int ssboBones;
 
-    //LISTS
+    // LISTS
     std::vector<ComponentMesh*> meshes;
     std::vector<CameraLens*> activeCameras;
 
