@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+add_definitions(-DNOMINMAX)
+
 find_package(SDL3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -90,6 +92,14 @@ set(PHYSICS_SRC
     src/PhysicsCooker.cpp
 )
 
+set(AUDIO_SRC
+    src/ModuleAudio.h
+    src/ModuleAudio.cpp
+    src/AudioSystem.h
+    src/AudioSystem.cpp
+    src/AudioUtility.h
+)
+
 set(UTILS_SRC 
     src/Globals.h 
     src/Log.cpp 
@@ -128,6 +138,13 @@ set(COMPONENTS_SRC
     src/ComponentRotate.h
     src/ComponentParticleSystem.h
     src/ComponentParticleSystem.cpp
+    src/AudioComponent.h
+    src/AudioSource.h
+    src/AudioSource.cpp
+    src/AudioListener.h
+    src/AudioListener.cpp
+    src/ReverbZone.h
+    src/ReverbZone.cpp
 )
 
 set(LOADERS_SRC 
@@ -211,6 +228,7 @@ set(NAVIGATION_SRC
 source_group("Source\\Core" FILES ${CORE_SRC})
 source_group("Source\\Rendering" FILES ${RENDERING_SRC})
 source_group("Source\\Rendering\\VFX" FILES ${VFX_SRC})
+source_group("Source\\Audio" FILES ${AUDIO_SRC})
 source_group("Source\\Utils" FILES ${UTILS_SRC})
 source_group("Source\\Utils\\Editor" FILES ${EDITOR_SRC})
 source_group("Source\\Game Objects" FILES ${GAMEOBJECTS_SRC})
@@ -240,5 +258,85 @@ target_link_libraries(Engine PRIVATE RecastNavigation::Recast)
 target_link_libraries(Engine PRIVATE RecastNavigation::Detour)
 target_link_libraries(Engine PRIVATE RecastNavigation::DetourCrowd)
 target_link_libraries(Engine PRIVATE ${LUA_LIBRARIES})
-
 target_include_directories(Engine PRIVATE ${LUA_INCLUDE_DIR})
+
+
+
+
+# ============= WWISE AUTO-DOWNLOAD =============
+set(WWISE_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/External/Wwise/SDK")
+
+# Check if Wwise libs exist (check soundengine file as indicator)
+if(NOT EXISTS "${WWISE_SDK_DIR}/x64_vc170/Debug/lib/AkSoundEngine.lib")
+    message(STATUS "Wwise SDK not found. Downloading...")
+    
+    file(DOWNLOAD 
+        "https://dl.dropboxusercontent.com/scl/fi/92fdn4rhlc3eim2a5p0ox/wwise_sdk.zip?rlkey=nob090idq4yw0h6v2ehpa7j6t&dl=1"
+        "${CMAKE_BINARY_DIR}/wwise_sdk.zip"
+        SHOW_PROGRESS
+        STATUS DOWNLOAD_STATUS
+    )
+    
+    list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+    if(NOT STATUS_CODE EQUAL 0)
+        message(FATAL_ERROR "Failed to download Wwise SDK. Please download manually from: [https://dl.dropboxusercontent.com/scl/fi/92fdn4rhlc3eim2a5p0ox/wwise_sdk.zip?rlkey=nob090idq4yw0h6v2ehpa7j6t&dl=1]")
+    endif()
+    
+    message(STATUS "Extracting Wwise SDK...")
+
+    file(ARCHIVE_EXTRACT 
+        INPUT "${CMAKE_BINARY_DIR}/wwise_sdk.zip"
+        DESTINATION "${WWISE_SDK_DIR}"
+    )
+    
+    message(STATUS "✓ Wwise SDK installed!")
+endif()
+
+# ============= END WWISE AUTO-DOWNLOAD =============
+
+
+set(WWISE_CONFIG_DIR $<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>$<$<CONFIG:Profile>:Profile>)
+set(WWISE_LIB_DIR "${WWISE_SDK_DIR}/x64_vc170/${WWISE_CONFIG_DIR}/lib")
+
+target_compile_definitions(Engine PRIVATE 
+    AK_WIN 
+    WIN32 
+    $<$<CONFIG:Debug>:_DEBUG>
+    $<$<CONFIG:Release>:AK_OPTIMIZED>
+)
+
+target_include_directories(Engine PRIVATE BEFORE
+    "${WWISE_SDK_DIR}/include"
+    "${WWISE_SDK_DIR}"
+    "${WWISE_SDK_DIR}/include/Common"
+    "${WWISE_SDK_DIR}/include/Win32"
+)
+
+set(WWISE_IO_SOURCES
+    "${WWISE_SDK_DIR}/include/Common/AkFileLocationBase.cpp"
+    "${WWISE_SDK_DIR}/include/Common/AkFilePackage.cpp"
+    "${WWISE_SDK_DIR}/include/Common/AkFilePackageLUT.cpp"
+    "${WWISE_SDK_DIR}/include/Common/AkMultipleFileLocation.cpp"
+    "${WWISE_SDK_DIR}/include/Win32/AkDefaultIOHookDeferred.cpp"
+)
+
+set_source_files_properties(${WWISE_IO_SOURCES} PROPERTIES 
+    COMPILE_DEFINITIONS "UNICODE;_UNICODE"
+)
+
+target_sources(Engine PRIVATE ${WWISE_IO_SOURCES})
+
+target_link_libraries(Engine PRIVATE 
+    "${WWISE_LIB_DIR}/AkSoundEngine.lib"
+    "${WWISE_LIB_DIR}/AkMemoryMgr.lib"
+    "${WWISE_LIB_DIR}/AkStreamMgr.lib"
+    "${WWISE_LIB_DIR}/AkSpatialAudio.lib"
+    "${WWISE_SDK_DIR}/x64_vc170/${WWISE_CONFIG_DIR}/lib/CommunicationCentral.lib"
+    "${WWISE_LIB_DIR}/AkRoomVerbFX.lib"
+    ws2_32.lib 
+    mswsock.lib 
+    dinput8.lib 
+    dsound.lib 
+    dxguid.lib
+)
+

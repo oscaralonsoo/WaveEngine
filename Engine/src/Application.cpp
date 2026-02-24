@@ -13,6 +13,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     renderer = std::make_shared<Renderer>();
     scene = std::make_shared<ModuleScene>();
     camera = std::make_shared<ModuleCamera>();
+    audio = std::make_shared<ModuleAudio>();
     editor = std::make_shared<ModuleEditor>();
     filesystem = std::make_shared<FileSystem>();
     time = std::make_shared<Time>();
@@ -22,12 +23,14 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     physics = std::make_shared<ModulePhysics>();  
     navMesh = std::make_shared<ModuleNavMesh>();
 
+    
     AddModule(std::static_pointer_cast<Module>(window));
     AddModule(std::static_pointer_cast<Module>(input));
     AddModule(std::static_pointer_cast<Module>(physics));
     AddModule(std::static_pointer_cast<Module>(renderContext));
     AddModule(std::static_pointer_cast<Module>(scene));
     AddModule(std::static_pointer_cast<Module>(camera));
+    AddModule(std::static_pointer_cast<Module>(audio));
     AddModule(std::static_pointer_cast<Module>(editor));
     AddModule(std::static_pointer_cast<Module>(resources));
     AddModule(std::static_pointer_cast<Module>(scripts)); 
@@ -208,12 +211,16 @@ void Application::Play()
 
     playState = PlayState::PLAYING;
     time->Resume();
+    AK::SoundEngine::WakeupFromSuspend();
 }
 
 void Application::Pause()
 {
     playState = PlayState::PAUSED;
+    
     time->Pause();
+
+    AK::SoundEngine::Suspend();
 }
 
 void Application::Stop()
@@ -237,6 +244,7 @@ void Application::Stop()
     playState = PlayState::EDITING;
     time->Reset();
     time->Pause();
+    audio->audioSystem->StopAllAudio();
 }
 
 void Application::Step()
@@ -276,6 +284,8 @@ bool Application::CleanUp()
     physics.reset();
     input.reset();
     window.reset();
+    resources.reset();
+    audio.reset();
 
     delete selectionManager;
     selectionManager = nullptr;

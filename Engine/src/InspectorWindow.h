@@ -4,6 +4,7 @@
 #include <imgui.h>  
 #include <ImGuizmo.h>
 #include <vector>
+#include "AudioSystem.h"
 
 class GameObject;
 
@@ -45,10 +46,15 @@ private:
     void DrawMeshColliderComponent(GameObject* selectedObject);
     void DrawConvexColliderComponent(GameObject* selectedObject);
     void DrawNavigationSection(GameObject* selectedObject);
+    void DrawAudioSourceComponent(GameObject* selectedObject);
+    void DrawAudioListenerComponent(GameObject* selectedObject);
+    void DrawReverbZoneComponent(GameObject* selectedObject); 
 
     // Helper methods
     void GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects);
     bool IsDescendantOf(GameObject* potentialDescendant, GameObject* potentialAncestor);
+
+    AudioSystem* audioSystem;
 
     // Gizmo state
     ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;

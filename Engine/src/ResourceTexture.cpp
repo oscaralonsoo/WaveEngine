@@ -86,9 +86,7 @@ bool ResourceTexture::LoadInMemory() {
 
     // Upload texture data to GPU
     GLenum format = (textureData.channels == 4) ? GL_RGBA : GL_RGB;
-    glTexImage2D(GL_TEXTURE_2D, 0, format,
-        textureData.width, textureData.height,
-        0, format, GL_UNSIGNED_BYTE, textureData.pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, textureData.width, textureData.height,0, format, GL_UNSIGNED_BYTE, textureData.pixels);
 
     // Check for OpenGL errors
     GLenum error = glGetError();

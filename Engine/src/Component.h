@@ -32,6 +32,9 @@ enum class ComponentType {
     PRISMATIC_JOINT,
     SPHERICAL_JOINT,
     NAVIGATION,
+    LISTENER,
+    AUDIOSOURCE,
+    REVERBZONE,
     UNKNOWN
 };
 

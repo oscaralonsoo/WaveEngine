@@ -14,7 +14,7 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-enum class TokenType
+enum class ScriptTokenType
 {
     NONE,
     KEYWORD,
@@ -142,9 +142,9 @@ private:
 
     // Syntax highlighting
     void InitializeLuaKeywords();
-    ImVec4 GetColorForToken(TokenType type);
+    ImVec4 GetColorForToken(ScriptTokenType type);
     void RenderTextWithSyntaxHighlighting(const std::string& text, int lineNumber, ImVec2 startPos);
-    TokenType IdentifyToken(const std::string& token);
+    ScriptTokenType IdentifyToken(const std::string& token);
     bool IsLuaKeyword(const std::string& word);
     bool IsLuaFunction(const std::string& word);
 

@@ -18,6 +18,7 @@
 #include "ScriptManager.h"  
 #include "ModulePhysics.h"
 #include "NavMeshManager.h"
+#include "ModuleAudio.h"
 
 class Module;
 
@@ -64,16 +65,20 @@ public:
     std::shared_ptr<Input> input;
     std::shared_ptr<RenderContext> renderContext;
     std::shared_ptr<Renderer> renderer;
+    
     std::shared_ptr<FileSystem> filesystem;
+    
     std::shared_ptr<Time> time;
     std::shared_ptr<ModuleScene> scene;
     std::shared_ptr<ModuleCamera> camera;
     std::shared_ptr<ModuleEditor> editor;
+    std::shared_ptr<ModuleAudio> audio;
     std::shared_ptr<Grid> grid;
     std::shared_ptr<ModuleResources> resources;
     std::shared_ptr<ScriptManager> scripts; 
     std::shared_ptr<ModuleNavMesh> navMesh;
     std::shared_ptr<ModulePhysics> physics; 
+    
 
     SelectionManager* selectionManager;
 

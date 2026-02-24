@@ -1,3 +1,10 @@
 Engine/build/
 Engine/Library/
 Engine/CMakeUserPresets.json
+
+Engine/External
+
+#wwise user-specific files
+*.prof
+*.validationcache
+*.wsettings

@@ -23,6 +23,7 @@ private:
     void DrawWindowSettings();
     void DrawCameraSettings();
     void DrawRendererSettings();
+    void DrawAudioVolumeSettings();
 
     // FPS tracking
     std::vector<float> fpsHistory;
@@ -39,6 +40,11 @@ private:
     float cameraScrollSpeed = 0.5f;
     float cameraFOV = 45.0f;
     float cameraPanSensitivity = 0.003f;
+
+    //Audio volume settings state
+    bool showAudioVolumeWindow = true;
+    float musicVolume = 100.0f;
+    float sfxVolume = 100.0f;
 
     // Debug visualization
     bool showAABB = false;

@@ -192,6 +192,26 @@ const glm::mat4& Transform::GetGlobalMatrix()
     return globalMatrix;
 }
 
+glm::mat4 Transform::GetWorldMatrixRecursive() {
+    //Force this local matrix to update if dirty
+    if (localDirty) {
+        UpdateLocalMatrix();
+    }
+
+    GameObject* parent = owner->GetParent();
+    if (parent != nullptr) {
+        Transform* parentTransform = static_cast<Transform*>(parent->GetComponent(ComponentType::TRANSFORM));
+        if (parentTransform != nullptr) {
+            // Recursively get the parent's world matrix
+            //bypasses the 'globalDirty' flag and forces a fresh calculation
+            return parentTransform->GetWorldMatrixRecursive() * localMatrix;
+        }
+    }
+
+    // If no parent, local is world
+    return localMatrix;
+}
+
 void Transform::UpdateLocalMatrix()
 {
     glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), position);

@@ -22,6 +22,11 @@
 #include "HingeJoint.h"
 #include "ComponentParticleSystem.h"
 #include "ComponentNavigation.h"
+#include "ComponentRotate.h"
+#include "AudioComponent.h"
+#include "AudioSource.h"
+#include "AudioListener.h"
+#include "ReverbZone.h"
 #include <nlohmann/json.hpp>
 
 GameObject::GameObject(const std::string& name) : name(name), active(true), parent(nullptr) {
@@ -62,6 +67,12 @@ Component* GameObject::CreateComponent(ComponentType type) {
         }
         newComponent = new ComponentMaterial(this);
         break;
+    case ComponentType::AUDIOSOURCE:
+        newComponent = new AudioSource(this);
+        break;
+    case ComponentType::LISTENER:
+        newComponent = new AudioListener(this);
+        break;
     case ComponentType::CAMERA:
         if (GetComponent(ComponentType::CAMERA) != nullptr) {
             return GetComponent(ComponentType::CAMERA);
@@ -70,6 +81,9 @@ Component* GameObject::CreateComponent(ComponentType type) {
         break;
     case ComponentType::ROTATE:
         newComponent = new ComponentRotate(this);
+        break;
+    case ComponentType::REVERBZONE:
+        newComponent = new ReverbZone(this);
         break;
     case ComponentType::SCRIPT:
         newComponent = new ComponentScript(this);

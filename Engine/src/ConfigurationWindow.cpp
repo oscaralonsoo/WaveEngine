@@ -43,6 +43,13 @@ void ConfigurationWindow::Draw()
 
     ImGui::Separator();
 
+    if (ImGui::CollapsingHeader("Audio")) {
+
+        DrawAudioVolumeSettings();
+    }
+
+    ImGui::Separator();
+
     if (ImGui::CollapsingHeader("Renderer"))
     {
         DrawRendererSettings();
@@ -335,6 +342,48 @@ void ConfigurationWindow::DrawCameraSettings()
     }
 
     ImGui::Separator();
+}
+
+void ConfigurationWindow::DrawAudioVolumeSettings() {
+    
+    
+    ImGui::Text("Audio Volume Settings");
+    ImGui::Spacing();
+    ImGui::Separator();
+
+    ImGui::Text("Music Volume");
+    if (ImGui::SliderFloat("##MusicVolume", &musicVolume, 0.0f, 100.0f, "%.2f"))
+    {
+        if (Application::GetInstance().audio)
+            Application::GetInstance().audio->SetMusicVolume(musicVolume);
+    }
+
+    ImGui::Text("SFX Volume");
+    if (ImGui::SliderFloat("##SFXVolume", &sfxVolume, 0.0f, 100.0f, "%.2f"))
+    {
+        if (Application::GetInstance().audio)
+            Application::GetInstance().audio->SetSFXVolume(sfxVolume);
+    }
+
+    /*if (ImGui::Button("Mute"))
+    {
+            sfxVolume01 = 0.0f;
+            if (Application::GetInstance().audio)
+                Application::GetInstance().audio->SetSfxVolume(sfxVolume01);
+    }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Max"))
+        {
+            sfxVolume01 = 1.0f;
+            if (Application::GetInstance().audio)
+                Application::GetInstance().audio->SetSfxVolume(sfxVolume01);
+    }*/
+
+    ImGui::Spacing();
+
+    
 }
 
 void ConfigurationWindow::DrawRendererSettings()

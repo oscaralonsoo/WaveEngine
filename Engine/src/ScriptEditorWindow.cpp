@@ -735,12 +735,12 @@ void ScriptEditorWindow::RenderTextWithSyntaxHighlighting(const std::string& tex
     auto flushToken = [&]() {
         if (currentToken.empty()) return;
 
-        TokenType type = TokenType::IDENTIFIER;
+        ScriptTokenType type = ScriptTokenType::IDENTIFIER;
 
         if (inComment)
-            type = TokenType::COMMENT;
+            type = ScriptTokenType::COMMENT;
         else if (inString)
-            type = TokenType::STRING;
+            type = ScriptTokenType::STRING;
         else
             type = IdentifyToken(currentToken);
 
@@ -824,12 +824,12 @@ void ScriptEditorWindow::RenderTextWithSyntaxHighlighting(const std::string& tex
     flushToken();
 }
 
-TokenType ScriptEditorWindow::IdentifyToken(const std::string& token)
+ScriptTokenType ScriptEditorWindow::IdentifyToken(const std::string& token)
 {
-    if (token.empty()) return TokenType::NONE;
+    if (token.empty()) return ScriptTokenType::NONE;
 
-    if (IsLuaKeyword(token)) return TokenType::KEYWORD;
-    if (IsLuaFunction(token)) return TokenType::FUNCTION;
+    if (IsLuaKeyword(token)) return ScriptTokenType::KEYWORD;
+    if (IsLuaFunction(token)) return ScriptTokenType::FUNCTION;
 
     bool isNumber = true;
     bool hasDot = false;
@@ -840,11 +840,11 @@ TokenType ScriptEditorWindow::IdentifyToken(const std::string& token)
         if (c == '.' && !hasDot) { hasDot = true; continue; }
         if (!std::isdigit(c)) { isNumber = false; break; }
     }
-    if (isNumber && token != "-" && token != "+") return TokenType::NUMBER;
+    if (isNumber && token != "-" && token != "+") return ScriptTokenType::NUMBER;
 
-    if (token.length() == 1 && std::ispunct(token[0])) return TokenType::OPERATOR;
+    if (token.length() == 1 && std::ispunct(token[0])) return ScriptTokenType::OPERATOR;
 
-    return TokenType::IDENTIFIER;
+    return ScriptTokenType::IDENTIFIER;
 }
 
 bool ScriptEditorWindow::IsLuaKeyword(const std::string& word)
@@ -857,16 +857,16 @@ bool ScriptEditorWindow::IsLuaFunction(const std::string& word)
     return luaBuiltinFunctions.find(word) != luaBuiltinFunctions.end();
 }
 
-ImVec4 ScriptEditorWindow::GetColorForToken(TokenType type)
+ImVec4 ScriptEditorWindow::GetColorForToken(ScriptTokenType type)
 {
     switch (type)
     {
-    case TokenType::KEYWORD:    return colorKeyword;
-    case TokenType::FUNCTION:   return colorFunction;
-    case TokenType::STRING:     return colorString;
-    case TokenType::NUMBER:     return colorNumber;
-    case TokenType::COMMENT:    return colorComment;
-    case TokenType::OPERATOR:   return colorOperator;
+    case ScriptTokenType::KEYWORD:    return colorKeyword;
+    case ScriptTokenType::FUNCTION:   return colorFunction;
+    case ScriptTokenType::STRING:     return colorString;
+    case ScriptTokenType::NUMBER:     return colorNumber;
+    case ScriptTokenType::COMMENT:    return colorComment;
+    case ScriptTokenType::OPERATOR:   return colorOperator;
     default:                    return colorIdentifier;
     }
 }
