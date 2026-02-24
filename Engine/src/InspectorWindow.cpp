@@ -49,7 +49,8 @@ static glm::vec3 JointQuatToEuler(const glm::quat& q) {
 static glm::quat JointEulerToQuat(const glm::vec3& deg) {
     return glm::quat(glm::radians(deg));
 }
-static void DrawComponentContextMenu(Component* component, bool canRemove = true)
+
+void InspectorWindow::DrawComponentContextMenu(Component* component, bool canRemove)
 {
     if (ImGui::BeginPopupContextItem())
     {
@@ -71,7 +72,7 @@ static void DrawComponentContextMenu(Component* component, bool canRemove = true
             ImGui::Separator();
             if (ImGui::MenuItem("Remove Component"))
             {
-                component->markedForRemoval = true;
+                m_PendingRemoval.push_back(component);
             }
         }
 
@@ -174,33 +175,37 @@ void InspectorWindow::Draw()
     }
 
     m_WasAnyItemActive = isAnyActive;
-
+    
+    auto skip = [&](ComponentType t) -> bool {
+        Component* c = selectedObject->GetComponent(t);
+        return c && IsPendingRemoval(c);
+        };
 
     DrawTransformComponent(selectedObject);
-    DrawCameraComponent(selectedObject);
-    DrawMeshComponent(selectedObject);
-    DrawMaterialComponent(selectedObject);
-    DrawRotateComponent(selectedObject);
-    DrawScriptComponent(selectedObject); 
-    DrawParticleComponent(selectedObject);
-    DrawRigidodyComponent(selectedObject);
-    DrawBoxColliderComponent(selectedObject);
-    DrawSphereColliderComponent(selectedObject);
-    DrawCapsuleColliderComponent(selectedObject);
-    DrawPlaneColliderComponent(selectedObject);
-    DrawInfinitePlaneColliderComponent(selectedObject);
-    DrawMeshColliderComponent(selectedObject);
-    DrawConvexColliderComponent(selectedObject);
-    DrawCanvasComponent(selectedObject);
+    if (!skip(ComponentType::CAMERA))                   DrawCameraComponent(selectedObject);
+    if (!skip(ComponentType::MESH))                     DrawMeshComponent(selectedObject);
+    if (!skip(ComponentType::MATERIAL))                 DrawMaterialComponent(selectedObject);
+    if (!skip(ComponentType::ROTATE))                   DrawRotateComponent(selectedObject);
+    if (!skip(ComponentType::SCRIPT))                   DrawScriptComponent(selectedObject);
+    if (!skip(ComponentType::PARTICLE))                 DrawParticleComponent(selectedObject);
+    if (!skip(ComponentType::RIGIDBODY))                DrawRigidodyComponent(selectedObject);
+    if (!skip(ComponentType::BOX_COLLIDER))             DrawBoxColliderComponent(selectedObject);
+    if (!skip(ComponentType::SPHERE_COLLIDER))          DrawSphereColliderComponent(selectedObject);
+    if (!skip(ComponentType::CAPSULE_COLLIDER))         DrawCapsuleColliderComponent(selectedObject);
+    if (!skip(ComponentType::PLANE_COLLIDER))           DrawPlaneColliderComponent(selectedObject);
+    if (!skip(ComponentType::INFINITE_PLANE_COLLIDER))  DrawInfinitePlaneColliderComponent(selectedObject);
+    if (!skip(ComponentType::MESH_COLLIDER))            DrawMeshColliderComponent(selectedObject);
+    if (!skip(ComponentType::CONVEX_COLLIDER))          DrawConvexColliderComponent(selectedObject);
+    if (!skip(ComponentType::CANVAS))                   DrawCanvasComponent(selectedObject);
+    if (!skip(ComponentType::LISTENER))                 DrawAudioListenerComponent(selectedObject);
+    if (!skip(ComponentType::FIXED_JOINT))              DrawFixedJointComponent(selectedObject);
+    if (!skip(ComponentType::DISTANCE_JOINT))           DrawDistanceJointComponent(selectedObject);
+    if (!skip(ComponentType::HINGE_JOINT))              DrawHingeJointComponent(selectedObject);
+    if (!skip(ComponentType::SPHERICAL_JOINT))          DrawSphericalJointComponent(selectedObject);
+    if (!skip(ComponentType::PRISMATIC_JOINT))          DrawPrismaticJointComponent(selectedObject);
+    if (!skip(ComponentType::D6_JOINT))                 DrawD6JointComponent(selectedObject);
     DrawAudioSourceComponent(selectedObject);
-    DrawAudioListenerComponent(selectedObject);
     DrawReverbZoneComponent(selectedObject);
-    DrawFixedJointComponent(selectedObject);
-    DrawDistanceJointComponent(selectedObject);
-    DrawHingeJointComponent(selectedObject);
-    DrawSphericalJointComponent(selectedObject);
-    DrawPrismaticJointComponent(selectedObject);
-    DrawD6JointComponent(selectedObject);
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -208,31 +213,22 @@ void InspectorWindow::Draw()
 
     DrawAddComponentButton(selectedObject);
 
-    //handle components removal in inspector
-    std::vector<Component*> componentsToRemove;
-    for (Component* comp : selectedObject->GetComponents())
+    for (Component* comp : m_PendingRemoval)
     {
-        if (comp->markedForRemoval) {
-            componentsToRemove.push_back(comp);
-            if (comp->GetType() == ComponentType::AUDIOSOURCE) {
-                AudioSource* source = static_cast<AudioSource*>(comp);
-
-                std::wstring wideName(source->eventName.begin(), source->eventName.end());
-                AkUniqueID eventID = AK::SoundEngine::GetIDFromString(wideName.c_str());
-
-                if (eventID != AK_INVALID_UNIQUE_ID) {
-                    Application::GetInstance().audio->StopAudio(source, eventID);
-                }
-            }
+        if (comp->GetType() == ComponentType::AUDIOSOURCE)
+        {
+            AudioSource* source = static_cast<AudioSource*>(comp);
+            std::wstring wideName(source->eventName.begin(), source->eventName.end());
+            AkUniqueID eventID = AK::SoundEngine::GetIDFromString(wideName.c_str());
+            if (eventID != AK_INVALID_UNIQUE_ID)
+                Application::GetInstance().audio->StopAudio(source, eventID);
         }
-    }
-    for (Component* comp : componentsToRemove)
-    {
-        comp->markedForRemoval = false;
+
         Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
             std::make_unique<RemoveComponentCommand>(selectedObject, comp)
         );
     }
+    m_PendingRemoval.clear();
 
     ImGui::End();
 }
@@ -1268,21 +1264,19 @@ void InspectorWindow::DrawCanvasComponent(GameObject* selectedObject)
         }
     }
 }
-void InspectorWindow::DrawAudioSourceComponent(GameObject* selectedObject) {
+void InspectorWindow::DrawAudioSourceComponent(GameObject* selectedObject)
+{
+    for (const auto& comp : selectedObject->GetComponents()) {
+        if (comp->GetType() != ComponentType::AUDIOSOURCE) continue;
+        if (IsPendingRemoval(comp)) continue;
 
-    for(const auto& comp: selectedObject->GetComponents()) {
-        if (comp->GetType() == ComponentType::AUDIOSOURCE) {
-            
-            AudioSource* source = static_cast<AudioSource*>(comp);
-            std::string popupID = source->name + "ComponentPopup##" + std::to_string((uintptr_t)comp);
-            ImGui::PushID(popupID.c_str());
-            bool open = ImGui::CollapsingHeader(source->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-            DrawComponentContextMenu(source);
-            if (open) {
-                source->OnEditor();
-            }
-            ImGui::PopID();
-        }
+        AudioSource* source = static_cast<AudioSource*>(comp);
+        std::string popupID = source->name + "ComponentPopup##" + std::to_string((uintptr_t)comp);
+        ImGui::PushID(popupID.c_str());
+        bool open = ImGui::CollapsingHeader(source->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+        DrawComponentContextMenu(source);
+        if (open) source->OnEditor();
+        ImGui::PopID();
     }
 }
 
@@ -1300,18 +1294,16 @@ void InspectorWindow::DrawAudioListenerComponent(GameObject* selectedObject) {
 void InspectorWindow::DrawReverbZoneComponent(GameObject* selectedObject)
 {
     for (const auto& comp : selectedObject->GetComponents()) {
-        if (comp->GetType() == ComponentType::REVERBZONE) {
+        if (comp->GetType() != ComponentType::REVERBZONE) continue;
+        if (IsPendingRemoval(comp)) continue;
 
-            ReverbZone* zone = static_cast<ReverbZone*>(comp);
-            std::string popupID = zone->name + "ComponentPopup##" + std::to_string((uintptr_t)comp);
-            ImGui::PushID(popupID.c_str());
-            bool open = ImGui::CollapsingHeader(zone->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-            DrawComponentContextMenu(zone);
-            if (open) {
-                zone->OnEditor();
-            }
-            ImGui::PopID();
-        }
+        ReverbZone* zone = static_cast<ReverbZone*>(comp);
+        std::string popupID = zone->name + "ComponentPopup##" + std::to_string((uintptr_t)comp);
+        ImGui::PushID(popupID.c_str());
+        bool open = ImGui::CollapsingHeader(zone->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+        DrawComponentContextMenu(zone);
+        if (open) zone->OnEditor();
+        ImGui::PopID();
     }
 }
 
@@ -1620,6 +1612,11 @@ bool InspectorWindow::IsDescendantOf(GameObject* potentialDescendant, GameObject
     }
 
     return false;
+}
+
+bool InspectorWindow::IsPendingRemoval(Component* comp) const
+{
+    return std::find(m_PendingRemoval.begin(), m_PendingRemoval.end(), comp) != m_PendingRemoval.end();
 }
 
 void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
