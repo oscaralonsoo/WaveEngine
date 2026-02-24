@@ -20,7 +20,7 @@
 #include "NsGui/IView.h"
 #include "NsGui/FrameworkElement.h"
 #include "NsGui/IntegrationAPI.h"
-#include "NsGui/InputEnums.h" 
+#include "NsGui/InputEnums.h"
 
 extern "C" void NsRegisterReflectionAppInteractivity();
 extern "C" void NsInitPackageAppInteractivity();
@@ -54,9 +54,7 @@ bool UI::Start()
 bool UI::CleanUp()
 {
     for (ComponentCanvas* c : canvas)
-    {
         c->CleanUp();
-    }
     canvas.clear();
 
     NsShutdownPackageAppInteractivity();
@@ -66,6 +64,8 @@ bool UI::CleanUp()
     return true;
 }
 
+//Mouse input handling
+
 void UI::SetMousePosition(int x, int y)
 {
     mouseX = x;
@@ -74,7 +74,7 @@ void UI::SetMousePosition(int x, int y)
         c->OnMouseMove(x, y);
 }
 
-static Noesis::MouseButton SDLButtonToNoesis(int sdlButton)
+static Noesis::MouseButton SDLMouseButtonToNoesis(int sdlButton)
 {
     switch (sdlButton)
     {
@@ -88,19 +88,80 @@ static Noesis::MouseButton SDLButtonToNoesis(int sdlButton)
 void UI::OnMouseButtonDown(int x, int y, int sdlButton)
 {
     for (ComponentCanvas* c : canvas)
-        c->OnMouseButtonDown(x, y, SDLButtonToNoesis(sdlButton));
+        c->OnMouseButtonDown(x, y, SDLMouseButtonToNoesis(sdlButton));
 }
 
 void UI::OnMouseButtonUp(int x, int y, int sdlButton)
 {
     for (ComponentCanvas* c : canvas)
-        c->OnMouseButtonUp(x, y, SDLButtonToNoesis(sdlButton));
+        c->OnMouseButtonUp(x, y, SDLMouseButtonToNoesis(sdlButton));
 }
-void UI::OnMouseWheel(int x, int y, int delta) {
+
+void UI::OnMouseWheel(int x, int y, int delta)
+{
     for (ComponentCanvas* c : canvas)
         c->OnMouseWheel(x, y, delta);
 }
-void UI::OnResize(uint32_t width, uint32_t height) {
+
+void UI::OnResize(uint32_t width, uint32_t height)
+{
     for (ComponentCanvas* c : canvas)
         c->Resize((int)width, (int)height);
+}
+
+//Gamepad input handling
+static Noesis::Key SDLGamepadButtonToNoesisKey(int sdlButton)
+{
+    switch (sdlButton)
+    {
+    case SDL_GAMEPAD_BUTTON_SOUTH:          return Noesis::Key_GamepadAccept;
+    case SDL_GAMEPAD_BUTTON_EAST:           return Noesis::Key_GamepadCancel;
+    case SDL_GAMEPAD_BUTTON_WEST:           return Noesis::Key_GamepadMenu;
+    case SDL_GAMEPAD_BUTTON_NORTH:          return Noesis::Key_GamepadView;
+    case SDL_GAMEPAD_BUTTON_DPAD_UP:        return Noesis::Key_GamepadUp;
+    case SDL_GAMEPAD_BUTTON_DPAD_DOWN:      return Noesis::Key_GamepadDown;
+    case SDL_GAMEPAD_BUTTON_DPAD_LEFT:      return Noesis::Key_GamepadLeft;
+    case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:     return Noesis::Key_GamepadRight;
+    case SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:  return Noesis::Key_GamepadPageLeft;
+    case SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER: return Noesis::Key_GamepadPageRight;
+    case SDL_GAMEPAD_BUTTON_LEFT_STICK:     return Noesis::Key_GamepadPageUp;
+    case SDL_GAMEPAD_BUTTON_RIGHT_STICK:    return Noesis::Key_GamepadPageDown;
+    case SDL_GAMEPAD_BUTTON_START:          return Noesis::Key_GamepadContext1;
+    case SDL_GAMEPAD_BUTTON_BACK:           return Noesis::Key_GamepadContext2;
+    default:                                return Noesis::Key_None;
+    }
+}
+
+void UI::OnGamepadButtonDown(int sdlButton)
+{
+    Noesis::Key key = SDLGamepadButtonToNoesisKey(sdlButton);
+    if (key == Noesis::Key_None) return;
+    for (ComponentCanvas* c : canvas)
+        c->OnGamepadButtonDown(key);
+}
+
+void UI::OnGamepadButtonUp(int sdlButton)
+{
+    Noesis::Key key = SDLGamepadButtonToNoesisKey(sdlButton);
+    if (key == Noesis::Key_None) return;
+    for (ComponentCanvas* c : canvas)
+        c->OnGamepadButtonUp(key);
+}
+
+void UI::OnGamepadLeftStick(float x, float y)
+{
+    for (ComponentCanvas* c : canvas)
+        c->OnGamepadLeftStick(x, y);
+}
+
+void UI::OnGamepadRightStick(float x, float y)
+{
+    for (ComponentCanvas* c : canvas)
+        c->OnGamepadRightStick(x, y);
+}
+
+void UI::OnGamepadTrigger(float left, float right)
+{
+    for (ComponentCanvas* c : canvas)
+        c->OnGamepadTrigger(left, right);
 }

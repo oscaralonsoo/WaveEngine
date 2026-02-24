@@ -17,6 +17,7 @@
 #include "NsGui/IView.h"
 #include "NsGui/FrameworkElement.h"
 #include "NsGui/IntegrationAPI.h"
+#include <NsApp/GamepadTrigger.h>
 
 ComponentCanvas::ComponentCanvas(GameObject* owner) : Component(owner, ComponentType::CANVAS)
 {
@@ -29,12 +30,7 @@ ComponentCanvas::ComponentCanvas(GameObject* owner) : Component(owner, Component
 ComponentCanvas::~ComponentCanvas()
 {
     Application::GetInstance().ui->UnregisterCanvas(this);
-
-    if (view)
-    {
-        view->GetRenderer()->Shutdown();
-        view.Reset();
-    }
+    ShutdownView();               
     device.Reset();
 
     if (fbo) glDeleteFramebuffers(1, &fbo);
@@ -42,53 +38,88 @@ ComponentCanvas::~ComponentCanvas()
     if (rbo) glDeleteRenderbuffers(1, &rbo);
 }
 
+void ComponentCanvas::ShutdownView()
+{
+    if (!view) return;
+    view->GetRenderer()->Shutdown();
+    view.Reset();
+}
+
 void ComponentCanvas::CleanUp()
 {
-    if (view)
-    {
-        view->GetRenderer()->Shutdown();
-        view.Reset();
-    }
+    ShutdownView();                   
     device.Reset();
 }
 
 bool ComponentCanvas::LoadXAML(const char* filename)
 {
+    if (currentXAML == filename)
+        return true;
+
     Noesis::Ptr<Noesis::FrameworkElement> xaml =
         Noesis::GUI::LoadXaml<Noesis::FrameworkElement>(filename);
 
     if (!xaml) return false;
 
-    if (view)
-    {
-        view->GetRenderer()->Shutdown();
-        view.Reset();
-    }
+    ShutdownView();  
 
     view = Noesis::GUI::CreateView(xaml);
     view->SetFlags(Noesis::RenderFlags_PPAA | Noesis::RenderFlags_LCD);
     view->SetSize(width, height);
 
     device = Application::GetInstance().ui->GetRenderDevice();
-
     view->GetRenderer()->Init(device);
 
     currentXAML = filename;
+    view->Activate();
     return true;
 }
 
 void ComponentCanvas::Update()
 {
     if (!view) return;
+    double dt = Application::GetInstance().time->GetRealDeltaTime();
     view->Update(Application::GetInstance().time->GetTotalTime());
+
+
+    const bool stickActive = (fabs(stickX) >= STICK_THRESHOLD || fabs(stickY) >= STICK_THRESHOLD);
+    if (stickActive)
+    {
+        if (!stickInitialFired)
+        {
+            TryNavigateStick(stickX, stickY);
+            stickInitialFired = true;
+            stickRepeatTimer = 0.0;
+        }
+        else if (stickRepeatTimer < STICK_INITIAL_DELAY)
+        {
+            stickRepeatTimer += dt;
+        }
+        else
+        {
+            stickRepeatTimer += dt;
+            while (stickRepeatTimer >= STICK_INITIAL_DELAY + STICK_REPEAT_RATE)
+            {
+                TryNavigateStick(stickX, stickY);
+                stickRepeatTimer -= STICK_REPEAT_RATE;
+            }
+        }
+    }
+    else
+    {
+        stickInitialFired = false;
+        stickRepeatTimer = 0.0;
+    }
 }
 
 void ComponentCanvas::RenderToTexture()
 {
     if (!view) return;
 
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-    glPushAttrib(GL_ALL_ATTRIB_BITS);	//Save current OpenGL state
+    view->GetRenderer()->UpdateRenderTree();
+    view->GetRenderer()->RenderOffscreen();
 
     GLint prevFBO = 0;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
@@ -100,14 +131,12 @@ void ComponentCanvas::RenderToTexture()
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    view->GetRenderer()->UpdateRenderTree();
-    view->GetRenderer()->RenderOffscreen();
     view->GetRenderer()->Render();
 
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
     glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
 
-	glPopAttrib(); //Restore previous OpenGL state
+    glPopAttrib();
 }
 
 void ComponentCanvas::Resize(int newWidth, int newHeight)
@@ -146,63 +175,106 @@ void ComponentCanvas::GenerateFramebuffer(int w, int h)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+// Mouse Input handling
 void ComponentCanvas::OnMouseMove(int x, int y)
 {
     if (!view) return;
     view->MouseMove(x, y);
 }
-
 void ComponentCanvas::OnMouseButtonDown(int x, int y, Noesis::MouseButton button)
 {
     if (!view) return;
     view->MouseButtonDown(x, y, button);
 }
-
 void ComponentCanvas::OnMouseButtonUp(int x, int y, Noesis::MouseButton button)
 {
     if (!view) return;
     view->MouseButtonUp(x, y, button);
 }
-void ComponentCanvas::OnMouseWheel(int x, int y, int delta) {
+void ComponentCanvas::OnMouseWheel(int x, int y, int delta)
+{
     if (!view) return;
     view->MouseWheel(x, y, delta);
 }
+
+// Gamepad input handling
+void ComponentCanvas::OnGamepadButtonDown(Noesis::Key key)
+{
+    if (!view) return;
+    bool handled = view->KeyDown(key);
+}
+void ComponentCanvas::OnGamepadButtonUp(Noesis::Key key)
+{
+    if (!view) return;
+    view->KeyUp(key);
+}
+void ComponentCanvas::OnGamepadLeftStick(float x, float y)
+{
+    stickX = x;
+    stickY = y;
+
+    const bool active = (fabs(x) >= STICK_THRESHOLD || fabs(y) >= STICK_THRESHOLD);
+    if (!active)
+    {
+        stickInitialFired = false;  
+        stickRepeatTimer = 0.0;
+    }
+}
+
+void ComponentCanvas::TryNavigateStick(float x, float y)
+{
+    if (!view) return;
+    if (fabs(y) >= fabs(x))
+    {
+        if (y >= STICK_THRESHOLD)
+            view->KeyDown(Noesis::Key_GamepadUp);
+        else
+            view->KeyDown(Noesis::Key_GamepadDown);
+    }
+    else
+    {
+        if (x >= STICK_THRESHOLD)
+            view->KeyDown(Noesis::Key_GamepadRight);
+        else
+            view->KeyDown(Noesis::Key_GamepadLeft);
+    }
+}
+void ComponentCanvas::OnGamepadRightStick(float x, float y)
+{
+    if (!view) return;
+}
+void ComponentCanvas::OnGamepadTrigger(float left, float right)
+{
+    if (!view) return;
+}
+
 void ComponentCanvas::Serialize(nlohmann::json& componentObj) const
 {
     componentObj["xamlPath"] = currentXAML;
     componentObj["opacity"] = opacity;
 }
-
 void ComponentCanvas::Deserialize(const nlohmann::json& componentObj)
 {
     if (componentObj.contains("opacity"))
-    {
         opacity = componentObj["opacity"];
-    }
 
     if (componentObj.contains("xamlPath"))
     {
         std::string path = componentObj["xamlPath"];
         if (!path.empty())
-        {
             LoadXAML(path.c_str());
-        }
     }
 }
 
 void ComponentCanvas::UnloadXAML()
 {
-    if (view)
-    {
-        view->GetRenderer()->Shutdown();
-        view.Reset();
-    }
+    ShutdownView();  
     currentXAML = "";
 }
 
 void ComponentCanvas::SetOpacity(float alpha)
 {
-    opacity = (alpha < 0.0f) ? 0.0f : (alpha > 1.0f ? 1.0f : alpha);
+    opacity = std::clamp(alpha, 0.0f, 1.0f);
 }
 
 float ComponentCanvas::GetOpacity() const

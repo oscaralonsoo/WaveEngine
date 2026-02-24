@@ -3,6 +3,7 @@
 #include <string>
 #include <glm/glm.hpp>
 #include "Globals.h"
+#include <SDL3/SDL_gamepad.h>
 
 class GameObject;
 
@@ -73,12 +74,25 @@ public:
 
 private:
 	bool windowEvents[WE_COUNT];
+
+	//Mouse & Keyboard state
 	KeyState* keyboard;
 	KeyState mouseButtons[NUM_MOUSE_BUTTONS];
 	int	mouseMotionX;
 	int mouseMotionY;
 	int mouseX;
 	int mouseY;
+
+	//Gamepad state
+ 	SDL_Gamepad* gamepad = nullptr;
+    float leftStickX = 0.0f;
+    float leftStickY = 0.0f;
+    float rightStickX = 0.0f;
+    float rightStickY = 0.0f;
+    float triggerLeft = 0.0f;
+    float triggerRight = 0.0f;
+
+    static float ApplyDeadzone(float value, float deadzone = 0.15f);
 
 	// Drag and Drop
 	bool droppedFile;

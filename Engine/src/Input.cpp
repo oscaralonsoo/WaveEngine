@@ -47,6 +47,18 @@ bool Input::Awake()
 
 bool Input::Start()
 {
+	LOG_DEBUG("Input::Start GAMEPAD INIT");
+
+	if (SDL_InitSubSystem(SDL_INIT_GAMEPAD) < 0)
+		LOG_DEBUG("SDL Gamepad init FAILED: %s", SDL_GetError());
+	else
+		LOG_DEBUG("SDL Gamepad init OK");
+
+	int numJoysticks = 0;
+	SDL_JoystickID* joysticks = SDL_GetJoysticks(&numJoysticks);
+	LOG_DEBUG("Joysticks found: %d", numJoysticks);
+	SDL_free(joysticks);
+
 	return true;
 }
 
@@ -344,6 +356,72 @@ bool Input::PreUpdate()
 			}
 			break;
 		}
+		 // ─── GAMEPAD ─── aquí, después del mouse wheel ───────────
+    case SDL_EVENT_GAMEPAD_ADDED:
+    {
+        if (!gamepad)
+        {
+            gamepad = SDL_OpenGamepad(event.gdevice.which);
+            LOG_DEBUG("Gamepad connected: %s", SDL_GetGamepadName(gamepad));
+        }
+        break;
+    }
+    case SDL_EVENT_GAMEPAD_REMOVED:
+    {
+        if (gamepad && SDL_GetGamepadID(gamepad) == event.gdevice.which)
+        {
+            SDL_CloseGamepad(gamepad);
+            gamepad = nullptr;
+            LOG_DEBUG("Gamepad disconnected");
+            Application::GetInstance().ui->OnGamepadLeftStick(0.0f, 0.0f);
+            Application::GetInstance().ui->OnGamepadRightStick(0.0f, 0.0f);
+            Application::GetInstance().ui->OnGamepadTrigger(0.0f, 0.0f);
+        }
+        break;
+    }
+    case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+    {
+        Application::GetInstance().ui->OnGamepadButtonDown(event.gbutton.button);
+        break;
+    }
+    case SDL_EVENT_GAMEPAD_BUTTON_UP:
+    {
+        Application::GetInstance().ui->OnGamepadButtonUp(event.gbutton.button);
+        break;
+    }
+    case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+    {
+        float value = event.gaxis.value / 32767.0f;
+        value = ApplyDeadzone(value);
+        switch (event.gaxis.axis)
+        {
+        case SDL_GAMEPAD_AXIS_LEFTX:
+            leftStickX = value;
+            Application::GetInstance().ui->OnGamepadLeftStick(leftStickX, leftStickY);
+            break;
+        case SDL_GAMEPAD_AXIS_LEFTY:
+            leftStickY = -value;
+            Application::GetInstance().ui->OnGamepadLeftStick(leftStickX, leftStickY);
+            break;
+        case SDL_GAMEPAD_AXIS_RIGHTX:
+            rightStickX = value;
+            Application::GetInstance().ui->OnGamepadRightStick(rightStickX, rightStickY);
+            break;
+        case SDL_GAMEPAD_AXIS_RIGHTY:
+            rightStickY = -value;
+            Application::GetInstance().ui->OnGamepadRightStick(rightStickX, rightStickY);
+            break;
+        case SDL_GAMEPAD_AXIS_LEFT_TRIGGER:
+            triggerLeft = (value + 1.0f) * 0.5f;
+            Application::GetInstance().ui->OnGamepadTrigger(triggerLeft, triggerRight);
+            break;
+        case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER:
+            triggerRight = (value + 1.0f) * 0.5f;
+            Application::GetInstance().ui->OnGamepadTrigger(triggerLeft, triggerRight);
+            break;
+        }
+        break;
+    }
 		}
 	}
 
@@ -481,8 +559,15 @@ bool Input::PreUpdate()
 
 bool Input::CleanUp()
 {
-	SDL_QuitSubSystem(SDL_INIT_EVENTS);
-	return true;
+    if (gamepad)
+    {
+        SDL_CloseGamepad(gamepad);
+        gamepad = nullptr;
+    }
+
+    SDL_QuitSubSystem(SDL_INIT_GAMEPAD);
+    SDL_QuitSubSystem(SDL_INIT_EVENTS);
+    return true;
 }
 
 bool Input::GetWindowEvent(EventWindow ev)
@@ -656,4 +741,11 @@ void Input::GetMousePosition(int& x, int& y)
 	}
 	x = instance->mouseX;
 	y = instance->mouseY;
+}
+
+float Input::ApplyDeadzone(float value, float deadzone)
+{
+    if (fabs(value) < deadzone) return 0.0f;
+    float sign = value > 0.0f ? 1.0f : -1.0f;
+    return sign * (fabs(value) - deadzone) / (1.0f - deadzone);
 }
