@@ -1093,9 +1093,10 @@ GameObject* ModuleEditor::CloneGameObject(GameObject* original)
 
         ComponentMaterial* newMaterial =
             (ComponentMaterial*)clone->CreateComponent(ComponentType::MATERIAL);
-
-        newMaterial->CreateCheckerboardTexture();
-        newMaterial->LoadTextureByUID(originalMaterial->GetTextureUID());
+        UID tempUid = originalMaterial->GetTextureUID();
+        if(tempUid !=0)newMaterial->LoadTextureByUID(tempUid);
+    
+        newMaterial->SetDiffuseColor(originalMaterial->GetDiffuseColor());
     }
 
     for (GameObject* child : original->GetChildren())
