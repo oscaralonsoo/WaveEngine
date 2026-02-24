@@ -151,7 +151,6 @@ void Rigidbody::CreateBody()
         }
     }
 
-
     if (actor) {
         physicsModule->GetScene()->removeActor(*actor);
         actor->release();
@@ -943,5 +942,6 @@ void Rigidbody::Deserialize(const nlohmann::json& componentObj)
     if (componentObj.contains("freezeRotX")) rx = componentObj["freezeRotX"].get<bool>();
     if (componentObj.contains("freezeRotY")) ry = componentObj["freezeRotY"].get<bool>();
     if (componentObj.contains("freezeRotZ")) rz = componentObj["freezeRotZ"].get<bool>();
-    SetConstraints(!px, !py, !pz, !rx, !ry, !rz);
+    SetConstraints(px, py, pz, rx, ry, rz);
 }
+
