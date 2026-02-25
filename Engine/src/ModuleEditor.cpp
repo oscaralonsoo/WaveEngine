@@ -506,7 +506,6 @@ void ModuleEditor::ShowMenuBar()
         ImGui::Separator();
         ImGui::Checkbox("Center On Paste", &centerOnPaste);
         ImGui::SameLine();
-        ImGui::PopItemWidth();
 
         if (centerOnPaste)
         {
