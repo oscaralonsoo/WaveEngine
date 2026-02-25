@@ -129,6 +129,7 @@ private:
     bool ischild = false;
 
     bool centerOnPaste = false;
+    float pasteDistance = 10.0f;
 
     glm::vec3 tempScale;
 };
