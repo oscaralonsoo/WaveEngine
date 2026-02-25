@@ -30,11 +30,13 @@ CameraLens::CameraLens()
     SetRenderTarget(textureWidth, textureHeight);
     LookAt(position, reference, up);
     SetPerspective(fov, aspectRatio, zNear, zFar);
+
+    Application::GetInstance().renderer->AddCamera(this);
 }
 
 CameraLens::~CameraLens()
 {
-
+    
 }
 
 void CameraLens::SetPerspective(float fov, float aspect, float zNear, float zFar)
@@ -129,6 +131,7 @@ glm::vec3 CameraLens::ScreenToWorldRay(int mouseX, int mouseY, int w, int h) con
 
 bool CameraLens::CleanUp()
 {
+    Application::GetInstance().renderer->RemoveCamera(this);
     delete frustum;
     return true;
 }

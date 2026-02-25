@@ -1,4 +1,7 @@
+#include "ModuleCamera.h"
 #include "GameWindow.h"
+#include "ComponentCamera.h"
+#include "CameraLens.h"
 #include "Application.h"
 #include <imgui.h>
 
@@ -19,17 +22,46 @@ void GameWindow::Draw()
     gameViewportPos = ImGui::GetCursorScreenPos();
     gameViewportSize = ImGui::GetContentRegionAvail();
 
-    //// Get the game texture from the renderer
-    //GLuint gameTexture = Application::GetInstance().renderer->GetGameTexture();
-    //if (gameTexture != 0 && gameViewportSize.x > 0 && gameViewportSize.y > 0)
-    //{
-    //    ImTextureID texID = (ImTextureID)(uintptr_t)gameTexture;
-    //    ImGui::Image(texID, gameViewportSize, ImVec2(0, 1), ImVec2(1, 0));
-    //}
-    //else
-    //{
-    //    ImGui::InvisibleButton("GameView", gameViewportSize);
-    //}
+    ComponentCamera* cameraComp = Application::GetInstance().camera->GetMainCamera();
+   
+    if (cameraComp && cameraComp->GetLens())
+    {
+        CameraLens* camera = cameraComp->GetLens();
+
+        if (gameViewportSize.x > 1 && gameViewportSize.y > 1)
+        {
+            if (gameViewportSize.x != camera->textureWidth || gameViewportSize.y != camera->textureHeight)
+            {
+                camera->SetRenderTarget((int)gameViewportSize.x, (int)gameViewportSize.y);
+
+                float aspect = gameViewportSize.x / gameViewportSize.y;
+                camera->SetPerspective(camera->GetFov(), aspect, camera->GetNearPlane(), camera->GetFarPlane());
+            }
+
+            GLuint gameTexture = camera->textureID;
+            if (gameTexture != 0)
+            {
+                ImTextureID texID = (ImTextureID)(uintptr_t)gameTexture;
+                ImGui::Image(texID, gameViewportSize, ImVec2(0, 1), ImVec2(1, 0));
+            }
+        }
+    }
+    else
+    {
+        const char* text = "There's no main camera in scene";
+        ImVec2 textSize = ImGui::CalcTextSize(text);
+
+        ImVec2 windowPos = ImGui::GetWindowPos();
+        ImVec2 windowSize = gameViewportSize;
+
+        float textX = windowPos.x + (windowSize.x - textSize.x) * 0.5f;
+        float textY = windowPos.y + (windowSize.y - textSize.y) * 0.5f;
+
+        ImGui::SetCursorScreenPos(ImVec2(textX, textY));
+
+        ImGui::Text(text);
+    }
+
 
     ImGui::End();
     ImGui::PopStyleVar();

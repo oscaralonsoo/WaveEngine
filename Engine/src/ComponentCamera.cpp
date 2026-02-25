@@ -33,7 +33,6 @@ void ComponentCamera::Update()
 void ComponentCamera::SyncTransformToLens()
 {
     Transform* transform = (Transform*)owner->transform;
-
     if (transform && lens)
     {
         glm::mat4 modelMatrix = transform->GetGlobalMatrix();

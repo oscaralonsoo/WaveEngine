@@ -22,7 +22,6 @@ EditorCamera::EditorCamera()
 
 	cameraLens = new CameraLens();
 	cameraLens->SetDebugCamera(true);
-	Application::GetInstance().renderer->AddCamera(cameraLens);
 
 	int w, h;
 	Application::GetInstance().window->GetWindowSize(w, h);
@@ -57,9 +56,6 @@ EditorCamera::EditorCamera()
 
 	viewChanged = true;
 	windowChanged = true;
-
-	//EVENTS
-	//Application::GetInstance().moduleEvents->Subscribe(Event::Type::WindowResize, this);
 }
 
 EditorCamera::~EditorCamera()
@@ -281,26 +277,8 @@ bool EditorCamera::CleanUp()
 {
 	bool ret = true;
 
-	//Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 	cameraLens->CleanUp();
 	delete cameraLens;
 
 	return ret;
 }
-
-//void EditorCamera::OnEvent(const Event& event)
-//{
-//	switch (event.type)
-//	{
-//	case Event::Type::WindowResize:
-//	{
-//		cameraLens->SetRenderTarget(event.data.point.x, event.data.point.y);
-//		windowChanged = true;
-//
-//		break;
-//	}
-//
-//	default:
-//		break;
-//	}
-//}
