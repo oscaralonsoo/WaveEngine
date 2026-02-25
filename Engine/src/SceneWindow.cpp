@@ -372,7 +372,7 @@ void SceneWindow::DrawGizmo()
 
     glm::mat4 viewMatrix = camera->GetViewMatrix();
     glm::mat4 projectionMatrix = camera->GetProjectionMatrix();
-    //glm::mat4 transformMatrix = transforms[0]->GetGlobalMatrix();
+
     glm::vec3 pivot(0.0f);
     for (auto* t : transforms)
         pivot += t->GetGlobalPosition();

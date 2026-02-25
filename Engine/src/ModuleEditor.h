@@ -127,5 +127,8 @@ private:
     GameObject* CloneGameObject(GameObject* original);
     std::vector<GameObject*> ObjectsCopy;
     bool ischild = false;
+
     bool centerOnPaste = false;
+
+    glm::vec3 tempScale;
 };

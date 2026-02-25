@@ -1080,6 +1080,8 @@ void ModuleEditor::HandleCopyPaste()
                 clonedObject->transform->SetPosition(centerPos);
 
             root->AddChild(clonedObject);
+            ischild = false;
+
             Application::GetInstance().selectionManager->AddToSelection(clonedObject);
             composite->AddCommand(std::make_unique<CreateCommand>(clonedObject));
         }
@@ -1149,6 +1151,13 @@ GameObject* ModuleEditor::CloneGameObject(GameObject* original)
     clone->transform->SetGlobalScale(originalTransform->GetGlobalScale());
     clone->transform->SetGlobalRotation(originalTransform->GetGlobalRotation());
 
+    if (ischild)
+    {
+        clone->transform->SetPosition(originalTransform->GetPosition());
+        clone->transform->SetScale(originalTransform->GetScale());
+        clone->transform->SetRotation(originalTransform->GetRotation());
+    }
+
     if (original->GetComponent(ComponentType::MESH))
     {
         ComponentMesh* originalMesh =
@@ -1173,13 +1182,13 @@ GameObject* ModuleEditor::CloneGameObject(GameObject* original)
     
         newMaterial->SetDiffuseColor(originalMaterial->GetDiffuseColor());
     }
-
     for (GameObject* child : original->GetChildren())
     {
         ischild = true;
         GameObject* childClone = CloneGameObject(child);
         clone->AddChild(childClone);
     }
+    ischild = false;
 
     return clone;
 }
