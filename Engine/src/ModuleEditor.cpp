@@ -18,6 +18,7 @@
 #include "Transform.h"           
 #include "ComponentCamera.h"   
 #include "ComponentMaterial.h"
+#include "ComponentScript.h"
 
 #include "ConfigurationWindow.h"
 #include "HierarchyWindow.h"
@@ -1191,6 +1192,16 @@ GameObject* ModuleEditor::CloneGameObject(GameObject* original)
         if(tempUid !=0)newMaterial->LoadTextureByUID(tempUid);
     
         newMaterial->SetDiffuseColor(originalMaterial->GetDiffuseColor());
+    }
+    if (original->GetComponent(ComponentType::SCRIPT))
+    {
+        ComponentScript * originalScript =
+            (ComponentScript*)original->GetComponent(ComponentType::SCRIPT);
+
+        ComponentScript* newScript =
+            (ComponentScript*)clone->CreateComponent(ComponentType::SCRIPT);
+
+        newScript->LoadScriptByUID(originalScript->GetScriptUID());
     }
     for (GameObject* child : original->GetChildren())
     {
