@@ -18,6 +18,7 @@
 #include "Transform.h"           
 #include "ComponentCamera.h"   
 #include "ComponentMaterial.h"
+#include "ComponentScript.h"
 
 #include "ConfigurationWindow.h"
 #include "HierarchyWindow.h"
@@ -384,10 +385,8 @@ void ModuleEditor::ShowMenuBar()
                         LOG_CONSOLE("Auto save disabled");
                     }
                 }
-
                 ImGui::EndMenu();
             }
-
             ImGui::EndMenu();
         }
 
@@ -413,13 +412,11 @@ void ModuleEditor::ShowMenuBar()
 
                 ComponentCamera* sceneCamera = static_cast<ComponentCamera*>(cameraGO->CreateComponent(ComponentType::CAMERA));
             }
-
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginMenu("GameObject"))
         {
-
             if (ImGui::BeginMenu("Create Primitive"))
             {
                 if (ImGui::MenuItem("Cube"))
@@ -499,18 +496,17 @@ void ModuleEditor::ShowMenuBar()
         ImGui::Separator();
         ImGui::Checkbox("Snap", &sceneWindow.get()->snapEnabled);
         ImGui::PushItemWidth(80);
-        ImGui::DragFloat("Position", &sceneWindow.get()->positionSnap, 0.1f);
+        ImGui::DragFloat("Position", &sceneWindow.get()->positionSnap, 0.1f, 0.0f, 100.0f, "%.3fx");
         ImGui::SameLine();
-        ImGui::PushItemWidth(80);
-        ImGui::DragFloat("Rotation", &sceneWindow.get()->rotationSnap, 0.1f);
+        ImGui::DragFloat("Rotation", &sceneWindow.get()->rotationSnap, 0.1f, 0.0f, 100.0f, "%.3fx");
         ImGui::SameLine();
-        ImGui::DragFloat("Scale", &sceneWindow.get()->scaleSnap, 0.1f);
-        ImGui::PopItemWidth();
-
+        ImGui::DragFloat("Scale", &sceneWindow.get()->scaleSnap, 0.1f, 0.0f, 100.0f, "%.3fx");
+        ImGui::SameLine();
+        
         ImGui::Separator();
-        ImGui::PushItemWidth(80);
         ImGui::Checkbox("Center On Paste", &centerOnPaste);
         ImGui::SameLine();
+        ImGui::PopItemWidth();
 
         if (centerOnPaste)
         {
@@ -1195,6 +1191,16 @@ GameObject* ModuleEditor::CloneGameObject(GameObject* original)
         if(tempUid !=0)newMaterial->LoadTextureByUID(tempUid);
     
         newMaterial->SetDiffuseColor(originalMaterial->GetDiffuseColor());
+    }
+    if (original->GetComponent(ComponentType::SCRIPT))
+    {
+        ComponentScript * originalScript =
+            (ComponentScript*)original->GetComponent(ComponentType::SCRIPT);
+
+        ComponentScript* newScript =
+            (ComponentScript*)clone->CreateComponent(ComponentType::SCRIPT);
+
+        newScript->LoadScriptByUID(originalScript->GetScriptUID());
     }
     for (GameObject* child : original->GetChildren())
     {
