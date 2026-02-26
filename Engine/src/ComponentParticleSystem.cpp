@@ -367,7 +367,7 @@ void ComponentParticleSystem::Serialize(nlohmann::json& componentObj) const {
     componentObj["simulationSpace"] = (int)emitter->simulationSpace;
     componentObj["prewarm"] = emitter->prewarm;
     componentObj["texturePath"] = emitter->texturePath;
-
+    if (textureResourceUID != 0) componentObj["textureUID"] = textureResourceUID;
     componentObj["additive"] = emitter->additiveBlending;
     componentObj["textureRows"] = emitter->textureRows;
     componentObj["textureCols"] = emitter->textureCols;
@@ -436,9 +436,17 @@ void ComponentParticleSystem::Deserialize(const nlohmann::json& componentObj) {
     if (componentObj.contains("emissionRateDist")) emitter->emissionRateDistance = componentObj["emissionRateDist"];
     if (componentObj.contains("simulationSpace")) emitter->simulationSpace = (SimulationSpace)componentObj["simulationSpace"];
     if (componentObj.contains("prewarm")) emitter->prewarm = componentObj["prewarm"];
-
-    if (componentObj.contains("texturePath")) SetTexture(componentObj["texturePath"]);
-
+    if (componentObj.contains("textureUID")) {
+        UID uid = componentObj["textureUID"].get<UID>();
+        if (uid != 0) {
+            const auto& allResources = Application::GetInstance().resources->GetAllResources();
+            auto it = allResources.find(uid);
+            if (it != allResources.end()) {
+                SetTexture(it->second->GetAssetFile());
+            }
+        }
+    }
+    if (emitter->textureID == 0 && componentObj.contains("texturePath")) SetTexture(componentObj["texturePath"]);
     if (componentObj.contains("additive")) emitter->additiveBlending = componentObj["additive"];
     if (componentObj.contains("textureRows")) emitter->textureRows = componentObj["textureRows"];
     if (componentObj.contains("textureCols")) emitter->textureCols = componentObj["textureCols"];

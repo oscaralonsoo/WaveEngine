@@ -944,4 +944,3 @@ void Rigidbody::Deserialize(const nlohmann::json& componentObj)
     if (componentObj.contains("freezeRotZ")) rz = componentObj["freezeRotZ"].get<bool>();
     SetConstraints(px, py, pz, rx, ry, rz);
 }
-
