@@ -86,7 +86,7 @@ public:
 private:
     GameObject* parent = nullptr;
     std::vector<GameObject*> children;
-
+    std::vector<std::unique_ptr<Component>> componentOwners;
     std::vector<Component*> components;
 
     bool markedForDeletion = false;

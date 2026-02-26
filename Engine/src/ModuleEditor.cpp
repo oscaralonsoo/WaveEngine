@@ -1067,14 +1067,16 @@ void ModuleEditor::HandleCopyPaste()
 
         //center pos option
         glm::vec3 centerPos(0.0f);
+        
         if (centerOnPaste)
         {
-            ComponentCamera* editorCam = Application::GetInstance().camera->GetEditorCamera();
+            ComponentCamera* editorCam = Application::GetInstance().camera->GetMainCamera();
             if (editorCam)
             {
-                glm::vec3 camPos = editorCam->GetPosition();
-                glm::vec3 camForward = editorCam->GetFront();
-                centerPos = camPos + camForward * pasteDistance;
+               //Need to be fix using new camera
+                //glm::vec3 camPos = editorCam->GetPosition();
+                //glm::vec3 camForward = editorCam->GetFront();
+                //centerPos = camPos + camForward * pasteDistance;
             }
         }
 

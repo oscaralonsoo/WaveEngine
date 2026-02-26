@@ -338,6 +338,7 @@ void SceneWindow::DrawGizmo()
     GameObject* selectedObject = Application::GetInstance().selectionManager->GetSelectedObject();
     if (!selectedObject) {
         if (isGizmoActive) Application::GetInstance().scene->MarkOctreeForRebuild();
+        }
     // First check if the gizmo was being used in the previous frame
     bool wasUsingGizmo = isGizmoActive;
     std::vector<GameObject*> selectedObjects = Application::GetInstance().selectionManager->GetFilteredObjects();
@@ -395,13 +396,13 @@ void SceneWindow::DrawGizmo()
     // Obtenemos la matriz global inicial del objeto
     glm::mat4 matrix = transform->GetGlobalMatrix();
     const float TOLERANCE = 0.001f;
-    if (std::abs(currentAspect - sceneAspect) > TOLERANCE)
-    {
-        camera->SetAspectRatio(sceneAspect);
-    }
+    //if (std::abs(currentAspect - sceneAspect) > TOLERANCE)
+    //{
+    //    camera->SetAspectRatio(sceneAspect);
+    //}
 
-    glm::mat4 viewMatrix = camera->GetViewMatrix();
-    glm::mat4 projectionMatrix = camera->GetProjectionMatrix();
+    //glm::mat4 viewMatrix = camera->GetViewMatrix();
+    //glm::mat4 projectionMatrix = camera->GetProjectionMatrix();
 
     glm::vec3 pivot(0.0f);
     for (auto* t : transforms)

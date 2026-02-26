@@ -520,7 +520,8 @@ void GameObject::PublishGameObjectEvent(GameObjectEvent event, Component* newCom
 void GameObject::MarkForDeletion()
 {
     markedForDeletion = true;
-    Application::GetInstance().events.get()->PublishImmediate({Event::Type::GameObjectDestroyed, this });
+    Application::GetInstance().events.get()->PublishImmediate({ Event::Type::GameObjectDestroyed, this });
+}
 std::unique_ptr<Component> GameObject::ExtractComponent(Component* comp)
 {
     auto it = std::find(components.begin(), components.end(), comp);

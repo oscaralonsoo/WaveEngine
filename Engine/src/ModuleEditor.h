@@ -138,5 +138,5 @@ private:
     bool centerOnPaste = false;
     float pasteDistance = 10.0f;
 
-    glm::vec3 tempScale;
+    //glm::vec3 tempScale;
 };

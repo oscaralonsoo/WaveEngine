@@ -472,7 +472,7 @@ void InspectorWindow::DrawTransformComponent(Component* component)
         {
             CommandHistory* history = Application::GetInstance().editor->GetCommandHistory();
             history->ExecuteCommand(std::make_unique<TransformCommand>(
-                selectedObject,
+                transform->owner,
                 posBeforeEdit, rotBeforeEdit, scaleBeforeEdit,
                 transform->GetPosition(), transform->GetRotation(), transform->GetScale()
             ));
@@ -488,7 +488,7 @@ void InspectorWindow::DrawTransformComponent(Component* component)
         {
             CommandHistory* history = Application::GetInstance().editor->GetCommandHistory();
             history->ExecuteCommand(std::make_unique<TransformCommand>(
-                selectedObject,
+                transform->owner,
                 transform->GetPosition(), transform->GetRotation(), transform->GetScale(),
                 glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f)
             ));
