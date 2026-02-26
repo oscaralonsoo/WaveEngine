@@ -382,17 +382,17 @@ void AudioSystem::ProcessReverbZones()
         }
     }
 
-    if (listenerID == AK_INVALID_GAME_OBJECT || !listenerGO) {
-        // no listener, still process source sends (they can be independent)
-    }
+    //if (listenerID == AK_INVALID_GAME_OBJECT || !listenerGO) {
+    //    // no listener, still process source sends (they can be independent)
+    //}
 
     // Get listener world position (if available)
     glm::vec3 listenerPos(0.0f);
     if (listenerGO) {
         Transform* lt = static_cast<Transform*>(listenerGO->GetComponent(ComponentType::TRANSFORM));
-        if (lt) listenerPos = glm::vec3(lt->GetGlobalMatrix()[3]);
+        if (lt) listenerPos = glm::vec3(lt->GetWorldMatrixRecursive()[3]);
 
-        if (enableDebugLogs) LOG_DEBUG("Listener Pos: %.2f, %.2f, %.2f", listenerPos.x, listenerPos.y, listenerPos.z);
+        //if (enableDebugLogs) LOG_DEBUG("Listener Pos: %.2f, %.2f, %.2f", listenerPos.x, listenerPos.y, listenerPos.z);
     }
 
     
@@ -463,7 +463,7 @@ void AudioSystem::ProcessReverbZones()
             // Skip clearing here (listener will still handle global reverb)
             continue;
         }
-        glm::vec3 sourcePos = glm::vec3(st->GetGlobalMatrix()[3]);
+        glm::vec3 sourcePos = glm::vec3(st->GetWorldMatrixRecursive()[3]);
 
         // Find the best matching zone for this source (highest priority)
         ReverbZone* bestZone = nullptr;
@@ -471,7 +471,7 @@ void AudioSystem::ProcessReverbZones()
         for (ReverbZone* zone : reverbZones) {
             if (!zone || !zone->enabled) continue;
             if (zone->ContainsPoint(sourcePos)) {
-                if (enableDebugLogs) LOG_DEBUG("Checking zone from auxBusID %u: Result=%d", zone->auxBusID, zone->ContainsPoint(listenerPos));
+                if (enableDebugLogs) LOG_DEBUG("Checking zone from auxBusID %u: Result=%d", zone->auxBusID, zone->ContainsPoint(sourcePos));
                 if (zone->priority > bestPriority) {
                     bestPriority = zone->priority;
                     bestZone = zone;

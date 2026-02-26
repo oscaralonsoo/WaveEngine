@@ -2,51 +2,6 @@
     "gameObjects": [
         {
             "active": true,
-            "children": [],
-            "components": [
-                {
-                    "active": true,
-                    "position": [
-                        0.41944265365600586,
-                        0.6472002863883972,
-                        2.2777857780456543
-                    ],
-                    "rotation": [
-                        0.0,
-                        9.508103370666504,
-                        0.0
-                    ],
-                    "scale": [
-                        0.9999760985374451,
-                        1.0,
-                        0.9999760985374451
-                    ],
-                    "type": 0
-                },
-                {
-                    "active": true,
-                    "aspectRatio": 1.016203761100769,
-                    "farPlane": 525.0,
-                    "fov": 67.30000305175781,
-                    "frustumCullingEnabled": false,
-                    "nearPlane": 0.10000000149011612,
-                    "type": 3
-                },
-                {
-                    "active": true,
-                    "scriptUID": 0,
-                    "type": 5
-                },
-                {
-                    "active": true,
-                    "isDefault": true,
-                    "type": 23
-                }
-            ],
-            "name": "Camera"
-        },
-        {
-            "active": true,
             "children": [
                 {
                     "active": true,
@@ -56,18 +11,18 @@
                             "active": true,
                             "position": [
                                 14.140254974365234,
-                                0.2665765881538391,
-                                26.321510314941406
+                                0.32062849402427673,
+                                26.321491241455078
                             ],
                             "rotation": [
-                                -1.0095083098349278e-06,
-                                -15.710779190063477,
-                                -1.8131445358449128e-06
+                                -9.722884897200856e-07,
+                                1.7206621170043945,
+                                -2.1158614345040405e-06
                             ],
                             "scale": [
-                                0.9999960064888,
+                                0.9999861121177673,
                                 1.0000001192092896,
-                                0.9999960064888
+                                0.9999861121177673
                             ],
                             "type": 0
                         },
@@ -97,6 +52,8 @@
                                 1.0
                             ],
                             "hasMaterialProperties": true,
+                            "lightingMode": 1,
+                            "materialType": 0,
                             "metallic": 0.0,
                             "opacity": 1.0,
                             "originalTextureUID": 5201253750392641611,
@@ -123,6 +80,11 @@
                             "active": true,
                             "auxBusID": 2100234192,
                             "auxBusName": "Reverb_InsideMyHead",
+                            "centerOffset": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
                             "enabled": true,
                             "extents": [
                                 5.0,
@@ -215,6 +177,8 @@
                                 1.0
                             ],
                             "hasMaterialProperties": true,
+                            "lightingMode": 1,
+                            "materialType": 0,
                             "metallic": 0.0,
                             "opacity": 1.0,
                             "originalTextureUID": 9153111391687361096,
@@ -282,6 +246,8 @@
                                 1.0
                             ],
                             "hasMaterialProperties": true,
+                            "lightingMode": 1,
+                            "materialType": 0,
                             "metallic": 0.0,
                             "opacity": 1.0,
                             "originalTextureUID": 9153111391687361096,
@@ -383,6 +349,8 @@
                                 1.0
                             ],
                             "hasMaterialProperties": true,
+                            "lightingMode": 1,
+                            "materialType": 0,
                             "metallic": 0.0,
                             "opacity": 1.0,
                             "originalTextureUID": 10766677656668552443,
@@ -402,6 +370,11 @@
                             "active": true,
                             "auxBusID": 2637049263,
                             "auxBusName": "Reverb_LongDarkHall",
+                            "centerOffset": [
+                                -0.4000000059604645,
+                                1.2000000476837158,
+                                -0.10000000149011612
+                            ],
                             "enabled": true,
                             "extents": [
                                 3.0,
@@ -498,6 +471,8 @@
                         1.0
                     ],
                     "hasMaterialProperties": true,
+                    "lightingMode": 1,
+                    "materialType": 0,
                     "metallic": 0.0,
                     "opacity": 1.0,
                     "originalTextureUID": 3369338043897232573,
@@ -522,23 +497,141 @@
                 },
                 {
                     "active": true,
-                    "auxBusID": 3522965360,
-                    "auxBusName": "Reverb_Robotic",
+                    "auxBusID": 1741738112,
+                    "auxBusName": "Reverb_Cathedral",
+                    "centerOffset": [
+                        -0.10000000149011612,
+                        0.20000000298023224,
+                        0.0
+                    ],
                     "enabled": true,
                     "extents": [
                         5.0,
                         5.0,
                         5.0
                     ],
-                    "presetIndex": 7,
-                    "priority": -1,
+                    "presetIndex": 1,
+                    "priority": 0,
                     "radius": 1.0,
                     "shape": 0,
                     "type": 25,
-                    "wetLevel": 0.5289999842643738
+                    "wetLevel": 1.0
                 }
             ],
             "name": "Radio"
+        },
+        {
+            "active": true,
+            "children": [
+                {
+                    "active": true,
+                    "children": [],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                17.6470890045166,
+                                -27.452327728271484,
+                                233.99403381347656
+                            ],
+                            "rotation": [
+                                90.0,
+                                0.0,
+                                -180.0
+                            ],
+                            "scale": [
+                                1.0001118183135986,
+                                1.0001205205917358,
+                                1.0001224279403687
+                            ],
+                            "type": 0
+                        },
+                        {
+                            "active": true,
+                            "aspectRatio": 0.44954127073287964,
+                            "farPlane": 1000.0,
+                            "fov": 67.30000305175781,
+                            "frustumCullingEnabled": false,
+                            "nearPlane": 0.10000000149011612,
+                            "type": 3
+                        },
+                        {
+                            "active": true,
+                            "scriptUID": 0,
+                            "type": 5
+                        },
+                        {
+                            "active": true,
+                            "isDefault": true,
+                            "type": 23
+                        }
+                    ],
+                    "name": "Camera"
+                }
+            ],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        -1.1375480890274048,
+                        -0.03880289942026138,
+                        1.7992303371429443
+                    ],
+                    "rotation": [
+                        89.99996948242188,
+                        32.732765197753906,
+                        179.9999237060547
+                    ],
+                    "scale": [
+                        0.00692520197480917,
+                        0.006925181485712528,
+                        0.005908016115427017
+                    ],
+                    "type": 0
+                },
+                {
+                    "active": true,
+                    "meshUID": 7031227031558198933,
+                    "type": 1
+                },
+                {
+                    "active": true,
+                    "ambientColor": [
+                        0.5882353186607361,
+                        0.5882353186607361,
+                        0.5882353186607361,
+                        1.0
+                    ],
+                    "diffuseColor": [
+                        0.5882353186607361,
+                        0.5882353186607361,
+                        0.5882353186607361,
+                        1.0
+                    ],
+                    "emissiveColor": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "hasMaterialProperties": true,
+                    "lightingMode": 1,
+                    "materialType": 0,
+                    "metallic": 0.0,
+                    "opacity": 1.0,
+                    "roughness": 0.5,
+                    "shininess": 32.0,
+                    "specularColor": [
+                        0.8999999761581421,
+                        0.8999999761581421,
+                        0.8999999761581421,
+                        1.0
+                    ],
+                    "type": 2,
+                    "useCheckerboard": false
+                }
+            ],
+            "name": "RPG-Character-Mesh"
         }
     ],
     "version": 1

@@ -45,38 +45,43 @@ bool ReverbZone::ContainsPoint(const glm::vec3& worldPoint) const
     Transform* t = static_cast<Transform*>(owner->GetComponent(ComponentType::TRANSFORM));
     if (!t) return false;
 
-    glm::mat4 worldMat = t->GetGlobalMatrix();
+    glm::mat4 worldMat = t->GetWorldMatrixRecursive();
     glm::vec3 zonePos = glm::vec3(worldMat[3]);
 
     if (shape == Shape::SPHERE) {
-        // matrix scale must be ignored for some reason(?
         float actualRadius = radius;
 
-        float distance = glm::distance(worldPoint, zonePos);
+        //Transform centerOffset from local to world space using rotation only (no scale)
 
-        //LOG_DEBUG("Dist: %.2f | Actual Radius: %.2f", distance, actualRadius);
+        glm::mat4 rotationMat = glm::mat4(
+            glm::vec4(glm::normalize(glm::vec3(worldMat[0])), 0.0f),
+            glm::vec4(glm::normalize(glm::vec3(worldMat[1])), 0.0f),
+            glm::vec4(glm::normalize(glm::vec3(worldMat[2])), 0.0f),
+            glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+        );
+
+        glm::vec3 worldOffset = glm::vec3(rotationMat * glm::vec4(centerOffset, 0.0f));
+        float distance = glm::distance(worldPoint, zonePos + worldOffset);
 
         return distance <= actualRadius;
     }
     
-    else { // BOX: transform point into local space ignoring scale
+    else { 
         
-        glm::vec3 zonePos = glm::vec3(worldMat[3]);
+        // Extract rotation only (strip scale via normalization)
+        glm::mat3 rotOnly = glm::mat3(
+            glm::normalize(glm::vec3(worldMat[0])),
+            glm::normalize(glm::vec3(worldMat[1])),
+            glm::normalize(glm::vec3(worldMat[2]))
+        );
 
-        // 2. extract rotation (normalize the columns of the world matrix to remove scale)
-        glm::mat4 rotationMat = worldMat;
-        rotationMat[0] = glm::normalize(rotationMat[0]);
-        rotationMat[1] = glm::normalize(rotationMat[1]);
-        rotationMat[2] = glm::normalize(rotationMat[2]);
-        rotationMat[3] = glm::vec4(0, 0, 0, 1); // remove translation for rotation part
+        glm::mat4 noScaleWorldMat = glm::mat4(rotOnly);
+        noScaleWorldMat[3] = glm::vec4(zonePos, 1.0f); // set translation
 
-        //build a "no-scale" world matrix
-        glm::mat4 noScaleWorldMat = glm::translate(glm::mat4(1.0f), zonePos) * rotationMat;
-
-        //invert that and check against extents
         glm::vec3 local = glm::vec3(glm::inverse(noScaleWorldMat) * glm::vec4(worldPoint, 1.0f));
+        // centerOffset check is missing for BOX too — add it:
+        local -= centerOffset; // apply offset in local space, or transform offset first
         glm::vec3 absLocal = glm::abs(local);
-
         return (absLocal.x <= extents.x) && (absLocal.y <= extents.y) && (absLocal.z <= extents.z);
     }
     

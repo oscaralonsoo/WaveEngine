@@ -1124,13 +1124,13 @@ void Renderer::DrawGameObjectIterative(GameObject* gameObject,
                         ReverbZone* zone = static_cast<ReverbZone*>(comp);
                         if (zone != nullptr)
                         {
-                            if (zone->enabled && selectionMgr->IsSelected(currentObj))
+                            if (zone->enabled /*&& selectionMgr->IsSelected(currentObj)*/)
                             {
                                 glm::vec3 worldCenter = glm::vec3(modelMatrix[3]);
 
                                 if (zone->shape == ReverbZone::Shape::SPHERE)
                                 {
-                                    DrawReverbSphere(worldCenter, zone->radius, zone->centerOffset, glm::vec4(0.2f, 0.4f, 0.5f, 1.0f));
+                                    DrawReverbSphere(worldCenter, modelMatrix, zone->radius, zone->centerOffset, glm::vec4(0.2f, 0.4f, 0.5f, 1.0f));
                                 }
                                 else
                                 {
@@ -1783,9 +1783,18 @@ void Renderer::BindGameFramebuffer()
     glViewport(0, 0, gameFramebufferWidth, gameFramebufferHeight);
 }
 
-void Renderer::DrawReverbSphere(const glm::vec3& center, float radius, const glm::vec3& offset, const glm::vec4& color, int segments)
+void Renderer::DrawReverbSphere(const glm::vec3& center, const glm::mat4& modelMatrix, float radius, const glm::vec3& offset, const glm::vec4& color, int segments)
 {
     if (segments < 4) segments = 4;
+
+    // Transform offset from local to world space (rotation only, no scale)
+    glm::mat4 rotOnly = glm::mat4(glm::mat3(
+        glm::normalize(glm::vec3(modelMatrix[0])),
+        glm::normalize(glm::vec3(modelMatrix[1])),
+        glm::normalize(glm::vec3(modelMatrix[2]))
+    ));
+    glm::vec3 worldOffset = glm::vec3(rotOnly * glm::vec4(offset, 0.0f));
+    glm::vec3 sphereCenter = center + worldOffset;  // ← use this everywhere below
 
     std::vector<float> verts;
     verts.reserve(segments * 6 * 3); // three rings, segments lines (two points each), 3 floats
@@ -1796,8 +1805,9 @@ void Renderer::DrawReverbSphere(const glm::vec3& center, float radius, const glm
             float a0 = (float)i / segments * glm::two_pi<float>();
             float a1 = (float)(i + 1) / segments * glm::two_pi<float>();
 
-            glm::vec3 p0 = (center + offset) + (right * cosf(a0) + up * sinf(a0)) * r;
-            glm::vec3 p1 = (center + offset) + (right * cosf(a1) + up * sinf(a1)) * r;
+            
+            glm::vec3 p0 = sphereCenter + (right * cosf(a0) + up * sinf(a0)) * r;
+            glm::vec3 p1 = sphereCenter + (right * cosf(a1) + up * sinf(a1)) * r;
 
             verts.insert(verts.end(), { p0.x, p0.y, p0.z, p1.x, p1.y, p1.z });
         }
@@ -1877,15 +1887,20 @@ void Renderer::DrawReverbBox(const glm::mat4& modelMatrix, const glm::vec3& exte
         { -extents.x,  extents.y,  extents.z }
     };
 
+    // Transform offset from local to world space (rotation only, no scale)
+    glm::mat4 rotOnly = glm::mat4(glm::mat3(
+        glm::normalize(glm::vec3(modelMatrix[0])),
+        glm::normalize(glm::vec3(modelMatrix[1])),
+        glm::normalize(glm::vec3(modelMatrix[2]))
+    ));
+    glm::vec3 worldOffset = glm::vec3(rotOnly * glm::vec4(offset, 0.0f));
 
-    // Transform to world space using modelMatrix
+
+    // Transform corners to world space
     glm::vec3 worldCorners[8];
     for (int i = 0; i < 8; ++i)
     {
-        
-        glm::vec4 wc = modelMatrix * glm::vec4(localCorners[i], 1.0f);
-        worldCorners[i] = glm::vec3(wc);
-        worldCorners[i] += offset;
+        worldCorners[i] = glm::vec3(modelMatrix * glm::vec4(localCorners[i], 1.0f)) + worldOffset;
     }
 
     // Build line list for edges (12 edges -> 24 points)
