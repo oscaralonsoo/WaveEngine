@@ -1,9 +1,45 @@
-uid: 1317833347738958121
-type: 1
-lastModified: 134155615075561937
-importScale: 1
-generateNormals: 1
-flipUVs: 1
-optimizeMeshes: 1
-upAxis: 0
-frontAxis: 0
+{
+    "fileHash": 1829670150,
+    "importSettings": {
+        "flipUVs": true,
+        "frontAxis": 0,
+        "generateNormals": true,
+        "importScale": 1.0,
+        "optimizeMeshes": true,
+        "upAxis": 0
+    },
+    "meshes": {
+        "City_building_001": 7685609927728916687,
+        "City_building_004": 9160477355699777096,
+        "City_building_007": 4022380747513732112,
+        "City_building_008": 12321804284081449527,
+        "City_building_010": 4285327639700133195,
+        "City_building_011": 17838143698717074865,
+        "City_building_013": 365528824041641299,
+        "City_building_014": 7353855280875510553,
+        "City_building_016": 16917679784809191658,
+        "City_building_017": 5967584447508919937,
+        "City_building_022": 15066751284605069163,
+        "City_building_023": 11466655257646391451,
+        "City_building_024": 1173486755897432587,
+        "City_building_026": 3304070417405022270,
+        "City_building_028": 7645972548008476865,
+        "City_building_030": 6148085141200137509,
+        "City_building_031": 2466167648975257263,
+        "City_building_032": 11215901746229593812,
+        "City_building_033": 6033424982852978580,
+        "City_building_034": 6809442803076717641,
+        "City_building_035": 5005298075976479118,
+        "City_building_036": 3039743130486785829,
+        "City_building_037": 4200609698773298444,
+        "City_building_038": 13013400386575878160,
+        "City_building_039": 6849412739881927053,
+        "City_building_040": 11268321029770161697,
+        "City_building_041": 9175967161536599978,
+        "Line002": 7462471818018108695,
+        "Object010": 879038827418586294,
+        "Plane001": 12308077628546020068
+    },
+    "type": 1,
+    "uid": 7489409624713237383
+}

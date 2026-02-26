@@ -1,9 +1,59 @@
-uid: 6370248490723992090
-type: 1
-lastModified: 134155615072533868
-importScale: 1
-generateNormals: 1
-flipUVs: 1
-optimizeMeshes: 1
-upAxis: 0
-frontAxis: 0
+{
+    "fileHash": 2846068426,
+    "importSettings": {
+        "flipUVs": true,
+        "frontAxis": 0,
+        "generateNormals": true,
+        "importScale": 1.0,
+        "optimizeMeshes": true,
+        "upAxis": 0
+    },
+    "meshes": {
+        "BackDoor_LOW": 13790630720561189740,
+        "BackPodBottomRing_LOW": 17910225819225899616,
+        "BackPodFlap_LOW": 7339949991254707848,
+        "BackPodHinge_LOW": 10577482559376855136,
+        "BackPodTopRing_LOW": 3453819773469971005,
+        "BackPod_LOW": 14479666496119634764,
+        "CanopyBrace_LOW": 10618059125860617705,
+        "CanopyFrame_LOW": 5915968087041119837,
+        "DropShipBody_LOW": 1111293971011023766,
+        "ExhaustFins_LOW": 3160537711317996597,
+        "FrontCanopyGlass_LOW": 2993333188687877668,
+        "FrontSensorPost_LOW": 16778826464938363045,
+        "FrontSensors_LOW": 13723360711980547747,
+        "FrontWheelDoor_LOW": 11348995600081138357,
+        "Gun1_LOW": 8964152519638929811,
+        "Gun2_LOW": 4264291625384828519,
+        "Gun3_LOW": 59968466474135588,
+        "GunBrackets_LOW": 14308432566246924562,
+        "GunPost_LOW": 1649884786533273020,
+        "LeftMainIntake_LOW": 13885686179874116118,
+        "PylonAttachment_Lower_2_LOW": 15057395883952757029,
+        "PylonAttachment_Lower_LOW": 2763449148488588523,
+        "PylonAttachment_Upper_LOW": 11884402203536957481,
+        "Pylon_LOW": 17923471697929977399,
+        "RearExhaustManifold_LOW": 43049208506167126,
+        "RearRingTeeth_LOW": 3694731521354904570,
+        "RearWheelDoor_LOW": 17310145089056652748,
+        "RightMainIntake_LOW": 6286612854096354384,
+        "Rocket_LOW": 13733703900764563134,
+        "SidePodBottomRing_LOW": 13273579628657539749,
+        "SidePodHinge_LOW": 4765059270627384471,
+        "SidePodTeethRing_LOW": 15733429181688708009,
+        "SidePodTopRing_LOW": 15830042376409404272,
+        "SidePod_LOW": 8784974417963937416,
+        "SideWing_LOW": 3846213841637605375,
+        "SphereEngine_LOW": 16355691777462577795,
+        "TireFront_LOW": 18182084803453787378,
+        "Tire_LOW": 16894194213254347925,
+        "WheelAssemblyFrontStrut_LOW": 12752566231615340973,
+        "WheelAssemblyMainStrut_LOW": 14483236848500156868,
+        "WheelAssemblyStabilizerDWNFRT_LOW": 11984925926481092340,
+        "WheelAssemblyStabilizerDWN_LOW": 13426392739462682370,
+        "WheelAssemblyStabilizerUPFRT_LOW": 15439440398054636790,
+        "WheelAssemblyStabilizerUP_LOW": 9243980160417817409
+    },
+    "type": 1,
+    "uid": 5187486776357197313
+}

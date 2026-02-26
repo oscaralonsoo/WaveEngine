@@ -1,9 +1,48 @@
-uid: 10698156210335403644
-type: 1
-lastModified: 134155615074196974
-importScale: 1
-generateNormals: 1
-flipUVs: 1
-optimizeMeshes: 1
-upAxis: 0
-frontAxis: 0
+{
+    "animations": {
+        "Take 001": 13132375996229636338
+    },
+    "fileHash": 528567231,
+    "importSettings": {
+        "flipUVs": true,
+        "frontAxis": 0,
+        "generateNormals": true,
+        "importScale": 1.0,
+        "optimizeMeshes": true,
+        "upAxis": 0
+    },
+    "meshes": {
+        "City_building_001": 6870308380688881509,
+        "City_building_004": 7175871786137573226,
+        "City_building_007": 18283021239841135511,
+        "City_building_008": 14759526487672827992,
+        "City_building_010": 11694667534824486800,
+        "City_building_011": 4434688531878585138,
+        "City_building_013": 2879090273135549562,
+        "City_building_014": 1794587157578548652,
+        "City_building_016": 4323352394591383697,
+        "City_building_017": 12582662344581161637,
+        "City_building_022": 1993541791912275046,
+        "City_building_023": 8714211915833493355,
+        "City_building_024": 11040217576734733003,
+        "City_building_026": 6512283780206516082,
+        "City_building_028": 16395322530108514768,
+        "City_building_030": 5908160395832291694,
+        "City_building_031": 4566582957970912710,
+        "City_building_032": 2925197195987272473,
+        "City_building_033": 18291169180079219744,
+        "City_building_034": 7262581360687549625,
+        "City_building_035": 5272077846080951810,
+        "City_building_036": 7059085088177583399,
+        "City_building_037": 17416920762391724181,
+        "City_building_038": 13004586803016897956,
+        "City_building_039": 1110041892424602565,
+        "City_building_040": 12070110274692982831,
+        "City_building_041": 7121062327724686968,
+        "Line002": 16593994943226100051,
+        "Object010": 9212738168463339424,
+        "Plane001": 11215525457683001845
+    },
+    "type": 1,
+    "uid": 3833978321129221081
+}

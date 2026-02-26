@@ -125,11 +125,11 @@ bool Input::PreUpdate()
 
 	while (SDL_PollEvent(&event) != 0)
 	{
-/*
-#ifndef WAVE_GAME
-		ImGui_ImplSDL3_ProcessEvent(&event);
-#endif
-*/	
+		/*
+		#ifndef WAVE_GAME
+				ImGui_ImplSDL3_ProcessEvent(&event);
+		#endif
+		*/
 		Application::GetInstance().events->PublishImmediate(Event(Event::Type::EventSDL, &event));
 
 		switch (event.type)
@@ -151,107 +151,107 @@ bool Input::PreUpdate()
 		case SDL_EVENT_WINDOW_RESTORED:
 			windowEvents[WE_SHOW] = true;
 			break;
-	/*
-case SDL_EVENT_MOUSE_BUTTON_DOWN:
-		{
-			mouseButtons[event.button.button - 1] = KEY_DOWN;
-			break;
-		}
-
-#ifndef WAVE_GAME
-			ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
-			if (!camera) break;
-
-			bool overSceneWindow = IsMouseOverSceneWindow();
-			if (!overSceneWindow)
-			{
-				break;
-			}
-
-			float mouseXf, mouseYf;
-			SDL_GetMouseState(&mouseXf, &mouseYf);
-			int scale = Application::GetInstance().window.get()->GetScale();
-			mouseXf /= scale;
-			mouseYf /= scale;
-
-			ImGuiIO& io = ImGui::GetIO();
-			if (io.WantCaptureMouse && !overSceneWindow)
-				break;
-
-			if (!overSceneWindow)
-				break;
-
-			if (event.button.button == SDL_BUTTON_RIGHT)
-			{
-				camera->ResetMouseInput();
-				camera->HandleMouseInput(mouseXf, mouseYf);
-			}
-			else if (event.button.button == SDL_BUTTON_LEFT)
-			{
-				// Left button over Scene: reset orbit and initialize orbit input
-				camera->ResetOrbitInput();
-				camera->HandleOrbitInput(mouseXf, mouseYf);
-
-				// Object selection: only if ALT is not pressed
-				if (!keys[SDL_SCANCODE_LALT] && !keys[SDL_SCANCODE_RALT] && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+			/*
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
 				{
-					ImVec2 scenePos = Application::GetInstance().editor->sceneViewportPos;
-					ImVec2 sceneSize = Application::GetInstance().editor->sceneViewportSize;
+					mouseButtons[event.button.button - 1] = KEY_DOWN;
+					break;
+				}
 
-					float relativeX = mouseXf - scenePos.x;
-					float relativeY = mouseYf - scenePos.y;
+		#ifndef WAVE_GAME
+					ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
+					if (!camera) break;
 
-					if (relativeX < 0 || relativeX > sceneSize.x ||
-						relativeY < 0 || relativeY > sceneSize.y)
+					bool overSceneWindow = IsMouseOverSceneWindow();
+					if (!overSceneWindow)
 					{
 						break;
 					}
 
-					glm::vec3 rayOrigin = camera->GetPosition();
-					glm::vec3 rayDir = camera->ScreenToWorldRay(
-						static_cast<int>(relativeX),
-						static_cast<int>(relativeY),
-						static_cast<int>(sceneSize.x),
-						static_cast<int>(sceneSize.y)
-					);
+					float mouseXf, mouseYf;
+					SDL_GetMouseState(&mouseXf, &mouseYf);
+					int scale = Application::GetInstance().window.get()->GetScale();
+					mouseXf /= scale;
+					mouseYf /= scale;
 
-					GameObject* root = Application::GetInstance().scene->GetRoot();
-					float minDist = std::numeric_limits<float>::max();
-					GameObject* clicked = FindClosestObjectToRayOptimized(root, rayOrigin, rayDir, minDist);
+					ImGuiIO& io = ImGui::GetIO();
+					if (io.WantCaptureMouse && !overSceneWindow)
+						break;
 
-					bool shiftPressed = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT];
+					if (!overSceneWindow)
+						break;
 
-					if (clicked)
+					if (event.button.button == SDL_BUTTON_RIGHT)
 					{
-						if (shiftPressed)
+						camera->ResetMouseInput();
+						camera->HandleMouseInput(mouseXf, mouseYf);
+					}
+					else if (event.button.button == SDL_BUTTON_LEFT)
+					{
+						// Left button over Scene: reset orbit and initialize orbit input
+						camera->ResetOrbitInput();
+						camera->HandleOrbitInput(mouseXf, mouseYf);
+
+						// Object selection: only if ALT is not pressed
+						if (!keys[SDL_SCANCODE_LALT] && !keys[SDL_SCANCODE_RALT] && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
 						{
-							Application::GetInstance().selectionManager->ToggleSelection(clicked);
+							ImVec2 scenePos = Application::GetInstance().editor->sceneViewportPos;
+							ImVec2 sceneSize = Application::GetInstance().editor->sceneViewportSize;
+
+							float relativeX = mouseXf - scenePos.x;
+							float relativeY = mouseYf - scenePos.y;
+
+							if (relativeX < 0 || relativeX > sceneSize.x ||
+								relativeY < 0 || relativeY > sceneSize.y)
+							{
+								break;
+							}
+
+							glm::vec3 rayOrigin = camera->GetPosition();
+							glm::vec3 rayDir = camera->ScreenToWorldRay(
+								static_cast<int>(relativeX),
+								static_cast<int>(relativeY),
+								static_cast<int>(sceneSize.x),
+								static_cast<int>(sceneSize.y)
+							);
+
+							GameObject* root = Application::GetInstance().scene->GetRoot();
+							float minDist = std::numeric_limits<float>::max();
+							GameObject* clicked = FindClosestObjectToRayOptimized(root, rayOrigin, rayDir, minDist);
+
+							bool shiftPressed = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT];
+
+							if (clicked)
+							{
+								if (shiftPressed)
+								{
+									Application::GetInstance().selectionManager->ToggleSelection(clicked);
+								}
+								else
+								{
+									Application::GetInstance().selectionManager->SetSelectedObject(clicked);
+								}
+							}
+							else
+							{
+								if (!shiftPressed)
+								{
+									Application::GetInstance().selectionManager->ClearSelection();
+								}
+							}
 						}
 						else
 						{
-							Application::GetInstance().selectionManager->SetSelectedObject(clicked);
+							camera->ResetOrbitInput();
+							camera->HandleOrbitInput(mouseXf, mouseYf);
 						}
 					}
-					else
+					else if (event.button.button == SDL_BUTTON_MIDDLE)
 					{
-						if (!shiftPressed)
-						{
-							Application::GetInstance().selectionManager->ClearSelection();
-						}
+						camera->ResetPanInput();
 					}
-				}
-				else
-				{
-					camera->ResetOrbitInput();
-					camera->HandleOrbitInput(mouseXf, mouseYf);
-				}
-			}
-			else if (event.button.button == SDL_BUTTON_MIDDLE)
-			{
-				camera->ResetPanInput();
-			}
-#endif
-*/
+		#endif
+		*/
 		case SDL_EVENT_WINDOW_RESIZED:
 			Application::GetInstance().events->PublishImmediate(Event(Event::Type::WindowResize, event.window.data1, event.window.data2));
 			windowEvents[WE_SHOW] = true;
@@ -267,47 +267,47 @@ case SDL_EVENT_MOUSE_BUTTON_DOWN:
 
 		case SDL_EVENT_MOUSE_MOTION:
 		{
-/*		int scale = Application::GetInstance().window.get()->GetScale();
-			mouseMotionX = static_cast<int>(event.motion.xrel / scale);
-			mouseMotionY = static_cast<int>(event.motion.yrel / scale);
-			mouseX = static_cast<int>(event.motion.x / scale);
-			mouseY = static_cast<int>(event.motion.y / scale);
+			/*		int scale = Application::GetInstance().window.get()->GetScale();
+						mouseMotionX = static_cast<int>(event.motion.xrel / scale);
+						mouseMotionY = static_cast<int>(event.motion.yrel / scale);
+						mouseX = static_cast<int>(event.motion.x / scale);
+						mouseY = static_cast<int>(event.motion.y / scale);
 
-#ifndef WAVE_GAME
-			float mouseXf = static_cast<float>(event.motion.x) / static_cast<float>(scale);
-			float mouseYf = static_cast<float>(event.motion.y) / static_cast<float>(scale);
+			#ifndef WAVE_GAME
+						float mouseXf = static_cast<float>(event.motion.x) / static_cast<float>(scale);
+						float mouseYf = static_cast<float>(event.motion.y) / static_cast<float>(scale);
 
-			bool overSceneWindow = IsMouseOverSceneWindow();
-			bool isDragging = (mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_REPEAT ||
-				mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_DOWN ||
-				mouseButtons[SDL_BUTTON_MIDDLE - 1] == KEY_REPEAT ||
-				mouseButtons[SDL_BUTTON_MIDDLE - 1] == KEY_DOWN ||
-				mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT ||
-				mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_DOWN);
+						bool overSceneWindow = IsMouseOverSceneWindow();
+						bool isDragging = (mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_REPEAT ||
+							mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_DOWN ||
+							mouseButtons[SDL_BUTTON_MIDDLE - 1] == KEY_REPEAT ||
+							mouseButtons[SDL_BUTTON_MIDDLE - 1] == KEY_DOWN ||
+							mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT ||
+							mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_DOWN);
 
-			if (overSceneWindow || isDragging)
-			{
-				ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
-				if (!camera) break;
+						if (overSceneWindow || isDragging)
+						{
+							ComponentCamera* camera = Application::GetInstance().camera->GetEditorCamera();
+							if (!camera) break;
 
-				if ((keys[SDL_SCANCODE_LALT] || keys[SDL_SCANCODE_RALT]) &&
-					(mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_DOWN))
-				{
-					camera->HandleOrbitInput(mouseXf, mouseYf);
-				}
-				else if (mouseButtons[SDL_BUTTON_MIDDLE - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_MIDDLE - 1] == KEY_DOWN)
-				{
-					camera->HandlePanInput(static_cast<float>(mouseMotionX), static_cast<float>(mouseMotionY));
-				}
-				else if (mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_DOWN)
-				{
-					camera->HandleMouseInput(mouseXf, mouseYf);
-				}
-			}
-#endif
+							if ((keys[SDL_SCANCODE_LALT] || keys[SDL_SCANCODE_RALT]) &&
+								(mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_LEFT - 1] == KEY_DOWN))
+							{
+								camera->HandleOrbitInput(mouseXf, mouseYf);
+							}
+							else if (mouseButtons[SDL_BUTTON_MIDDLE - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_MIDDLE - 1] == KEY_DOWN)
+							{
+								camera->HandlePanInput(static_cast<float>(mouseMotionX), static_cast<float>(mouseMotionY));
+							}
+							else if (mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_REPEAT || mouseButtons[SDL_BUTTON_RIGHT - 1] == KEY_DOWN)
+							{
+								camera->HandleMouseInput(mouseXf, mouseYf);
+							}
+						}
+			#endif
 
-			break;
-*/	
+						break;
+			*/
 			mouseMotionX = event.motion.xrel / scale;
 			mouseMotionY = event.motion.yrel / scale;
 			mouseX = event.motion.x / scale;
@@ -405,45 +405,45 @@ case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		break;
 
 		}
-	};
+		};
 
-	if (controller != nullptr)
-	{
-		for (int i = 0; i < MAX_GAMEPAD_BUTTONS; ++i)
+		if (controller != nullptr)
 		{
-			bool isPressed = SDL_GetGamepadButton(controller, static_cast<SDL_GamepadButton>(i));
-
-			switch (gamepadButtons[i])
+			for (int i = 0; i < MAX_GAMEPAD_BUTTONS; ++i)
 			{
-			case KEY_IDLE:
-				if (isPressed)
-					gamepadButtons[i] = KEY_DOWN;
-				break;
-			case KEY_DOWN:
-				gamepadButtons[i] = isPressed ? KEY_REPEAT : KEY_UP;
-				break;
-			case KEY_REPEAT:
-				if (!isPressed)
-					gamepadButtons[i] = KEY_UP;
-				break;
-			case KEY_UP:
-				gamepadButtons[i] = isPressed ? KEY_DOWN : KEY_IDLE;
-				break;
+				bool isPressed = SDL_GetGamepadButton(controller, static_cast<SDL_GamepadButton>(i));
+
+				switch (gamepadButtons[i])
+				{
+				case KEY_IDLE:
+					if (isPressed)
+						gamepadButtons[i] = KEY_DOWN;
+					break;
+				case KEY_DOWN:
+					gamepadButtons[i] = isPressed ? KEY_REPEAT : KEY_UP;
+					break;
+				case KEY_REPEAT:
+					if (!isPressed)
+						gamepadButtons[i] = KEY_UP;
+					break;
+				case KEY_UP:
+					gamepadButtons[i] = isPressed ? KEY_DOWN : KEY_IDLE;
+					break;
+				}
 			}
 		}
-	}
-/*
-#endif
-*/	
-else
-	{
-		for (int i = 0; i < MAX_GAMEPAD_BUTTONS; ++i)
-			gamepadButtons[i] = KEY_IDLE;
-	}
+		/*
+		#endif
+		*/
+		else
+		{
+			for (int i = 0; i < MAX_GAMEPAD_BUTTONS; ++i)
+				gamepadButtons[i] = KEY_IDLE;
+		}
 
-	return true;
+		return true;
+	}
 }
-
 bool Input::CleanUp()
 {
 	LOG_DEBUG("Quitting SDL event subsystem");

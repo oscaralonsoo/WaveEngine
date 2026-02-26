@@ -110,12 +110,12 @@ void FixedJoint::DrawDebug() {
     render->DrawSphere(pB, 0.2f, color);
 }
 
-void FixedJoint::Serialize(nlohmann::json& componentObj) const
-{
-    Joint::Serialize(componentObj);
-}
-
-void FixedJoint::Deserialize(const nlohmann::json& componentObj)
-{
-    Joint::Deserialize(componentObj);
-}
+//void FixedJoint::Serialize(nlohmann::json& componentObj) const
+//{
+//    Joint::Serialize(componentObj);
+//}
+//
+//void FixedJoint::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Joint::Deserialize(componentObj);
+//}

@@ -161,27 +161,27 @@ void Collider::OnGameObjectEvent(GameObjectEvent event, Component* component)
     }
 }
 
-void Collider::Serialize(nlohmann::json& componentObj) const
-{
-    componentObj["center"] = { center.x, center.y, center.z };
-    componentObj["isTrigger"] = isTrigger;
-    componentObj["staticFriction"] = staticFriction;
-    componentObj["dynamicFriction"] = dynamicFriction;
-    componentObj["restitution"] = restitution;
-}
-
-void Collider::Deserialize(const nlohmann::json& componentObj)
-{
-    if (componentObj.contains("center")) {
-        const auto& c = componentObj["center"];
-        SetCenter(glm::vec3(c[0].get<float>(), c[1].get<float>(), c[2].get<float>()));
-    }
-    if (componentObj.contains("isTrigger"))
-        SetTrigger(componentObj["isTrigger"].get<bool>());
-    if (componentObj.contains("staticFriction"))
-        SetStaticFriction(componentObj["staticFriction"].get<float>());
-    if (componentObj.contains("dynamicFriction"))
-        SetDynamicFriction(componentObj["dynamicFriction"].get<float>());
-    if (componentObj.contains("restitution"))
-        SetRestitution(componentObj["restitution"].get<float>());
-}
+//void Collider::Serialize(nlohmann::json& componentObj) const
+//{
+//    componentObj["center"] = { center.x, center.y, center.z };
+//    componentObj["isTrigger"] = isTrigger;
+//    componentObj["staticFriction"] = staticFriction;
+//    componentObj["dynamicFriction"] = dynamicFriction;
+//    componentObj["restitution"] = restitution;
+//}
+//
+//void Collider::Deserialize(const nlohmann::json& componentObj)
+//{
+//    if (componentObj.contains("center")) {
+//        const auto& c = componentObj["center"];
+//        SetCenter(glm::vec3(c[0].get<float>(), c[1].get<float>(), c[2].get<float>()));
+//    }
+//    if (componentObj.contains("isTrigger"))
+//        SetTrigger(componentObj["isTrigger"].get<bool>());
+//    if (componentObj.contains("staticFriction"))
+//        SetStaticFriction(componentObj["staticFriction"].get<float>());
+//    if (componentObj.contains("dynamicFriction"))
+//        SetDynamicFriction(componentObj["dynamicFriction"].get<float>());
+//    if (componentObj.contains("restitution"))
+//        SetRestitution(componentObj["restitution"].get<float>());
+//}

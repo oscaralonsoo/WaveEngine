@@ -226,42 +226,42 @@ void D6Joint::DrawDebug() {
     render->DrawLine(pRef, glm::vec3(worldA.p.x, worldA.p.y, worldA.p.z), glm::vec4(1, 1, 1, 1));
 }
 
-void D6Joint::Serialize(nlohmann::json& componentObj) const
-{
-    Joint::Serialize(componentObj);
-
-    nlohmann::json motionsArr = nlohmann::json::array();
-    for (int i = 0; i < 6; ++i)
-        motionsArr.push_back((int)motions[i]);
-    componentObj["motions"] = motionsArr;
-
-    componentObj["linearLimit"] = linearLimit;
-    componentObj["twistMin"] = twistMin;
-    componentObj["twistMax"] = twistMax;
-    componentObj["swingY"] = swingY;
-    componentObj["swingZ"] = swingZ;
-}
-
-void D6Joint::Deserialize(const nlohmann::json& componentObj)
-{
-    Joint::Deserialize(componentObj);
-
-    if (componentObj.contains("motions")) {
-        const auto& arr = componentObj["motions"];
-        for (int i = 0; i < 6 && i < (int)arr.size(); ++i)
-            motions[i] = (physx::PxD6Motion::Enum)arr[i].get<int>();
-    }
-
-    if (componentObj.contains("linearLimit"))
-        SetLinearLimit(componentObj["linearLimit"].get<float>());
-
-    float tMin = twistMin, tMax = twistMax;
-    if (componentObj.contains("twistMin")) tMin = componentObj["twistMin"].get<float>();
-    if (componentObj.contains("twistMax")) tMax = componentObj["twistMax"].get<float>();
-    SetTwistLimit(tMin, tMax);
-
-    float sY = swingY, sZ = swingZ;
-    if (componentObj.contains("swingY")) sY = componentObj["swingY"].get<float>();
-    if (componentObj.contains("swingZ")) sZ = componentObj["swingZ"].get<float>();
-    SetSwingLimit(sY, sZ);
-}
+//void D6Joint::Serialize(nlohmann::json& componentObj) const
+//{
+//    Joint::Serialize(componentObj);
+//
+//    nlohmann::json motionsArr = nlohmann::json::array();
+//    for (int i = 0; i < 6; ++i)
+//        motionsArr.push_back((int)motions[i]);
+//    componentObj["motions"] = motionsArr;
+//
+//    componentObj["linearLimit"] = linearLimit;
+//    componentObj["twistMin"] = twistMin;
+//    componentObj["twistMax"] = twistMax;
+//    componentObj["swingY"] = swingY;
+//    componentObj["swingZ"] = swingZ;
+//}
+//
+//void D6Joint::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Joint::Deserialize(componentObj);
+//
+//    if (componentObj.contains("motions")) {
+//        const auto& arr = componentObj["motions"];
+//        for (int i = 0; i < 6 && i < (int)arr.size(); ++i)
+//            motions[i] = (physx::PxD6Motion::Enum)arr[i].get<int>();
+//    }
+//
+//    if (componentObj.contains("linearLimit"))
+//        SetLinearLimit(componentObj["linearLimit"].get<float>());
+//
+//    float tMin = twistMin, tMax = twistMax;
+//    if (componentObj.contains("twistMin")) tMin = componentObj["twistMin"].get<float>();
+//    if (componentObj.contains("twistMax")) tMax = componentObj["twistMax"].get<float>();
+//    SetTwistLimit(tMin, tMax);
+//
+//    float sY = swingY, sZ = swingZ;
+//    if (componentObj.contains("swingY")) sY = componentObj["swingY"].get<float>();
+//    if (componentObj.contains("swingZ")) sZ = componentObj["swingZ"].get<float>();
+//    SetSwingLimit(sY, sZ);
+//}

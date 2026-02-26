@@ -106,15 +106,15 @@ void SphereCollider::DebugShape()
     render->DrawCircle(pos, rot, finalRadius, segments, color, glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
 }
 
-void SphereCollider::Serialize(nlohmann::json& componentObj) const
-{
-    Collider::Serialize(componentObj);
-    componentObj["radius"] = radius;
-}
-
-void SphereCollider::Deserialize(const nlohmann::json& componentObj)
-{
-    Collider::Deserialize(componentObj);
-    if (componentObj.contains("radius"))
-        SetRadius(componentObj["radius"].get<float>());
-}
+//void SphereCollider::Serialize(nlohmann::json& componentObj) const
+//{
+//    Collider::Serialize(componentObj);
+//    componentObj["radius"] = radius;
+//}
+//
+//void SphereCollider::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Collider::Deserialize(componentObj);
+//    if (componentObj.contains("radius"))
+//        SetRadius(componentObj["radius"].get<float>());
+//}

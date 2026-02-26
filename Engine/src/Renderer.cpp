@@ -5,9 +5,7 @@
 #include "ComponentMesh.h"
 #include "ComponentSkinnedMesh.h"
 #include "ComponentMaterial.h"
-#ifndef WAVE_GAME
 #include "ModuleEditor.h"
-#endif
 #include "ResourceShader.h"
 #include "ComponentParticleSystem.h"
 #include "CameraLens.h"
@@ -43,7 +41,7 @@ bool Renderer::Start()
     // Initialize default shader
     defaultShader = make_unique<Shader>();
 
-    if (!defaultShader->CreateNoTexture())  
+    if (!defaultShader->CreateNoTexture())
     {
         LOG_DEBUG("ERROR: Failed to create default shader");
         LOG_CONSOLE("ERROR: Failed to compile shaders");
@@ -98,7 +96,7 @@ bool Renderer::Start()
         LOG_DEBUG("Water shader created successfully - Program ID: %d", waterShader->GetProgramID());
         LOG_CONSOLE("Water shader compiled successfully");
     }
-    
+
     normalsShader = make_unique<Shader>();
     if (!normalsShader->CreateNormalShader())
     {
@@ -111,7 +109,7 @@ bool Renderer::Start()
         LOG_DEBUG("normals shader created successfully - Program ID: %d", normalsShader->GetProgramID());
         LOG_CONSOLE("normals shader compiled successfully");
     }
-    
+
     meshShader = make_unique<Shader>();
     if (!meshShader->CreateMeshShader())
     {
@@ -178,14 +176,6 @@ bool Renderer::Start()
     outlineUniforms.projection = glGetUniformLocation(outlineShader->GetProgramID(), "projection");
     outlineUniforms.view = glGetUniformLocation(outlineShader->GetProgramID(), "view");
     outlineUniforms.model = glGetUniformLocation(outlineShader->GetProgramID(), "model");
-
-#ifndef WAVE_GAME
-	// Create framebuffer (Scene window)
-    CreateFramebuffer(framebufferWidth, framebufferHeight);
-
-    // Create framebuffer (Game window)
-    CreateGameFramebuffer(gameFramebufferWidth, gameFramebufferHeight);
-#endif
 
     return true;
 }
@@ -355,58 +345,11 @@ bool Renderer::PostUpdate()
 {
     bool ret = true;
 
-bool Renderer::Update()
-{
-
-    ZoneScopedN("RendererUpdate");
-
-#ifdef WAVE_GAME
-    // Render directly to screen
-    int windowWidth, windowHeight;
-    Application::GetInstance().window->GetWindowSize(windowWidth, windowHeight);
-    glViewport(0, 0, windowWidth, windowHeight);
-
-    glClearColor(clearColorR, clearColorG, clearColorB, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    ComponentCamera* sceneCamera = Application::GetInstance().camera->GetSceneCamera();
-    if (!sceneCamera)
-    {
-        // No camera = clear color only
-        LOG_DEBUG("[Game] No cameras rendering");
-        return true;
-    }
-
-    defaultShader->Use();
-
-    float aspectRatio = (windowWidth > 0 && windowHeight > 0)
-        ? (float)windowWidth / (float)windowHeight
-        : 1.0f;
-    sceneCamera->SetAspectRatio(aspectRatio);
-
-    GLuint shaderProgram = defaultShader->GetProgramID();
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE,
-        glm::value_ptr(sceneCamera->GetProjectionMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE,
-        glm::value_ptr(sceneCamera->GetViewMatrix()));
-
-    glActiveTexture(GL_TEXTURE0);
-    glUniform1i(defaultUniforms.texture1, 0);
-
-    GameObject* root = Application::GetInstance().scene->GetRoot();
-    if (root && root->GetChildren().size() > 0)
-    {
-        DrawScene(sceneCamera, sceneCamera, false);
-    }
-
-    defaultTexture->Unbind();
-
-#else
     for (CameraLens* camera : activeCameras)
     {
         RenderScene(camera);
     }
-#endif
+
     int width = 0;
     int height = 0;
 
@@ -450,7 +393,7 @@ bool Renderer::RenderScene(CameraLens* camera)
     //UPDATE CAM MATRIX 
     UpdateViewMatrix(camera->GetViewMatrix());
     UpdateProjectionMatrix(camera->GetProjectionMatrix());
-    
+
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, uboMatrices);
 
     //CLEAN LIST AND BUILD NEWS
@@ -469,28 +412,7 @@ bool Renderer::RenderScene(CameraLens* camera)
     else
     {
         defaultShader->Use();
-
-        float gameAspectRatio = gameViewportSize.x / gameViewportSize.y;
-        sceneCamera->SetAspectRatio(gameAspectRatio);
-
-        // Update camera matrices
-        GLuint gameShaderProgram = defaultShader->GetProgramID();
-        glUniformMatrix4fv(glGetUniformLocation(gameShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(sceneCamera->GetProjectionMatrix()));
-        glUniformMatrix4fv(glGetUniformLocation(gameShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(sceneCamera->GetViewMatrix()));
-
-        glActiveTexture(GL_TEXTURE0);
-        glUniform1i(defaultUniforms.texture1, 0);
-
-            if (root != nullptr && root->GetChildren().size() > 0)
-        {
-            DrawScene(sceneCamera, sceneCamera, false);
-        }
-
-        defaultTexture->Unbind();
-
-        UnbindFramebuffer();
     }
-#endif
 
     //CONFIG OPENGL
     glEnable(GL_STENCIL_TEST);
@@ -586,7 +508,7 @@ void Renderer::BuildRenderLists(const CameraLens* camera)
         }
 
         glm::vec3 pos = ps->owner->transform->GetGlobalPosition();
-       float distanceToCamera = glm::distance(pos, camera->position);
+        float distanceToCamera = glm::distance(pos, camera->position);
 
         particlesList.emplace(distanceToCamera, pObj);
     }
@@ -610,7 +532,7 @@ void Renderer::DrawRenderList(const std::multimap<float, RenderObject>& map, con
             glStencilFunc(GL_ALWAYS, 0, 0xFF);
             glStencilMask(0x00);
         }
-        
+
         ComponentMaterial* materialComp = meshComp->GetAttachedMaterial();
         materialComp->Use();
 
@@ -801,7 +723,7 @@ bool Renderer::CleanUp()
 {
     LOG_DEBUG("Cleaning up Renderer");
 
-    
+
 
     // Release primitive meshes
     UnloadMesh(sphere);

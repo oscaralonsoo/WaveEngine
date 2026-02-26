@@ -147,18 +147,18 @@ void CapsuleCollider::DebugShape()
     render->DrawArc(bottomCenter, rot, finalRadius, 8, color, localForward, -localUp);
 }
 
-void CapsuleCollider::Serialize(nlohmann::json& componentObj) const
-{
-    Collider::Serialize(componentObj);
-    componentObj["radius"] = radius;
-    componentObj["height"] = height;
-}
-
-void CapsuleCollider::Deserialize(const nlohmann::json& componentObj)
-{
-    Collider::Deserialize(componentObj);
-    if (componentObj.contains("radius"))
-        SetRadius(componentObj["radius"].get<float>());
-    if (componentObj.contains("height"))
-        SetHeight(componentObj["height"].get<float>());
-}
+//void CapsuleCollider::Serialize(nlohmann::json& componentObj) const
+//{
+//    Collider::Serialize(componentObj);
+//    componentObj["radius"] = radius;
+//    componentObj["height"] = height;
+//}
+//
+//void CapsuleCollider::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Collider::Deserialize(componentObj);
+//    if (componentObj.contains("radius"))
+//        SetRadius(componentObj["radius"].get<float>());
+//    if (componentObj.contains("height"))
+//        SetHeight(componentObj["height"].get<float>());
+//}

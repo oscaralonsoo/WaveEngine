@@ -355,40 +355,40 @@ void Joint::OnGameObjectEvent(GameObjectEvent event, Component* component)
     }
 }
 
-void Joint::Serialize(nlohmann::json& componentObj) const
-{
-    componentObj["localPosA"] = { localPosA.x, localPosA.y, localPosA.z };
-    componentObj["localPosB"] = { localPosB.x, localPosB.y, localPosB.z };
-
-    glm::vec3 eulerA = QuatToEuler(localRotA);
-    glm::vec3 eulerB = QuatToEuler(localRotB);
-    componentObj["localRotA"] = { eulerA.x, eulerA.y, eulerA.z };
-    componentObj["localRotB"] = { eulerB.x, eulerB.y, eulerB.z };
-
-    componentObj["breakForce"] = breakForce;
-    componentObj["breakTorque"] = breakTorque;
-}
-
-void Joint::Deserialize(const nlohmann::json& componentObj)
-{
-    if (componentObj.contains("localPosA")) {
-        const auto& p = componentObj["localPosA"];
-        SetAnchorPosition(JointBody::Self, glm::vec3(p[0], p[1], p[2]));
-    }
-    if (componentObj.contains("localPosB")) {
-        const auto& p = componentObj["localPosB"];
-        SetAnchorPosition(JointBody::Target, glm::vec3(p[0], p[1], p[2]));
-    }
-    if (componentObj.contains("localRotA")) {
-        const auto& r = componentObj["localRotA"];
-        SetAnchorRotation(JointBody::Self, EulerToQuat(glm::vec3(r[0], r[1], r[2])));
-    }
-    if (componentObj.contains("localRotB")) {
-        const auto& r = componentObj["localRotB"];
-        SetAnchorRotation(JointBody::Target, EulerToQuat(glm::vec3(r[0], r[1], r[2])));
-    }
-    if (componentObj.contains("breakForce"))
-        SetBreakForce(componentObj["breakForce"].get<float>());
-    if (componentObj.contains("breakTorque"))
-        SetBreakTorque(componentObj["breakTorque"].get<float>());
-}
+//void Joint::Serialize(nlohmann::json& componentObj) const
+//{
+//    componentObj["localPosA"] = { localPosA.x, localPosA.y, localPosA.z };
+//    componentObj["localPosB"] = { localPosB.x, localPosB.y, localPosB.z };
+//
+//    glm::vec3 eulerA = QuatToEuler(localRotA);
+//    glm::vec3 eulerB = QuatToEuler(localRotB);
+//    componentObj["localRotA"] = { eulerA.x, eulerA.y, eulerA.z };
+//    componentObj["localRotB"] = { eulerB.x, eulerB.y, eulerB.z };
+//
+//    componentObj["breakForce"] = breakForce;
+//    componentObj["breakTorque"] = breakTorque;
+//}
+//
+//void Joint::Deserialize(const nlohmann::json& componentObj)
+//{
+//    if (componentObj.contains("localPosA")) {
+//        const auto& p = componentObj["localPosA"];
+//        SetAnchorPosition(JointBody::Self, glm::vec3(p[0], p[1], p[2]));
+//    }
+//    if (componentObj.contains("localPosB")) {
+//        const auto& p = componentObj["localPosB"];
+//        SetAnchorPosition(JointBody::Target, glm::vec3(p[0], p[1], p[2]));
+//    }
+//    if (componentObj.contains("localRotA")) {
+//        const auto& r = componentObj["localRotA"];
+//        SetAnchorRotation(JointBody::Self, EulerToQuat(glm::vec3(r[0], r[1], r[2])));
+//    }
+//    if (componentObj.contains("localRotB")) {
+//        const auto& r = componentObj["localRotB"];
+//        SetAnchorRotation(JointBody::Target, EulerToQuat(glm::vec3(r[0], r[1], r[2])));
+//    }
+//    if (componentObj.contains("breakForce"))
+//        SetBreakForce(componentObj["breakForce"].get<float>());
+//    if (componentObj.contains("breakTorque"))
+//        SetBreakTorque(componentObj["breakTorque"].get<float>());
+//}

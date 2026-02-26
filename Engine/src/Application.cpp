@@ -27,7 +27,6 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     scripts = std::make_shared<ScriptManager>();  
     physics = std::make_shared<ModulePhysics>();  
 
-    
     AddModule(std::static_pointer_cast<Module>(window));
     AddModule(std::static_pointer_cast<Module>(events));
     AddModule(std::static_pointer_cast<Module>(input));
@@ -37,17 +36,15 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     AddModule(std::static_pointer_cast<Module>(scene));
     AddModule(std::static_pointer_cast<Module>(camera));
     AddModule(std::static_pointer_cast<Module>(audio));
-#ifndef WAVE_GAME
-    AddModule(std::static_pointer_cast<Module>(editor));
-#endif
     AddModule(std::static_pointer_cast<Module>(resources));
     AddModule(std::static_pointer_cast<Module>(scripts));  
     AddModule(std::static_pointer_cast<Module>(loader));
     AddModule(std::static_pointer_cast<Module>(time));
     AddModule(std::static_pointer_cast<Module>(grid));
     AddModule(std::static_pointer_cast<Module>(renderer));
+#ifndef WAVE_GAME
     AddModule(std::static_pointer_cast<Module>(editor));
-
+#endif
 
     selectionManager = new SelectionManager();
 }

@@ -27,6 +27,6 @@ public:
 
     void DebugShape();
 
-    void Serialize(nlohmann::json& componentObj) const override;
-    void Deserialize(const nlohmann::json& componentObj) override;
+    //void Serialize(nlohmann::json& componentObj) const override;
+    //void Deserialize(const nlohmann::json& componentObj) override;
 };

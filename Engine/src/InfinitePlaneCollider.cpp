@@ -80,12 +80,12 @@ void InfinitePlaneCollider::DebugShape() {
     render->DrawLine(pos, pos + normal * 2.0f, glm::vec4(1, 1, 1, 1));
 }
 
-void InfinitePlaneCollider::Serialize(nlohmann::json& componentObj) const
-{
-    Collider::Serialize(componentObj);
-}
-
-void InfinitePlaneCollider::Deserialize(const nlohmann::json& componentObj)
-{
-    Collider::Deserialize(componentObj);
-}
+//void InfinitePlaneCollider::Serialize(nlohmann::json& componentObj) const
+//{
+//    Collider::Serialize(componentObj);
+//}
+//
+//void InfinitePlaneCollider::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Collider::Deserialize(componentObj);
+//}

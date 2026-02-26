@@ -1,6 +1,6 @@
 {
     "animations": {
-        "Take 001": 2464042632846681574
+        "Take 001": 8128414388985602892
     },
     "fileHash": 85876180,
     "importSettings": {
@@ -12,8 +12,8 @@
         "upAxis": 0
     },
     "meshes": {
-        "RPG-Character-Mesh": 5434502072278581913
+        "RPG-Character-Mesh": 10435763997954690203
     },
     "type": 1,
-    "uid": 1532824112105547964
+    "uid": 585760950748460086
 }

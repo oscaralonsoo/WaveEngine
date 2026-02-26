@@ -22,8 +22,8 @@ public:
     void OnEditor() override;
     void DebugShape() override;
 
-    void Serialize(nlohmann::json& componentObj) const override;
-    void Deserialize(const nlohmann::json& componentObj) override;
+    //void Serialize(nlohmann::json& componentObj) const override;
+    //void Deserialize(const nlohmann::json& componentObj) override;
 
 private:
     glm::vec2 size = { 1.0f, 1.0f };

@@ -166,13 +166,13 @@ void MeshCollider::OnGameObjectEvent(GameObjectEvent event, Component* component
     Collider::OnGameObjectEvent(event, component);
 }
 
-void MeshCollider::Serialize(nlohmann::json& componentObj) const
-{
-    Collider::Serialize(componentObj);
-}
-
-void MeshCollider::Deserialize(const nlohmann::json& componentObj)
-{
-    Collider::Deserialize(componentObj);
-    CookMesh();
-}
+//void MeshCollider::Serialize(nlohmann::json& componentObj) const
+//{
+//    Collider::Serialize(componentObj);
+//}
+//
+//void MeshCollider::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Collider::Deserialize(componentObj);
+//    CookMesh();
+//}
