@@ -28,9 +28,18 @@ void ComponentNavigation::OnEditor()
 
         ImGui::Spacing();
 
+        if (type == NavType::SURFACE) {
+            ImGui::Text("Surface Settings");
+            ImGui::SliderFloat("Max Slope Angle", &maxSlopeAngle, 0.0f, 90.0f);
+        }
+
+
+        ImGui::Spacing();
+
         if (ImGui::Button("Bake NavMesh", ImVec2(-1, 30)))
         {
             Application::GetInstance().navMesh->Bake(this->owner);
+
          
         }
 

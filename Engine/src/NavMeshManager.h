@@ -27,8 +27,8 @@ public:
     void Bake(GameObject* obj);
     void DrawDebug();
     void RemoveNavMesh(GameObject* obj);
+    void RemoveNavMeshRecursive(GameObject* obj);
 
-    float maxSlopeAngle = 0.0f;
 
 
 private:
@@ -41,6 +41,7 @@ private:
 
 
     bool IsBlockedByObstacle(const glm::vec3& min, const glm::vec3& max);
+    void RecollectObstacles(GameObject* obj);
 
     rcPolyMesh* m_polyMesh = nullptr;
 

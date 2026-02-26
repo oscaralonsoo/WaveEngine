@@ -69,8 +69,11 @@ void ModuleNavMesh::ExtractVertices(ComponentMesh* mesh, std::vector<float>& ver
 
 void ModuleNavMesh::Bake(GameObject* obj)
 {
-    RemoveNavMesh(obj);
-    navObstacles.erase(std::remove(navObstacles.begin(), navObstacles.end(), obj), navObstacles.end());
+    RemoveNavMeshRecursive(obj);
+
+    navObstacles.clear();
+
+    RecollectObstacles(obj);
 
     std::vector<float> allVertices;
     std::vector<int>   allIndices;
@@ -86,7 +89,7 @@ void ModuleNavMesh::Bake(GameObject* obj)
     ComponentNavigation* navComp = static_cast<ComponentNavigation*>(obj->GetComponent(ComponentType::NAVIGATION));
 
     if (navComp && navComp->type == NavType::OBSTACLE) {
-        navObstacles.push_back(obj);
+        //navObstacles.push_back(obj);
         NavMeshData obstacleData;
         obstacleData.heightfield = nullptr;
         obstacleData.owner = obj;
@@ -99,6 +102,8 @@ void ModuleNavMesh::Bake(GameObject* obj)
     CalculateAABB(allVertices, bmin, bmax);
 
     rcConfig cfg = CreateDefaultConfig(bmin, bmax);
+    cfg.walkableSlopeAngle = navComp->maxSlopeAngle;
+
     rcContext ctx;
 
     rcHeightfield* hf = rcAllocHeightfield();
@@ -231,7 +236,10 @@ void ModuleNavMesh::DrawDebug() {
                             // atan2 con la horizontal más corta (borde) para ser conservadores
                             float cellAngle = glm::degrees(glm::atan(maxDeltaH, hf->cs));
 
-                            if (cellAngle > maxSlopeAngle)
+                            ComponentNavigation* nav = (ComponentNavigation*)meshData.owner->GetComponent(ComponentType::NAVIGATION);
+                            float slopeLimit = nav ? nav->maxSlopeAngle : 35.0f; 
+                            
+                            if (cellAngle > slopeLimit)
                             {
                                 // Aplanar: todos los vértices a la altura central de la celda
                                 float flatY = hf->bmin[1] + span->smax * hf->ch;
@@ -263,6 +271,21 @@ void ModuleNavMesh::DrawDebug() {
         }
     }
 }
+
+void ModuleNavMesh::RecollectObstacles(GameObject* obj)
+{
+    if (!obj || !obj->IsActive()) return;
+
+    ComponentNavigation* nav =
+        (ComponentNavigation*)obj->GetComponent(ComponentType::NAVIGATION);
+
+    if (nav && nav->type == NavType::OBSTACLE)
+        navObstacles.push_back(obj);
+
+    for (auto* child : obj->GetChildren())
+        RecollectObstacles(child);
+}
+
 
 bool ModuleNavMesh::IsBlockedByObstacle(const glm::vec3& min, const glm::vec3& max)
 {
@@ -308,6 +331,25 @@ void ModuleNavMesh::RemoveNavMesh(GameObject* obj)
 
     LOG_CONSOLE("NavMesh not found for object: %s", obj->GetName().c_str());
 }
+
+void ModuleNavMesh::RemoveNavMeshRecursive(GameObject* obj)
+{
+    if (!obj) return;
+
+    for (auto& data : navMeshes)
+    {
+        if (data.owner == obj)
+        {
+            RemoveNavMesh(obj);
+            break;
+        }
+    }
+
+    for (auto* child : obj->GetChildren())
+        RemoveNavMeshRecursive(child);
+}
+
+
 
 bool ModuleNavMesh::CleanUp() {
 

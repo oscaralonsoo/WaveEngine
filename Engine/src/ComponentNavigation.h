@@ -20,4 +20,7 @@ public:
 
     bool isStatic = true;
     NavType type = NavType::SURFACE;
+
+    float maxSlopeAngle = 35.0f;
+
 };
