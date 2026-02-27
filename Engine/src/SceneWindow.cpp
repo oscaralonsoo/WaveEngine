@@ -97,6 +97,7 @@ void SceneWindow::Draw()
     if (Application::GetInstance().input->GetMouseButtonDown(1) == KEY_UP)
         SelectObject();
 
+
     ImGuizmo::BeginFrame();
 
     HandleGizmoInput();
@@ -117,13 +118,25 @@ void SceneWindow::SelectObject()
 
     if (!isHovered) return;
 
-    Application::GetInstance().selectionManager->ClearSelection();
     GameObject* objToSelect = GetGameObjectUnderMouse();
 
+    bool shiftPressed = Application::GetInstance().input.get()->GetKey(SDL_SCANCODE_LSHIFT) || Application::GetInstance().input.get()->GetKey(SDL_SCANCODE_RSHIFT);
+
     if (objToSelect) {
-        Application::GetInstance().selectionManager->SetSelectedObject(objToSelect);
+
+        if (shiftPressed)
+        {
+            Application::GetInstance().selectionManager->ToggleSelection(objToSelect);
+        }
+        else
+        {
+            Application::GetInstance().selectionManager->SetSelectedObject(objToSelect);
+        }
+
         LOG_CONSOLE("Selected: %s", objToSelect ? objToSelect->GetName().c_str() : "None");
     }
+    else Application::GetInstance().selectionManager->ClearSelection();
+
 }
 
 void SceneWindow::HandleAssetDropTarget()
