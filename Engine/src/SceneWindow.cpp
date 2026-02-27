@@ -91,7 +91,7 @@ void SceneWindow::Draw()
         ImGui::InvisibleButton("SceneView", sceneViewportSize);
     }
 
-    if (Application::GetInstance().input->GetMouseButtonDown(1) == KEY_UP)
+    if (Application::GetInstance().input->GetMouseButtonDown(1) == KEY_DOWN && Application::GetInstance().input->GetKey(SDL_SCANCODE_LALT) != KEY_REPEAT)
         SelectObject();
 
     ImGuizmo::BeginFrame();

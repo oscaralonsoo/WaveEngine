@@ -100,7 +100,7 @@ bool EditorCamera::Update()
 
 void EditorCamera::MoveCamera()
 {
-	std::vector<GameObject*> gameObjects = /*Application::GetInstance().editor->sce*/ {};
+	std::vector<GameObject*> gameObjects = Application::GetInstance().selectionManager->GetSelectedObjects();
 
 	bool shouldBeRelative = (
 		(Application::GetInstance().input->GetMouseButtonDown(3) == KEY_REPEAT) ||
