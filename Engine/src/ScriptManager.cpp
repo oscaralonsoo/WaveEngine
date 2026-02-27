@@ -201,6 +201,8 @@ static int Lua_Input_GetKey(lua_State* L) {
     else if (strcmp(keyName, "Space") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_REPEAT;
     else if (strcmp(keyName, "Q") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_Q) == KEY_REPEAT;
     else if (strcmp(keyName, "E") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_E) == KEY_REPEAT;
+    else if (strcmp(keyName, "LeftShift") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+    else if (strcmp(keyName, "RightShift") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_RSHIFT) == KEY_REPEAT;
 
     lua_pushboolean(L, pressed);
     return 1;
@@ -218,13 +220,15 @@ static int Lua_Input_GetKeyDown(lua_State* L) {
     else if (strcmp(keyName, "D") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_D) == KEY_DOWN;
     else if (strcmp(keyName, "Q") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_Q) == KEY_DOWN;
     else if (strcmp(keyName, "E") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_E) == KEY_DOWN;
+    else if (strcmp(keyName, "LeftShift") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_DOWN;
+    else if (strcmp(keyName, "RightShift") == 0) pressed = Application::GetInstance().input->GetKey(SDL_SCANCODE_RSHIFT) == KEY_DOWN;
 
     lua_pushboolean(L, pressed);
     return 1;
 }
 
 static int Lua_Input_GetMousePosition(lua_State* L) {
-    
+
     glm::vec2 raw = Application::GetInstance().input.get()->GetMousePosition();
     int rawX = raw.x;
     int rawY = raw.y;
@@ -256,6 +260,136 @@ static int Lua_Input_GetMousePosition(lua_State* L) {
     lua_pushnil(L);
     return 2;
 }
+
+// Gamepad Lua Universal Bindings
+// Possible Returns:
+// Input.GetGamepadButton("A") - return true when is held
+// Input.GetGamepadButtonDown("A") - return true only the first frame is pushed, next frame is false
+// Input.GetGamepadAxis("LeftX") - number between -1.0 and 1.0
+// Input.GetLeftStick() - two numbers, coords of the horizontal axis X and vertical axis Y of the joystick, player movement
+// Input.GetRightStick() - same but is the right joystick, usually used for camera movement
+// Input.HasGamepad() - return true if a gamepad is detected, false if is only mouse and keyboard
+// Input.GetGamepadCount() - return number of gamepads connecteds
+static GamepadButton LuaStringToButton(const char* name)
+{
+    if (strcmp(name, "A") == 0 || strcmp(name, "South") == 0) return GP_SOUTH;
+    if (strcmp(name, "B") == 0 || strcmp(name, "East") == 0) return GP_EAST;
+    if (strcmp(name, "X") == 0 || strcmp(name, "West") == 0) return GP_WEST;
+    if (strcmp(name, "Y") == 0 || strcmp(name, "North") == 0) return GP_NORTH;
+    if (strcmp(name, "Start") == 0)                                 return GP_START;
+    if (strcmp(name, "Back") == 0 || strcmp(name, "Select") == 0) return GP_BACK;
+    if (strcmp(name, "Guide") == 0)                                 return GP_GUIDE;
+    if (strcmp(name, "LeftStick") == 0 || strcmp(name, "L3") == 0) return GP_LEFT_STICK;
+    if (strcmp(name, "RightStick") == 0 || strcmp(name, "R3") == 0) return GP_RIGHT_STICK;
+    if (strcmp(name, "LB") == 0 || strcmp(name, "L1") == 0 || strcmp(name, "LeftShoulder") == 0) return GP_LEFT_SHOULDER;
+    if (strcmp(name, "RB") == 0 || strcmp(name, "R1") == 0 || strcmp(name, "RightShoulder") == 0) return GP_RIGHT_SHOULDER;
+    if (strcmp(name, "DPadUp") == 0) return GP_DPAD_UP;
+    if (strcmp(name, "DPadDown") == 0) return GP_DPAD_DOWN;
+    if (strcmp(name, "DPadLeft") == 0) return GP_DPAD_LEFT;
+    if (strcmp(name, "DPadRight") == 0) return GP_DPAD_RIGHT;
+    return GP_SOUTH;
+    // default setting
+}
+
+static GamepadAxis LuaStringToAxis(const char* name)
+{
+    if (strcmp(name, "LeftX") == 0) return GP_AXIS_LEFT_X;
+    if (strcmp(name, "LeftY") == 0) return GP_AXIS_LEFT_Y;
+    if (strcmp(name, "RightX") == 0) return GP_AXIS_RIGHT_X;
+    if (strcmp(name, "RightY") == 0) return GP_AXIS_RIGHT_Y;
+    if (strcmp(name, "LT") == 0 || strcmp(name, "L2") == 0 || strcmp(name, "LeftTrigger") == 0) return GP_AXIS_LEFT_TRIGGER;
+    if (strcmp(name, "RT") == 0 || strcmp(name, "R2") == 0 || strcmp(name, "RightTrigger") == 0) return GP_AXIS_RIGHT_TRIGGER;
+    return GP_AXIS_LEFT_X;
+}
+
+// Input.GetGamepadButton("A") will send the message to the gamepad number 1 connected
+// Input.GetGamepadButton("A", 2) will send the message to the gamepad number 2
+static int Lua_Input_GetGamepadButton(lua_State* L)
+{
+    const char* name = luaL_checkstring(L, 1);
+    int idx = static_cast<int>(luaL_optinteger(L, 2, 1)) - 1;
+    // In Lua the index starts at 1, in C++ it starts at 0 so a conversion is needed
+    GamepadButton btn = LuaStringToButton(name);
+    lua_pushboolean(L, Application::GetInstance().input->IsGamepadButtonPressed(btn, idx));
+    return 1;
+}
+
+// Same
+// Input.GetGamepadButtonDown("A")
+// Input.GetGamepadButtonDown("A", 2)
+static int Lua_Input_GetGamepadButtonDown(lua_State* L)
+{
+    const char* name = luaL_checkstring(L, 1);
+    int idx = static_cast<int>(luaL_optinteger(L, 2, 1)) - 1;
+    GamepadButton btn = LuaStringToButton(name);
+    lua_pushboolean(L, Application::GetInstance().input->IsGamepadButtonDown(btn, idx));
+    return 1;
+}
+
+// Input.GetGamepadAxis("LeftX")
+static int Lua_Input_GetGamepadAxis(lua_State* L)
+{
+    const char* name = luaL_checkstring(L, 1);
+    int idx = static_cast<int>(luaL_optinteger(L, 2, 1)) - 1;
+    GamepadAxis axis = LuaStringToAxis(name);
+    lua_pushnumber(L, static_cast<lua_Number>(Application::GetInstance().input->GetGamepadAxis(axis, idx)));
+    return 1;
+}
+
+// Input.GetLeftStick() returns axis x and axis y
+static int Lua_Input_GetLeftStick(lua_State* L)
+{
+    int idx = static_cast<int>(luaL_optinteger(L, 1, 1)) - 1;
+    glm::vec2 v = Application::GetInstance().input->GetLeftStick(idx);
+    lua_pushnumber(L, v.x);
+    lua_pushnumber(L, v.y);
+    return 2;
+}
+
+// Input.GetRightStick() returns axis x and axis y
+static int Lua_Input_GetRightStick(lua_State* L)
+{
+    int idx = static_cast<int>(luaL_optinteger(L, 1, 1)) - 1;
+    glm::vec2 v = Application::GetInstance().input->GetRightStick(idx);
+    lua_pushnumber(L, v.x);
+    lua_pushnumber(L, v.y);
+    return 2;
+}
+
+// Input.HasGamepad()
+static int Lua_Input_HasGamepad(lua_State* L)
+{
+    lua_pushboolean(L, Application::GetInstance().input->HasGamepad());
+    return 1;
+}
+
+// Input.GetGamepadCount()
+static int Lua_Input_GetGamepadCount(lua_State* L)
+{
+    lua_pushinteger(L, Application::GetInstance().input->GetGamepadCount());
+    return 1;
+}
+
+// Example of using rumble in Lua Input.RumbleGamepad(0.8, 0.3, 500)
+static int Lua_Input_RumbleGamepad(lua_State* L)
+{
+    float  lowFreq = static_cast<float>(luaL_checknumber(L, 1));
+    float  highFreq = static_cast<float>(luaL_checknumber(L, 2));
+    Uint32 durationMs = static_cast<Uint32>(luaL_checkinteger(L, 3));
+    int    idx = static_cast<int>(luaL_optinteger(L, 4, 1)) - 1;
+    // Lua starts with 1 and C++ with 0
+    Application::GetInstance().input->RumbleGamepad(lowFreq, highFreq, durationMs, idx);
+    return 0;
+}
+
+// Example to stop inmediatly the rumble Input.StopRumble()
+static int Lua_Input_StopRumble(lua_State* L)
+{
+    int idx = static_cast<int>(luaL_optinteger(L, 1, 1)) - 1;
+    Application::GetInstance().input->StopRumble(idx);
+    return 0;
+}
+
 static int Lua_Time_GetDeltaTime(lua_State* L) {
     lua_pushnumber(L, Time::GetDeltaTimeStatic());
     return 1;
@@ -280,11 +414,11 @@ static int Lua_Camera_GetScreenToWorldPlane(lua_State* L) {
     }
 
     ComponentCamera* camera = nullptr;
-    
+
     if (app.GetPlayState() == Application::PlayState::PLAYING) {
         // En Play mode: usar la cámara de escena (ya cacheada)
         camera = app.camera->GetMainCamera();
-        
+
         //// Fallback a editor si no hay cámara de juego
         //if (!camera) {
         //    camera = app.camera->GetEditorCamera();
@@ -348,6 +482,25 @@ void ScriptManager::RegisterEngineFunctions() {
     lua_setfield(L, -2, "GetKeyDown");
     lua_pushcfunction(L, Lua_Input_GetMousePosition);
     lua_setfield(L, -2, "GetMousePosition");
+    // Gamepad
+    lua_pushcfunction(L, Lua_Input_GetGamepadButton);
+    lua_setfield(L, -2, "GetGamepadButton");
+    lua_pushcfunction(L, Lua_Input_GetGamepadButtonDown);
+    lua_setfield(L, -2, "GetGamepadButtonDown");
+    lua_pushcfunction(L, Lua_Input_GetGamepadAxis);
+    lua_setfield(L, -2, "GetGamepadAxis");
+    lua_pushcfunction(L, Lua_Input_GetLeftStick);
+    lua_setfield(L, -2, "GetLeftStick");
+    lua_pushcfunction(L, Lua_Input_GetRightStick);
+    lua_setfield(L, -2, "GetRightStick");
+    lua_pushcfunction(L, Lua_Input_HasGamepad);
+    lua_setfield(L, -2, "HasGamepad");
+    lua_pushcfunction(L, Lua_Input_GetGamepadCount);
+    lua_setfield(L, -2, "GetGamepadCount");
+    lua_pushcfunction(L, Lua_Input_RumbleGamepad);
+    lua_setfield(L, -2, "RumbleGamepad");
+    lua_pushcfunction(L, Lua_Input_StopRumble);
+    lua_setfield(L, -2, "StopRumble");
     lua_setglobal(L, "Input");
 
     // Time
