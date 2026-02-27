@@ -1,0 +1,153 @@
+{
+    "gameObjects": [
+        {
+            "active": true,
+            "children": [],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        100.0,
+                        1.0,
+                        100.0
+                    ],
+                    "type": 0
+                },
+                {
+                    "active": true,
+                    "primitiveType": "Plane",
+                    "type": 1
+                },
+                {
+                    "active": true,
+                    "hasMaterialProperties": false,
+                    "materialType": 0,
+                    "type": 3,
+                    "useCheckerboard": true
+                }
+            ],
+            "name": "Plane",
+            "uid": 17626132811281118029
+        },
+        {
+            "active": true,
+            "children": [
+                {
+                    "active": true,
+                    "children": [],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                0.0,
+                                5.567675590515137,
+                                5.607100486755371
+                            ],
+                            "rotation": [
+                                -45.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                0.999994158744812,
+                                0.999994158744812
+                            ],
+                            "type": 0
+                        },
+                        {
+                            "active": true,
+                            "aspectRatio": 2.2531328201293945,
+                            "farPlane": 1000.0,
+                            "fov": 60.0,
+                            "nearPlane": 0.30000001192092896,
+                            "type": 4
+                        }
+                    ],
+                    "name": "Camera",
+                    "uid": 15272521139987133155
+                }
+            ],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        0.0,
+                        0.5099999904632568,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": 0
+                },
+                {
+                    "active": true,
+                    "primitiveType": "Pyramid",
+                    "type": 1
+                },
+                {
+                    "active": true,
+                    "hasMaterialProperties": false,
+                    "materialType": 0,
+                    "originalTextureUID": 16197798635182179637,
+                    "textureUID": 16197798635182179637,
+                    "type": 3,
+                    "useCheckerboard": false
+                },
+                {
+                    "active": true,
+                    "publicVariables": [
+                        {
+                            "name": "stamina",
+                            "type": 0,
+                            "value": 4.0
+                        },
+                        {
+                            "name": "sprintMultiplier",
+                            "type": 0,
+                            "value": 1.5
+                        },
+                        {
+                            "name": "rollDuration",
+                            "type": 0,
+                            "value": 0.05000000074505806
+                        },
+                        {
+                            "name": "tiredMultiplier",
+                            "type": 0,
+                            "value": 0.699999988079071
+                        },
+                        {
+                            "name": "speed",
+                            "type": 0,
+                            "value": 10.0
+                        }
+                    ],
+                    "scriptUID": 8002383071243665151,
+                    "type": 6
+                }
+            ],
+            "name": "Pyramid",
+            "uid": 2537915417684515364
+        }
+    ],
+    "version": 1
+}
