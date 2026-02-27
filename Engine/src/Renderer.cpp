@@ -590,58 +590,60 @@ void Renderer::DrawParticlesList(const CameraLens* camera)
 }
 void Renderer::DrawStencilList(const CameraLens* camera)
 {
+    if (stencilList.empty()) return;
+
+    // Guardar estado de profundidad para restaurarlo luego
+    GLboolean depthWriteEnabled;
+    glGetBooleanv(GL_DEPTH_WRITEMASK, &depthWriteEnabled);
+
     glEnable(GL_STENCIL_TEST);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_CULL_FACE); // Para que se vean los bordes internos si giras
 
     for (RenderObject renderObject : stencilList)
     {
         ComponentMesh* meshComp = renderObject.mesh;
 
-        outlineShader->Use();
+        // 1. Limpiar stencil para este objeto específico
+        glClear(GL_STENCIL_BUFFER_BIT);
 
+        // --- PASO 1: CREAR LA MÁSCARA (Silueta del objeto) ---
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+        // Desactivamos el test de profundidad para que la máscara se cree 
+        // aunque el objeto esté tapado por el suelo o casas.
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
+
+        defaultShader->Use();
+        glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "model"), 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+        DrawMesh(meshComp);
+
+        // --- PASO 2: DIBUJAR EL OUTLINE (Borde expandido) ---
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+        // Mantenemos GL_DEPTH_TEST desactivado para que el color rosa 
+        // se pinte ENCIMA de cualquier cosa (suelo, casas, etc.)
+        glDisable(GL_DEPTH_TEST);
+
+        outlineShader->Use();
         glUniformMatrix4fv(outlineUniforms.projection, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
         glUniformMatrix4fv(outlineUniforms.view, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+        glUniformMatrix4fv(outlineUniforms.model, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 
         outlineShader->SetVec3("outlineColor", glm::vec3(1.0f, 0.41f, 0.71f));
         outlineShader->SetFloat("outlineThickness", 0.04f);
 
-        glUniformMatrix4fv(outlineUniforms.model, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
-
-        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-        glStencilMask(0x00);
-        glDepthMask(GL_FALSE);
-        glDepthFunc(GL_LEQUAL);
-
         DrawMesh(meshComp);
-
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-        glStencilFunc(GL_ALWAYS, 2, 0xFF);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-        glStencilMask(0xFF);
-
-        DrawMesh(meshComp);
-
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        glDepthFunc(GL_GREATER);
-        glStencilFunc(GL_NOTEQUAL, 2, 0xFF);
-        glStencilMask(0x00);
-
-        DrawMesh(meshComp);
-
-        if (meshComp->HasSkinning())
-        {
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-        }
     }
 
-    glDepthFunc(GL_LESS);
-    glDepthMask(GL_TRUE);
-    glStencilMask(0xFF);
-    glDisable(GL_BLEND);
+    // Restaurar estado original
+    glDepthMask(depthWriteEnabled);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     glDisable(GL_STENCIL_TEST);
 }
 
