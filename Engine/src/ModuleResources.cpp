@@ -45,8 +45,10 @@ bool ModuleResources::Start() {
 
     LoadResourcesFromMetaFiles();
 
+#ifndef WAVE_GAME
     LOG_CONSOLE("[ModuleResources] Importing assets to Library...");
     LibraryManager::RegenerateFromAssets();
+#endif
 
     LOG_CONSOLE("[ModuleResources] Initialized successfully");
 
