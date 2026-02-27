@@ -592,27 +592,23 @@ void Renderer::DrawStencilList(const CameraLens* camera)
 {
     if (stencilList.empty()) return;
 
-    // Guardar estado de profundidad para restaurarlo luego
     GLboolean depthWriteEnabled;
     glGetBooleanv(GL_DEPTH_WRITEMASK, &depthWriteEnabled);
 
     glEnable(GL_STENCIL_TEST);
-    glDisable(GL_CULL_FACE); // Para que se vean los bordes internos si giras
+    glDisable(GL_CULL_FACE);
 
     for (RenderObject renderObject : stencilList)
     {
         ComponentMesh* meshComp = renderObject.mesh;
 
-        // 1. Limpiar stencil para este objeto específico
         glClear(GL_STENCIL_BUFFER_BIT);
 
-        // --- PASO 1: CREAR LA MÁSCARA (Silueta del objeto) ---
+
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glStencilMask(0xFF);
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-        // Desactivamos el test de profundidad para que la máscara se cree 
-        // aunque el objeto esté tapado por el suelo o casas.
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
 
@@ -620,13 +616,10 @@ void Renderer::DrawStencilList(const CameraLens* camera)
         glUniformMatrix4fv(glGetUniformLocation(defaultShader->GetProgramID(), "model"), 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
         DrawMesh(meshComp);
 
-        // --- PASO 2: DIBUJAR EL OUTLINE (Borde expandido) ---
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
         glStencilMask(0x00);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
-        // Mantenemos GL_DEPTH_TEST desactivado para que el color rosa 
-        // se pinte ENCIMA de cualquier cosa (suelo, casas, etc.)
         glDisable(GL_DEPTH_TEST);
 
         outlineShader->Use();
@@ -640,7 +633,6 @@ void Renderer::DrawStencilList(const CameraLens* camera)
         DrawMesh(meshComp);
     }
 
-    // Restaurar estado original
     glDepthMask(depthWriteEnabled);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
