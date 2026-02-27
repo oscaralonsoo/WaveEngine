@@ -232,15 +232,13 @@ void EditorCamera::MoveCamera()
 		float mouseWheel = Application::GetInstance().input->GetMouseWheelY();
 		if (mouseWheel < 0)
 		{
-			fieldOfView += zoomSpeed;
-			if (fieldOfView > maxFieldOfView) fieldOfView = 45.0f;
+			position -= forward * 2.0f;
 		}
 		else if (mouseWheel > 0)
 		{
-			fieldOfView -= zoomSpeed;
-			if (fieldOfView < minFieldOfView) fieldOfView = 10.0f;
+			position += forward * 2.0f;
 		}
-		windowChanged = true;
+		viewChanged = true;
 	}
 }
 
