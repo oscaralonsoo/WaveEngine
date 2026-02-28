@@ -30,7 +30,7 @@ bool ResourceMesh::LoadInMemory() {
     }
 
     // load using meshimporter
-    mesh = MeshImporter::LoadFromCustomFormat(filename);
+    mesh = MeshImporter::LoadFromCustomFormat(uid);
 
     if (mesh.vertices.empty() || mesh.indices.empty()) {
         LOG_DEBUG("[ResourceMesh] ERROR: Failed to load mesh data");

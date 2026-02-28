@@ -94,9 +94,7 @@ Model ModelImporter::ImportFromFile(const std::string& file_path)
 
             if (animData.IsValid())
             {
-                std::string animFilename = LibraryManager::GetAnimationPathFromUID(animUID);
-                AnimationImporter::SaveToCustomFormat(animData, animFilename);
-
+                AnimationImporter::SaveToCustomFormat(animData, animUID);
                 LOG_DEBUG("Animation '%s' imported successfully.", animName.c_str());
             }
             else
@@ -320,7 +318,8 @@ GameObject* ModelImporter::ProcessNode(aiNode* node, const aiScene* scene, const
                 {
                     if (std::filesystem::exists(path))
                     {
-                        if (matComponent->LoadTexture(path))
+                        UID uid = Application::GetInstance().resources.get()->ImportFile(path.c_str());
+                        if (uid != 0 && matComponent->LoadTextureByUID(uid))
                         {
                             loaded = true;
                             LOG_DEBUG("Loaded diffuse texture: %s", fileName.c_str());
@@ -378,17 +377,16 @@ UID ModelImporter::ProcessMesh(aiMesh* aiMesh, const aiScene* scene, const UID u
     }
 
     // Save to Library using UID-based filename
-    std::string meshFilename = std::to_string(meshUID) + ".mesh";
-    if (!MeshImporter::SaveToCustomFormat(mesh, meshFilename)) {
+    if (!MeshImporter::SaveToCustomFormat(mesh, meshUID)) {
         LOG_CONSOLE("ERROR: Failed to save mesh to Library");
         return 0;
     }
 
     // Register mesh in ModuleResources
-    std::string libraryPath = LibraryManager::GetMeshPathFromUID(meshUID);
+    std::string libraryPath = LibraryManager::GetLibraryPathFromUID(meshUID);
 
     Resource* newResource = resources->CreateNewResourceWithUID(
-        libraryPath.c_str(),  // Use library path as "asset" path for generated meshes
+        libraryPath.c_str(),
         Resource::MESH,
         meshUID
     );
@@ -474,9 +472,9 @@ void ModelImporter::CalculateBoundingBox(GameObject* obj, glm::vec3& minBounds, 
     }
 }
 
-bool ModelImporter::SaveToCustomFormat(const Model& model, const std::string& filename)
+bool ModelImporter::SaveToCustomFormat(const Model& model, const UID& uid)
 {
-    std::string fullPath = LibraryManager::GetModelPath(filename);
+    std::string fullPath = LibraryManager::GetLibraryPathFromUID(uid);
     std::ofstream file(fullPath, std::ios::out | std::ios::binary);
 
     if (file.is_open())
@@ -503,10 +501,10 @@ bool ModelImporter::SaveToCustomFormat(const Model& model, const std::string& fi
     return false;
 }
 
-Model ModelImporter::LoadFromCustomFormat(const std::string& filename)
+Model ModelImporter::LoadFromCustomFormat(const UID& uid)
 {
     Model model;
-    std::string fullPath = LibraryManager::GetModelPath(filename);
+    std::string fullPath = LibraryManager::GetLibraryPathFromUID(uid);
 
     std::ifstream file(fullPath, std::ios::in | std::ios::binary | std::ios::ate);
 

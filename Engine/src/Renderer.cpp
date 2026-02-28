@@ -321,25 +321,6 @@ void Renderer::RemoveCamera(CameraLens* camera)
 }
 
 
-void Renderer::LoadTexture(const std::string& path)
-{
-    LOG_DEBUG("Renderer: Loading new texture");
-    LOG_CONSOLE("Loading texture...");
-
-    auto newTexture = make_unique<Texture>();
-
-    if (newTexture->LoadFromLibraryOrFile(path))
-    {
-        defaultTexture = std::move(newTexture);
-        LOG_DEBUG("Renderer: Texture applied successfully");
-        LOG_CONSOLE("Texture applied to scene");
-    }
-    else
-    {
-        LOG_DEBUG("ERROR: Renderer failed to load texture: %s", path.c_str());
-        LOG_CONSOLE("Failed to apply texture");
-    }
-}
 
 bool Renderer::PostUpdate()
 {

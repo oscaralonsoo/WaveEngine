@@ -18,8 +18,8 @@ public:
     static Animation ImportFromAssimp(const aiAnimation* aiAnimation);
 
     // SAVE: Save our AnimationData to custom binary format in Library/Animations/
-    static bool SaveToCustomFormat(const Animation& animation, const std::string& filename);
+    static bool SaveToCustomFormat(const Animation& animation, const UID& uid);
 
     // LOAD: Load from custom binary format back into our AnimationData structure
-    static Animation LoadFromCustomFormat(const std::string& filename);
+    static Animation LoadFromCustomFormat(const UID& uid);
 };

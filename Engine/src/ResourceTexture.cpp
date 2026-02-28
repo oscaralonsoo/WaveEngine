@@ -33,7 +33,7 @@ bool ResourceTexture::LoadInMemory() {
     LOG_DEBUG("[ResourceTexture] Loading from Library: %s", filename.c_str());
 
     // Load texture data from custom format
-    TextureData textureData = TextureImporter::LoadFromCustomFormat(filename);
+    TextureData textureData = TextureImporter::LoadFromCustomFormat(uid);
 
     if (!textureData.IsValid()) {
         LOG_DEBUG("[ResourceTexture] ERROR: Failed to load texture data");

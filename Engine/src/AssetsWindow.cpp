@@ -272,20 +272,6 @@ void AssetsWindow::Draw()
 
         std::string libRoot = LibraryManager::GetLibraryRoot();
 
-        std::string texDir = libRoot + "/Textures";
-
-        if (!fs::exists(texDir)) {
-            LOG_CONSOLE("CREATING Textures directory...");
-            fs::create_directories(texDir);
-        }
-
-        std::string meshDir = libRoot + "/Meshes";
-
-        if (!fs::exists(meshDir)) {
-            LOG_CONSOLE("CREATING Meshes directory...");
-            fs::create_directories(meshDir);
-        }
-
         RefreshAssets();
         firstDraw = false;
         previousShow3DPreviews = show3DPreviews;
@@ -1500,7 +1486,7 @@ void AssetsWindow::LoadFBXSubresources(AssetEntry& fbxAsset)
     // --- 1. PROCESAR MINTAS (MESHES) ---
     for (const auto& [meshName, meshUID] : meta.meshes)
     {
-        std::string libPath = LibraryManager::GetMeshPathFromUID(meshUID);
+        std::string libPath = LibraryManager::GetLibraryPathFromUID(meshUID);
 
         if (!LibraryManager::FileExists(libPath))
             continue;
@@ -1524,7 +1510,7 @@ void AssetsWindow::LoadFBXSubresources(AssetEntry& fbxAsset)
 
     for (const auto& [animName, animUID] : meta.animations)
     {
-        std::string libPath = LibraryManager::GetAnimationPathFromUID(animUID);
+        std::string libPath = LibraryManager::GetLibraryPathFromUID(animUID);
 
         if (!LibraryManager::FileExists(libPath))
             continue;
@@ -1569,7 +1555,7 @@ bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
                     // Delete all mesh files with UIDs: base_uid, base_uid+1, base_uid+2, etc.
                     for (int i = 0; i < 100; i++) {
                         unsigned long long meshUID = uid + i;
-                        std::string libPath = LibraryManager::GetMeshPathFromUID(meshUID);
+                        std::string libPath = LibraryManager::GetLibraryPathFromUID(meshUID);
 
                         if (fs::exists(libPath)) {
                             fs::remove(libPath);
@@ -1587,7 +1573,7 @@ bool AssetsWindow::DeleteAsset(const AssetEntry& asset)
                         meta.type == AssetType::TEXTURE_JPG ||
                         meta.type == AssetType::TEXTURE_DDS ||
                         meta.type == AssetType::TEXTURE_TGA) {
-                        libPath = LibraryManager::GetTexturePathFromUID(uid);
+                        libPath = LibraryManager::GetLibraryPathFromUID(uid);
                     }
 
                     if (!libPath.empty() && fs::exists(libPath)) {
@@ -1636,7 +1622,7 @@ bool AssetsWindow::DeleteDirectory(const fs::path& dirPath)
                     if (meta.type == AssetType::MODEL_FBX) {
                         for (int i = 0; i < 100; i++) {
                             unsigned long long meshUID = meta.uid + i;
-                            std::string libPath = LibraryManager::GetMeshPathFromUID(meshUID);
+                            std::string libPath = LibraryManager::GetLibraryPathFromUID(meshUID);
 
                             if (fs::exists(libPath)) {
                                 fs::remove(libPath);
@@ -1654,7 +1640,7 @@ bool AssetsWindow::DeleteDirectory(const fs::path& dirPath)
                             meta.type == AssetType::TEXTURE_JPG ||
                             meta.type == AssetType::TEXTURE_DDS ||
                             meta.type == AssetType::TEXTURE_TGA) {
-                            libPath = LibraryManager::GetTexturePathFromUID(meta.uid);
+                            libPath = LibraryManager::GetLibraryPathFromUID(meta.uid);
                         }
 
                         if (!libPath.empty() && fs::exists(libPath)) {
@@ -1775,7 +1761,7 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
 
                                         for (int i = 0; i < 100; i++) {
                                             unsigned long long meshUID = subMeta.uid + i;
-                                            std::string meshLibPath = LibraryManager::GetMeshPathFromUID(meshUID);
+                                            std::string meshLibPath = LibraryManager::GetLibraryPathFromUID(meshUID);
 
                                             if (!fs::exists(meshLibPath)) {
                                                 break;
@@ -1847,7 +1833,7 @@ void AssetsWindow::ScanDirectory(const fs::path& directory, std::vector<AssetEnt
                         // Verify all meshes in the FBX (sequential UIDs)
                         for (int i = 0; i < 100; i++) {
                             unsigned long long meshUID = meta.uid + i;
-                            std::string meshLibPath = LibraryManager::GetMeshPathFromUID(meshUID);
+                            std::string meshLibPath = LibraryManager::GetLibraryPathFromUID(meshUID);
 
                             if (!fs::exists(meshLibPath)) {
                                 break;
@@ -2060,7 +2046,7 @@ void AssetsWindow::LoadPreviewForAsset(AssetEntry& asset)
                 for (int i = 0; i < 100; i++)
                 {
                     unsigned long long meshUID = asset.uid + i;
-                    std::string meshLibPath = LibraryManager::GetMeshPathFromUID(meshUID);
+                    std::string meshLibPath = LibraryManager::GetLibraryPathFromUID(meshUID);
 
                     if (!LibraryManager::FileExists(meshLibPath))
                     {
@@ -2524,130 +2510,6 @@ bool AssetsWindow::CopyFileToAssets(const std::string& sourceFilePath, std::stri
         LOG_CONSOLE("[AssetsWindow] ERROR copying file: %s", e.what());
         return false;
     }
-}
-
-bool AssetsWindow::TestImportSystem()
-{
-    std::string libRoot = LibraryManager::GetLibraryRoot();
-
-    if (!fs::exists(libRoot))
-    {
-        fs::create_directories(libRoot);
-    }
-    else
-    {
-        //LOG_CONSOLE(" Library root exists");
-    }
-
-    std::string texDir = libRoot + "/Textures";
-
-    if (!fs::exists(texDir))
-    {
-        fs::create_directories(texDir);
-    }
-    else
-    {
-        LOG_CONSOLE(" Textures directory exists");
-    }
-
-    LOG_CONSOLE("\n--- TEST 2: Write Permissions ---");
-    std::string testFile = texDir + "/write_test.tmp";
-    std::ofstream test(testFile, std::ios::binary);
-
-    if (!test.is_open())
-    {
-        LOG_CONSOLE("ERROR: Cannot open file for writing!");
-        return false;
-    }
-
-    test << "test data 12345";
-    test.close();
-
-    if (!fs::exists(testFile))
-    {
-        LOG_CONSOLE("ERROR: File not created!");
-        return false;
-    }
-
-    uintmax_t size = fs::file_size(testFile);
-    LOG_CONSOLE("✓ File created: %llu bytes", size);
-
-    std::ifstream testRead(testFile, std::ios::binary);
-    if (!testRead.is_open())
-    {
-        LOG_CONSOLE("ERROR: Cannot read file!");
-        return false;
-    }
-
-    std::string content;
-    std::getline(testRead, content);
-    testRead.close();
-
-
-    fs::remove(testFile);
-
-    UID testUID = 12345678901234567890ULL;
-    std::string texPath = LibraryManager::GetTexturePathFromUID(testUID);
-
-    if (texPath.find("Library") != std::string::npos &&
-        texPath.find("Textures") != std::string::npos)
-    {
-        LOG_CONSOLE("Path format correct");
-    }
-    else
-    {
-        LOG_CONSOLE("ERROR: Path format incorrect!");
-        return false;
-    }
-
-    TextureData testTexture;
-    testTexture.width = 4;
-    testTexture.height = 4;
-    testTexture.channels = 4;
-    testTexture.pixels = new unsigned char[4 * 4 * 4];
-
-    for (int i = 0; i < 4 * 4 * 4; i++)
-    {
-        testTexture.pixels[i] = (i % 256);
-    }
-
-    LOG_CONSOLE("Created test texture: %dx%d", testTexture.width, testTexture.height);
-
-    std::string testTexFilename = std::to_string(testUID) + ".texture";
-    LOG_CONSOLE("Saving as: %s", testTexFilename.c_str());
-
-    if (TextureImporter::SaveToCustomFormat(testTexture, testTexFilename))
-    {
-
-        std::string savedPath = LibraryManager::GetTexturePathFromUID(testUID);
-        if (fs::exists(savedPath))
-        {
-            uintmax_t savedSize = fs::file_size(savedPath);
-
-            TextureData loaded = TextureImporter::LoadFromCustomFormat(testTexFilename);
-            if (loaded.IsValid())
-            {
-                LOG_CONSOLE("  Loaded: %dx%d, %d channels",
-                    loaded.width, loaded.height, loaded.channels);
-            }
-            else
-            {
-                LOG_CONSOLE("ERROR: Failed to load back texture!");
-            }
-
-            fs::remove(savedPath);
-        }
-        else
-        {
-            LOG_CONSOLE("ERROR: Saved file not found at: %s", savedPath.c_str());
-        }
-    }
-    else
-    {
-        return false;
-    }
-
-    return true;
 }
 
 // scripts

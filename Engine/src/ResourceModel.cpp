@@ -33,7 +33,7 @@ bool ResourceModel::LoadInMemory() {
 
     LOG_DEBUG("[ResourceModel] Loading from Library: %s", filename.c_str());
 
-    Model modelData = ModelImporter::LoadFromCustomFormat(filename);;
+    Model modelData = ModelImporter::LoadFromCustomFormat(uid);;
 
     if (!modelData.IsValid()) {
         LOG_DEBUG("[ResourceModel] ERROR: Failed to load model data");

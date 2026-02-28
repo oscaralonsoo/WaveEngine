@@ -63,9 +63,6 @@ public:
     void AddCamera(CameraLens* camera);
     void RemoveCamera(CameraLens* camera);
 
-    // Textures Management
-    void LoadTexture(const std::string& path);
-
     // Scene Rendering
     bool RenderScene(CameraLens* renderCamera);
 

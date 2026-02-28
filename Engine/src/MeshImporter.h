@@ -19,10 +19,10 @@ public:
     static Mesh ImportFromAssimp(const aiMesh* assimpMesh);
 
     // SAVE: Save our Mesh to custom binary format in Library/Meshes/
-    static bool SaveToCustomFormat(const Mesh& mesh, const std::string& filename);
+    static bool SaveToCustomFormat(const Mesh& mesh, const UID& uid);
 
     // LOAD: Load from custom binary format back into our Mesh structure
-    static Mesh LoadFromCustomFormat(const std::string& filename);
+    static Mesh LoadFromCustomFormat(const UID& uid);
 
     // Utility: Generate unique filename for mesh
     static std::string GenerateMeshFilename(const std::string& originalName);

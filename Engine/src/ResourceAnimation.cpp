@@ -31,7 +31,7 @@ bool ResourceAnimation::LoadInMemory() {
     }
 
     //Extract data from Library
-    animation = AnimationImporter::LoadFromCustomFormat(filename);
+    animation = AnimationImporter::LoadFromCustomFormat(uid);
 
     if (animation.IsValid())
     {

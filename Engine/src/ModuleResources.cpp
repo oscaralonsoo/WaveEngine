@@ -141,7 +141,7 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
             resource = new ResourceTexture(meta.uid);
             if (resource) {
                 resource->SetAssetFile(assetPath);
-                resource->SetLibraryFile(LibraryManager::GetTexturePathFromUID(meta.uid));
+                resource->SetLibraryFile(LibraryManager::GetLibraryPathFromUID(meta.uid));
                 resources[meta.uid] = resource;
                 registered++;
             }
@@ -153,14 +153,14 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
             resource = new ResourceModel(meta.uid);
             if (resource) {
                 resource->SetAssetFile(assetPath);
-                resource->SetLibraryFile(LibraryManager::GetModelPathFromUID(meta.uid));
+                resource->SetLibraryFile(LibraryManager::GetLibraryPathFromUID(meta.uid));
                 resources[meta.uid] = resource;
                 registered++;
             }
             
             for (const auto& [meshName, meshUID] : meta.meshes) {
 
-                std::string meshPath = LibraryManager::GetMeshPathFromUID(meshUID);
+                std::string meshPath = LibraryManager::GetLibraryPathFromUID(meshUID);
 
                 if (std::filesystem::exists(meshPath)) {
                     ResourceMesh* meshResource = new ResourceMesh(meshUID);
@@ -175,7 +175,7 @@ void ModuleResources::LoadResourcesFromMetaFiles() {
             }
             for (const auto& [animationName, animationUID] : meta.animations) {
 
-                std::string animationPath = LibraryManager::GetAnimationPathFromUID(animationUID);
+                std::string animationPath = LibraryManager::GetLibraryPathFromUID(animationUID);
 
                 if (std::filesystem::exists(animationPath)) {
                     ResourceAnimation* animationResource = new ResourceAnimation(animationUID);
@@ -283,7 +283,7 @@ UID ModuleResources::ImportFile(const char* newFileInAssets, bool forceReimport)
     auto it = resources.find(meta.uid);
 
     if (it != resources.end()) {
-        if (!forceReimport) {
+        if (!forceReimport && std::filesystem::exists(LibraryManager::GetLibraryPathFromUID(meta.uid))) {
             return meta.uid;
         }
         resource = it->second;
@@ -384,10 +384,10 @@ Resource* ModuleResources::CreateNewResourceWithUID(const char* assetsFile, Reso
             resource->SetLibraryFile(assetsFile);
         }
         else if (type == Resource::TEXTURE) {
-            resource->SetLibraryFile(LibraryManager::GetTexturePathFromUID(uid));
+            resource->SetLibraryFile(LibraryManager::GetLibraryPathFromUID(uid));
         }
         else if (type == Resource::MESH) {
-            resource->SetLibraryFile(LibraryManager::GetMeshPathFromUID(uid));
+            resource->SetLibraryFile(LibraryManager::GetLibraryPathFromUID(uid));
         }
 
         resources[uid] = resource;
@@ -510,15 +510,15 @@ std::string ModuleResources::GenerateLibraryPath(Resource* resource) {
 
     switch (resource->GetType()) {
     case Resource::TEXTURE:
-        return LibraryManager::GetTexturePathFromUID(resource->GetUID());
+        return LibraryManager::GetLibraryPathFromUID(resource->GetUID());
     case Resource::MESH:
-        return LibraryManager::GetMeshPathFromUID(resource->GetUID());
+        return LibraryManager::GetLibraryPathFromUID(resource->GetUID());
     case Resource::MODEL:
-        return LibraryManager::GetModelPathFromUID(resource->GetUID());
+        return LibraryManager::GetLibraryPathFromUID(resource->GetUID());
     case Resource::MATERIAL:
-        return LibraryManager::GetMaterialPathFromUID(resource->GetUID());
+        return LibraryManager::GetLibraryPathFromUID(resource->GetUID());
     case Resource::ANIMATION:
-        return LibraryManager::GetAnimationPathFromUID(resource->GetUID());
+        return LibraryManager::GetLibraryPathFromUID(resource->GetUID());
     case Resource::SHADER:
         return ""; // Shaders load directly from assets
     default:
@@ -540,7 +540,7 @@ bool ModuleResources::LoadResourceMetadata(UID uid) {
 bool ModuleResources::ImportTexture(Resource* resource, const std::string& assetPath) {
     
     std::string filename = std::to_string(resource->GetUID()) + ".texture";
-    std::string libraryPath = LibraryManager::GetTexturePathFromUID(resource->GetUID());
+    std::string libraryPath = LibraryManager::GetLibraryPathFromUID(resource->GetUID());
 
     std::string metaPath = assetPath + ".meta";
     MetaFile meta;
@@ -572,7 +572,7 @@ bool ModuleResources::ImportTexture(Resource* resource, const std::string& asset
         return false;
     }
 
-    if (!TextureImporter::SaveToCustomFormat(textureData, filename)) {
+    if (!TextureImporter::SaveToCustomFormat(textureData, meta.uid)) {
         LOG_CONSOLE("ERROR: Failed to save texture to Library");
         return false;
     }
@@ -589,7 +589,7 @@ bool ModuleResources::ImportMesh(Resource* resource, const std::string& assetPat
 bool ModuleResources::ImportModel(Resource* resource, const std::string& assetPath) {
     
     std::string filename = std::to_string(resource->GetUID()) + ".model";
-    std::string libraryPath = LibraryManager::GetModelPathFromUID(resource->GetUID());
+    std::string libraryPath = LibraryManager::GetLibraryPathFromUID(resource->GetUID());
 
     std::string metaPath = assetPath + ".meta";
     MetaFile meta;
@@ -609,7 +609,7 @@ bool ModuleResources::ImportModel(Resource* resource, const std::string& assetPa
         return false;
     }
 
-    if (!ModelImporter::SaveToCustomFormat(modelData, filename)) {
+    if (!ModelImporter::SaveToCustomFormat(modelData, meta.uid)) {
         LOG_CONSOLE("ERROR: Failed to save model to Library");
         return false;
     }
@@ -636,10 +636,10 @@ bool ModuleResources::GetResourceInfo(UID uid, std::string& outAssetPath, std::s
         case AssetType::TEXTURE_JPG:
         case AssetType::TEXTURE_DDS:
         case AssetType::TEXTURE_TGA:
-            outLibraryPath = LibraryManager::GetTexturePathFromUID(uid);
+            outLibraryPath = LibraryManager::GetLibraryPathFromUID(uid);
             break;
         case AssetType::MODEL_FBX:
-            outLibraryPath = LibraryManager::GetMeshPathFromUID(uid);
+            outLibraryPath = LibraryManager::GetLibraryPathFromUID(uid);
             break;
         default:
             outLibraryPath = "";

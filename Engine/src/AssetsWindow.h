@@ -102,9 +102,6 @@ private:
     void CreateNewScript(const std::string& scriptName);
     std::string GetDefaultScriptTemplate();
 
-    // Test function (temporal)
-    bool TestImportSystem();
-
     void HandlePrefabCreationDrop(const std::string& prefabName);
     bool CreatePrefabFromGameObject(GameObject* obj, const std::string& prefabPath);
     

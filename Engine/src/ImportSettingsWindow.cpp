@@ -363,7 +363,7 @@ void ImportSettingsWindow::ApplyChanges()
         }
 
         // Reimport with new settings
-        if (LibraryManager::ReimportAsset(currentAssetPath)) {
+        if (Application::GetInstance().resources.get()->ImportFile(currentAssetPath.c_str(), true)) {
             LOG_CONSOLE("[ImportSettings] Texture reimported successfully!");
 
             // Reload texture in all materials that use it
@@ -393,7 +393,7 @@ void ImportSettingsWindow::ApplyChanges()
         LOG_CONSOLE("[ImportSettings] Unloaded %d meshes", unloadedCount);
 
         // Reimport
-        if (LibraryManager::ReimportAsset(currentAssetPath)) {
+        if (Application::GetInstance().resources.get()->ImportFile(currentAssetPath.c_str(), true)) {
             LOG_CONSOLE("[ImportSettings] FBX reimported successfully!");
             hasUnsavedChanges = false;
         }

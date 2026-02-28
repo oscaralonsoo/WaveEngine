@@ -26,8 +26,8 @@ class ModelImporter
 public:
 
     static Model ImportFromFile(const std::string& filepath);
-    static bool SaveToCustomFormat(const Model& texture, const std::string& filename);
-    static Model LoadFromCustomFormat(const std::string& filename);
+    static bool SaveToCustomFormat(const Model& texture, const UID& filename);
+    static Model LoadFromCustomFormat(const UID& filename);
 
 private:
     
