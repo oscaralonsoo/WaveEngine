@@ -67,7 +67,7 @@
                         },
                         {
                             "active": true,
-                            "aspectRatio": 2.2531328201293945,
+                            "aspectRatio": 2.7871901988983154,
                             "farPlane": 1000.0,
                             "fov": 60.0,
                             "nearPlane": 0.30000001192092896,
@@ -121,9 +121,9 @@
                             "value": 4.0
                         },
                         {
-                            "name": "sprintMultiplier",
+                            "name": "tiredMultiplier",
                             "type": 0,
-                            "value": 1.5
+                            "value": 0.699999988079071
                         },
                         {
                             "name": "rollDuration",
@@ -131,14 +131,14 @@
                             "value": 0.05000000074505806
                         },
                         {
-                            "name": "tiredMultiplier",
-                            "type": 0,
-                            "value": 0.699999988079071
-                        },
-                        {
                             "name": "speed",
                             "type": 0,
                             "value": 10.0
+                        },
+                        {
+                            "name": "sprintMultiplier",
+                            "type": 0,
+                            "value": 1.5
                         }
                     ],
                     "scriptUID": 8002383071243665151,
@@ -147,6 +147,2105 @@
             ],
             "name": "Pyramid",
             "uid": 2537915417684515364
+        },
+        {
+            "active": true,
+            "children": [
+                {
+                    "active": true,
+                    "children": [
+                        {
+                            "active": true,
+                            "children": [
+                                {
+                                    "active": true,
+                                    "children": [
+                                        {
+                                            "active": true,
+                                            "children": [
+                                                {
+                                                    "active": true,
+                                                    "children": [],
+                                                    "components": [
+                                                        {
+                                                            "active": true,
+                                                            "position": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "rotation": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "scale": [
+                                                                1.0,
+                                                                1.0,
+                                                                1.0
+                                                            ],
+                                                            "type": 0
+                                                        },
+                                                        {
+                                                            "active": true,
+                                                            "meshUID": 4868655420060653972,
+                                                            "type": 1
+                                                        },
+                                                        {
+                                                            "active": true,
+                                                            "ambientColor": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0,
+                                                                1.0
+                                                            ],
+                                                            "diffuseColor": [
+                                                                0.4000000059604645,
+                                                                0.4000000059604645,
+                                                                0.4000000059604645,
+                                                                1.0
+                                                            ],
+                                                            "emissiveColor": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0,
+                                                                1.0
+                                                            ],
+                                                            "hasMaterialProperties": true,
+                                                            "lightingMode": 1,
+                                                            "materialType": 0,
+                                                            "metallic": 0.0,
+                                                            "opacity": 1.0,
+                                                            "originalTextureUID": 12130375509824233534,
+                                                            "roughness": 0.5,
+                                                            "shininess": 32.0,
+                                                            "specularColor": [
+                                                                1.0,
+                                                                1.0,
+                                                                1.0,
+                                                                1.0
+                                                            ],
+                                                            "textureUID": 12130375509824233534,
+                                                            "type": 3,
+                                                            "useCheckerboard": false
+                                                        }
+                                                    ],
+                                                    "name": "pCube24",
+                                                    "uid": 10379462766642535399
+                                                }
+                                            ],
+                                            "components": [
+                                                {
+                                                    "active": true,
+                                                    "position": [
+                                                        1.8376963138580322,
+                                                        -1.144225001335144,
+                                                        -1.7431145906448364
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ],
+                                                    "type": 0
+                                                }
+                                            ],
+                                            "name": "pCube24_$AssimpFbx$_ScalingPivotInverse",
+                                            "uid": 3477063556813284447
+                                        }
+                                    ],
+                                    "components": [
+                                        {
+                                            "active": true,
+                                            "position": [
+                                                -1.8376963138580322,
+                                                1.144225001335144,
+                                                1.7431145906448364
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "type": 0
+                                        }
+                                    ],
+                                    "name": "pCube24_$AssimpFbx$_ScalingPivot",
+                                    "uid": 7905219318774598876
+                                }
+                            ],
+                            "components": [
+                                {
+                                    "active": true,
+                                    "position": [
+                                        1.8376963138580322,
+                                        -1.144225001335144,
+                                        -1.7431145906448364
+                                    ],
+                                    "rotation": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ],
+                                    "type": 0
+                                }
+                            ],
+                            "name": "pCube24_$AssimpFbx$_RotationPivotInverse",
+                            "uid": 15471267075884636030
+                        }
+                    ],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                -1.8376963138580322,
+                                1.144225001335144,
+                                1.7431145906448364
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "type": 0
+                        }
+                    ],
+                    "name": "pCube24_$AssimpFbx$_RotationPivot",
+                    "uid": 2971548534271344660
+                }
+            ],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        2.0451064109802246,
+                        2.0451064109802246,
+                        2.0451064109802246
+                    ],
+                    "type": 0
+                }
+            ],
+            "name": "RootNode",
+            "uid": 9451803518912970041
+        },
+        {
+            "active": true,
+            "children": [
+                {
+                    "active": true,
+                    "children": [
+                        {
+                            "active": true,
+                            "children": [
+                                {
+                                    "active": true,
+                                    "children": [
+                                        {
+                                            "active": true,
+                                            "children": [
+                                                {
+                                                    "active": true,
+                                                    "children": [
+                                                        {
+                                                            "active": true,
+                                                            "children": [
+                                                                {
+                                                                    "active": true,
+                                                                    "children": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "children": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "children": [],
+                                                                                            "components": [
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "position": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "rotation": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "scale": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "type": 0
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "meshUID": 16450282669257660283,
+                                                                                                    "type": 1
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "ambientColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "diffuseColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "emissiveColor": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "hasMaterialProperties": true,
+                                                                                                    "lightingMode": 1,
+                                                                                                    "materialType": 0,
+                                                                                                    "metallic": 0.0,
+                                                                                                    "opacity": 1.0,
+                                                                                                    "originalTextureUID": 4676049201108877090,
+                                                                                                    "roughness": 0.5,
+                                                                                                    "shininess": 32.0,
+                                                                                                    "specularColor": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "textureUID": 4676049201108877090,
+                                                                                                    "type": 3,
+                                                                                                    "useCheckerboard": false
+                                                                                                }
+                                                                                            ],
+                                                                                            "name": "pCube7",
+                                                                                            "uid": 6979035511768790656
+                                                                                        }
+                                                                                    ],
+                                                                                    "components": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "position": [
+                                                                                                0.16885638236999512,
+                                                                                                -4.243513107299805,
+                                                                                                -0.22992271184921265
+                                                                                            ],
+                                                                                            "rotation": [
+                                                                                                0.0,
+                                                                                                0.0,
+                                                                                                0.0
+                                                                                            ],
+                                                                                            "scale": [
+                                                                                                1.0,
+                                                                                                1.0,
+                                                                                                1.0
+                                                                                            ],
+                                                                                            "type": 0
+                                                                                        }
+                                                                                    ],
+                                                                                    "name": "pCube7_$AssimpFbx$_ScalingPivotInverse",
+                                                                                    "uid": 1573678209592600582
+                                                                                }
+                                                                            ],
+                                                                            "components": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "position": [
+                                                                                        -0.16885638236999512,
+                                                                                        4.243513107299805,
+                                                                                        0.22992271184921265
+                                                                                    ],
+                                                                                    "rotation": [
+                                                                                        0.0,
+                                                                                        0.0,
+                                                                                        0.0
+                                                                                    ],
+                                                                                    "scale": [
+                                                                                        1.0,
+                                                                                        1.0,
+                                                                                        1.0
+                                                                                    ],
+                                                                                    "type": 0
+                                                                                }
+                                                                            ],
+                                                                            "name": "pCube7_$AssimpFbx$_ScalingPivot",
+                                                                            "uid": 2623511541829816761
+                                                                        }
+                                                                    ],
+                                                                    "components": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "position": [
+                                                                                0.16885638236999512,
+                                                                                -4.243513107299805,
+                                                                                -0.22992271184921265
+                                                                            ],
+                                                                            "rotation": [
+                                                                                0.0,
+                                                                                0.0,
+                                                                                0.0
+                                                                            ],
+                                                                            "scale": [
+                                                                                1.0,
+                                                                                1.0,
+                                                                                1.0
+                                                                            ],
+                                                                            "type": 0
+                                                                        }
+                                                                    ],
+                                                                    "name": "pCube7_$AssimpFbx$_RotationPivotInverse",
+                                                                    "uid": 3861525125831695954
+                                                                }
+                                                            ],
+                                                            "components": [
+                                                                {
+                                                                    "active": true,
+                                                                    "position": [
+                                                                        -0.16885638236999512,
+                                                                        4.243513107299805,
+                                                                        0.22992271184921265
+                                                                    ],
+                                                                    "rotation": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "type": 0
+                                                                }
+                                                            ],
+                                                            "name": "pCube7_$AssimpFbx$_RotationPivot",
+                                                            "uid": 966709834637405665
+                                                        },
+                                                        {
+                                                            "active": true,
+                                                            "children": [
+                                                                {
+                                                                    "active": true,
+                                                                    "children": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "children": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "children": [],
+                                                                                            "components": [
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "position": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "rotation": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "scale": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "type": 0
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "meshUID": 4890459208533504094,
+                                                                                                    "type": 1
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "ambientColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "diffuseColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "emissiveColor": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "hasMaterialProperties": true,
+                                                                                                    "lightingMode": 1,
+                                                                                                    "materialType": 0,
+                                                                                                    "metallic": 0.0,
+                                                                                                    "opacity": 1.0,
+                                                                                                    "originalTextureUID": 4676049201108877090,
+                                                                                                    "roughness": 0.5,
+                                                                                                    "shininess": 32.0,
+                                                                                                    "specularColor": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "textureUID": 4676049201108877090,
+                                                                                                    "type": 3,
+                                                                                                    "useCheckerboard": false
+                                                                                                }
+                                                                                            ],
+                                                                                            "name": "pCube6",
+                                                                                            "uid": 12546164295471722024
+                                                                                        }
+                                                                                    ],
+                                                                                    "components": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "position": [
+                                                                                                0.121609628200531,
+                                                                                                -4.145702362060547,
+                                                                                                -0.2793782651424408
+                                                                                            ],
+                                                                                            "rotation": [
+                                                                                                0.0,
+                                                                                                0.0,
+                                                                                                0.0
+                                                                                            ],
+                                                                                            "scale": [
+                                                                                                1.0,
+                                                                                                1.0,
+                                                                                                1.0
+                                                                                            ],
+                                                                                            "type": 0
+                                                                                        }
+                                                                                    ],
+                                                                                    "name": "pCube6_$AssimpFbx$_ScalingPivotInverse",
+                                                                                    "uid": 17666467432825352514
+                                                                                }
+                                                                            ],
+                                                                            "components": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "position": [
+                                                                                        -0.121609628200531,
+                                                                                        4.145702362060547,
+                                                                                        0.2793782651424408
+                                                                                    ],
+                                                                                    "rotation": [
+                                                                                        0.0,
+                                                                                        0.0,
+                                                                                        0.0
+                                                                                    ],
+                                                                                    "scale": [
+                                                                                        1.0,
+                                                                                        1.0,
+                                                                                        1.0
+                                                                                    ],
+                                                                                    "type": 0
+                                                                                }
+                                                                            ],
+                                                                            "name": "pCube6_$AssimpFbx$_ScalingPivot",
+                                                                            "uid": 2456021898846699198
+                                                                        }
+                                                                    ],
+                                                                    "components": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "position": [
+                                                                                0.121609628200531,
+                                                                                -4.145702362060547,
+                                                                                -0.2793782651424408
+                                                                            ],
+                                                                            "rotation": [
+                                                                                0.0,
+                                                                                0.0,
+                                                                                0.0
+                                                                            ],
+                                                                            "scale": [
+                                                                                1.0,
+                                                                                1.0,
+                                                                                1.0
+                                                                            ],
+                                                                            "type": 0
+                                                                        }
+                                                                    ],
+                                                                    "name": "pCube6_$AssimpFbx$_RotationPivotInverse",
+                                                                    "uid": 3714881610562592493
+                                                                }
+                                                            ],
+                                                            "components": [
+                                                                {
+                                                                    "active": true,
+                                                                    "position": [
+                                                                        -0.121609628200531,
+                                                                        4.145702362060547,
+                                                                        0.2793782651424408
+                                                                    ],
+                                                                    "rotation": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "type": 0
+                                                                }
+                                                            ],
+                                                            "name": "pCube6_$AssimpFbx$_RotationPivot",
+                                                            "uid": 11365431879107753047
+                                                        },
+                                                        {
+                                                            "active": true,
+                                                            "children": [
+                                                                {
+                                                                    "active": true,
+                                                                    "children": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "children": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "children": [],
+                                                                                            "components": [
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "position": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "rotation": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "scale": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "type": 0
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "meshUID": 12800878780970760474,
+                                                                                                    "type": 1
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "ambientColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "diffuseColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "emissiveColor": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "hasMaterialProperties": true,
+                                                                                                    "lightingMode": 1,
+                                                                                                    "materialType": 0,
+                                                                                                    "metallic": 0.0,
+                                                                                                    "opacity": 1.0,
+                                                                                                    "originalTextureUID": 4676049201108877090,
+                                                                                                    "roughness": 0.5,
+                                                                                                    "shininess": 32.0,
+                                                                                                    "specularColor": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "textureUID": 4676049201108877090,
+                                                                                                    "type": 3,
+                                                                                                    "useCheckerboard": false
+                                                                                                }
+                                                                                            ],
+                                                                                            "name": "pCube5",
+                                                                                            "uid": 7831739164874787254
+                                                                                        }
+                                                                                    ],
+                                                                                    "components": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "position": [
+                                                                                                0.09256947040557861,
+                                                                                                -4.236916542053223,
+                                                                                                0.2535731792449951
+                                                                                            ],
+                                                                                            "rotation": [
+                                                                                                0.0,
+                                                                                                0.0,
+                                                                                                0.0
+                                                                                            ],
+                                                                                            "scale": [
+                                                                                                1.0,
+                                                                                                1.0,
+                                                                                                1.0
+                                                                                            ],
+                                                                                            "type": 0
+                                                                                        }
+                                                                                    ],
+                                                                                    "name": "pCube5_$AssimpFbx$_ScalingPivotInverse",
+                                                                                    "uid": 3400250708289558205
+                                                                                }
+                                                                            ],
+                                                                            "components": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "position": [
+                                                                                        -0.09256947040557861,
+                                                                                        4.236916542053223,
+                                                                                        -0.2535731792449951
+                                                                                    ],
+                                                                                    "rotation": [
+                                                                                        0.0,
+                                                                                        0.0,
+                                                                                        0.0
+                                                                                    ],
+                                                                                    "scale": [
+                                                                                        1.0,
+                                                                                        1.0,
+                                                                                        1.0
+                                                                                    ],
+                                                                                    "type": 0
+                                                                                }
+                                                                            ],
+                                                                            "name": "pCube5_$AssimpFbx$_ScalingPivot",
+                                                                            "uid": 14555609621908231910
+                                                                        }
+                                                                    ],
+                                                                    "components": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "position": [
+                                                                                0.09256947040557861,
+                                                                                -4.236916542053223,
+                                                                                0.2535731792449951
+                                                                            ],
+                                                                            "rotation": [
+                                                                                0.0,
+                                                                                0.0,
+                                                                                0.0
+                                                                            ],
+                                                                            "scale": [
+                                                                                1.0,
+                                                                                1.0,
+                                                                                1.0
+                                                                            ],
+                                                                            "type": 0
+                                                                        }
+                                                                    ],
+                                                                    "name": "pCube5_$AssimpFbx$_RotationPivotInverse",
+                                                                    "uid": 14981769034796941474
+                                                                }
+                                                            ],
+                                                            "components": [
+                                                                {
+                                                                    "active": true,
+                                                                    "position": [
+                                                                        -0.09256947040557861,
+                                                                        4.236916542053223,
+                                                                        -0.2535731792449951
+                                                                    ],
+                                                                    "rotation": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "type": 0
+                                                                }
+                                                            ],
+                                                            "name": "pCube5_$AssimpFbx$_RotationPivot",
+                                                            "uid": 14971312400489365258
+                                                        },
+                                                        {
+                                                            "active": true,
+                                                            "children": [
+                                                                {
+                                                                    "active": true,
+                                                                    "children": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "children": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "children": [],
+                                                                                            "components": [
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "position": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "rotation": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "scale": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "type": 0
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "meshUID": 3257085352911725793,
+                                                                                                    "type": 1
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "ambientColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "diffuseColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "emissiveColor": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "hasMaterialProperties": true,
+                                                                                                    "lightingMode": 1,
+                                                                                                    "materialType": 0,
+                                                                                                    "metallic": 0.0,
+                                                                                                    "opacity": 1.0,
+                                                                                                    "originalTextureUID": 4676049201108877090,
+                                                                                                    "roughness": 0.5,
+                                                                                                    "shininess": 32.0,
+                                                                                                    "specularColor": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "textureUID": 4676049201108877090,
+                                                                                                    "type": 3,
+                                                                                                    "useCheckerboard": false
+                                                                                                }
+                                                                                            ],
+                                                                                            "name": "pCube3",
+                                                                                            "uid": 12284922205027083413
+                                                                                        }
+                                                                                    ],
+                                                                                    "components": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "position": [
+                                                                                                0.09419089555740356,
+                                                                                                -4.304053783416748,
+                                                                                                0.2131263017654419
+                                                                                            ],
+                                                                                            "rotation": [
+                                                                                                0.0,
+                                                                                                0.0,
+                                                                                                0.0
+                                                                                            ],
+                                                                                            "scale": [
+                                                                                                1.0,
+                                                                                                1.0,
+                                                                                                1.0
+                                                                                            ],
+                                                                                            "type": 0
+                                                                                        }
+                                                                                    ],
+                                                                                    "name": "pCube3_$AssimpFbx$_ScalingPivotInverse",
+                                                                                    "uid": 2757673642657745474
+                                                                                }
+                                                                            ],
+                                                                            "components": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "position": [
+                                                                                        -0.09419089555740356,
+                                                                                        4.304053783416748,
+                                                                                        -0.2131263017654419
+                                                                                    ],
+                                                                                    "rotation": [
+                                                                                        0.0,
+                                                                                        0.0,
+                                                                                        0.0
+                                                                                    ],
+                                                                                    "scale": [
+                                                                                        1.0,
+                                                                                        1.0,
+                                                                                        1.0
+                                                                                    ],
+                                                                                    "type": 0
+                                                                                }
+                                                                            ],
+                                                                            "name": "pCube3_$AssimpFbx$_ScalingPivot",
+                                                                            "uid": 9669284379675598363
+                                                                        }
+                                                                    ],
+                                                                    "components": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "position": [
+                                                                                0.09419089555740356,
+                                                                                -4.304053783416748,
+                                                                                0.2131263017654419
+                                                                            ],
+                                                                            "rotation": [
+                                                                                0.0,
+                                                                                0.0,
+                                                                                0.0
+                                                                            ],
+                                                                            "scale": [
+                                                                                1.0,
+                                                                                1.0,
+                                                                                1.0
+                                                                            ],
+                                                                            "type": 0
+                                                                        }
+                                                                    ],
+                                                                    "name": "pCube3_$AssimpFbx$_RotationPivotInverse",
+                                                                    "uid": 14638540746956007103
+                                                                }
+                                                            ],
+                                                            "components": [
+                                                                {
+                                                                    "active": true,
+                                                                    "position": [
+                                                                        -0.09419089555740356,
+                                                                        4.304053783416748,
+                                                                        -0.2131263017654419
+                                                                    ],
+                                                                    "rotation": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "type": 0
+                                                                }
+                                                            ],
+                                                            "name": "pCube3_$AssimpFbx$_RotationPivot",
+                                                            "uid": 14273264011202260224
+                                                        },
+                                                        {
+                                                            "active": true,
+                                                            "children": [
+                                                                {
+                                                                    "active": true,
+                                                                    "children": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "children": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "children": [],
+                                                                                            "components": [
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "position": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "rotation": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "scale": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "type": 0
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "meshUID": 9251197083696533758,
+                                                                                                    "type": 1
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "ambientColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "diffuseColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "emissiveColor": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "hasMaterialProperties": true,
+                                                                                                    "lightingMode": 1,
+                                                                                                    "materialType": 0,
+                                                                                                    "metallic": 0.0,
+                                                                                                    "opacity": 1.0,
+                                                                                                    "originalTextureUID": 4676049201108877090,
+                                                                                                    "roughness": 0.5,
+                                                                                                    "shininess": 32.0,
+                                                                                                    "specularColor": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "textureUID": 4676049201108877090,
+                                                                                                    "type": 3,
+                                                                                                    "useCheckerboard": false
+                                                                                                }
+                                                                                            ],
+                                                                                            "name": "pCube1",
+                                                                                            "uid": 12344261473545028385
+                                                                                        }
+                                                                                    ],
+                                                                                    "components": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "position": [
+                                                                                                0.3326462507247925,
+                                                                                                -7.293126106262207,
+                                                                                                -0.0
+                                                                                            ],
+                                                                                            "rotation": [
+                                                                                                0.0,
+                                                                                                0.0,
+                                                                                                0.0
+                                                                                            ],
+                                                                                            "scale": [
+                                                                                                1.0,
+                                                                                                1.0,
+                                                                                                1.0
+                                                                                            ],
+                                                                                            "type": 0
+                                                                                        }
+                                                                                    ],
+                                                                                    "name": "pCube1_$AssimpFbx$_ScalingPivotInverse",
+                                                                                    "uid": 1756347364981773140
+                                                                                }
+                                                                            ],
+                                                                            "components": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "position": [
+                                                                                        -0.3326462507247925,
+                                                                                        7.293126106262207,
+                                                                                        0.0
+                                                                                    ],
+                                                                                    "rotation": [
+                                                                                        0.0,
+                                                                                        0.0,
+                                                                                        0.0
+                                                                                    ],
+                                                                                    "scale": [
+                                                                                        1.0,
+                                                                                        1.0,
+                                                                                        1.0
+                                                                                    ],
+                                                                                    "type": 0
+                                                                                }
+                                                                            ],
+                                                                            "name": "pCube1_$AssimpFbx$_ScalingPivot",
+                                                                            "uid": 8005005541434951169
+                                                                        }
+                                                                    ],
+                                                                    "components": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "position": [
+                                                                                0.3326462507247925,
+                                                                                -7.293126106262207,
+                                                                                -0.0
+                                                                            ],
+                                                                            "rotation": [
+                                                                                0.0,
+                                                                                0.0,
+                                                                                0.0
+                                                                            ],
+                                                                            "scale": [
+                                                                                1.0,
+                                                                                1.0,
+                                                                                1.0
+                                                                            ],
+                                                                            "type": 0
+                                                                        }
+                                                                    ],
+                                                                    "name": "pCube1_$AssimpFbx$_RotationPivotInverse",
+                                                                    "uid": 894837521196392111
+                                                                }
+                                                            ],
+                                                            "components": [
+                                                                {
+                                                                    "active": true,
+                                                                    "position": [
+                                                                        -0.3326462507247925,
+                                                                        7.293126106262207,
+                                                                        0.0
+                                                                    ],
+                                                                    "rotation": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "type": 0
+                                                                }
+                                                            ],
+                                                            "name": "pCube1_$AssimpFbx$_RotationPivot",
+                                                            "uid": 13211495588763904268
+                                                        },
+                                                        {
+                                                            "active": true,
+                                                            "children": [
+                                                                {
+                                                                    "active": true,
+                                                                    "children": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "children": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "children": [],
+                                                                                            "components": [
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "position": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "rotation": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0
+                                                                                                    ],
+                                                                                                    "scale": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "type": 0
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "meshUID": 15191944953108887207,
+                                                                                                    "type": 1
+                                                                                                },
+                                                                                                {
+                                                                                                    "active": true,
+                                                                                                    "ambientColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "diffuseColor": [
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        0.5,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "emissiveColor": [
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        0.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "hasMaterialProperties": true,
+                                                                                                    "lightingMode": 1,
+                                                                                                    "materialType": 0,
+                                                                                                    "metallic": 0.0,
+                                                                                                    "opacity": 1.0,
+                                                                                                    "originalTextureUID": 4676049201108877090,
+                                                                                                    "roughness": 0.5,
+                                                                                                    "shininess": 32.0,
+                                                                                                    "specularColor": [
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0,
+                                                                                                        1.0
+                                                                                                    ],
+                                                                                                    "textureUID": 4676049201108877090,
+                                                                                                    "type": 3,
+                                                                                                    "useCheckerboard": false
+                                                                                                }
+                                                                                            ],
+                                                                                            "name": "pCube8",
+                                                                                            "uid": 4519863119271738336
+                                                                                        }
+                                                                                    ],
+                                                                                    "components": [
+                                                                                        {
+                                                                                            "active": true,
+                                                                                            "position": [
+                                                                                                0.036838725209236145,
+                                                                                                -3.9702041149139404,
+                                                                                                0.05791175365447998
+                                                                                            ],
+                                                                                            "rotation": [
+                                                                                                0.0,
+                                                                                                0.0,
+                                                                                                0.0
+                                                                                            ],
+                                                                                            "scale": [
+                                                                                                1.0,
+                                                                                                1.0,
+                                                                                                1.0
+                                                                                            ],
+                                                                                            "type": 0
+                                                                                        }
+                                                                                    ],
+                                                                                    "name": "pCube8_$AssimpFbx$_ScalingPivotInverse",
+                                                                                    "uid": 9652566252090788520
+                                                                                }
+                                                                            ],
+                                                                            "components": [
+                                                                                {
+                                                                                    "active": true,
+                                                                                    "position": [
+                                                                                        -0.036838725209236145,
+                                                                                        3.9702041149139404,
+                                                                                        -0.05791175365447998
+                                                                                    ],
+                                                                                    "rotation": [
+                                                                                        0.0,
+                                                                                        0.0,
+                                                                                        0.0
+                                                                                    ],
+                                                                                    "scale": [
+                                                                                        1.0,
+                                                                                        1.0,
+                                                                                        1.0
+                                                                                    ],
+                                                                                    "type": 0
+                                                                                }
+                                                                            ],
+                                                                            "name": "pCube8_$AssimpFbx$_ScalingPivot",
+                                                                            "uid": 49050717927696490
+                                                                        }
+                                                                    ],
+                                                                    "components": [
+                                                                        {
+                                                                            "active": true,
+                                                                            "position": [
+                                                                                0.036838725209236145,
+                                                                                -3.9702041149139404,
+                                                                                0.05791175365447998
+                                                                            ],
+                                                                            "rotation": [
+                                                                                0.0,
+                                                                                0.0,
+                                                                                0.0
+                                                                            ],
+                                                                            "scale": [
+                                                                                1.0,
+                                                                                1.0,
+                                                                                1.0
+                                                                            ],
+                                                                            "type": 0
+                                                                        }
+                                                                    ],
+                                                                    "name": "pCube8_$AssimpFbx$_RotationPivotInverse",
+                                                                    "uid": 3291743042021887833
+                                                                }
+                                                            ],
+                                                            "components": [
+                                                                {
+                                                                    "active": true,
+                                                                    "position": [
+                                                                        -0.036838725209236145,
+                                                                        3.9702041149139404,
+                                                                        -0.05791175365447998
+                                                                    ],
+                                                                    "rotation": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "type": 0
+                                                                }
+                                                            ],
+                                                            "name": "pCube8_$AssimpFbx$_RotationPivot",
+                                                            "uid": 13356181492346355920
+                                                        }
+                                                    ],
+                                                    "components": [
+                                                        {
+                                                            "active": true,
+                                                            "position": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "rotation": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "scale": [
+                                                                1.0,
+                                                                1.0,
+                                                                1.0
+                                                            ],
+                                                            "type": 0
+                                                        }
+                                                    ],
+                                                    "name": "group1",
+                                                    "uid": 1027637734069538814
+                                                }
+                                            ],
+                                            "components": [
+                                                {
+                                                    "active": true,
+                                                    "position": [
+                                                        0.09256941080093384,
+                                                        -4.311395645141602,
+                                                        -0.005904436111450195
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ],
+                                                    "type": 0
+                                                }
+                                            ],
+                                            "name": "group1_$AssimpFbx$_ScalingPivotInverse",
+                                            "uid": 12274241919599007726
+                                        }
+                                    ],
+                                    "components": [
+                                        {
+                                            "active": true,
+                                            "position": [
+                                                -0.09256941080093384,
+                                                4.311395645141602,
+                                                0.005904436111450195
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "type": 0
+                                        }
+                                    ],
+                                    "name": "group1_$AssimpFbx$_ScalingPivot",
+                                    "uid": 6341932583045297600
+                                }
+                            ],
+                            "components": [
+                                {
+                                    "active": true,
+                                    "position": [
+                                        0.09256941080093384,
+                                        -4.311395645141602,
+                                        -0.005904436111450195
+                                    ],
+                                    "rotation": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ],
+                                    "type": 0
+                                }
+                            ],
+                            "name": "group1_$AssimpFbx$_RotationPivotInverse",
+                            "uid": 17632504293071396099
+                        }
+                    ],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                -0.09256941080093384,
+                                4.311395645141602,
+                                0.005904436111450195
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "type": 0
+                        }
+                    ],
+                    "name": "group1_$AssimpFbx$_RotationPivot",
+                    "uid": 12017444976212979027
+                },
+                {
+                    "active": true,
+                    "children": [],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                0.04457906261086464,
+                                0.0,
+                                0.0
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "type": 0
+                        }
+                    ],
+                    "name": "materialXStack1",
+                    "uid": 12507177502347670742
+                }
+            ],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        -6.277731418609619,
+                        2.7992788091069087e-05,
+                        3.257009506225586
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        0.3224983811378479,
+                        0.3224983811378479,
+                        0.3224983811378479
+                    ],
+                    "type": 0
+                }
+            ],
+            "name": "RootNode",
+            "uid": 7629513809572231128
+        },
+        {
+            "active": true,
+            "children": [
+                {
+                    "active": true,
+                    "children": [
+                        {
+                            "active": true,
+                            "children": [
+                                {
+                                    "active": true,
+                                    "children": [
+                                        {
+                                            "active": true,
+                                            "children": [
+                                                {
+                                                    "active": true,
+                                                    "children": [
+                                                        {
+                                                            "active": true,
+                                                            "children": [],
+                                                            "components": [
+                                                                {
+                                                                    "active": true,
+                                                                    "position": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "rotation": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "type": 0
+                                                                },
+                                                                {
+                                                                    "active": true,
+                                                                    "meshUID": 16099009282918631653,
+                                                                    "type": 1
+                                                                },
+                                                                {
+                                                                    "active": true,
+                                                                    "ambientColor": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "diffuseColor": [
+                                                                        0.4000000059604645,
+                                                                        0.4000000059604645,
+                                                                        0.4000000059604645,
+                                                                        1.0
+                                                                    ],
+                                                                    "emissiveColor": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "hasMaterialProperties": true,
+                                                                    "lightingMode": 1,
+                                                                    "materialType": 0,
+                                                                    "metallic": 0.0,
+                                                                    "opacity": 1.0,
+                                                                    "originalTextureUID": 15481172425993555188,
+                                                                    "roughness": 0.5,
+                                                                    "shininess": 32.0,
+                                                                    "specularColor": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "textureUID": 15481172425993555188,
+                                                                    "type": 3,
+                                                                    "useCheckerboard": false
+                                                                }
+                                                            ],
+                                                            "name": "Base_bottom",
+                                                            "uid": 16111957548289717288
+                                                        }
+                                                    ],
+                                                    "components": [
+                                                        {
+                                                            "active": true,
+                                                            "position": [
+                                                                -0.0,
+                                                                -0.27069950103759766,
+                                                                -0.0
+                                                            ],
+                                                            "rotation": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "scale": [
+                                                                1.0,
+                                                                1.0,
+                                                                1.0
+                                                            ],
+                                                            "type": 0
+                                                        }
+                                                    ],
+                                                    "name": "Base_bottom_$AssimpFbx$_ScalingPivotInverse",
+                                                    "uid": 10725343206046624127
+                                                }
+                                            ],
+                                            "components": [
+                                                {
+                                                    "active": true,
+                                                    "position": [
+                                                        0.0,
+                                                        0.27069950103759766,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ],
+                                                    "type": 0
+                                                }
+                                            ],
+                                            "name": "Base_bottom_$AssimpFbx$_ScalingPivot",
+                                            "uid": 4599360500094263424
+                                        }
+                                    ],
+                                    "components": [
+                                        {
+                                            "active": true,
+                                            "position": [
+                                                -0.0,
+                                                -0.27069950103759766,
+                                                -0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "type": 0
+                                        }
+                                    ],
+                                    "name": "Base_bottom_$AssimpFbx$_RotationPivotInverse",
+                                    "uid": 10839054059922212314
+                                }
+                            ],
+                            "components": [
+                                {
+                                    "active": true,
+                                    "position": [
+                                        0.0,
+                                        0.27069950103759766,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ],
+                                    "type": 0
+                                }
+                            ],
+                            "name": "Base_bottom_$AssimpFbx$_RotationPivot",
+                            "uid": 16694146694950690459
+                        },
+                        {
+                            "active": true,
+                            "children": [
+                                {
+                                    "active": true,
+                                    "children": [
+                                        {
+                                            "active": true,
+                                            "children": [
+                                                {
+                                                    "active": true,
+                                                    "children": [
+                                                        {
+                                                            "active": true,
+                                                            "children": [],
+                                                            "components": [
+                                                                {
+                                                                    "active": true,
+                                                                    "position": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "rotation": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "scale": [
+                                                                        1.0000051259994507,
+                                                                        1.0000051259994507,
+                                                                        1.0000051259994507
+                                                                    ],
+                                                                    "type": 0
+                                                                },
+                                                                {
+                                                                    "active": true,
+                                                                    "meshUID": 6773697965563338767,
+                                                                    "type": 1
+                                                                },
+                                                                {
+                                                                    "active": true,
+                                                                    "ambientColor": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "diffuseColor": [
+                                                                        0.4000000059604645,
+                                                                        0.4000000059604645,
+                                                                        0.4000000059604645,
+                                                                        1.0
+                                                                    ],
+                                                                    "emissiveColor": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "hasMaterialProperties": true,
+                                                                    "lightingMode": 1,
+                                                                    "materialType": 0,
+                                                                    "metallic": 0.0,
+                                                                    "opacity": 1.0,
+                                                                    "originalTextureUID": 15481172425993555188,
+                                                                    "roughness": 0.5,
+                                                                    "shininess": 32.0,
+                                                                    "specularColor": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "textureUID": 15481172425993555188,
+                                                                    "type": 3,
+                                                                    "useCheckerboard": false
+                                                                }
+                                                            ],
+                                                            "name": "Pillar_main",
+                                                            "uid": 14737093278218062579
+                                                        }
+                                                    ],
+                                                    "components": [
+                                                        {
+                                                            "active": true,
+                                                            "position": [
+                                                                1.1920928955078125e-07,
+                                                                -5.533626556396484,
+                                                                1.1920928955078125e-07
+                                                            ],
+                                                            "rotation": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "scale": [
+                                                                1.0,
+                                                                1.0,
+                                                                1.0
+                                                            ],
+                                                            "type": 0
+                                                        }
+                                                    ],
+                                                    "name": "Pillar_main_$AssimpFbx$_ScalingPivotInverse",
+                                                    "uid": 9097077453359435444
+                                                }
+                                            ],
+                                            "components": [
+                                                {
+                                                    "active": true,
+                                                    "position": [
+                                                        -1.1920928955078125e-07,
+                                                        5.533626556396484,
+                                                        -1.1920928955078125e-07
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ],
+                                                    "type": 0
+                                                }
+                                            ],
+                                            "name": "Pillar_main_$AssimpFbx$_ScalingPivot",
+                                            "uid": 800607342971323377
+                                        }
+                                    ],
+                                    "components": [
+                                        {
+                                            "active": true,
+                                            "position": [
+                                                1.1920928955078125e-07,
+                                                -5.533626556396484,
+                                                1.1920928955078125e-07
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "type": 0
+                                        }
+                                    ],
+                                    "name": "Pillar_main_$AssimpFbx$_RotationPivotInverse",
+                                    "uid": 1430786540821674160
+                                }
+                            ],
+                            "components": [
+                                {
+                                    "active": true,
+                                    "position": [
+                                        -1.1920928955078125e-07,
+                                        5.533626556396484,
+                                        -1.1920928955078125e-07
+                                    ],
+                                    "rotation": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ],
+                                    "type": 0
+                                }
+                            ],
+                            "name": "Pillar_main_$AssimpFbx$_RotationPivot",
+                            "uid": 15392482758969335294
+                        },
+                        {
+                            "active": true,
+                            "children": [
+                                {
+                                    "active": true,
+                                    "children": [
+                                        {
+                                            "active": true,
+                                            "children": [
+                                                {
+                                                    "active": true,
+                                                    "children": [
+                                                        {
+                                                            "active": true,
+                                                            "children": [],
+                                                            "components": [
+                                                                {
+                                                                    "active": true,
+                                                                    "position": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "rotation": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0
+                                                                    ],
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "type": 0
+                                                                },
+                                                                {
+                                                                    "active": true,
+                                                                    "meshUID": 17025556549840695333,
+                                                                    "type": 1
+                                                                },
+                                                                {
+                                                                    "active": true,
+                                                                    "ambientColor": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "diffuseColor": [
+                                                                        0.4000000059604645,
+                                                                        0.4000000059604645,
+                                                                        0.4000000059604645,
+                                                                        1.0
+                                                                    ],
+                                                                    "emissiveColor": [
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "hasMaterialProperties": true,
+                                                                    "lightingMode": 1,
+                                                                    "materialType": 0,
+                                                                    "metallic": 0.0,
+                                                                    "opacity": 1.0,
+                                                                    "originalTextureUID": 15481172425993555188,
+                                                                    "roughness": 0.5,
+                                                                    "shininess": 32.0,
+                                                                    "specularColor": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "textureUID": 15481172425993555188,
+                                                                    "type": 3,
+                                                                    "useCheckerboard": false
+                                                                }
+                                                            ],
+                                                            "name": "Base_top",
+                                                            "uid": 15516262559508096988
+                                                        }
+                                                    ],
+                                                    "components": [
+                                                        {
+                                                            "active": true,
+                                                            "position": [
+                                                                -5.960464477539063e-08,
+                                                                -10.844844818115234,
+                                                                -0.0
+                                                            ],
+                                                            "rotation": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "scale": [
+                                                                1.0,
+                                                                1.0,
+                                                                1.0
+                                                            ],
+                                                            "type": 0
+                                                        }
+                                                    ],
+                                                    "name": "Base_top_$AssimpFbx$_ScalingPivotInverse",
+                                                    "uid": 6076185423334359873
+                                                }
+                                            ],
+                                            "components": [
+                                                {
+                                                    "active": true,
+                                                    "position": [
+                                                        5.960464477539063e-08,
+                                                        10.844844818115234,
+                                                        0.0
+                                                    ],
+                                                    "rotation": [
+                                                        0.0,
+                                                        0.0,
+                                                        0.0
+                                                    ],
+                                                    "scale": [
+                                                        1.0,
+                                                        1.0,
+                                                        1.0
+                                                    ],
+                                                    "type": 0
+                                                }
+                                            ],
+                                            "name": "Base_top_$AssimpFbx$_ScalingPivot",
+                                            "uid": 2880491608441404603
+                                        }
+                                    ],
+                                    "components": [
+                                        {
+                                            "active": true,
+                                            "position": [
+                                                -5.960464477539063e-08,
+                                                -10.844844818115234,
+                                                -0.0
+                                            ],
+                                            "rotation": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "type": 0
+                                        }
+                                    ],
+                                    "name": "Base_top_$AssimpFbx$_RotationPivotInverse",
+                                    "uid": 17026893677811268220
+                                }
+                            ],
+                            "components": [
+                                {
+                                    "active": true,
+                                    "position": [
+                                        5.960464477539063e-08,
+                                        10.844844818115234,
+                                        0.0
+                                    ],
+                                    "rotation": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "scale": [
+                                        1.0,
+                                        1.0,
+                                        1.0
+                                    ],
+                                    "type": 0
+                                }
+                            ],
+                            "name": "Base_top_$AssimpFbx$_RotationPivot",
+                            "uid": 7612468306610776887
+                        }
+                    ],
+                    "components": [
+                        {
+                            "active": true,
+                            "position": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "type": 0
+                        }
+                    ],
+                    "name": "Pillar_Complete_Low",
+                    "uid": 8089254647958624067
+                }
+            ],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        -10.1290283203125,
+                        0.0,
+                        1.9437552690505981
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        0.8248865604400635,
+                        0.8248865604400635,
+                        0.8248865604400635
+                    ],
+                    "type": 0
+                }
+            ],
+            "name": "RootNode",
+            "uid": 14287495878214351611
         }
     ],
     "version": 1
