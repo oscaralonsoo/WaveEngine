@@ -1053,33 +1053,24 @@ void ModuleEditor::BuildGame()
         fs::path assetsSrc(LibraryManager::GetAssetsRoot());
         if (fs::exists(assetsSrc))
         {
-            fs::create_directories(dest / "Assets");
-            fs::copy(assetsSrc, dest / "Assets", fs::copy_options::overwrite_existing | fs::copy_options::recursive); // https://en.cppreference.com/w/cpp/filesystem/copy
+            fs::copy(assetsSrc, dest / "Assets", fs::copy_options::overwrite_existing | fs::copy_options::recursive);
             LOG_CONSOLE("[Build] Copied Assets/ folder");
         }
         else
         {
-            fs::create_directories(dest / "Assets");
-            LOG_CONSOLE("[Build] WARNING: Assets not found");
+            LOG_CONSOLE("[Build] WARNING: Assetsfolder not found");
         }
 
-        // Copy Library/Meshes and Library/Textures
+        // Copy Library/ folder
         fs::path libRoot(LibraryManager::GetLibraryRoot());
-
-        fs::path meshSrc = libRoot / "Meshes";
-        if (fs::exists(meshSrc))
+        if (fs::exists(libRoot))
         {
-            fs::create_directories(dest / "Library" / "Meshes");
-            fs::copy(meshSrc, dest / "Library" / "Meshes", fs::copy_options::overwrite_existing | fs::copy_options::recursive);
-            LOG_CONSOLE("[Build] Copied Library/Meshes");
+            fs::copy(libRoot, dest / "Library", fs::copy_options::overwrite_existing | fs::copy_options::recursive);
+            LOG_CONSOLE("[Build] Copied Library/ folder");
         }
-
-        fs::path texSrc = libRoot / "Textures";
-        if (fs::exists(texSrc))
+        else
         {
-            fs::create_directories(dest / "Library" / "Textures");
-            fs::copy(texSrc, dest / "Library" / "Textures", fs::copy_options::overwrite_existing | fs::copy_options::recursive);
-            LOG_CONSOLE("[Build] Copied Library/Textures");
+            LOG_CONSOLE("[Build] WARNING: Library folder not found");
         }
 
         // Export scene
