@@ -163,6 +163,7 @@ Model ModelImporter::ImportFromFile(const std::string& file_path)
     nlohmann::json gameObjectHierarchy;
     rootObj->Serialize(gameObjectHierarchy);
     model.modelJson = gameObjectHierarchy;
+    delete rootObj;
 
     return model;
 }
