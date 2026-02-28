@@ -14,6 +14,7 @@
 #include "ImportSettingsWindow.h"
 #include "TextureImporter.h" 
 #include "ModuleLoader.h"       
+#include "ModuleEvents.h"       
 #include "GameObject.h"        
 #include "Input.h"           
 #include "ScriptEditorWindow.h"
@@ -29,6 +30,8 @@ AssetsWindow::AssetsWindow()
     : EditorWindow("Assets"), selectedAsset(nullptr), iconSize(64.0f),
     showInMemoryOnly(false), show3DPreviews(true), showDeleteConfirmation(false)
 {
+    Application::GetInstance().events.get()->Subscribe(Event::Type::FileDropped, this);
+
     if (!LibraryManager::IsInitialized()) {
         LibraryManager::Initialize();
     }
@@ -43,6 +46,8 @@ AssetsWindow::AssetsWindow()
 
 AssetsWindow::~AssetsWindow()
 {
+    Application::GetInstance().events.get()->UnsubscribeAll(this);
+
     for (auto& asset : currentAssets)
     {
         UnloadPreviewForAsset(asset);
@@ -261,6 +266,8 @@ void AssetsWindow::Draw()
     static bool firstDraw = true;
     static bool previousShow3DPreviews = true;
 
+    isHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows);
+
     if (firstDraw) {
 
         std::string libRoot = LibraryManager::GetLibraryRoot();
@@ -322,16 +329,7 @@ void AssetsWindow::Draw()
 
     if (ImGui::Begin(name.c_str(), &isOpen))
     {
-        isHovered = ImGui::IsWindowHovered();
-
-        // Llamar a HandleExternalDragDrop 
-        HandleExternalDragDrop();
-
-        // Test manual con Ctrl+T
-        if (ImGui::IsKeyPressed(ImGuiKey_T) && ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
-        {
-            TestImportSystem();
-        }
+        
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
 
@@ -2420,41 +2418,22 @@ unsigned int AssetsWindow::RenderMultipleMeshesToTexture(const std::vector<const
     return colorTexture;
 }
 
-void AssetsWindow::HandleExternalDragDrop()
+void AssetsWindow::HandleExternalDragDrop(const std::string& filePath)
 {
-    //// Manejar archivos externos (desde fuera de la aplicación)
-    //if (Application::GetInstance().input->HasDroppedFile())
-    //{
-    //    ImVec2 mousePos = ImGui::GetMousePos();
-    //    ImVec2 windowPos = ImGui::GetWindowPos();
-    //    ImVec2 windowSize = ImGui::GetWindowSize();
+    std::string droppedPath = filePath;
 
-    //    bool isMouseOverWindow = (mousePos.x >= windowPos.x &&
-    //        mousePos.x <= windowPos.x + windowSize.x &&
-    //        mousePos.y >= windowPos.y &&
-    //        mousePos.y <= windowPos.y + windowSize.y);
+    LOG_CONSOLE("[AssetsWindow] File dropped on Assets window: %s", droppedPath.c_str());
 
-    //    bool windowActive = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) ||
-    //        ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
-
-    //    if (isMouseOverWindow || windowActive)
-    //    {
-    //        std::string droppedPath = Application::GetInstance().input->GetDroppedFilePath();
-    //        Application::GetInstance().input->ClearDroppedFile();
-
-    //        LOG_CONSOLE("[AssetsWindow] File dropped on Assets window: %s", droppedPath.c_str());
-
-    //        if (ProcessDroppedFile(droppedPath))
-    //        {
-    //            RefreshAssets();
-    //        }
-    //        else
-    //        {
-    //            LOG_CONSOLE("[AssetsWindow] Failed to import: %s", droppedPath.c_str());
-    //        }
-    //    }
-    //}
+    if (ProcessDroppedFile(droppedPath))
+    {
+        RefreshAssets();
+    }
+    else
+    {
+        LOG_CONSOLE("[AssetsWindow] Failed to import: %s", droppedPath.c_str());
+    }
 }
+
 bool AssetsWindow::ProcessDroppedFile(const std::string& sourceFilePath)
 {
     LOG_CONSOLE("[AssetsWindow] Processing dropped file: %s", sourceFilePath.c_str());
@@ -2916,4 +2895,20 @@ bool AssetsWindow::CreatePrefabFromGameObject(GameObject* obj, const std::string
     }
 
     return true;
+}
+
+void AssetsWindow::OnEvent(const Event& event)
+{
+    switch (event.type)
+    {
+    case Event::Type::FileDropped:
+    {
+        std::string filePath = event.data.string.string;
+        HandleExternalDragDrop(filePath);
+        break;
+    }
+
+    default:
+        break;
+    }
 }

@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "EventListener.h"
 #include "EditorWindow.h"
 #include <string>
 #include <vector>
@@ -58,7 +59,7 @@ struct DragDropPayload
     DragDropAssetType assetType;
 };
 
-class AssetsWindow : public EditorWindow
+class AssetsWindow : public EditorWindow, public EventListener
 {
 public:
     AssetsWindow();
@@ -93,7 +94,7 @@ private:
     unsigned int RenderMultipleMeshesToTexture(const std::vector<const Mesh*>& meshes, int width, int height);
 
     // Drag & Drop from external files
-    void HandleExternalDragDrop();
+    void HandleExternalDragDrop(const std::string& filePath);
     bool ProcessDroppedFile(const std::string& sourceFilePath);
     bool CopyFileToAssets(const std::string& sourceFilePath, std::string& outDestPath);
 
@@ -106,6 +107,8 @@ private:
 
     void HandlePrefabCreationDrop(const std::string& prefabName);
     bool CreatePrefabFromGameObject(GameObject* obj, const std::string& prefabPath);
+    
+    void OnEvent(const Event& event) override;
 
     std::string assetsRootPath;
     std::string currentPath;

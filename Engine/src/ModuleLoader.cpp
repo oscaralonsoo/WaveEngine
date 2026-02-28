@@ -1,28 +1,11 @@
-﻿#include "ModuleLoader.h"
-#define NOMINMAX  
-#include <assimp/scene.h>
-#include <assimp/postprocess.h> 
-#include <assimp/cimport.h>
-#include <windows.h>
-#include <algorithm>
-#include <limits>
-#include <filesystem>
-#include "Application.h"
-#include "GameObject.h"
-#include "Transform.h"
+﻿#include "Application.h"
+#include "ModuleEvents.h"
+#include "ModuleLoader.h"
+#include "LibraryManager.h"
 #include "ComponentMesh.h"
-#include "MeshImporter.h"
-#include "ModelImporter.h"
-#include "LibraryManager.h"  
-#include "ComponentMaterial.h"
+#include "ResourceModel.h"
 #include "MetaFile.h"
-#include "Log.h"
-#include "TextureImporter.h"
-#include "ResourceMesh.h"     
-#include "ResourceModel.h"     
-#include "ResourceTexture.h"   
-#include "ResourceModel.h"   
-#include "AssetsWindow.h"
+#include "ComponentMaterial.h"
 
 ModuleLoader::ModuleLoader() : Module() {}
 ModuleLoader::~ModuleLoader() {}
@@ -36,13 +19,11 @@ bool ModuleLoader::Start()
 {
     namespace fs = std::filesystem;
 
-    // Verificar que LibraryManager esté inicializado
     if (!LibraryManager::IsInitialized()) {
         LOG_CONSOLE("[FileSystem] ERROR: LibraryManager not initialized");
         return false;
     }
 
-    // Load default scene
     std::string defaultScenePath = "../Scene/scene.json";
     if (fs::exists(defaultScenePath)) {
         LOG_CONSOLE("[FileSystem] Loading default scene: %s", defaultScenePath.c_str());
@@ -55,13 +36,11 @@ bool ModuleLoader::Start()
         }
     }
 
-    // Usar las rutas de LibraryManager
     fs::path assetsPath = LibraryManager::GetAssetsRoot();
 
     if (!fs::exists(assetsPath) || !fs::is_directory(assetsPath)) {
         LOG_CONSOLE("[FileSystem] WARNING: Assets folder not accessible");
 
-        // Fallback geometry
         GameObject* pyramidObject = new GameObject("Pyramid");
         ComponentMesh* meshComp = static_cast<ComponentMesh*>(pyramidObject->CreateComponent(ComponentType::MESH));
         Mesh pyramidMesh = Primitives::CreatePyramid();
@@ -105,7 +84,6 @@ bool ModuleLoader::Start()
 
 bool ModuleLoader::CleanUp()
 {
-    aiDetachAllLogStreams();
     LOG_CONSOLE("FileSystem cleaned up");
     return true;
 }
