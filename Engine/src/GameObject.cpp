@@ -426,7 +426,8 @@ GameObject* GameObject::Deserialize(const nlohmann::json& gameObjectObj, GameObj
     // Create gameobject
     std::string objName = gameObjectObj.contains("name") ? gameObjectObj["name"].get<std::string>() : "GameObject";
     GameObject* newObject = new GameObject(objName);
-    newObject->objectUID = gameObjectObj.contains("uid") ? gameObjectObj["uid"].get<UID>() : newObject->objectUID;
+    UID uid = gameObjectObj.contains("uid") ? gameObjectObj["uid"].get<UID>() : newObject->objectUID;
+    if (uid != 0)newObject->objectUID = uid;
 
     if (gameObjectObj.contains("active")) {
         newObject->SetActive(gameObjectObj["active"].get<bool>());

@@ -70,6 +70,7 @@ Model ModelImporter::ImportFromFile(const std::string& file_path)
     rootObj = ProcessNode(scene->mRootNode, scene, directory, referedMeshes);
 
     rootObj->name = GetFileNameNoExtension(file_path);
+    rootObj->objectUID = 0;
 
     if (hasAnimations)
     {
@@ -173,6 +174,7 @@ GameObject* ModelImporter::ProcessNode(aiNode* node, const aiScene* scene, const
     if (nodeName.empty()) nodeName = "Unnamed";
 
     GameObject* gameObject = new GameObject(nodeName);
+    gameObject->objectUID = 0;
 
     Transform* transform = static_cast<Transform*>(gameObject->GetComponent(ComponentType::TRANSFORM));
 
