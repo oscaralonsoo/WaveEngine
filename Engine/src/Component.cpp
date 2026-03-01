@@ -16,19 +16,3 @@ Component::Component(GameObject* owner, ComponentType type) : owner(owner), type
     default: name = "Unknown Component";
     }
 }
-
-void Component::DrawRemoveComponentPopup() {
-
-    //std::string popupID = "RemovePopup##" + name;
-    std::string popupID = name + "RemovePopup##" + std::to_string((uintptr_t)this); 
-
-    if (ImGui::BeginPopupContextItem(popupID.c_str()))
-    {
-        if (ImGui::MenuItem("Remove Component"))
-        {
-            markedForRemoval = true;
-        }
-        ImGui::EndPopup();
-    }
-}
-

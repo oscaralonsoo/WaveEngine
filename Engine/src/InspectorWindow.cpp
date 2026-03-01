@@ -78,11 +78,11 @@ static void DrawComponentContextMenu(Component* component, bool canRemove = true
 
         if (canRemove)
         {
-            ImGui::Separator();
-            if (ImGui::MenuItem("Remove Component"))
-            {
-                component->markedForRemoval = true;
-            }
+            //ImGui::Separator();
+            //if (ImGui::MenuItem("Remove Component"))
+            //{
+            //    component->markedForRemoval = true;
+            //}
         }
 
         ImGui::EndPopup();
@@ -271,20 +271,6 @@ void InspectorWindow::Draw()
     ImGui::Spacing();
 
     DrawAddComponentButton(selectedObject);
-
-    //handle components removal in inspector
-    std::vector<Component*> componentsToRemove;
-    for (Component* comp : selectedObject->GetComponents())
-    {
-        if (comp->markedForRemoval) componentsToRemove.push_back(comp);
-    }
-    for (Component* comp : componentsToRemove)
-    {
-        comp->markedForRemoval = false;
-        Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
-            std::make_unique<RemoveComponentCommand>(selectedObject, comp)
-        );
-    }
 
     ImGui::End();
 }
