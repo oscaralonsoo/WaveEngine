@@ -40,6 +40,7 @@ public:
     // Scene serialization
     bool SaveScene(const std::string& filepath);
     bool LoadScene(const std::string& filepath);
+    void NewScene();
     void ClearScene();
 
     // for raycast visualization

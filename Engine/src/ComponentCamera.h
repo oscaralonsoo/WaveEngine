@@ -32,4 +32,5 @@ private:
     void SyncTransformToLens();
 
     CameraLens* lens = nullptr;
+
 };

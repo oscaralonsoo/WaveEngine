@@ -282,7 +282,6 @@ void EditorCamera::CalcMouseVectors()
 	up = glm::normalize(glm::cross(right, forward));
 }
 
-
 bool EditorCamera::CleanUp()
 {
 	bool ret = true;

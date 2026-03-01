@@ -28,6 +28,12 @@ public:
     const UID GetUID() { return objectUID; };
 
     Component* CreateComponent(ComponentType type);
+    void RemoveComponent(Component* comp);
+
+    //QOL
+    std::unique_ptr<Component> ExtractComponent(Component* comp);
+    void ReinsertComponentAt(std::unique_ptr<Component> comp, int index);
+    int GetComponentIndex(Component* comp) const;
 
     Component* GetComponent(ComponentType type) const;
     std::vector<Component*> GetComponentsOfType(ComponentType type) const;
@@ -80,7 +86,7 @@ public:
 private:
     GameObject* parent = nullptr;
     std::vector<GameObject*> children;
-
+    std::vector<std::unique_ptr<Component>> componentOwners;
     std::vector<Component*> components;
 
     bool markedForDeletion = false;
