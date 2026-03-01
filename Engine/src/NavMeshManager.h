@@ -32,12 +32,19 @@ public:
     struct NavMeshData
     {
         rcHeightfield* heightfield = nullptr;
+        rcCompactHeightfield* chf = nullptr;  // nuevo
         dtNavMesh* navMesh = nullptr;
         dtNavMeshQuery* navQuery = nullptr;
         GameObject* owner = nullptr;
+        dtTileRef tileRef = 0;
     };
 
     NavMeshData* GetNavMeshData(GameObject* owner);
+
+    bool FindPath(GameObject* surface,
+        const glm::vec3& start,
+        const glm::vec3& end,
+        std::vector<glm::vec3>& outPath);
 
 
 private:

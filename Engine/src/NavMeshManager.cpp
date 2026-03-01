@@ -79,33 +79,49 @@ void ModuleNavMesh::ExtractVertices(ComponentMesh* mesh, std::vector<float>& ver
     for (unsigned int idx : meshData.indices)
         indices.push_back(vertexOffset + (int)idx);
 }
-void ModuleNavMesh::Bake(GameObject* obj)
+void ModuleNavMesh::Bake(GameObject* root)
 {
-    RemoveNavMeshRecursive(obj);
-    navObstacles.clear();
-    RecollectObstacles(obj);
+    // ── Buscar el objeto con NavType::SURFACE ─────────────────────────────────
+    std::function<GameObject* (GameObject*)> FindSurface = [&](GameObject* obj) -> GameObject*
+        {
+            if (!obj || !obj->IsActive()) return nullptr;
 
+            ComponentNavigation* nav = (ComponentNavigation*)obj->GetComponent(ComponentType::NAVIGATION);
+            if (nav && nav->type == NavType::SURFACE)
+                return obj;
+
+            for (auto* child : obj->GetChildren())
+                if (auto* found = FindSurface(child))
+                    return found;
+
+            return nullptr;
+        };
+
+    GameObject* surface = FindSurface(root);
+    if (!surface)
+    {
+        LOG_CONSOLE("NavMesh Error: No hay ningun objeto con NavType::SURFACE en la escena.");
+        return;
+    }
+
+    LOG_CONSOLE("NavMesh: Bakeando superficie -> %s", surface->GetName().c_str());
+
+    RemoveNavMeshRecursive(surface);
+    navObstacles.clear();
+    RecollectObstacles(root); // obstáculos desde el root entero
+
+    // ── Recolectar geometría solo del objeto SURFACE ──────────────────────────
     std::vector<float> allVertices;
     std::vector<int>   allIndices;
+    RecollectGeometry(surface, allVertices, allIndices);
 
-    if (obj != nullptr)
-        RecollectGeometry(obj, allVertices, allIndices);
-
-    if (allVertices.empty() || allIndices.empty()) {
+    if (allVertices.empty() || allIndices.empty())
+    {
         LOG_CONSOLE("NavMesh Error: No geometry found to bake!");
         return;
     }
 
-    ComponentNavigation* navComp = static_cast<ComponentNavigation*>(obj->GetComponent(ComponentType::NAVIGATION));
-
-    if (navComp && navComp->type == NavType::OBSTACLE) {
-        NavMeshData obstacleData;
-        obstacleData.heightfield = nullptr;
-        obstacleData.owner = obj;
-        navMeshes.push_back(obstacleData);
-        LOG_CONSOLE("Obstacle registered: %s", obj->GetName().c_str());
-        return;
-    }
+    ComponentNavigation* navComp = static_cast<ComponentNavigation*>(surface->GetComponent(ComponentType::NAVIGATION));
 
     float bmin[3], bmax[3];
     CalculateAABB(allVertices, bmin, bmax);
@@ -116,7 +132,8 @@ void ModuleNavMesh::Bake(GameObject* obj)
     rcContext ctx;
 
     rcHeightfield* hf = rcAllocHeightfield();
-    if (!rcCreateHeightfield(&ctx, *hf, cfg.width, cfg.height, cfg.bmin, cfg.bmax, cfg.cs, cfg.ch)) {
+    if (!rcCreateHeightfield(&ctx, *hf, cfg.width, cfg.height, cfg.bmin, cfg.bmax, cfg.cs, cfg.ch))
+    {
         LOG_CONSOLE("NavMesh Error: Could not create heightfield.");
         return;
     }
@@ -127,48 +144,97 @@ void ModuleNavMesh::Bake(GameObject* obj)
     std::vector<unsigned char> areas(nTris, RC_WALKABLE_AREA);
     rcRasterizeTriangles(&ctx, allVertices.data(), nVerts, allIndices.data(), areas.data(), nTris, *hf, cfg.walkableClimb);
 
-    // ── Convertir los vértices a unsigned short para la versión antigua
-    std::vector<unsigned short> vertsShort;
-    vertsShort.reserve(allVertices.size());
-    for (float v : allVertices)
-        vertsShort.push_back(static_cast<unsigned short>(v / cfg.cs)); // escala a celda
+    rcFilterLowHangingWalkableObstacles(&ctx, cfg.walkableClimb, *hf);
+    rcFilterLedgeSpans(&ctx, cfg.walkableHeight, cfg.walkableClimb, *hf);
+    rcFilterWalkableLowHeightSpans(&ctx, cfg.walkableHeight, *hf);
 
-    // ── Convertir los índices a unsigned short
-    std::vector<unsigned short> shortIndices;
-    shortIndices.reserve(allIndices.size());
-    for (int idx : allIndices)
-        shortIndices.push_back(static_cast<unsigned short>(idx));
+    // ── Compact Heightfield ───────────────────────────────────────────────────
+    rcCompactHeightfield* chf = rcAllocCompactHeightfield();
+    if (!rcBuildCompactHeightfield(&ctx, cfg.walkableHeight, cfg.walkableClimb, *hf, *chf))
+    {
+        LOG_CONSOLE("NavMesh Error: compact heightfield"); return;
+    }
+    rcErodeWalkableArea(&ctx, cfg.walkableRadius, *chf);
 
-    dtNavMesh* navMesh = dtAllocNavMesh();
+    // ── Regiones ──────────────────────────────────────────────────────────────
+    rcBuildDistanceField(&ctx, *chf);
+    rcBuildRegions(&ctx, *chf, 0, cfg.minRegionArea, cfg.mergeRegionArea);
+
+    // ── Contornos ─────────────────────────────────────────────────────────────
+    rcContourSet* cset = rcAllocContourSet();
+    rcBuildContours(&ctx, *chf, cfg.maxSimplificationError, cfg.maxEdgeLen, *cset);
+
+    // ── Poly Mesh ─────────────────────────────────────────────────────────────
+    rcPolyMesh* pmesh = rcAllocPolyMesh();
+    rcBuildPolyMesh(&ctx, *cset, cfg.maxVertsPerPoly, *pmesh);
+
+    // ── Poly Mesh Detail ──────────────────────────────────────────────────────
+    rcPolyMeshDetail* dmesh = rcAllocPolyMeshDetail();
+    rcBuildPolyMeshDetail(&ctx, *pmesh, *chf, sampleDist, sampleMaxError, *dmesh);
+
+    // Marcar todos los polígonos como caminables
+    for (int i = 0; i < pmesh->npolys; ++i)
+        pmesh->flags[i] = 1;
+
+    // ── Diagnóstico ───────────────────────────────────────────────────────────
+    LOG_CONSOLE("AABB: min=(%.1f,%.1f,%.1f) max=(%.1f,%.1f,%.1f)",
+        bmin[0], bmin[1], bmin[2], bmax[0], bmax[1], bmax[2]);
+    LOG_CONSOLE("NavMesh stats: polys=%d, verts=%d", pmesh->npolys, pmesh->nverts);
+
+    // ── Crear dtNavMesh ───────────────────────────────────────────────────────
     dtNavMeshCreateParams params;
     memset(&params, 0, sizeof(params));
-
-    // Asignar datos correctos
-    params.verts = vertsShort.data();      // unsigned short*
-    params.vertCount = nVerts;
-
-    params.polys = shortIndices.data();    // unsigned short*
-    params.polyCount = nTris;             // número de triángulos
-    params.nvp = 3;                        // vértices por triángulo
-
-    params.walkableHeight = cfg.walkableHeight;
-    params.walkableRadius = cfg.walkableRadius;
-    params.walkableClimb = cfg.walkableClimb;
-    memcpy(params.bmin, bmin, sizeof(float) * 3);
-    memcpy(params.bmax, bmax, sizeof(float) * 3);
+    params.verts = pmesh->verts;
+    params.vertCount = pmesh->nverts;
+    params.polys = pmesh->polys;
+    params.polyAreas = pmesh->areas;
+    params.polyFlags = pmesh->flags;
+    params.polyCount = pmesh->npolys;
+    params.nvp = pmesh->nvp;
+    params.detailMeshes = dmesh->meshes;
+    params.detailVerts = dmesh->verts;
+    params.detailVertsCount = dmesh->nverts;
+    params.detailTris = dmesh->tris;
+    params.detailTriCount = dmesh->ntris;
+    params.walkableHeight = cfg.walkableHeight * cfg.ch;
+    params.walkableRadius = cfg.walkableRadius * cfg.cs;
+    params.walkableClimb = cfg.walkableClimb * cfg.ch;
+    memcpy(params.bmin, pmesh->bmin, sizeof(params.bmin));
+    memcpy(params.bmax, pmesh->bmax, sizeof(params.bmax));
     params.cs = cfg.cs;
     params.ch = cfg.ch;
     params.buildBvTree = true;
 
-    NavMeshData newMesh;
-    newMesh.heightfield = hf;
-    newMesh.navMesh = navMesh;
-    newMesh.navQuery = dtAllocNavMeshQuery();
-    newMesh.navQuery->init(navMesh, 2048);
-    newMesh.owner = obj;
+    unsigned char* navData = nullptr;
+    int            navDataSize = 0;
+    dtCreateNavMeshData(&params, &navData, &navDataSize);
 
-    navMeshes.push_back(newMesh);
-    LOG_CONSOLE("NavMesh Bake exitoso: %s. Vertices: %d Triangulos: %d", obj->GetName().c_str(), nVerts, nTris);
+    dtNavMesh* navMesh = dtAllocNavMesh();
+    navMesh->init(navData, navDataSize, DT_TILE_FREE_DATA);
+
+    dtNavMeshQuery* navQuery = dtAllocNavMeshQuery();
+    navQuery->init(navMesh, 2048);
+
+    // ── Liberar temporales ────────────────────────────────────────────────────
+    rcFreeContourSet(cset);
+    rcFreePolyMesh(pmesh);
+    rcFreePolyMeshDetail(dmesh);
+
+    // ── Guardar con tileRef ───────────────────────────────────────────────────
+    NavMeshData meshData;
+    meshData.heightfield = hf;
+    meshData.chf = chf;
+    meshData.navMesh = navMesh;
+    meshData.navQuery = navQuery;
+    meshData.owner = surface;
+    meshData.tileRef = navMesh->getTileRefAt(0, 0, 0);
+
+    if (meshData.tileRef == 0)
+        LOG_CONSOLE("NavMesh Warning: tileRef es 0 para %s!", surface->GetName().c_str());
+
+    navMeshes.push_back(meshData);
+
+    LOG_CONSOLE("NavMesh Bake exitoso: %s. Vertices: %d Triangulos: %d", surface->GetName().c_str(), nVerts, nTris);
 }
 
 void ModuleNavMesh::CalculateAABB(const std::vector<float>& verts, float* minBounds, float* maxBounds) {
@@ -191,7 +257,14 @@ rcConfig ModuleNavMesh::CreateDefaultConfig(const float* minBounds, const float*
     cfg.walkableSlopeAngle = 45.0f;
     cfg.walkableHeight = 10;
     cfg.walkableClimb = 2;
-    cfg.walkableRadius = 2;
+    cfg.walkableRadius = 0;
+    cfg.maxEdgeLen = 12;
+    cfg.maxSimplificationError = 1.3f;
+    cfg.minRegionArea = 8;
+    cfg.mergeRegionArea = 20;
+    cfg.maxVertsPerPoly = 6;
+    cfg.detailSampleDist = cfg.cs * sampleDist;
+    cfg.detailSampleMaxError = cfg.ch * sampleMaxError;
 
     rcVcopy(cfg.bmin, minBounds);
     rcVcopy(cfg.bmax, maxBounds);
@@ -200,115 +273,63 @@ rcConfig ModuleNavMesh::CreateDefaultConfig(const float* minBounds, const float*
     return cfg;
 }
 
-void ModuleNavMesh::DrawDebug() {
+void ModuleNavMesh::DrawDebug()
+{
+    glm::vec4 colorWalkable = { 0.0f, 0.75f, 1.0f, 1.0f };
+    glm::vec4 colorEdge = { 0.0f, 0.4f,  0.9f, 1.0f };
 
     for (auto& meshData : navMeshes)
     {
-        rcHeightfield* hf = meshData.heightfield;
-        if (!hf) continue;
+        // getTile(int) es privado en esta versión de Detour — usamos getTileByRef
+        if (!meshData.navMesh || meshData.tileRef == 0) continue;
 
-        for (int y = 0; y < hf->height; ++y)
+        const dtMeshTile* tile = meshData.navMesh->getTileByRef(meshData.tileRef);
+        if (!tile || !tile->header) continue;
+
+        for (int p = 0; p < tile->header->polyCount; ++p)
         {
-            for (int x = 0; x < hf->width; ++x)
+            const dtPoly* poly = &tile->polys[p];
+            if (poly->getType() != DT_POLYTYPE_GROUND) continue;
+
+            const dtPolyDetail* detail = &tile->detailMeshes[p];
+
+            for (int t = 0; t < detail->triCount; ++t)
             {
-                auto GetCornerHeight = [&](int cx, int cy, unsigned short refSmax) -> float
-                    {
-                        // Las 4 celdas que comparten esta esquina
-                        int offsets[4][2] = { {cx - 1, cy - 1}, {cx, cy - 1}, {cx - 1, cy}, {cx, cy} };
+                const unsigned char* tri = &tile->detailTris[(detail->triBase + t) * 4];
 
-                        float totalHeight = 0.0f;
-                        int   count = 0;
-
-                        for (auto& off : offsets)
-                        {
-                            int nx = glm::clamp(off[0], 0, hf->width - 1);
-                            int ny = glm::clamp(off[1], 0, hf->height - 1);
-
-                            const rcSpan* s = hf->spans[nx + ny * hf->width];
-                            const rcSpan* best = nullptr;
-                            int bestDiff = INT_MAX;
-
-                            while (s) {
-                                int diff = abs((int)s->smax - (int)refSmax);
-                                if (diff < bestDiff) { bestDiff = diff; best = s; }
-                                s = s->next;
-                            }
-
-                            if (best) {
-                                totalHeight += hf->bmin[1] + best->smax * hf->ch;
-                                ++count;
-                            }
-                        }
-
-                        return count > 0 ? totalHeight / count
-                            : hf->bmin[1] + refSmax * hf->ch;
-                    };
-
-                const rcSpan* span = hf->spans[x + y * hf->width];
-
-                while (span)
+                glm::vec3 v[3];
+                for (int k = 0; k < 3; ++k)
                 {
-                    if (span->area == RC_WALKABLE_AREA)
+                    if (tri[k] < poly->vertCount)
                     {
-                        float fx = hf->bmin[0] + x * hf->cs;
-                        float fz = hf->bmin[2] + y * hf->cs;
-                        float fy = hf->bmin[1] + span->smax * hf->ch;
-
-                        glm::vec3 quadMin = { fx, fy, fz };
-                        glm::vec3 quadMax = { fx + hf->cs, fy, fz + hf->cs };
-
-                        if (!IsBlockedByObstacle(quadMin, quadMax))
-                        {
-                            glm::vec3 p1 = { fx,          GetCornerHeight(x,     y,     span->smax), fz };
-                            glm::vec3 p2 = { fx + hf->cs, GetCornerHeight(x + 1, y,     span->smax), fz };
-                            glm::vec3 p3 = { fx + hf->cs, GetCornerHeight(x + 1, y + 1, span->smax), fz + hf->cs };
-                            glm::vec3 p4 = { fx,          GetCornerHeight(x,     y + 1, span->smax), fz + hf->cs };
-
-                            // ── Calcular el ángulo máximo de la celda ────────────────────────────
-                            // Comprobamos las dos diagonales y los 4 bordes del quad
-                            float diag = hf->cs * glm::sqrt(2.0f);
-                            float maxDeltaH = 0.0f;
-                            maxDeltaH = glm::max(maxDeltaH, glm::abs(p1.y - p2.y)); // borde N
-                            maxDeltaH = glm::max(maxDeltaH, glm::abs(p2.y - p3.y)); // borde E
-                            maxDeltaH = glm::max(maxDeltaH, glm::abs(p3.y - p4.y)); // borde S
-                            maxDeltaH = glm::max(maxDeltaH, glm::abs(p4.y - p1.y)); // borde W
-                            maxDeltaH = glm::max(maxDeltaH, glm::abs(p1.y - p3.y)); // diagonal
-                            maxDeltaH = glm::max(maxDeltaH, glm::abs(p2.y - p4.y)); // diagonal
-
-                            // atan2 con la horizontal más corta (borde) para ser conservadores
-                            float cellAngle = glm::degrees(glm::atan(maxDeltaH, hf->cs));
-
-                            ComponentNavigation* nav = (ComponentNavigation*)meshData.owner->GetComponent(ComponentType::NAVIGATION);
-                            float slopeLimit = nav ? nav->maxSlopeAngle : 35.0f; 
-                            
-                            if (cellAngle > slopeLimit)
-                            {
-                                // Aplanar: todos los vértices a la altura central de la celda
-                                float flatY = hf->bmin[1] + span->smax * hf->ch;
-                                p1.y = p2.y = p3.y = p4.y = flatY;
-                            }
-
-                            glm::vec4 navColor = { 0, 1, 0, 1 };
-                            Application::GetInstance().renderer->DrawLine(p1, p2, navColor);
-                            Application::GetInstance().renderer->DrawLine(p2, p3, navColor);
-                            Application::GetInstance().renderer->DrawLine(p3, p4, navColor);
-                            Application::GetInstance().renderer->DrawLine(p4, p1, navColor);
-                        }
+                        const float* vert = &tile->verts[poly->verts[tri[k]] * 3];
+                        v[k] = { vert[0], vert[1], vert[2] };
                     }
-                    span = span->next;
+                    else
+                    {
+                        const float* vert = &tile->detailVerts[(detail->vertBase + tri[k] - poly->vertCount) * 3];
+                        v[k] = { vert[0], vert[1], vert[2] };
+                    }
                 }
+
+                v[0].y += 0.05f; v[1].y += 0.05f; v[2].y += 0.05f;
+
+                Application::GetInstance().renderer->DrawLine(v[0], v[1], colorWalkable);
+                Application::GetInstance().renderer->DrawLine(v[1], v[2], colorWalkable);
+                Application::GetInstance().renderer->DrawLine(v[2], v[0], colorWalkable);
             }
-        }
 
-        if (meshData.owner && meshData.owner->IsActive()) {
-            ComponentMesh* meshComp = static_cast<ComponentMesh*>(meshData.owner->GetComponent(ComponentType::MESH));
+            for (int e = 0; e < (int)poly->vertCount; ++e)
+            {
+                if (poly->neis[e] != 0) continue;
 
-            if (meshComp != nullptr && meshComp->HasMesh()) {
-                glm::vec3 worldMin, worldMax;
-                meshComp->GetWorldAABB(worldMin, worldMax);
+                const float* va = &tile->verts[poly->verts[e] * 3];
+                const float* vb = &tile->verts[poly->verts[(e + 1) % poly->vertCount] * 3];
 
-                glm::vec3 bakedHighlightColor = glm::vec3(1.0f, 0.5f, 0.0f);
-                Application::GetInstance().renderer->DrawAABB(worldMin, worldMax, bakedHighlightColor);
+                Application::GetInstance().renderer->DrawLine(
+                    { va[0], va[1] + 0.05f, va[2] },
+                    { vb[0], vb[1] + 0.05f, vb[2] },
+                    colorEdge);
             }
         }
     }
@@ -363,6 +384,7 @@ void ModuleNavMesh::RemoveNavMesh(GameObject* obj)
             if (it->heightfield) rcFreeHeightField(it->heightfield);
             if (it->navMesh) dtFreeNavMesh(it->navMesh);
             if (it->navQuery) dtFreeNavMeshQuery(it->navQuery);
+            if (it->chf)         rcFreeCompactHeightfield(it->chf);
 
             navMeshes.erase(it);
 
@@ -410,11 +432,61 @@ bool ModuleNavMesh::CleanUp() {
         if (mesh.heightfield) rcFreeHeightField(mesh.heightfield);
         if (mesh.navMesh) dtFreeNavMesh(mesh.navMesh);
         if (mesh.navQuery) dtFreeNavMeshQuery(mesh.navQuery);
+        if (mesh.chf) rcFreeCompactHeightfield(mesh.chf);
     }
 
     navMeshes.clear();
  
     
+
+    return true;
+}
+
+bool ModuleNavMesh::FindPath(GameObject* surface,
+    const glm::vec3& start,
+    const glm::vec3& end,
+    std::vector<glm::vec3>& outPath)
+{
+    outPath.clear();
+    NavMeshData* data = GetNavMeshData(surface);
+    if (!data || !data->navQuery) return false;
+
+    float extents[3] = { 2.f, 4.f, 2.f }; // margen de búsqueda del poly más cercano
+    dtQueryFilter filter;
+    filter.setIncludeFlags(0xFFFF);
+
+    float startF[3] = { start.x, start.y, start.z };
+    float endF[3] = { end.x,   end.y,   end.z };
+
+    dtPolyRef startRef, endRef;
+    float nearestStart[3], nearestEnd[3];
+
+    // Encuentra el polígono más cercano a cada punto
+    data->navQuery->findNearestPoly(startF, extents, &filter, &startRef, nearestStart);
+    data->navQuery->findNearestPoly(endF, extents, &filter, &endRef, nearestEnd);
+
+    if (!startRef || !endRef) return false;
+
+    // Busca el camino como lista de polígonos
+    static const int MAX_POLYS = 256;
+    dtPolyRef polys[MAX_POLYS];
+    int nPolys = 0;
+    data->navQuery->findPath(startRef, endRef, nearestStart, nearestEnd,
+        &filter, polys, &nPolys, MAX_POLYS);
+    if (nPolys == 0) return false;
+
+    // Convierte la lista de polígonos en puntos suavizados en world-space
+    float straightPath[MAX_POLYS * 3];
+    unsigned char flags[MAX_POLYS];
+    dtPolyRef pathPolys[MAX_POLYS];
+    int nStraight = 0;
+    data->navQuery->findStraightPath(nearestStart, nearestEnd, polys, nPolys,
+        straightPath, flags, pathPolys,
+        &nStraight, MAX_POLYS);
+    if (nStraight == 0) return false;
+
+    for (int i = 0; i < nStraight; ++i)
+        outPath.emplace_back(straightPath[i * 3], straightPath[i * 3 + 1], straightPath[i * 3 + 2]);
 
     return true;
 }
