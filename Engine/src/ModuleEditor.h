@@ -2,6 +2,7 @@
 
 #include "Module.h"
 #include "EventListener.h"
+#include "CommandHistory.h"
 #include <imgui.h>
 #include <memory>
 #include <string>
@@ -54,6 +55,7 @@ public:
     AssetsWindow* GetAssetsWindow() const { return assetsWindow.get(); }
     ConsoleWindow* GetConsoleWindow() { return consoleWindow.get(); }
     EditorCamera* GetEditorCamera() const { return editorCamera; }
+    CommandHistory* GetCommandHistory() { return commandHistory.get(); }
 
     ImVec2 sceneViewportPos = ImVec2(0, 0);
     ImVec2 sceneViewportSize = ImVec2(1280, 720);
@@ -128,4 +130,17 @@ private:
     const float metaFileCheckInterval = 2.0f;
 
     EditorCamera* editorCamera;
+    // QOL
+    std::unique_ptr<CommandHistory> commandHistory;
+    void HandleUndoRedo();
+
+    void HandleCopyPaste();
+    GameObject* CloneGameObject(GameObject* original);
+    std::vector<GameObject*> ObjectsCopy;
+    bool ischild = false;
+
+    bool centerOnPaste = false;
+    float pasteDistance = 10.0f;
+
+    //glm::vec3 tempScale;
 };

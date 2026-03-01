@@ -7,6 +7,8 @@
 #include <ImGuizmo.h>
 #include <vector>
 #include "AudioSystem.h"
+#include <unordered_map>
+#include <nlohmann/json.hpp>
 
 class GameObject;
 
@@ -64,10 +66,15 @@ private:
     void DrawAnimationComponent(Component* component);
 
     // Helper methods
+    // Helper methods
     void GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects);
     bool IsDescendantOf(GameObject* potentialDescendant, GameObject* potentialAncestor);
 
     AudioSystem* audioSystem;
+
+    //QOL
+    bool m_WasAnyItemActive = false;
+    std::unordered_map<Component*, nlohmann::json> m_ComponentSnapshots;
 
     // Gizmo state
     ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;

@@ -19,9 +19,12 @@
 #include "Primitives.h"
 #include "ComponentMesh.h"
 #include "Transform.h"           
-#include "ComponentCamera.h"   
+#include "ComponentCamera.h"  
+#include "CameraLens.h"   
+
 #include "EditorCamera.h"   
 #include "ComponentMaterial.h"
+#include "ComponentScript.h"
 
 #include "ConfigurationWindow.h"
 #include "HierarchyWindow.h"
@@ -33,6 +36,10 @@
 #include "MetaFile.h"
 #include "LibraryManager.h"
 #include "ShaderEditorWindow.h"
+#include "ScriptEditorWindow.h"
+#include "DeleteCommand.h"
+#include "CreateCommand.h"
+#include "CompositeCommand.h"
 
 ModuleEditor::ModuleEditor() : Module()
 {
@@ -87,6 +94,7 @@ bool ModuleEditor::Start()
     gameWindow = std::make_unique<GameWindow>();
     assetsWindow = std::make_unique<AssetsWindow>();
     shaderEditorWindow = std::make_unique<ShaderEditorWindow>();
+    commandHistory = std::make_unique<CommandHistory>();
 
     editorCamera = new EditorCamera();
 
@@ -152,6 +160,8 @@ bool ModuleEditor::Update()
     }
 
     HandleDeleteKey();
+    HandleUndoRedo();
+    HandleCopyPaste();
 
 
 
@@ -196,6 +206,8 @@ bool ModuleEditor::CleanUp()
 
     LOG_DEBUG("Cleaning up Editor");
 
+    commandHistory->Clear();
+
     // Save if auto save is enabled
     if (autoSaveLayout && ImGui::GetIO().IniFilename != nullptr)
     {
@@ -218,6 +230,11 @@ void ModuleEditor::ShowMenuBar()
     {
         if (ImGui::BeginMenu("File"))
         {
+            if (ImGui::MenuItem("New Scene"))
+            {
+                Application::GetInstance().scene->NewScene();
+            }
+
             if (ImGui::MenuItem("Save Scene"))
             {
                 std::string filepath = OpenSaveFile("../Scene/scene.json");
@@ -258,6 +275,18 @@ void ModuleEditor::ShowMenuBar()
 
         if (ImGui::BeginMenu("View"))
         {
+            bool sceneOpen = sceneWindow->IsOpen();
+            if (ImGui::MenuItem("Scene", NULL, &sceneOpen))
+            {
+                sceneWindow->SetOpen(sceneOpen);
+            }
+
+            bool gameOpen = gameWindow->IsOpen();
+            if (ImGui::MenuItem("Game", NULL, &gameOpen))
+            {
+                gameWindow->SetOpen(gameOpen);
+            }
+
             bool configOpen = configWindow->IsOpen();
             if (ImGui::MenuItem("Configuration", NULL, &configOpen))
             {
@@ -286,6 +315,15 @@ void ModuleEditor::ShowMenuBar()
             if (ImGui::MenuItem("Assets", NULL, &assetsOpen))
             {
                 assetsWindow->SetOpen(assetsOpen);
+            }
+
+            if (assetsWindow->scriptEditorWindow)
+            {
+                bool scriptEditorOpen = assetsWindow->scriptEditorWindow->IsOpen();
+                if (ImGui::MenuItem("Script Editor", NULL, &scriptEditorOpen))
+                {
+                    assetsWindow->scriptEditorWindow->SetOpen(scriptEditorOpen);
+                }
             }
 
             bool shaderEditorOpen = shaderEditorWindow->IsOpen();
@@ -343,10 +381,8 @@ void ModuleEditor::ShowMenuBar()
                         LOG_CONSOLE("Auto save disabled");
                     }
                 }
-
                 ImGui::EndMenu();
             }
-
             ImGui::EndMenu();
         }
 
@@ -378,6 +414,16 @@ void ModuleEditor::ShowMenuBar()
                 ImGui::EndMenu();
             }
 
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Create Empty"))
+            {
+                GameObject* empty = Application::GetInstance().scene->CreateGameObject("GameObject");
+                commandHistory->ExecuteCommand(std::make_unique<CreateCommand>(empty));
+
+                Application::GetInstance().selectionManager->SetSelectedObject(empty);
+            }
+            
             ImGui::Separator();
 
             if (ImGui::MenuItem("Add Auto Rotate Component"))
@@ -417,6 +463,26 @@ void ModuleEditor::ShowMenuBar()
                 showAbout = true;
             }
             ImGui::EndMenu();
+        }
+
+        ImGui::Separator();
+        ImGui::Checkbox("Snap", &sceneWindow.get()->snapEnabled);
+        ImGui::PushItemWidth(80);
+        ImGui::DragFloat("Position", &sceneWindow.get()->positionSnap, 0.1f, 0.0f, 100.0f, "%.3fx");
+        ImGui::SameLine();
+        ImGui::DragFloat("Rotation", &sceneWindow.get()->rotationSnap, 0.1f, 0.0f, 100.0f, "%.3fx");
+        ImGui::SameLine();
+        ImGui::DragFloat("Scale", &sceneWindow.get()->scaleSnap, 0.1f, 0.0f, 100.0f, "%.3fx");
+        ImGui::SameLine();
+        
+        ImGui::Separator();
+        ImGui::Checkbox("Center On Paste", &centerOnPaste);
+        ImGui::SameLine();
+
+        if (centerOnPaste)
+        {
+            ImGui::DragFloat("Paste Distance", &pasteDistance, 0.1f, 1.0f, 100.0f);
+            ImGui::SameLine();
         }
 
         ImGui::EndMenuBar();
@@ -476,6 +542,8 @@ void ModuleEditor::ShowPlayToolbar()
     }
 
     if (ImGui::Button("Play", ImVec2(40, 0))) {
+        commandHistory->Clear();
+        ObjectsCopy.clear();
         app.Play();
         // Focus the Game window when entering play mode
         if (gameWindow && gameWindow->IsOpen()) {
@@ -507,6 +575,7 @@ void ModuleEditor::ShowPlayToolbar()
 
     // Stop button
     if (ImGui::Button("Stop", ImVec2(40, 0))) {
+        commandHistory->Clear();
         app.Stop();
         if (sceneWindow && sceneWindow->IsOpen()) {
             ImGui::SetWindowFocus("Scene");
@@ -661,6 +730,7 @@ void ModuleEditor::CreatePrimitiveGameObject(const std::string& name, Mesh mesh)
 
     GameObject* root = Application::GetInstance().scene->GetRoot();
     root->AddChild(Object);
+    commandHistory->ExecuteCommand(std::make_unique<CreateCommand>(Object));
 
     Application::GetInstance().scene->RebuildOctree();
 
@@ -677,26 +747,50 @@ void ModuleEditor::HandleDeleteKey()
         std::vector<GameObject*> selectedObjects =
             Application::GetInstance().selectionManager->GetSelectedObjects();
 
-        if (!selectedObjects.empty())
+        std::vector<GameObject*> candidates;
+        GameObject* sceneRoot = Application::GetInstance().scene->GetRoot();
+        for (GameObject* obj : selectedObjects)
         {
-            int deletedCount = 0;
-
-            for (GameObject* obj : selectedObjects)
-            {
-                if (obj != nullptr && obj != Application::GetInstance().scene->GetRoot())
-                {
-                    obj->MarkForDeletion();
-                    deletedCount++;
-                }
-            }
-
-            Application::GetInstance().selectionManager->ClearSelection();
-
-            if (deletedCount > 0)
-            {
-                LOG_CONSOLE("GameObject deleted: %d", deletedCount);
-            }
+            if (obj && obj != sceneRoot && obj->GetParent())
+                candidates.push_back(obj);
         }
+
+        if (candidates.empty()) return;
+
+        auto IsAncestorSelected = [&](GameObject* obj) -> bool
+            {
+                GameObject* current = obj->GetParent();
+                while (current && current != sceneRoot)
+                {
+                    for (GameObject* candidate : candidates)
+                    {
+                        if (candidate == current) return true;
+                    }
+                    current = current->GetParent();
+                }
+                return false;
+            };
+
+        std::vector<GameObject*> toDelete;
+        for (GameObject* obj : candidates)
+        {
+            if (!IsAncestorSelected(obj))
+                toDelete.push_back(obj);
+        }
+
+        if (toDelete.empty()) return;
+
+        Application::GetInstance().selectionManager->ClearSelection();
+
+        auto composite = std::make_unique<CompositeCommand>();
+        for (GameObject* obj : toDelete)
+        {
+            composite->AddCommand(std::make_unique<DeleteCommand>(obj));
+        }
+
+        commandHistory->ExecuteCommand(std::move(composite));
+
+        LOG_CONSOLE("GameObject(s) deleted: %d", (int)toDelete.size());
     }
 }
 
@@ -1104,4 +1198,179 @@ void ModuleEditor::BuildGame()
     {
         LOG_CONSOLE("[Build] ERROR: %s", error.what());
     }
+}
+void ModuleEditor::HandleUndoRedo()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantTextInput) return;
+
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z, false))
+        commandHistory->Undo();
+
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y, false))
+        commandHistory->Redo();
+}
+
+void ModuleEditor::HandleCopyPaste()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantTextInput) return;
+    
+    //copy (ctrl c)
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_C, false))
+        ObjectsCopy = Application::GetInstance().selectionManager->GetFilteredObjects();
+
+    //paste (ctrl v)
+    if ((io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_V, false)) && !ObjectsCopy.empty())
+    {
+        GameObject* root = Application::GetInstance().scene->GetRoot();
+        Application::GetInstance().selectionManager->ClearSelection();
+
+        //center pos option
+        glm::vec3 centerPos(0.0f);
+        
+        if (centerOnPaste)
+        {
+            EditorCamera* editorCam = Application::GetInstance().editor->GetEditorCamera();
+
+            if (editorCam)
+            {
+                CameraLens* camLens = editorCam->GetCameraLens();
+                glm::vec3 camPos = camLens->position;
+                glm::vec3 camForward = editorCam->forward;
+                centerPos = camPos + camForward * pasteDistance;
+            }
+        }
+
+        auto composite = std::make_unique<CompositeCommand>();
+
+        for (GameObject* obj : ObjectsCopy)
+        {
+            GameObject* clonedObject = CloneGameObject(obj);
+
+            if (centerOnPaste)
+                clonedObject->transform->SetPosition(centerPos);
+
+            root->AddChild(clonedObject);
+            ischild = false;
+
+            Application::GetInstance().selectionManager->AddToSelection(clonedObject);
+            composite->AddCommand(std::make_unique<CreateCommand>(clonedObject));
+        }
+
+        commandHistory->PushWithoutExecute(std::move(composite));
+        Application::GetInstance().scene->RebuildOctree();
+    }
+
+    //cut (ctrl x)
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_X, false))
+    {
+        std::vector<GameObject*> toCut =
+            Application::GetInstance().selectionManager->GetFilteredObjects();
+
+        if (!toCut.empty())
+        {
+            ObjectsCopy = toCut;
+
+            Application::GetInstance().selectionManager->ClearSelection();
+
+            auto composite = std::make_unique<CompositeCommand>();
+            for (GameObject* obj : toCut)
+            {
+                if (obj && obj != Application::GetInstance().scene->GetRoot() && obj->GetParent())
+                    composite->AddCommand(std::make_unique<DeleteCommand>(obj));
+            }
+            commandHistory->ExecuteCommand(std::move(composite));
+        }
+    }
+
+    //duplicate (ctrl d)
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_D, false))
+    {
+        std::vector<GameObject*> toClone =
+            Application::GetInstance().selectionManager->GetFilteredObjects();
+
+        if (!toClone.empty())
+        {
+            GameObject* root = Application::GetInstance().scene->GetRoot();
+            Application::GetInstance().selectionManager->ClearSelection();
+
+            auto composite = std::make_unique<CompositeCommand>();
+
+            for (GameObject* obj : toClone)
+            {
+                GameObject* cloned = CloneGameObject(obj);
+                root->AddChild(cloned);
+                Application::GetInstance().selectionManager->AddToSelection(cloned);
+                composite->AddCommand(std::make_unique<CreateCommand>(cloned));
+            }
+
+            commandHistory->PushWithoutExecute(std::move(composite));
+            Application::GetInstance().scene->RebuildOctree();
+        }
+    }
+}
+
+GameObject* ModuleEditor::CloneGameObject(GameObject* original)
+{
+    std::string name = original->GetName() + "_copy";
+    GameObject* clone = new GameObject(name.c_str());
+
+    Transform* originalTransform =
+        (Transform*)original->GetComponent(ComponentType::TRANSFORM);
+   
+    clone->transform->SetGlobalPosition(originalTransform->GetGlobalPosition());
+    clone->transform->SetGlobalScale(originalTransform->GetGlobalScale());
+    clone->transform->SetGlobalRotation(originalTransform->GetGlobalRotation());
+
+    if (ischild)
+    {
+        clone->transform->SetPosition(originalTransform->GetPosition());
+        clone->transform->SetScale(originalTransform->GetScale());
+        clone->transform->SetRotation(originalTransform->GetRotation());
+    }
+
+    if (original->GetComponent(ComponentType::MESH))
+    {
+        ComponentMesh* originalMesh =
+            (ComponentMesh*)original->GetComponent(ComponentType::MESH);
+
+        ComponentMesh* newMesh =
+            (ComponentMesh*)clone->CreateComponent(ComponentType::MESH);
+
+        newMesh->SetMesh(originalMesh->GetMesh());
+        newMesh->SetPrimitiveType(name);
+    }
+
+    if (original->GetComponent(ComponentType::MATERIAL))
+    {
+        ComponentMaterial* originalMaterial =
+            (ComponentMaterial*)original->GetComponent(ComponentType::MATERIAL);
+
+        ComponentMaterial* newMaterial =
+            (ComponentMaterial*)clone->CreateComponent(ComponentType::MATERIAL);
+        UID tempUid = originalMaterial->GetTextureUID();
+        if(tempUid !=0)newMaterial->LoadTextureByUID(tempUid);
+    
+        newMaterial->SetDiffuseColor(originalMaterial->GetDiffuseColor());
+    }
+    if (original->GetComponent(ComponentType::SCRIPT))
+    {
+        ComponentScript * originalScript =
+            (ComponentScript*)original->GetComponent(ComponentType::SCRIPT);
+
+        ComponentScript* newScript =
+            (ComponentScript*)clone->CreateComponent(ComponentType::SCRIPT);
+
+        newScript->LoadScriptByUID(originalScript->GetScriptUID());
+    }
+    for (GameObject* child : original->GetChildren())
+    {
+        ischild = true;
+        GameObject* childClone = CloneGameObject(child);
+        clone->AddChild(childClone);
+    }
+    ischild = false;
+
+    return clone;
 }

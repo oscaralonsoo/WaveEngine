@@ -322,6 +322,24 @@ bool ModuleScene::LoadScene(const std::string& filepath)
     return true;
 }
 
+void ModuleScene::NewScene()
+{
+    ClearScene();
+
+    if (root)
+    {
+        Transform* transform = static_cast<Transform*>(root->GetComponent(ComponentType::TRANSFORM));
+        if (transform)
+        {
+            transform->SetPosition(glm::vec3(0.0f));
+            transform->SetRotation(glm::vec3(0.0f));
+            transform->SetScale(glm::vec3(1.0f));
+        }
+    }
+
+    LOG_CONSOLE("New Scene created");
+}
+
 void ModuleScene::ClearScene()
 {
     LOG_CONSOLE("Clearing scene...");

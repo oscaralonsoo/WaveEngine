@@ -1,8 +1,10 @@
 #pragma once
-
+#include <vector>
 #include "EditorWindow.h"
 #include <imgui.h>
 #include <ImGuizmo.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 class InspectorWindow;
 class GameObject; 
@@ -21,6 +23,11 @@ public:
 
     bool IsGizmoBeingUsed() const { return isGizmoActive; }
 
+    bool snapEnabled = true;
+    float positionSnap = 1.0f;
+    float rotationSnap = 15.0f;
+    float scaleSnap = 0.1f;
+
 private:
     void SelectObject();
     void HandleGizmoInput();
@@ -37,4 +44,12 @@ private:
     GameObject* GetGameObjectUnderMouse();
 
     bool isGizmoActive = false;
+
+    //QOL
+    bool gizmoSnapshotTaken = false;
+    glm::vec3 gizmoSnapshotPos;
+    glm::vec3 gizmoSnapshotRot;
+    glm::vec3 gizmoSnapshotScale;
+
+    std::vector<glm::vec3> originalScales;
 };

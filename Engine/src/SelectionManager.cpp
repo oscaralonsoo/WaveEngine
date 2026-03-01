@@ -75,7 +75,35 @@ GameObject* SelectionManager::GetSelectedObject() const
 {
 	return selectedObjects.empty() ? nullptr : selectedObjects[0];
 }
+std::vector<GameObject*> SelectionManager::GetFilteredObjects()
+{
+	std::vector<GameObject*> filtered;
 
+	std::unordered_set<GameObject*> selectedSet(
+		selectedObjects.begin(),
+		selectedObjects.end()
+	);
+
+	for (GameObject* obj : selectedObjects)
+	{
+		GameObject* current = obj->GetParent();
+		bool skip = false;
+
+		while (current != nullptr)
+		{
+			if (selectedSet.find(current) != selectedSet.end())
+			{
+				skip = true;
+				break;
+			}
+			current = current->GetParent();
+		}
+
+		if (!skip)
+			filtered.push_back(obj);
+	}
+	return filtered;
+}
 bool SelectionManager::IsSelected(GameObject* obj) const
 {
 	if (obj) return obj->IsSelected();

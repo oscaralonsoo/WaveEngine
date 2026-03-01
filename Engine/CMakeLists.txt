@@ -194,6 +194,19 @@ set(EDITOR_SRC
     src/ScriptEditorWindow.cpp
     src/TextEditor.h
     src/TextEditor.cpp
+    src/Editorcommand.h
+    src/Commandhistory.h
+    src/Transformcommand.cpp
+    src/Transformcommand.h
+    src/Deletecommand.h
+    src/Createcommand.h
+    src/Createcommand.cpp
+    src/Deletecommand.cpp
+    src/Compositecommand.h
+    src/Transformcommand.h
+    src/Reparentcommand.h
+    src/Componentcommand.h
+    src/Componentstatecommand.h
 )
 
 set(IMPORTERS_SRC 

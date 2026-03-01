@@ -1,5 +1,7 @@
 #include "Component.h"
 #include "GameObject.h"
+#include <imgui.h>  
+#include <ImGuizmo.h>
 
 Component::Component(GameObject* owner, ComponentType type) : owner(owner), type(type), active(true) {
     switch (type) {

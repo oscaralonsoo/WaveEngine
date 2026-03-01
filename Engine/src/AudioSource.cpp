@@ -91,23 +91,28 @@ void AudioSource::OnEditor() {
 
     //get all Wwise events 
     auto& events = Application::GetInstance().audio->audioSystem->eventNames;
+    auto& wwiseEvents = Application::GetInstance().audio->audioSystem->GetAudioEvents();
 
     if (ImGui::BeginCombo("Wwise Event", eventName.c_str())) {
-        for (const string& name : events) {
+        for (int i = 0; i < events.size(); ++i) {
+            const string name = events[i];
+            const AudioEvent* event = wwiseEvents[i];
+
             bool isSelected = (eventName == name);
             if (ImGui::Selectable(name.c_str(), isSelected)) {
 
                 if (eventName != name) {  // Stop playing the event if you switch to another  
-                    AK::SoundEngine::StopAll(goID);
+                    if (event->playingID == 1L) AK::SoundEngine::StopAll(goID);
                     
                     std::wstring wideName(name.begin(), name.end());
                     AkUniqueID eventID = AK::SoundEngine::GetIDFromString(wideName.c_str());
 
-                    if (eventID == AK_INVALID_UNIQUE_ID) {
+                    if (eventID == AK_INVALID_UNIQUE_ID)    {
                         LOG_CONSOLE("Wwise Error: Event name '%s' not found!", name.c_str());
                     }
                     else {
-                        Application::GetInstance().audio->PlayAudio(this, eventID);
+                        if(event->playingID == 1L)
+                            Application::GetInstance().audio->PlayAudio(this, eventID);
                     }
                 }
                 eventName = name;
