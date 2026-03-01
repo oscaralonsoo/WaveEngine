@@ -25,8 +25,9 @@ MeshCollider::~MeshCollider() {
     }
 }
 
-void MeshCollider::Update() {
-    DebugShape();
+void MeshCollider::Update() 
+{
+
 }
 
 physx::PxGeometry* MeshCollider::GetGeometry() {

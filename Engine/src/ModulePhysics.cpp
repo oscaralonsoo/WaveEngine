@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "Renderer.h"
 #include "Rigidbody.h"
+#include "Collider.h"
 
 using namespace physx;
 
@@ -136,5 +137,26 @@ void ModulePhysics::onTrigger(PxTriggerPair* pairs, PxU32 count)
 
         rbTrigger->CastPhysicsEvent(eventType, rbOther);
         rbOther->CastPhysicsEvent(eventType, rbTrigger);
+    }
+}
+
+void ModulePhysics::RegisterCollider(Collider* col)
+{
+    if (col) registeredColliders.push_back(col);
+}
+
+void ModulePhysics::UnregisterCollider(Collider* col)
+{
+    auto it = std::find(registeredColliders.begin(), registeredColliders.end(), col);
+    if (it != registeredColliders.end())
+        registeredColliders.erase(it);
+}
+
+void ModulePhysics::DrawDebug()
+{
+    for (Collider* col : registeredColliders)
+    {
+        if (col && col->showDebug)
+            col->DebugShape();
     }
 }

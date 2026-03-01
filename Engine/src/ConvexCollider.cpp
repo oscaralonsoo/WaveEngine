@@ -26,7 +26,7 @@ ConvexCollider::~ConvexCollider() {
 
 void ConvexCollider::Update()
 {
-    DebugShape();
+
 }
 
 
