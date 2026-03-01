@@ -3818,7 +3818,7 @@
                                 },
                                 {
                                     "active": true,
-                                    "aspectRatio": 0.9235807657241821,
+                                    "aspectRatio": 0.6928571462631226,
                                     "farPlane": 1000.0,
                                     "fov": 60.0,
                                     "nearPlane": 0.30000001192092896,
@@ -3992,6 +3992,38 @@
                     "Animations": [],
                     "active": true,
                     "type": 27
+                },
+                {
+                    "active": true,
+                    "publicVariables": [
+                        {
+                            "name": "speed",
+                            "type": 0,
+                            "value": 10.0
+                        },
+                        {
+                            "name": "stamina",
+                            "type": 0,
+                            "value": 4.0
+                        },
+                        {
+                            "name": "tiredMultiplier",
+                            "type": 0,
+                            "value": 0.699999988079071
+                        },
+                        {
+                            "name": "sprintMultiplier",
+                            "type": 0,
+                            "value": 1.5
+                        },
+                        {
+                            "name": "rollDuration",
+                            "type": 0,
+                            "value": 0.05000000074505806
+                        }
+                    ],
+                    "scriptUID": 8002383071243665151,
+                    "type": 6
                 }
             ],
             "name": "MC",
