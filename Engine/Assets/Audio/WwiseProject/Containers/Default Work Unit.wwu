@@ -998,9 +998,8 @@
 						<Sound Name="torchFire" ID="{C844522A-26DF-4303-B498-96C8CD6D71E0}" ShortID="182806143">
 							<PropertyList>
 								<Property Name="3DSpatialization" Type="int16" Value="2"/>
-								<Property Name="AttenuationDistanceScaling" Type="Real32" Value="0.6"/>
+								<Property Name="IsLoopingEnabled" Type="bool" Value="True"/>
 								<Property Name="OverrideOutput" Type="bool" Value="True"/>
-								<Property Name="OverridePositioning" Type="bool" Value="True"/>
 							</PropertyList>
 							<ReferenceList>
 								<Reference Name="Attenuation">
