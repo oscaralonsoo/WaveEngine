@@ -112,7 +112,8 @@ void SceneWindow::HandleAssetDropTarget()
                 {
                     GameObject* root = Application::GetInstance().scene->GetRoot();
                     root->AddChild(loadedModel);
-                    Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    //Application::GetInstance().editor->GetCommandHistory()->Clear();
+                    Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
                         std::make_unique<CreateCommand>(loadedModel)
                     );
                     Application::GetInstance().scene->RebuildOctree();
@@ -167,7 +168,8 @@ void SceneWindow::HandleAssetDropTarget()
 
                     GameObject* root = Application::GetInstance().scene->GetRoot();
                     root->AddChild(meshObject);
-                    Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                    //Application::GetInstance().editor->GetCommandHistory()->Clear();
+                    Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
                         std::make_unique<CreateCommand>(meshObject)
                     );
                     Application::GetInstance().scene->RebuildOctree();
