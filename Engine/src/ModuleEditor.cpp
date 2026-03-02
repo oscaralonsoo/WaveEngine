@@ -787,7 +787,8 @@ void ModuleEditor::HandleDeleteKey()
         auto composite = std::make_unique<CompositeCommand>();
         for (GameObject* obj : toDelete)
         {
-            composite->AddCommand(std::make_unique<DeleteCommand>(obj));
+            //composite->AddCommand(std::make_unique<DeleteCommand>(obj));
+            obj->MarkForDeletion();
         }
 
         commandHistory->ExecuteCommand(std::move(composite));
