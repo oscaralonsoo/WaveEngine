@@ -13,6 +13,7 @@ MeshCollider::MeshCollider(GameObject* owner) : Collider(owner) {
     
     name = "Mesh Collider";
     cookedMesh = nullptr;
+    type = ComponentType::MESH_COLLIDER;
     CookMesh();
 }
 
@@ -77,6 +78,7 @@ void MeshCollider::CookMesh() {
 }
 
 void MeshCollider::OnEditor() {
+#ifndef WAVE_GAME
     OnEditorBase();
     ImGui::Separator();
 
@@ -93,17 +95,19 @@ void MeshCollider::OnEditor() {
         CookMesh();
         if (attachedRigidbody) attachedRigidbody->CreateBody();
     }
+#endif
 }
 
-//
-//void MeshCollider::Save(Config& config) {
-//    SaveBase(config);
-//}
-//
-//void MeshCollider::Load(Config& config) {
-//    LoadBase(config);
-//    CookMesh();
-//}
+void MeshCollider::Serialize(nlohmann::json& componentObj) const {
+    SerializeBase(componentObj);
+}
+
+void MeshCollider::Deserialize(const nlohmann::json& componentObj) {
+    DeserializeBase(componentObj);
+    CookMesh();
+    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::RIGIDBODY);
+    if (rb) rb->CreateBody();
+}
 
 void MeshCollider::DebugShape() {
     
@@ -161,3 +165,14 @@ void MeshCollider::OnGameObjectEvent(GameObjectEvent event, Component* component
     }
     Collider::OnGameObjectEvent(event, component);
 }
+
+//void MeshCollider::Serialize(nlohmann::json& componentObj) const
+//{
+//    Collider::Serialize(componentObj);
+//}
+//
+//void MeshCollider::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Collider::Deserialize(componentObj);
+//    CookMesh();
+//}

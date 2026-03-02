@@ -1,9 +1,16 @@
-uid: 10027636387599370896
-type: 1
-lastModified: 134164237576258235
-importScale: 1
-generateNormals: 1
-flipUVs: 1
-optimizeMeshes: 1
-upAxis: 0
-frontAxis: 0
+{
+    "fileHash": 289716366,
+    "importSettings": {
+        "flipUVs": true,
+        "frontAxis": 0,
+        "generateNormals": true,
+        "importScale": 1.0,
+        "optimizeMeshes": true,
+        "upAxis": 0
+    },
+    "meshes": {
+        "Kadama": 7465604858031829272
+    },
+    "type": 1,
+    "uid": 12599165742525804778
+}

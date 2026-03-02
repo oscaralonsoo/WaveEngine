@@ -17,7 +17,6 @@ public:
     void SetEnabled(bool state) { enabled = state; }
 
 private:
-    void CreateGrid();
 
     unsigned int VAO;
     unsigned int VBO;

@@ -1,9 +1,16 @@
-uid: 9512063698528752154
-type: 1
-lastModified: 134157515285947333
-importScale: 1
-generateNormals: 1
-flipUVs: 1
-optimizeMeshes: 1
-upAxis: 0
-frontAxis: 0
+{
+    "fileHash": 3272179388,
+    "importSettings": {
+        "flipUVs": true,
+        "frontAxis": 0,
+        "generateNormals": true,
+        "importScale": 1.0,
+        "optimizeMeshes": true,
+        "upAxis": 0
+    },
+    "meshes": {
+        "Cylinder.010": 13068615023212363628
+    },
+    "type": 1,
+    "uid": 14186631979441623005
+}

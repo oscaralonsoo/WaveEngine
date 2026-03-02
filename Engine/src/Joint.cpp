@@ -54,39 +54,63 @@ void Joint::CleanUp()
     bodyB = nullptr;
 }
 
-//void Joint::SaveBase(Config& config)
-//{
-//    config.SetUInt("BodyBUID", bodyB ? bodyB->owner->UUID : 0);
-//    config.SetVector3("LocalPositionA", localPosA);
-//    config.SetVector3("LocalPositionB", localPosB);
-//    config.SetVector3("LocalRotationA", QuatToEuler(localRotA));
-//    config.SetVector3("LocalRotationB", QuatToEuler(localRotB));
-//    config.SetFloat("BreakForce", breakForce);
-//    config.SetFloat("BreakTorque", breakTorque);
-//}
-//
-//void Joint::LoadBase(Config& config)
-//{
-//    bUID = config.GetUInt("BodyBUID");
-//    SetAnchorPosition(JointBody::Self, config.GetVector3("LocalPositionA"));
-//    SetAnchorPosition(JointBody::Target, config.GetVector3("LocalPositionB"));
-//    SetAnchorRotation(JointBody::Self, EulerToQuat(config.GetVector3("LocalRotationA")));
-//    SetAnchorRotation(JointBody::Target, EulerToQuat(config.GetVector3("LocalRotationB")));
-//    SetBreakForce(config.GetFloat("BreakForce", INFINITY_PHYSIC));
-//    SetBreakTorque(config.GetFloat("BreakTorque", INFINITY_PHYSIC));
-//}
-//
-//void Joint::ResolveReferences()
-//{
-//    if (bUID != 0) {
-//        GameObject* target = Engine::GetInstance().moduleScene->GetObjectByUUID(bUID);
-//        if (target) {
-//            bodyB = (Rigidbody*)target->GetComponent(ComponentType::Rigidbody);
-//        }
-//    }
-//
-//    RefreshJoint();
-//}
+void Joint::SerializeBase(nlohmann::json& componentObj) const
+{
+    UID referedUID = (bodyB && bodyB->owner) ? bodyB->owner->GetUID() : (UID)0;
+    componentObj["BodyBUID"] = referedUID;
+
+    componentObj["LocalPositionA"] = { localPosA.x, localPosA.y, localPosA.z };
+    componentObj["LocalPositionB"] = { localPosB.x, localPosB.y, localPosB.z };
+
+    glm::vec3 eulerA = QuatToEuler(localRotA);
+    glm::vec3 eulerB = QuatToEuler(localRotB);
+    componentObj["LocalRotationA"] = { eulerA.x, eulerA.y, eulerA.z };
+    componentObj["LocalRotationB"] = { eulerB.x, eulerB.y, eulerB.z };
+
+    componentObj["BreakForce"] = breakForce;
+    componentObj["BreakTorque"] = breakTorque;
+}
+
+void Joint::DeserializeBase(const nlohmann::json& componentObj)
+{
+    bUID = 0;
+    if (componentObj.contains("BodyBUID"))
+        bUID = componentObj["BodyBUID"].get<UID>();
+
+    if (componentObj.contains("LocalPositionA")) {
+        auto p = componentObj["LocalPositionA"];
+        SetAnchorPosition(JointBody::Self, glm::vec3(p[0], p[1], p[2]));
+    }
+    if (componentObj.contains("LocalPositionB")) {
+        auto p = componentObj["LocalPositionB"];
+        SetAnchorPosition(JointBody::Target, glm::vec3(p[0], p[1], p[2]));
+    }
+
+    if (componentObj.contains("LocalRotationA")) {
+        auto r = componentObj["LocalRotationA"];
+        SetAnchorRotation(JointBody::Self, EulerToQuat(glm::vec3(r[0], r[1], r[2])));
+    }
+    if (componentObj.contains("LocalRotationB")) {
+        auto r = componentObj["LocalRotationB"];
+        SetAnchorRotation(JointBody::Target, EulerToQuat(glm::vec3(r[0], r[1], r[2])));
+    }
+
+    breakForce = componentObj.value("BreakForce", INFINITY_PHYSIC);
+    breakTorque = componentObj.value("BreakTorque", INFINITY_PHYSIC);
+}
+
+
+void Joint::SolveReferences()
+{
+    if (bUID != 0) {
+        GameObject* target = Application::GetInstance().scene->FindObject(bUID);
+        if (target) {
+            bodyB = (Rigidbody*)target->GetComponent(ComponentType::RIGIDBODY);
+        }
+    }
+
+    RefreshJoint();
+}
 
 void Joint::RefreshJoint() {
 
@@ -198,6 +222,7 @@ void Joint::SyncFrames()
 
 void Joint::OnEditorBase()
 {
+    #ifndef WAVE_GAME
     ImGui::Text("Connections:");
     ImGui::Separator();
 
@@ -222,26 +247,16 @@ void Joint::OnEditorBase()
             ImGui::Button(bodyB->owner->name.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 20));
         else
             ImGui::Button("None (World)", ImVec2(ImGui::GetContentRegionAvail().x, 20));
-        /*if (ImGui::BeginDragDropTarget())
+        if (ImGui::BeginDragDropTarget())
         {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GAMEOBJECTS_DRAG))
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_GAMEOBJECT"))
             {
-                uint32_t* uidsIdx = (uint32_t*)payload->Data;
-                int objectCount = payload->DataSize / sizeof(uint32_t);
+                GameObject* draggedObject = *(GameObject**)payload->Data;
 
-                for (int i = 0; i < objectCount; i++)
-                {
-                    uint32_t draggedUID = uidsIdx[i];
-                    GameObject* draggedGO = Engine::GetInstance().moduleScene->GetObjectByUUID(draggedUID);
-
-                    if (draggedGO != nullptr)
-                    {
-                        SetTarget(draggedGO);
-                    }
-                }
+                SetTarget(draggedObject);
             }
             ImGui::EndDragDropTarget();
-        }*/
+        }
         if (ImGui::Button("Clear"))
         {
             SetTarget(nullptr);
@@ -312,6 +327,7 @@ void Joint::OnEditorBase()
 
         ImGui::TreePop();
     }
+    #endif
 }
 
 void Joint::OnGameObjectEvent(GameObjectEvent event, Component* component)
@@ -337,5 +353,42 @@ void Joint::OnGameObjectEvent(GameObjectEvent event, Component* component)
         }
         break;
     }
-
 }
+
+//void Joint::Serialize(nlohmann::json& componentObj) const
+//{
+//    componentObj["localPosA"] = { localPosA.x, localPosA.y, localPosA.z };
+//    componentObj["localPosB"] = { localPosB.x, localPosB.y, localPosB.z };
+//
+//    glm::vec3 eulerA = QuatToEuler(localRotA);
+//    glm::vec3 eulerB = QuatToEuler(localRotB);
+//    componentObj["localRotA"] = { eulerA.x, eulerA.y, eulerA.z };
+//    componentObj["localRotB"] = { eulerB.x, eulerB.y, eulerB.z };
+//
+//    componentObj["breakForce"] = breakForce;
+//    componentObj["breakTorque"] = breakTorque;
+//}
+//
+//void Joint::Deserialize(const nlohmann::json& componentObj)
+//{
+//    if (componentObj.contains("localPosA")) {
+//        const auto& p = componentObj["localPosA"];
+//        SetAnchorPosition(JointBody::Self, glm::vec3(p[0], p[1], p[2]));
+//    }
+//    if (componentObj.contains("localPosB")) {
+//        const auto& p = componentObj["localPosB"];
+//        SetAnchorPosition(JointBody::Target, glm::vec3(p[0], p[1], p[2]));
+//    }
+//    if (componentObj.contains("localRotA")) {
+//        const auto& r = componentObj["localRotA"];
+//        SetAnchorRotation(JointBody::Self, EulerToQuat(glm::vec3(r[0], r[1], r[2])));
+//    }
+//    if (componentObj.contains("localRotB")) {
+//        const auto& r = componentObj["localRotB"];
+//        SetAnchorRotation(JointBody::Target, EulerToQuat(glm::vec3(r[0], r[1], r[2])));
+//    }
+//    if (componentObj.contains("breakForce"))
+//        SetBreakForce(componentObj["breakForce"].get<float>());
+//    if (componentObj.contains("breakTorque"))
+//        SetBreakTorque(componentObj["breakTorque"].get<float>());
+//}

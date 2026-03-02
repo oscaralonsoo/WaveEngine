@@ -43,8 +43,8 @@ public:
     physx::PxRigidActor* GetActor() const { return actor; }
     void CollectColliders(GameObject* obj, std::vector<Collider*>& list);
 
-    //void Save(Config& componentNode) override;
-    //void Load(Config& componentNode) override;
+    void Serialize(nlohmann::json& componentObj) const override;
+    void Deserialize(const nlohmann::json& componentObj) override;
 
     void OnEditor() override;
 
@@ -97,6 +97,9 @@ public:
     //JOINTS
     void RegisterJoint(Joint* joint);
     void UnregisterJoint(Joint* joint);
+
+    //void Serialize(nlohmann::json& componentObj) const override;
+    //void Deserialize(const nlohmann::json& componentObj) override;
 
 private:    
 

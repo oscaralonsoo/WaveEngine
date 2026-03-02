@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Module.h"
 #include "Octree.h"
+#include "Globals.h"
 #include <memory>
 #include <vector>
 
@@ -27,6 +28,9 @@ public:
 
     GameObject* GetRoot() const { return root; }
 
+    GameObject* FindObject(const UID uid) ; 
+    GameObject* FindObject(const std::string& name);
+
     void CleanupMarkedObjects(GameObject* parent);
 
     Octree* GetOctree() { return octree.get(); }
@@ -36,6 +40,7 @@ public:
     // Scene serialization
     bool SaveScene(const std::string& filepath);
     bool LoadScene(const std::string& filepath);
+    void NewScene();
     void ClearScene();
 
     // for raycast visualization

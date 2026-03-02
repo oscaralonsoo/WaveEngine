@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Module.h"
+#include "EventListener.h"
+#include "CommandHistory.h"
 #include <imgui.h>
 #include <memory>
 #include <string>
@@ -17,6 +19,7 @@ class GameObject;
 struct Mesh;
 class AssetsWindow;
 class ShaderEditorWindow;
+class EditorCamera;
 
 enum class EditorWindowType
 {
@@ -32,7 +35,7 @@ enum class EditorWindowType
     ABOUT
 };
 
-class ModuleEditor : public Module
+class ModuleEditor : public Module, public EventListener
 {
 public:
     ModuleEditor();
@@ -51,6 +54,8 @@ public:
     ConfigurationWindow* GetConfigWindow() const { return configWindow.get(); }
     AssetsWindow* GetAssetsWindow() const { return assetsWindow.get(); }
     ConsoleWindow* GetConsoleWindow() { return consoleWindow.get(); }
+    EditorCamera* GetEditorCamera() const { return editorCamera; }
+    CommandHistory* GetCommandHistory() { return commandHistory.get(); }
 
     ImVec2 sceneViewportPos = ImVec2(0, 0);
     ImVec2 sceneViewportSize = ImVec2(1280, 720);
@@ -70,6 +75,9 @@ public:
     bool IsSceneWindowActive() const { return currentWindow == EditorWindowType::SCENE;  }
     bool IsMouseOverScene() const;
 
+    //EVENTS
+    void OnEvent(const Event& event) override;
+
 private:
     void ShowMenuBar();
     void ShowPlayToolbar();
@@ -87,6 +95,10 @@ private:
     // File Browser
     std::string OpenSaveFile(const std::string& defaultPath);
     std::string OpenLoadFile(const std::string& defaultPath);
+    std::string OpenFolderDialog();
+
+    // Build
+    void BuildGame();
 
     // Editor windows (owned by ModuleEditor)
     std::unique_ptr<ConfigurationWindow> configWindow;
@@ -100,8 +112,6 @@ private:
 
     // About window state
     bool showAbout = false;
-
-
 
     // Window states
     EditorWindowType currentWindow = EditorWindowType::NONE;
@@ -119,4 +129,18 @@ private:
     float metaFileCheckTimer = 0.0f;
     const float metaFileCheckInterval = 2.0f;
 
+    EditorCamera* editorCamera;
+    // QOL
+    std::unique_ptr<CommandHistory> commandHistory;
+    void HandleUndoRedo();
+
+    void HandleCopyPaste();
+    GameObject* CloneGameObject(GameObject* original);
+    std::vector<GameObject*> ObjectsCopy;
+    bool ischild = false;
+
+    bool centerOnPaste = false;
+    float pasteDistance = 10.0f;
+
+    //glm::vec3 tempScale;
 };

@@ -133,27 +133,46 @@ void PrismaticJoint::SetMaxLimit(float m) {
     }
 }
 
-//void PrismaticJoint::Save(Config& config) {
-//    SaveBase(config);
-//    config.SetBool("LimitsEnabled", limitsEnabled);
-//    config.SetFloat("MinLimit", minLimit);
-//    config.SetFloat("MaxLimit", maxLimit);
-//    config.SetBool("SoftLimit", softLimitEnabled);
-//    config.SetFloat("Stiffness", stiffness);
-//    config.SetFloat("Damping", damping);
-//}
-//
-//void PrismaticJoint::Load(Config& config) {
-//    LoadBase(config);
-//    EnableLimits(config.GetBool("LimitsEnabled"));
-//    SetMinLimit(config.GetFloat("MinLimit", -5.0f));
-//    SetMaxLimit(config.GetFloat("MaxLimit", 5.0f));
-//    EnableSoftLimit(config.GetBool("SoftLimit"));
-//    SetStiffness(config.GetFloat("Stiffness"));
-//    SetDamping(config.GetFloat("Damping"));
-//}
+void PrismaticJoint::Serialize(nlohmann::json& componentObj) const
+{
+    SerializeBase(componentObj);
+
+    componentObj["Limits"] = {
+        {"Enabled", limitsEnabled},
+        {"Min", minLimit},
+        {"Max", maxLimit}
+    };
+
+    componentObj["SoftLimit"] = {
+        {"Enabled", softLimitEnabled},
+        {"Stiffness", stiffness},
+        {"Damping", damping}
+    };
+}
+
+void PrismaticJoint::Deserialize(const nlohmann::json& componentObj)
+{
+    DeserializeBase(componentObj);
+
+    if (componentObj.contains("Limits")) {
+        auto limits = componentObj["Limits"];
+        EnableLimits(limits.value("Enabled", false));
+        SetMinLimit(limits.value("Min", -5.0f));
+        SetMaxLimit(limits.value("Max", 5.0f));
+    }
+
+    if (componentObj.contains("SoftLimit")) {
+        auto soft = componentObj["SoftLimit"];
+        EnableSoftLimit(soft.value("Enabled", false));
+        SetStiffness(soft.value("Stiffness", 0.0f));
+        SetDamping(soft.value("Damping", 0.0f));
+    }
+
+    RefreshJoint();
+}
 
 void PrismaticJoint::OnEditor() {
+#ifndef WAVE_GAME
     OnEditorBase();
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth;
 
@@ -171,6 +190,7 @@ void PrismaticJoint::OnEditor() {
         if (ImGui::IsItemDeactivatedAfterEdit()) RefreshJoint();
         ImGui::TreePop();
     }
+#endif 
 }
 
 void PrismaticJoint::DrawDebug() {
@@ -202,3 +222,29 @@ void PrismaticJoint::DrawDebug() {
     physx::PxTransform worldA = poseA.transform(localA);
     render->DrawSphere(glm::vec3(worldA.p.x, worldA.p.y, worldA.p.z), 0.2f, color);
 }
+
+//void PrismaticJoint::Serialize(nlohmann::json& componentObj) const {
+//    Joint::Serialize(componentObj);
+//    componentObj["limitsEnabled"] = limitsEnabled;
+//    componentObj["softLimitEnabled"] = softLimitEnabled;
+//    componentObj["stiffness"] = stiffness;
+//    componentObj["damping"] = damping;
+//    componentObj["minLimit"] = minLimit;
+//    componentObj["maxLimit"] = maxLimit;
+//}
+//
+//void PrismaticJoint::Deserialize(const nlohmann::json& componentObj) {
+//    Joint::Deserialize(componentObj);
+//    if (componentObj.contains("limitsEnabled"))
+//        EnableLimits(componentObj["limitsEnabled"].get<bool>());
+//    if (componentObj.contains("minLimit"))
+//        SetMinLimit(componentObj["minLimit"].get<float>());
+//    if (componentObj.contains("maxLimit"))
+//        SetMaxLimit(componentObj["maxLimit"].get<float>());
+//    if (componentObj.contains("stiffness"))
+//        SetStiffness(componentObj["stiffness"].get<float>());
+//    if (componentObj.contains("damping"))
+//        SetDamping(componentObj["damping"].get<float>());
+//    if (componentObj.contains("softLimitEnabled"))
+//        EnableSoftLimit(componentObj["softLimitEnabled"].get<bool>());
+//}

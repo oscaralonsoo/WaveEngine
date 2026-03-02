@@ -8,6 +8,9 @@ public:
 
     void Update() override;
 
+    void Serialize(nlohmann::json& componentObj) const override;
+    void Deserialize(const nlohmann::json& componentObj) override;
+
     bool CanBeDynamic() const override { return false; }
 
     ColliderType GetColliderType() override { return ColliderType::INFINITE_PLANE_COLLIDER; }
@@ -15,9 +18,9 @@ public:
 
     physx::PxGeometry* GetGeometry() override;
 
-    //void Save(Config& config) override;
-    //void Load(Config& config) override;
-
     void OnEditor() override;
     void DebugShape() override;
+
+    //void Serialize(nlohmann::json& componentObj) const override;
+    //void Deserialize(const nlohmann::json& componentObj) override;
 };

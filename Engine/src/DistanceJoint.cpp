@@ -153,31 +153,42 @@ void DistanceJoint::SetMinDistance(float m)
     }
 }
 
-//void DistanceJoint::Save(Config& config)
-//{
-//    SaveBase(config);
-//    config.SetBool("EnableMaxDistance", maxDistanceEnabled);
-//    config.SetFloat("MaxDistance", maxDistance);
-//    config.SetFloat("MinDistance", minDistance);
-//    config.SetBool("EnableSpring", springEnabled);
-//    config.SetFloat("Stifness", stiffness);
-//    config.SetFloat("Damping", damping);
-//
-//}
-//
-//void DistanceJoint::Load(Config& config)
-//{
-//    LoadBase(config);
-//    EnableMaxDistance(config.GetBool("EnableMaxDistance"));
-//    SetMaxDistance(config.GetFloat("MaxDistance"));
-//    SetMinDistance(config.GetFloat("MinDistance"));
-//    EnableSpring(config.GetBool("EnableSpring"));
-//    SetStiffness(config.GetFloat("Stifness"));
-//    SetDamping(config.GetFloat("Damping"));
-//}
+void DistanceJoint::Serialize(nlohmann::json& componentObj) const
+{
+    SerializeBase(componentObj);
+
+    componentObj["EnableMaxDistance"] = maxDistanceEnabled;
+    componentObj["MaxDistance"] = maxDistance;
+    componentObj["MinDistance"] = minDistance;
+
+    componentObj["Spring"] = {
+        {"Enabled", springEnabled},
+        {"Stiffness", stiffness},
+        {"Damping", damping}
+    };
+}
+
+void DistanceJoint::Deserialize(const nlohmann::json& componentObj)
+{
+    DeserializeBase(componentObj);
+
+    EnableMaxDistance(componentObj.value("EnableMaxDistance", false));
+    SetMaxDistance(componentObj.value("MaxDistance", 1.0f));
+    SetMinDistance(componentObj.value("MinDistance", 0.0f));
+
+    if (componentObj.contains("Spring")) {
+        auto spring = componentObj["Spring"];
+        EnableSpring(spring.value("Enabled", false));
+        SetStiffness(spring.value("Stiffness", 0.0f));
+        SetDamping(spring.value("Damping", 0.0f));
+    }
+
+    RefreshJoint();
+}
 
 void DistanceJoint::OnEditor()
 {
+#ifndef WAVE_GAME
     OnEditorBase();
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -224,6 +235,7 @@ void DistanceJoint::OnEditor()
 
         ImGui::TreePop();
     }
+#endif
 }
 
 void DistanceJoint::DrawDebug()
@@ -257,3 +269,34 @@ void DistanceJoint::DrawDebug()
     render->DrawSphere(pA, 0.2f, glm::vec4(1, 1, 1, 1));
     render->DrawSphere(pB, 0.2f, glm::vec4(1, 1, 1, 1));
 }
+
+//void DistanceJoint::Serialize(nlohmann::json& componentObj) const
+//{
+//    Joint::Serialize(componentObj);
+//    componentObj["maxDistance"] = maxDistance;
+//    componentObj["maxDistanceEnabled"] = maxDistanceEnabled;
+//    componentObj["minDistance"] = minDistance;
+//    componentObj["springEnabled"] = springEnabled;
+//    componentObj["stiffness"] = stiffness;
+//    componentObj["damping"] = damping;
+//}
+//
+//void DistanceJoint::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Joint::Deserialize(componentObj);
+//
+//    if (componentObj.contains("maxDistance"))
+//        SetMaxDistance(componentObj["maxDistance"].get<float>());
+//    if (componentObj.contains("maxDistanceEnabled"))
+//        EnableMaxDistance(componentObj["maxDistanceEnabled"].get<bool>());
+//
+//    if (componentObj.contains("minDistance"))
+//        SetMinDistance(componentObj["minDistance"].get<float>());
+//
+//    if (componentObj.contains("stiffness"))
+//        SetStiffness(componentObj["stiffness"].get<float>());
+//    if (componentObj.contains("damping"))
+//        SetDamping(componentObj["damping"].get<float>());
+//    if (componentObj.contains("springEnabled"))
+//        EnableSpring(componentObj["springEnabled"].get<bool>());
+//}

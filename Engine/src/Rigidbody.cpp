@@ -118,7 +118,7 @@ void Rigidbody::CollectColliders(GameObject* obj, std::vector<Collider*>& list) 
             }
             else
             {
-                /*LOG(LogType::LOG_WARNING, "%s ignored on GameObject '%s': This collider type is only compatible with STATIC Rigidbodies.", collider->name.c_str(), owner->name.c_str());*/
+                LOG_CONSOLE("%s ignored on GameObject '%s': This collider type is only compatible with STATIC Rigidbodies.", collider->name.c_str(), owner->name.c_str());
             }
         }
     }
@@ -150,7 +150,6 @@ void Rigidbody::CreateBody()
             savedAngularVel = glm::vec3(av.x, av.y, av.z);
         }
     }
-
 
     if (actor) {
         physicsModule->GetScene()->removeActor(*actor);
@@ -396,38 +395,46 @@ void Rigidbody::EnableSimulation(bool enable)
     }
 }
 
-//void Rigidbody::Save(Config& config)
-//{
-//    config.SetInt("Type", (int)type);
-//    config.SetFloat("Mass", mass);
-//    config.SetFloat("LinearDamping", linearDamping);
-//    config.SetFloat("AngularDamping", angularDamping);
-//    config.SetBool("UseGravity", useGravity);
-//    config.SetBool("UseCCD", useContiniusCollisionDetection);
-//    config.SetBool("FreezePosX", freezePosX);
-//    config.SetBool("FreezePosY", freezePosY);
-//    config.SetBool("FreezePosZ", freezePosZ);
-//    config.SetBool("FreezeRotX", freezeRotX);
-//    config.SetBool("FreezeRotY", freezeRotY);
-//    config.SetBool("FreezeRotZ", freezeRotZ);
-//}
-//
-//void Rigidbody::Load(Config& config)
-//{
-//    type = (Type)config.GetInt("Type");
-//    mass = config.GetFloat("Mass", 1.0f);
-//    linearDamping = config.GetFloat("LinearDamping");
-//    angularDamping = config.GetFloat("AngularDamping");
-//    useGravity = config.GetBool("UseGravity", true);
-//    useContiniusCollisionDetection = config.GetBool("UseCCD");
-//    freezePosX = config.GetBool("FreezePosX");
-//    freezePosY = config.GetBool("FreezePosY");
-//    freezePosZ = config.GetBool("FreezePosZ");
-//    freezeRotX = config.GetBool("FreezeRotX");
-//    freezeRotY = config.GetBool("FreezeRotY");
-//    freezeRotZ = config.GetBool("FreezeRotZ");
-//    CreateBody();
-//}
+void Rigidbody::Serialize(nlohmann::json& componentObj) const
+{
+    componentObj["Type"] = static_cast<int>(type);
+    componentObj["Mass"] = mass;
+    componentObj["LinearDamping"] = linearDamping;
+    componentObj["AngularDamping"] = angularDamping;
+    componentObj["UseGravity"] = useGravity;
+    componentObj["UseCCD"] = useContiniusCollisionDetection;
+
+    componentObj["FreezePos"] = { freezePosX, freezePosY, freezePosZ };
+    componentObj["FreezeRot"] = { freezeRotX, freezeRotY, freezeRotZ };
+}
+
+void Rigidbody::Deserialize(const nlohmann::json& componentObj)
+{
+    if (componentObj.contains("Type"))
+        type = static_cast<Type>(componentObj["Type"].get<int>());
+
+    mass = componentObj.value("Mass", 1.0f);
+    linearDamping = componentObj.value("LinearDamping", 0.0f);
+    angularDamping = componentObj.value("AngularDamping", 0.0f);
+    useGravity = componentObj.value("UseGravity", true);
+    useContiniusCollisionDetection = componentObj.value("UseCCD", false);
+
+    if (componentObj.contains("FreezePos")) {
+        auto fPos = componentObj["FreezePos"];
+        freezePosX = fPos[0];
+        freezePosY = fPos[1];
+        freezePosZ = fPos[2];
+    }
+
+    if (componentObj.contains("FreezeRot")) {
+        auto fRot = componentObj["FreezeRot"];
+        freezeRotX = fRot[0];
+        freezeRotY = fRot[1];
+        freezeRotZ = fRot[2];
+    }
+
+    CreateBody();
+}
 
 void Rigidbody::AddForce(const glm::vec3& force, ForceMode mode) {
     if (type == Type::DYNAMIC && actor) {
@@ -765,6 +772,7 @@ void Rigidbody::OnGameObjectEvent(GameObjectEvent event, Component* component)
 
 void Rigidbody::OnEditor()
 {
+#ifndef WAVE_GAME
     const char* bodyTypes[] = { "Static", "Dynamic", "Kinematic" };
     int currentType = (int)this->type;
     ImGui::Text("Body Type:");
@@ -899,4 +907,48 @@ void Rigidbody::OnEditor()
         ImGui::Text("Velocity:");
         ImGui::Text("X:%.2f | Y:%.2f | Z:%.2f", vel.x, vel.y, vel.z);
     }
+#endif
 }
+
+//void Rigidbody::Serialize(nlohmann::json& componentObj) const
+//{
+//    componentObj["bodyType"] = static_cast<int>(type);
+//    componentObj["mass"] = mass;
+//    componentObj["linearDamping"] = linearDamping;
+//    componentObj["angularDamping"] = angularDamping;
+//    componentObj["useGravity"] = useGravity;
+//    componentObj["useCCD"] = useContiniusCollisionDetection;
+//
+//    componentObj["freezePosX"] = freezePosX;
+//    componentObj["freezePosY"] = freezePosY;
+//    componentObj["freezePosZ"] = freezePosZ;
+//    componentObj["freezeRotX"] = freezeRotX;
+//    componentObj["freezeRotY"] = freezeRotY;
+//    componentObj["freezeRotZ"] = freezeRotZ;
+//}
+//
+//void Rigidbody::Deserialize(const nlohmann::json& componentObj)
+//{
+//    if (componentObj.contains("bodyType"))
+//        SetType(static_cast<Type>(componentObj["bodyType"].get<int>()));
+//    if (componentObj.contains("mass"))
+//        SetMass(componentObj["mass"].get<float>());
+//    if (componentObj.contains("linearDamping"))
+//        SetLinearDamping(componentObj["linearDamping"].get<float>());
+//    if (componentObj.contains("angularDamping"))
+//        SetAngularDamping(componentObj["angularDamping"].get<float>());
+//    if (componentObj.contains("useGravity"))
+//        SetUseGravity(componentObj["useGravity"].get<bool>());
+//    if (componentObj.contains("useCCD"))
+//        SetUseCCD(componentObj["useCCD"].get<bool>());
+//
+//    bool px = freezePosX, py = freezePosY, pz = freezePosZ;
+//    bool rx = freezeRotX, ry = freezeRotY, rz = freezeRotZ;
+//    if (componentObj.contains("freezePosX")) px = componentObj["freezePosX"].get<bool>();
+//    if (componentObj.contains("freezePosY")) py = componentObj["freezePosY"].get<bool>();
+//    if (componentObj.contains("freezePosZ")) pz = componentObj["freezePosZ"].get<bool>();
+//    if (componentObj.contains("freezeRotX")) rx = componentObj["freezeRotX"].get<bool>();
+//    if (componentObj.contains("freezeRotY")) ry = componentObj["freezeRotY"].get<bool>();
+//    if (componentObj.contains("freezeRotZ")) rz = componentObj["freezeRotZ"].get<bool>();
+//    SetConstraints(px, py, pz, rx, ry, rz);
+//}

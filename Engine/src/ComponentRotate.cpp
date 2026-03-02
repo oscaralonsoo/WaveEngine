@@ -3,7 +3,9 @@
 #include "Transform.h"
 #include "Application.h"
 #include "Log.h"
+#ifndef WAVE_GAME
 #include <imgui.h>
+#endif
 
 ComponentRotate::ComponentRotate(GameObject* owner)
     : Component(owner, ComponentType::ROTATE),
@@ -33,5 +35,7 @@ void ComponentRotate::Update()
 
 void ComponentRotate::OnEditor()
 {
+#ifndef WAVE_GAME
     ImGui::DragFloat3("Rotation Speed (deg/s)", &rotationSpeed.x, 1.0f, -360.0f, 360.0f);
+#endif
 }

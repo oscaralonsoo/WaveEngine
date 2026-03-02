@@ -1,7 +1,11 @@
-uid: 10766677656668552443
-type: 2
-lastModified: 134164237576571709
-generateMipmaps: 1
-filterMode: 2
-flipHorizontal: 0
-maxTextureSize: 6
+{
+    "fileHash": 3090445463,
+    "importSettings": {
+        "filterMode": 2,
+        "flipHorizontal": false,
+        "generateMipmaps": true,
+        "maxTextureSize": 6
+    },
+    "type": 2,
+    "uid": 6762164471183530016
+}

@@ -7,11 +7,13 @@
 #include "Input.h"
 #include "RenderContext.h"
 #include "Renderer.h"
-#include "FileSystem.h"
+#include "ModuleLoader.h"
 #include "Time.h"
 #include "ModuleScene.h"
 #include "Grid.h"
+#ifndef WAVE_GAME
 #include "ModuleEditor.h"
+#endif
 #include "SelectionManager.h"
 #include "ModuleCamera.h" 
 #include "ModuleResources.h"
@@ -19,6 +21,7 @@
 #include "ModulePhysics.h"
 #include "NavMeshManager.h"
 #include "ModuleAudio.h"
+#include "ModuleEvents.h"
 
 class Module;
 
@@ -65,13 +68,16 @@ public:
     std::shared_ptr<Input> input;
     std::shared_ptr<RenderContext> renderContext;
     std::shared_ptr<Renderer> renderer;
+    std::shared_ptr<ModuleEvents> events;
     
-    std::shared_ptr<FileSystem> filesystem;
+    std::shared_ptr<ModuleLoader> loader;
     
     std::shared_ptr<Time> time;
     std::shared_ptr<ModuleScene> scene;
     std::shared_ptr<ModuleCamera> camera;
+#ifndef WAVE_GAME
     std::shared_ptr<ModuleEditor> editor;
+#endif
     std::shared_ptr<ModuleAudio> audio;
     std::shared_ptr<Grid> grid;
     std::shared_ptr<ModuleResources> resources;

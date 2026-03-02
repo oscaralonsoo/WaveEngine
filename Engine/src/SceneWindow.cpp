@@ -15,6 +15,9 @@
 #include "AssetsWindow.h"
 #include "ComponentMesh.h"
 #include "ComponentMaterial.h"
+#include "ModuleEditor.h"
+#include "EditorCamera.h"
+#include "CameraLens.h"
 #include "Log.h"
 #include "MetaFile.h"
 #include "LibraryManager.h"
@@ -23,6 +26,9 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "TransformCommand.h"
+#include "ModuleEditor.h"
+#include "CreateCommand.h"
 
 namespace fs = std::filesystem;
 
@@ -53,20 +59,32 @@ SceneWindow::SceneWindow(InspectorWindow* inspector)
 
 void SceneWindow::Draw()
 {
+    isHovered = false;
+    isFocused = false;
+    
     if (!isOpen) return;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin(name.c_str(), &isOpen);
 
     isHovered = (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows));
+    isFocused = (ImGui::IsWindowFocused(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows));
 
     sceneViewportPos = ImGui::GetCursorScreenPos();
     sceneViewportSize = ImGui::GetContentRegionAvail();
-
-    GLuint sceneTexture = Application::GetInstance().renderer->GetSceneTexture();
-    if (sceneTexture != 0 && sceneViewportSize.x > 0 && sceneViewportSize.y > 0)
+    
+    CameraLens* camera = Application::GetInstance().editor->GetEditorCamera()->GetCameraLens();
+    if (sceneViewportSize.x != camera->textureWidth || sceneViewportSize.y != camera->textureHeight)
     {
-        ImTextureID texID = (ImTextureID)(uintptr_t)sceneTexture;
+        camera->SetRenderTarget((int)sceneViewportSize.x, (int)sceneViewportSize.y);
+        camera->SetPerspective(camera->GetFov(), sceneViewportSize.x / sceneViewportSize.y, camera->GetNearPlane(), camera->GetFarPlane());
+    }
+    
+    unsigned int textureID = camera->textureID;
+
+    if (textureID != 0 && sceneViewportSize.x > 0 && sceneViewportSize.y > 0)
+    {
+        ImTextureID texID = (ImTextureID)(uintptr_t)textureID;
         ImGui::Image(texID, sceneViewportSize, ImVec2(0, 1), ImVec2(1, 0));
 
         HandleAssetDropTarget();
@@ -76,6 +94,10 @@ void SceneWindow::Draw()
         ImGui::InvisibleButton("SceneView", sceneViewportSize);
     }
 
+    if (Application::GetInstance().input->GetMouseButtonDown(1) == KEY_DOWN && Application::GetInstance().input->GetKey(SDL_SCANCODE_LALT) != KEY_REPEAT)
+        SelectObject();
+
+
     ImGuizmo::BeginFrame();
 
     HandleGizmoInput();
@@ -83,6 +105,38 @@ void SceneWindow::Draw()
 
     ImGui::End();
     ImGui::PopStyleVar();
+}
+
+void SceneWindow::SelectObject()
+{
+    bool hasSelection = Application::GetInstance().selectionManager->GetSelectedObject() != nullptr;
+
+    if (hasSelection)
+    {
+        if (ImGuizmo::IsOver() || ImGuizmo::IsUsing()) return;
+    }
+
+    if (!isHovered) return;
+
+    GameObject* objToSelect = GetGameObjectUnderMouse();
+
+    bool shiftPressed = Application::GetInstance().input.get()->GetKey(SDL_SCANCODE_LSHIFT) || Application::GetInstance().input.get()->GetKey(SDL_SCANCODE_RSHIFT);
+
+    if (objToSelect) {
+
+        if (shiftPressed)
+        {
+            Application::GetInstance().selectionManager->ToggleSelection(objToSelect);
+        }
+        else
+        {
+            Application::GetInstance().selectionManager->SetSelectedObject(objToSelect);
+        }
+
+        LOG_CONSOLE("Selected: %s", objToSelect ? objToSelect->GetName().c_str() : "None");
+    }
+    else Application::GetInstance().selectionManager->ClearSelection();
+
 }
 
 void SceneWindow::HandleAssetDropTarget()
@@ -103,13 +157,10 @@ void SceneWindow::HandleAssetDropTarget()
             case DragDropAssetType::FBX_MODEL:
             {
                 LOG_CONSOLE("Loading FBX model...");
-                GameObject* loadedModel = Application::GetInstance().filesystem->LoadFBXAsGameObject(dropData->assetPath);
+                bool loadedModel = Application::GetInstance().loader->LoadFbx(dropData->assetPath);
 
                 if (loadedModel)
                 {
-                    GameObject* root = Application::GetInstance().scene->GetRoot();
-                    root->AddChild(loadedModel);
-                    Application::GetInstance().scene->RebuildOctree();
                     LOG_CONSOLE("FBX model loaded successfully");
                 }
                 else
@@ -161,6 +212,9 @@ void SceneWindow::HandleAssetDropTarget()
 
                     GameObject* root = Application::GetInstance().scene->GetRoot();
                     root->AddChild(meshObject);
+                    Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
+                        std::make_unique<CreateCommand>(meshObject)
+                    );
                     Application::GetInstance().scene->RebuildOctree();
                     LOG_CONSOLE("Mesh loaded successfully (UID: %llu)", dropData->assetUID);
                 }
@@ -293,46 +347,43 @@ void SceneWindow::HandleGizmoInput()
 
 void SceneWindow::DrawGizmo()
 {
+    // 1. Verificaci�n de objeto seleccionado
+    GameObject* selectedObject = Application::GetInstance().selectionManager->GetSelectedObject();
+    if (!selectedObject) {
+        if (isGizmoActive) Application::GetInstance().scene->MarkOctreeForRebuild();
+        }
     // First check if the gizmo was being used in the previous frame
     bool wasUsingGizmo = isGizmoActive;
+    std::vector<GameObject*> selectedObjects = Application::GetInstance().selectionManager->GetFilteredObjects();
 
-    GameObject* selectedObject = Application::GetInstance().selectionManager->GetSelectedObject();
-    if (!selectedObject)
+    //GameObject* selectedObject = Application::GetInstance().selectionManager->GetSelectedObject();
+    if (selectedObjects.empty())
     {
         isGizmoActive = false;
-
-        // If we have just released the gizmo, mark it as needing rebuilding.
-        if (wasUsingGizmo)
-        {
-            Application::GetInstance().scene->MarkOctreeForRebuild();
-        }
         return;
     }
 
-    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-    if (!camera)
-    {
-        isGizmoActive = false;
-
-        if (wasUsingGizmo)
-        {
-            Application::GetInstance().scene->MarkOctreeForRebuild();
-        }
-        return;
-    }
-
+    // 2. Obtenci�n de componentes necesarios
+    EditorCamera* camera = Application::GetInstance().editor->GetEditorCamera();
     Transform* transform = static_cast<Transform*>(selectedObject->GetComponent(ComponentType::TRANSFORM));
-    if (!transform)
+
+    if (!camera || !transform || sceneViewportSize.y <= 0.0f || sceneViewportSize.x <= 0.0f) return;
+    std::vector<Transform*> transforms;
+    for (auto& selectedObject : selectedObjects)
     {
-        isGizmoActive = false;
-
-        if (wasUsingGizmo)
+        Transform* transform = static_cast<Transform*>(selectedObject->GetComponent(ComponentType::TRANSFORM));
+        if (!transform)
         {
-            Application::GetInstance().scene->MarkOctreeForRebuild();
-        }
-        return;
-    }
+            isGizmoActive = false;
 
+            if (wasUsingGizmo)
+            {
+                Application::GetInstance().scene->MarkOctreeForRebuild();
+            }
+            return;
+        }
+        transforms.push_back(transform);
+    }
     if (sceneViewportSize.y <= 0.0f)
     {
         isGizmoActive = false;
@@ -344,65 +395,150 @@ void SceneWindow::DrawGizmo()
         return;
     }
 
+    // 3. Configuraci�n obligatoria para ImGuizmo
     ImGuizmo::SetOrthographic(false);
     ImGuizmo::SetDrawlist();
+
+    // Rect�ngulo exacto del viewport dentro de la ventana de ImGui
     ImGuizmo::SetRect(sceneViewportPos.x, sceneViewportPos.y, sceneViewportSize.x, sceneViewportSize.y);
 
-    float sceneAspect = sceneViewportSize.x / sceneViewportSize.y;
-    float currentAspect = camera->GetAspectRatio();
+    // 4. Preparaci�n de matrices
+    glm::mat4 viewMatrix = camera->GetCameraLens()->GetViewMatrix();
+    glm::mat4 projectionMatrix = camera->GetCameraLens()->GetProjectionMatrix();
 
+    // Obtenemos la matriz global inicial del objeto
+    glm::mat4 matrix = transform->GetGlobalMatrix();
     const float TOLERANCE = 0.001f;
-    if (std::abs(currentAspect - sceneAspect) > TOLERANCE)
-    {
-        camera->SetAspectRatio(sceneAspect);
-    }
+    //if (std::abs(currentAspect - sceneAspect) > TOLERANCE)
+    //{
+    //    camera->SetAspectRatio(sceneAspect);
+    //}
 
-    glm::mat4 viewMatrix = camera->GetViewMatrix();
-    glm::mat4 projectionMatrix = camera->GetProjectionMatrix();
-    glm::mat4 transformMatrix = transform->GetGlobalMatrix();
+    //glm::mat4 viewMatrix = camera->GetViewMatrix();
+    //glm::mat4 projectionMatrix = camera->GetProjectionMatrix();
 
+    glm::vec3 pivot(0.0f);
+    for (auto* t : transforms)
+        pivot += t->GetGlobalPosition();
+    pivot /= transforms.size();
+
+    glm::mat4 originalPivotMatrix = glm::translate(glm::mat4(1.0f), pivot);
+    glm::mat4 gizmoMatrix = originalPivotMatrix;
+
+    // 5. Manipulaci�n
     ImGuizmo::OPERATION currentOp = inspectorWindow->GetCurrentGizmoOperation();
     ImGuizmo::MODE currentMode = inspectorWindow->GetCurrentGizmoMode();
+
+    float snapValues[3];
+
+    if (snapEnabled)
+    {
+        if (currentOp == ImGuizmo::TRANSLATE)
+        {
+            snapValues[0] = positionSnap;
+            snapValues[1] = positionSnap;
+            snapValues[2] = positionSnap;
+        }
+        else if (currentOp == ImGuizmo::ROTATE)
+        {
+            snapValues[0] = rotationSnap;
+            snapValues[1] = rotationSnap;
+            snapValues[2] = rotationSnap;
+        }
+        else if (currentOp == ImGuizmo::SCALE)
+        {
+            snapValues[0] = scaleSnap;
+            snapValues[1] = scaleSnap;
+            snapValues[2] = scaleSnap;
+        }
+    }
 
     ImGuizmo::Manipulate(
         glm::value_ptr(viewMatrix),
         glm::value_ptr(projectionMatrix),
         currentOp,
         currentMode,
-        glm::value_ptr(transformMatrix)
+        glm::value_ptr(gizmoMatrix),
+        nullptr,
+        snapEnabled ? snapValues : nullptr
     );
-
+ 
     // Update the flag indicating whether the gizmo is being used
     isGizmoActive = ImGuizmo::IsUsing();
 
-    if (ImGuizmo::IsUsing())
+    if (!wasUsingGizmo && isGizmoActive)
     {
-        GameObject* parent = selectedObject->GetParent();
+        originalScales.clear();
+        for (auto* t : transforms)
+            originalScales.push_back(t->GetScale());
+    }
 
-        if (parent)
+    if (!wasUsingGizmo && isGizmoActive)
+    {
+        gizmoSnapshotPos = transforms[0]->GetPosition();
+        gizmoSnapshotRot = transforms[0]->GetRotation();
+        gizmoSnapshotScale = transforms[0]->GetScale();
+        gizmoSnapshotTaken = true;
+    }
+
+    glm::mat4 deltaMatrix = glm::inverse(originalPivotMatrix) * gizmoMatrix;
+
+    //save transform
+    for (int cnt = 0; selectedObjects.size() > cnt;cnt++)
+    {
+        if (ImGuizmo::IsUsing())
         {
-            Transform* parentTransform = static_cast<Transform*>(parent->GetComponent(ComponentType::TRANSFORM));
-            if (parentTransform)
+            if (currentOp == ImGuizmo::SCALE)
             {
-                const glm::mat4& parentGlobal = parentTransform->GetGlobalMatrix();
-                transformMatrix = glm::inverse(parentGlobal) * transformMatrix;
+                glm::vec3 deltaScale;
+                deltaScale.x = glm::length(glm::vec3(deltaMatrix[0]));
+                deltaScale.y = glm::length(glm::vec3(deltaMatrix[1]));
+                deltaScale.z = glm::length(glm::vec3(deltaMatrix[2]));
+                
+                glm::vec3 newScale = originalScales[cnt] * deltaScale;
+
+                transforms[cnt]->SetScale(newScale);
+            }
+            else
+            {
+                glm::mat4 originalGlobal = transforms[cnt]->GetGlobalMatrix();
+                glm::mat4 newGlobal = originalPivotMatrix * deltaMatrix * glm::inverse(originalPivotMatrix) * originalGlobal;
+
+                GameObject* parent = selectedObjects[cnt]->GetParent();
+
+                if (parent)
+                {
+                    Transform* parentTransform = static_cast<Transform*>(parent->GetComponent(ComponentType::TRANSFORM));
+                    if (parentTransform)
+                        newGlobal = glm::inverse(parentTransform->GetGlobalMatrix()) * newGlobal;
+                }
+
+                glm::vec3 position, scale, skew;
+                glm::vec4 perspective;
+                glm::quat rotation;
+
+                glm::decompose(newGlobal, scale, rotation, position, skew, perspective);
+
+                transforms[cnt]->SetPosition(position);
+                transforms[cnt]->SetRotationQuat(rotation);
             }
         }
+        else if (wasUsingGizmo)
+        {
+            // We just released the gizmo, mark for octree rebuild
+            if (gizmoSnapshotTaken)
+            {
+                CommandHistory* history = Application::GetInstance().editor->GetCommandHistory();
+                history->ExecuteCommand(std::make_unique<TransformCommand>(
+                    selectedObjects[cnt],
+                    gizmoSnapshotPos, gizmoSnapshotRot, gizmoSnapshotScale,
+                    transforms[cnt]->GetPosition(), transforms[cnt]->GetRotation(), transforms[cnt]->GetScale()
+                ));
+                gizmoSnapshotTaken = false;
+            }
 
-        glm::vec3 position, scale, skew;
-        glm::vec4 perspective;
-        glm::quat rotation;
-
-        glm::decompose(transformMatrix, scale, rotation, position, skew, perspective);
-
-        transform->SetPosition(position);
-        transform->SetRotationQuat(rotation);
-        transform->SetScale(scale);
-    }
-    else if (wasUsingGizmo)
-    {
-        // We just released the gizmo, mark for octree rebuild
-        Application::GetInstance().scene->MarkOctreeForRebuild();
+            Application::GetInstance().scene->MarkOctreeForRebuild();
+        }
     }
 }
 
@@ -561,33 +697,21 @@ void SceneWindow::ApplyMeshTransformFromFBX(GameObject* meshObject, unsigned lon
 
 GameObject* SceneWindow::GetGameObjectUnderMouse()
 {
-    // Get mouse position relative to scene viewport
+
     ImVec2 mousePos = ImGui::GetMousePos();
-    float relativeX = mousePos.x - sceneViewportPos.x;
-    float relativeY = mousePos.y - sceneViewportPos.y;
-    // Verify that the mouse is inside the viewport
-    if (relativeX < 0 || relativeX > sceneViewportSize.x ||
-        relativeY < 0 || relativeY > sceneViewportSize.y)
-    {
-        return nullptr;
-    }
-    // Get the active camera
-    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-    if (!camera)
-    {
-        return nullptr;
-    }
-    // Generate ray from the camera
-    glm::vec3 rayOrigin = camera->GetPosition();
-    glm::vec3 rayDir = camera->ScreenToWorldRay(
-        static_cast<int>(relativeX),
-        static_cast<int>(relativeY),
-        static_cast<int>(sceneViewportSize.x),
-        static_cast<int>(sceneViewportSize.y)
+
+    int mouseX = (int)(mousePos.x - sceneViewportPos.x);
+    int mouseY = (int)(mousePos.y - sceneViewportPos.y);
+
+    UID objectToSelectUID = Application::GetInstance().renderer->GetObjectInPixel(
+        Application::GetInstance().editor->GetEditorCamera()->GetCameraLens(),
+        mouseX,
+        mouseY
     );
-    // Perform ray picking
-    GameObject* root = Application::GetInstance().scene->GetRoot();
-    float minDist = std::numeric_limits<float>::max();
-    GameObject* hitObject = FindClosestObjectToRayOptimized(root, rayOrigin, rayDir, minDist);
-    return hitObject;
+
+    if (objectToSelectUID != 0) {
+        GameObject* objectToSelect = Application::GetInstance().scene->FindObject(objectToSelectUID);
+        return objectToSelect;
+    }
+    return nullptr;
 }

@@ -14,8 +14,9 @@ public:
     ColliderType GetColliderType() override { return ColliderType::CAPSULE_COLLIDER; }
     bool IsType(ComponentType type) override { return type == ComponentType::COLLIDER || type == ComponentType::CAPSULE_COLLIDER; };
     void OnEditor() override;
-    //void Save(Config& config) override;
-    //void Load(Config& config) override;
+    
+    void Serialize(nlohmann::json& componentObj) const override;
+    void Deserialize(const nlohmann::json& componentObj) override;
 
     void SetRadius(float radius);
     const float GetRadius() { return radius; }
@@ -23,6 +24,9 @@ public:
     const float GetHeight() { return height; }
    
     void DebugShape();
+
+    //void Serialize(nlohmann::json& componentObj) const override;
+    //void Deserialize(const nlohmann::json& componentObj) override;
 
 private:
     float radius = 0.5f;

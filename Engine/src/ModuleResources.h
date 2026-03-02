@@ -71,7 +71,7 @@ public:
     UID Find(const char* fileInAssets) const;
 
     // Import new file and return its UID
-    UID ImportFile(const char* newFileInAssets);
+    UID ImportFile(const char* newFileInAssets, bool forceReimport = false);
 
     // Generate unique UID
     UID GenerateNewUID();
@@ -82,6 +82,8 @@ public:
 
     // Release resource (decrement ref count)
     void ReleaseResource(UID uid);
+
+    const Resource* PeekResource(UID uid);
 
     // Get resource without incrementing reference count
     const Resource* GetResourceDirect(UID uid) const {

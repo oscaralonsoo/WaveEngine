@@ -14,10 +14,16 @@ public:
     void OnEditor() override;
     void Update() override;
 
+    void Serialize(nlohmann::json& componentObj) const override;
+    void Deserialize(const nlohmann::json& componentObj) override;
+
     const glm::vec3& GetSize() { return size; }
     void SetSize(glm::vec3 size);
 
     void DebugShape() override;
+
+    //void Serialize(nlohmann::json& componentObj) const override;
+    //void Deserialize(const nlohmann::json& componentObj) override; 
 
 private:
     glm::vec3 size = { 1.0f, 1.0f, 1.0f };

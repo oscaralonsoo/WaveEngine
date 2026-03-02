@@ -15,11 +15,15 @@ public:
     const glm::vec2& GetSize() { return size; }
     void SetSize(glm::vec2 size);
 
-    //void Save(Config& config) override;
-    //void Load(Config& config) override;
+    void Serialize(nlohmann::json& componentObj) const override;
+    void Deserialize(const nlohmann::json& componentObj) override;
+
 
     void OnEditor() override;
     void DebugShape() override;
+
+    //void Serialize(nlohmann::json& componentObj) const override;
+    //void Deserialize(const nlohmann::json& componentObj) override;
 
 private:
     glm::vec2 size = { 1.0f, 1.0f };

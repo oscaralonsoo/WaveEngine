@@ -10,6 +10,7 @@ enum class ComponentType {
 
     TRANSFORM,
     MESH,
+    SKINNED_MESH,
     MATERIAL,
     CAMERA,
     ROTATE,
@@ -35,7 +36,8 @@ enum class ComponentType {
     LISTENER,
     AUDIOSOURCE,
     REVERBZONE,
-    UNKNOWN
+    ANIMATION,
+    UNKNOWN,
 };
 
 class Component {
@@ -49,10 +51,12 @@ public:
     virtual void FixedUpdate() {};
     virtual void Disable() {};
     virtual void OnEditor() {};
+    virtual void CleanUp() {};
 
     // Serialization
     virtual void Serialize(nlohmann::json& componentObj) const {};
     virtual void Deserialize(const nlohmann::json& componentObj) {};
+    virtual void SolveReferences() {};
 
     ComponentType GetType() const { return type; }
     virtual bool IsType(ComponentType type) = 0;

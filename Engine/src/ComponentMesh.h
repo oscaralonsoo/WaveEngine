@@ -1,55 +1,48 @@
 #pragma once
 
 #include "Component.h"
-#include "FileSystem.h"  
 #include "ModuleResources.h"  
+#include "ResourceMesh.h"
 #include <glm/glm.hpp>
+
+#include "AABB.h"
+
+class ComponentMaterial;
+class AABB;
 
 class ComponentMesh : public Component {
 public:
-    // Constructor and destructor
-    ComponentMesh(GameObject* owner);
+
+    ComponentMesh(GameObject* owner, ComponentType type = ComponentType::MESH);
     ~ComponentMesh();
 
-    // Component lifecycle
-    void Update() override;
-    void OnEditor() override;
+    void Update() override { cachedBones = false; }
 
-    // Serialization
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;
 
-    bool IsType(ComponentType type) override { return type == ComponentType::MESH; };
-    bool IsIncompatible(ComponentType type) override { return type == ComponentType::MESH /*|| type == ComponentType::SkinnedMeshRenderer*/; };
+    virtual bool IsType(ComponentType type) override { return type == ComponentType::MESH; };
+    virtual bool IsIncompatible(ComponentType type) override { return type == ComponentType::MESH || type == ComponentType::SKINNED_MESH; };
 
-    // Load mesh from resource system by UID
     bool LoadMeshByUID(UID uid);
 
-    // Set mesh data directly (for primitives that don't use resource system)
-    void SetMesh(const Mesh& meshData);
+    virtual void SetMesh(const Mesh& meshData);
 
-    // Accessors for mesh
     const Mesh& GetMesh() const;
     Mesh& GetMesh();
 
-    // Validation
     bool HasMesh() const;
 
-    // Draw the mesh
     void Draw();
 
-    // Get mesh UID (0 if using direct mesh)
     UID GetMeshUID() const { return meshUID; }
 
-    // Check if using resource system or direct mesh
     bool IsUsingResourceMesh() const { return meshUID != 0; }
     bool IsUsingDirectMesh() const { return hasDirectMesh && meshUID == 0; }
 
-    // Primitive Type (for serialization)
     void SetPrimitiveType(const std::string& type) { primitiveType = type; }
     const std::string& GetPrimitiveType() const { return primitiveType; }
 
-    // Mesh statistics
     unsigned int GetNumVertices() const {
         const Mesh& m = GetMesh();
         return static_cast<unsigned int>(m.vertices.size());
@@ -80,24 +73,48 @@ public:
         return static_cast<unsigned int>(m.textures.size());
     }
 
+    ComponentMaterial* GetAttachedMaterial() { return attachedMaterial; }
 
-    // AABB methods
-    glm::vec3 GetAABBMin() const;
-    glm::vec3 GetAABBMax() const;
+    const AABB& GetAABB() const;
+    const AABB& GetGlobalAABB() const;
+    void UpdateStaticAABB();
+    virtual void UpdateDynamicAABB() {}
 
-    // World space AABB (transformed by GameObject's global matrix)
-    void GetWorldAABB(glm::vec3& outMin, glm::vec3& outMax) const;
+    //SKINNING
+    virtual void UpdateSkinningMatrices() {}
+
+    virtual bool HasSkinning() const { return false; }
+    virtual const std::vector<glm::mat4>& GetBoneMatrices() const { static std::vector<glm::mat4> empty; return empty; }
+
+    //DEBUG
+    void SetDrawMesh(bool b) { drawMesh = b; };
+    bool GetDrawMesh() { return drawMesh; }
+    void SetDrawNormals(bool b) { drawNormals = b; };
+    bool GetDrawNormals() { return drawNormals; }
 
 private:
+    void OnGameObjectEvent(GameObjectEvent event, Component* component);
+
+
+protected:
 
     UID meshUID = 0;
-    // Release current mesh resource
     void ReleaseCurrentMesh();
 
-private:
+    Mesh directMesh;
+    bool hasDirectMesh;
+    std::string primitiveType;       
+    
+    AABB staticAABB;
+    AABB dynamicAABB;
 
-    // Direct mesh (for primitives)
-    Mesh directMesh;                        // Direct mesh data (for primitives)
-    bool hasDirectMesh;                     // True if using direct mesh instead of resource
-    std::string primitiveType;              // Type of primitive for serialization
+    //MATERIAL
+    ComponentMaterial* attachedMaterial;
+
+    //ANIMATION
+    bool cachedBones = false;   
+
+    //DEBUG
+    bool drawMesh = false;
+    bool drawNormals = false;
 };

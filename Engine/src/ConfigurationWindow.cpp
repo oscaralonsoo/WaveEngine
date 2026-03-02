@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <psapi.h>
 #include "Application.h"
+#include "ModuleCamera.h"
 #include "Log.h"
 
 ConfigurationWindow::ConfigurationWindow()
@@ -189,12 +190,12 @@ void ConfigurationWindow::DrawWindowSettings()
 
 void ConfigurationWindow::DrawCameraSettings()
 {
-    Application& app = Application::GetInstance();
+    /*Application& app = Application::GetInstance();
 
     ImGui::Text("Camera Controls");
     ImGui::Separator();
 
-    bool usingEditorCamera = app.camera->IsUsingEditorCamera();
+    bool usingEditorCamera = app.editor.get()->IsUsingEditorCamera();
     ImGui::Text("Active Camera Mode:");
     if (ImGui::RadioButton("Editor Camera", usingEditorCamera))
     {
@@ -214,7 +215,7 @@ void ConfigurationWindow::DrawCameraSettings()
     }
     ImGui::Separator();
 
-    ComponentCamera* camera = app.renderer->GetCamera();
+    ComponentCamera* camera = nullptr;
 
     if (camera == nullptr)
     {
@@ -341,7 +342,7 @@ void ConfigurationWindow::DrawCameraSettings()
         ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "None (create one)");
     }
 
-    ImGui::Separator();
+    ImGui::Separator();*/
 }
 
 void ConfigurationWindow::DrawAudioVolumeSettings() {

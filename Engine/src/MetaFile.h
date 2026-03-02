@@ -2,11 +2,12 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include "Globals.h"
 
-typedef unsigned long long UID;
 
 enum class AssetType {
     UNKNOWN = 0,
@@ -71,10 +72,11 @@ struct MetaFile {
     UID uid = 0;
     AssetType type = AssetType::UNKNOWN;
     std::string originalPath;
-    long long lastModified = 0;
+    uint32_t fileHash = 0;
     ImportSettings importSettings;
+    std::map<std::string, UID> meshes;
+    std::map<std::string, UID> animations;
 
-    static UID GenerateUID();
     static AssetType GetAssetType(const std::string& extension);
 
     bool Save(const std::string& metaFilePath) const;
@@ -101,6 +103,7 @@ public:
     static UID GetUIDFromAsset(const std::string& assetPath);
     static std::string GetAssetFromUID(UID uid);
     static long long GetFileTimestamp(const std::string& filePath);
+    static uint32_t GetFileHash(const std::string& path);
 
 private:
     static std::string GetMetaPath(const std::string& assetPath);

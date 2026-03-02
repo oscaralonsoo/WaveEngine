@@ -3,7 +3,6 @@
 #include "MeshImporter.h"
 #include "LibraryManager.h"
 #include <filesystem>
-#include "FileSystem.h" 
 #include <assimp/mesh.h>
 #include <fstream>
 #include <sstream>
@@ -16,6 +15,7 @@ MeshImporter::~MeshImporter() {}
 
 // IMPORT: Assimp -> Our Mesh Structure
 Mesh MeshImporter::ImportFromAssimp(const aiMesh* assimpMesh) {
+    
     Mesh mesh;
 
     if (!assimpMesh) {
@@ -72,89 +72,116 @@ Mesh MeshImporter::ImportFromAssimp(const aiMesh* assimpMesh) {
         }
     }
 
+    // Import Bones
+    if (assimpMesh->HasBones()) {
+        std::map<std::string, int> boneMapping;
+        for (unsigned int i = 0; i < assimpMesh->mNumBones; i++) {
+            aiBone* aiBone = assimpMesh->mBones[i];
+            std::string boneName = aiBone->mName.C_Str();
+            int boneID = -1;
+
+            if (boneMapping.find(boneName) == boneMapping.end()) {
+                boneID = (int)mesh.bones.size();
+                Bone boneInfo;
+                boneInfo.name = boneName;
+
+                aiMatrix4x4 m = aiBone->mOffsetMatrix;
+                boneInfo.offsetMatrix = glm::mat4(
+                    m.a1, m.b1, m.c1, m.d1,
+                    m.a2, m.b2, m.c2, m.d2,
+                    m.a3, m.b3, m.c3, m.d3,
+                    m.a4, m.b4, m.c4, m.d4
+                );
+                mesh.bones.push_back(boneInfo);
+                boneMapping[boneName] = boneID;
+            }
+            else {
+                boneID = boneMapping[boneName];
+            }
+
+            for (unsigned int j = 0; j < aiBone->mNumWeights; j++) {
+                int vID = aiBone->mWeights[j].mVertexId;
+                float weight = aiBone->mWeights[j].mWeight;
+                if (vID < mesh.vertices.size()) {
+                    mesh.vertices[vID].AddBoneData(boneID, weight);
+                }
+            }
+        }
+    }
+
+    for (auto& vertex : mesh.vertices) {
+        vertex.NormalizeWeights();
+    }
+
     return mesh;
 }
 
 // SAVE: Our Mesh -> Custom Binary Format
-bool MeshImporter::SaveToCustomFormat(const Mesh& mesh, const std::string& filename) {
-    std::string fullPath = LibraryManager::GetMeshPath(filename);
-
+bool MeshImporter::SaveToCustomFormat(const Mesh& mesh, const UID& uid) {
+    std::string fullPath = LibraryManager::GetLibraryPathFromUID(uid);
     std::ofstream file(fullPath, std::ios::binary);
-    if (!file.is_open()) {
-        LOG_DEBUG("ERROR: Could not open file for writing: %s", fullPath.c_str());
-        return false;
-    }
 
-    // 1. Build header
-    MeshHeader header;
-    header.numVertices = static_cast<unsigned int>(mesh.vertices.size());
-    header.numIndices = static_cast<unsigned int>(mesh.indices.size());
-    header.hasNormals = !mesh.vertices.empty();
-    header.hasTexCoords = !mesh.vertices.empty();
+    if (!file.is_open()) return false;
 
-    // Calculate bounding box
-    CalculateBoundingBox(mesh, header.boundingBoxMin, header.boundingBoxMax);
+    unsigned int numVertices = static_cast<unsigned int>(mesh.vertices.size());
+    unsigned int numIndices = static_cast<unsigned int>(mesh.indices.size());
+    unsigned int numBones = static_cast<unsigned int>(mesh.bones.size());
 
-    // 2. Write header
-    file.write(reinterpret_cast<const char*>(&header), sizeof(MeshHeader));
+    file.write(reinterpret_cast<const char*>(&numVertices), sizeof(unsigned int));
+    file.write(reinterpret_cast<const char*>(&numIndices), sizeof(unsigned int));
+    file.write(reinterpret_cast<const char*>(&numBones), sizeof(unsigned int));
 
-    // 3. Write vertex data
-    if (!mesh.vertices.empty()) {
-        file.write(
-            reinterpret_cast<const char*>(mesh.vertices.data()),
-            mesh.vertices.size() * sizeof(Vertex)
-        );
-    }
+    file.write(reinterpret_cast<const char*>(mesh.vertices.data()), numVertices * sizeof(Vertex));
 
-    // 4. Write index data
-    if (!mesh.indices.empty()) {
-        file.write(
-            reinterpret_cast<const char*>(mesh.indices.data()),
-            mesh.indices.size() * sizeof(unsigned int)
-        );
+    file.write(reinterpret_cast<const char*>(mesh.indices.data()), numIndices * sizeof(unsigned int));
+
+    for (const auto& bone : mesh.bones) {
+        unsigned int nameSize = static_cast<unsigned int>(bone.name.size());
+        file.write(reinterpret_cast<const char*>(&nameSize), sizeof(unsigned int));
+        file.write(bone.name.c_str(), nameSize);
+        file.write(reinterpret_cast<const char*>(&bone.offsetMatrix), sizeof(glm::mat4));
     }
 
     file.close();
-
     return true;
 }
 
-// LOAD: Custom Binary Format -> Our Mesh
-Mesh MeshImporter::LoadFromCustomFormat(const std::string& filename) {
-    std::string fullPath = LibraryManager::GetMeshPath(filename);
-
+Mesh MeshImporter::LoadFromCustomFormat(const UID& uid) {
+    std::string fullPath = LibraryManager::GetLibraryPathFromUID(uid);
     Mesh mesh;
-
     std::ifstream file(fullPath, std::ios::binary);
-    if (!file.is_open()) {
-        LOG_DEBUG("ERROR: Could not open file for reading: %s", fullPath.c_str());
-        return mesh;
+
+    if (!file.is_open()) return mesh;
+
+    unsigned int numVertices = 0, numIndices = 0, numBones = 0;
+
+    file.read(reinterpret_cast<char*>(&numVertices), sizeof(unsigned int));
+    file.read(reinterpret_cast<char*>(&numIndices), sizeof(unsigned int));
+    file.read(reinterpret_cast<char*>(&numBones), sizeof(unsigned int));
+
+    if (numVertices > 0) {
+        mesh.vertices.resize(numVertices);
+        file.read(reinterpret_cast<char*>(mesh.vertices.data()), numVertices * sizeof(Vertex));
+    }
+    if (numIndices > 0) {
+        mesh.indices.resize(numIndices);
+        file.read(reinterpret_cast<char*>(mesh.indices.data()), numIndices * sizeof(unsigned int));
     }
 
-    // 1. Read header
-    MeshHeader header;
-    file.read(reinterpret_cast<char*>(&header), sizeof(MeshHeader));
+    if (numBones > 0) {
+        mesh.bones.resize(numBones);
+        for (unsigned int i = 0; i < numBones; i++) {
+            unsigned int nameSize = 0;
+            file.read(reinterpret_cast<char*>(&nameSize), sizeof(unsigned int));
 
-    // 2. Read vertex data
-    mesh.vertices.resize(header.numVertices);
-    if (header.numVertices > 0) {
-        file.read(
-            reinterpret_cast<char*>(mesh.vertices.data()),
-            header.numVertices * sizeof(Vertex)
-        );
-    }
+            mesh.bones[i].name.resize(nameSize);
+            file.read(&mesh.bones[i].name[0], nameSize);
 
-    // 3. Read index data
-    mesh.indices.resize(header.numIndices);
-    if (header.numIndices > 0) {
-        file.read(
-            reinterpret_cast<char*>(mesh.indices.data()),
-            header.numIndices * sizeof(unsigned int)
-        );
+            file.read(reinterpret_cast<char*>(&mesh.bones[i].offsetMatrix), sizeof(glm::mat4));
+        }
     }
 
     file.close();
-
     return mesh;
 }
 
@@ -172,10 +199,8 @@ std::string MeshImporter::GenerateMeshFilename(const std::string& originalName) 
         sanitized.end()
     );
 
-    // for consistency
     std::transform(sanitized.begin(), sanitized.end(), sanitized.begin(), ::tolower);
 
-    // generate hash
     std::hash<std::string> hasher;
     size_t hashValue = hasher(originalName);
 
@@ -183,25 +208,4 @@ std::string MeshImporter::GenerateMeshFilename(const std::string& originalName) 
     ss << sanitized << "_" << std::hex << hashValue << ".mesh";
 
     return ss.str();
-}
-
-void MeshImporter::CalculateBoundingBox(const Mesh& mesh, glm::vec3& minBounds, glm::vec3& maxBounds) {
-    if (mesh.vertices.empty()) {
-        minBounds = glm::vec3(0.0f);
-        maxBounds = glm::vec3(0.0f);
-        return;
-    }
-
-    minBounds = glm::vec3(std::numeric_limits<float>::max());
-    maxBounds = glm::vec3(std::numeric_limits<float>::lowest());
-
-    for (const auto& vertex : mesh.vertices) {
-        minBounds.x = std::min(minBounds.x, vertex.position.x);
-        minBounds.y = std::min(minBounds.y, vertex.position.y);
-        minBounds.z = std::min(minBounds.z, vertex.position.z);
-
-        maxBounds.x = std::max(maxBounds.x, vertex.position.x);
-        maxBounds.y = std::max(maxBounds.y, vertex.position.y);
-        maxBounds.z = std::max(maxBounds.z, vertex.position.z);
-    }
 }

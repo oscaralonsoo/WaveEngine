@@ -37,26 +37,32 @@ void Collider::Disable()
 }
 
 
-//void Collider::SaveBase(Config& config)
-//{
-//    config.SetVector3("Center", center);
-//    config.SetBool("Trigger", isTrigger);
-//    config.SetFloat("DynamicFriction", dynamicFriction);
-//    config.SetFloat("StaticFriction", staticFriction);
-//    config.SetFloat("Restitution", restitution);
-//}
-//
-//void Collider::LoadBase(Config& config)
-//{
-//    center = config.GetVector3("Center");
-//    isTrigger = config.GetBool("Trigger");
-//    dynamicFriction = config.GetFloat("DynamicFriction");
-//    staticFriction = config.GetFloat("StaticFriction");
-//    restitution = config.GetFloat("Restitution");
-//}
+void Collider::SerializeBase(nlohmann::json& componentObj) const
+{
+    // Guardamos el centro como un array [x, y, z]
+    componentObj["Center"] = { center.x, center.y, center.z };
+    componentObj["Trigger"] = isTrigger;
+    componentObj["DynamicFriction"] = dynamicFriction;
+    componentObj["StaticFriction"] = staticFriction;
+    componentObj["Restitution"] = restitution;
+}
+
+void Collider::DeserializeBase(const nlohmann::json& componentObj)
+{
+    if (componentObj.contains("Center")) {
+        auto c = componentObj["Center"];
+        center = glm::vec3(c[0], c[1], c[2]);
+    }
+
+    isTrigger = componentObj.value("Trigger", false);
+    dynamicFriction = componentObj.value("DynamicFriction", 0.5f);
+    staticFriction = componentObj.value("StaticFriction", 0.5f);
+    restitution = componentObj.value("Restitution", 0.0f);
+}
 
 void Collider::OnEditorBase()
 {
+    #ifndef WAVE_GAME
     //ATRIBUTES
     ImGui::Text("Trigger");
     bool trigger = isTrigger;
@@ -92,6 +98,7 @@ void Collider::OnEditorBase()
     {
         SetRestitution(restitution);
     }
+    #endif
 }
 
 void Collider::SetCenter(glm::vec3 center)
@@ -153,3 +160,28 @@ void Collider::OnGameObjectEvent(GameObjectEvent event, Component* component)
         break;
     }
 }
+
+//void Collider::Serialize(nlohmann::json& componentObj) const
+//{
+//    componentObj["center"] = { center.x, center.y, center.z };
+//    componentObj["isTrigger"] = isTrigger;
+//    componentObj["staticFriction"] = staticFriction;
+//    componentObj["dynamicFriction"] = dynamicFriction;
+//    componentObj["restitution"] = restitution;
+//}
+//
+//void Collider::Deserialize(const nlohmann::json& componentObj)
+//{
+//    if (componentObj.contains("center")) {
+//        const auto& c = componentObj["center"];
+//        SetCenter(glm::vec3(c[0].get<float>(), c[1].get<float>(), c[2].get<float>()));
+//    }
+//    if (componentObj.contains("isTrigger"))
+//        SetTrigger(componentObj["isTrigger"].get<bool>());
+//    if (componentObj.contains("staticFriction"))
+//        SetStaticFriction(componentObj["staticFriction"].get<float>());
+//    if (componentObj.contains("dynamicFriction"))
+//        SetDynamicFriction(componentObj["dynamicFriction"].get<float>());
+//    if (componentObj.contains("restitution"))
+//        SetRestitution(componentObj["restitution"].get<float>());
+//}

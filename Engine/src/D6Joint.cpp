@@ -127,32 +127,53 @@ void D6Joint::SetSwingLimit(float yAngle, float zAngle) {
     }
 }
 
-//void D6Joint::Save(Config& config) {
-//    SaveBase(config);
-//    for (int i = 0; i < 6; ++i)
-//    {
-//        std::string motionName = "Motion" + std::to_string(i);
-//        config.SetInt(motionName.c_str(), (int)motions[i]);
-//    }
-//    config.SetFloat("LinearLimit", linearLimit);
-//    config.SetFloat("TwistMin", twistMin); config.SetFloat("TwistMax", twistMax);
-//    config.SetFloat("SwingY", swingY); config.SetFloat("SwingZ", swingZ);
-//}
-//
-//void D6Joint::Load(Config& config) {
-//    LoadBase(config);
-//    for (int i = 0; i < 6; ++i)
-//    {
-//        std::string motionName = "Motion" + std::to_string(i);
-//        motions[i] = (physx::PxD6Motion::Enum)config.GetInt(motionName.c_str());
-//    }
-//    linearLimit = config.GetFloat("LinearLimit", 1.0f);
-//    twistMin = config.GetFloat("TwistMin", -45.0f); twistMax = config.GetFloat("TwistMax", 45.0f);
-//    swingY = config.GetFloat("SwingY", 45.0f); swingZ = config.GetFloat("SwingZ", 45.0f);
-//    RefreshJoint();
-//}
+void D6Joint::Serialize(nlohmann::json& componentObj) const
+{
+    SerializeBase(componentObj);
+
+    nlohmann::json motionsArray = nlohmann::json::array();
+    for (int i = 0; i < 6; ++i)
+    {
+        motionsArray.push_back(static_cast<int>(motions[i]));
+    }
+    componentObj["Motions"] = motionsArray;
+
+    componentObj["LinearLimit"] = linearLimit;
+    componentObj["TwistLimit"] = { twistMin, twistMax };
+    componentObj["SwingLimit"] = { swingY, swingZ };
+}
+
+void D6Joint::Deserialize(const nlohmann::json& componentObj)
+{
+    DeserializeBase(componentObj);
+
+    if (componentObj.contains("Motions") && componentObj["Motions"].is_array())
+    {
+        for (int i = 0; i < 6 && i < componentObj["Motions"].size(); ++i)
+        {
+            motions[i] = static_cast<physx::PxD6Motion::Enum>(componentObj["Motions"][i].get<int>());
+        }
+    }
+
+    linearLimit = componentObj.value("LinearLimit", 1.0f);
+
+    if (componentObj.contains("TwistLimit")) {
+        auto t = componentObj["TwistLimit"];
+        twistMin = t[0];
+        twistMax = t[1];
+    }
+
+    if (componentObj.contains("SwingLimit")) {
+        auto s = componentObj["SwingLimit"];
+        swingY = s[0];
+        swingZ = s[1];
+    }
+
+    RefreshJoint();
+}
 
 void D6Joint::OnEditor() {
+#ifndef WAVE_GAME
     OnEditorBase();
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth;
 
@@ -175,6 +196,7 @@ void D6Joint::OnEditor() {
         if (ImGui::DragFloat2("Swing Y/Z", &swingY, 1.0f, 0.0f, 180.0f)) SetSwingLimit(swingY, swingZ);
         ImGui::TreePop();
     }
+#endif
 }
 
 void D6Joint::DrawDebug() {
@@ -203,3 +225,43 @@ void D6Joint::DrawDebug() {
     physx::PxTransform worldA = poseA.transform(pxJoint->getLocalPose(physx::PxJointActorIndex::eACTOR0));
     render->DrawLine(pRef, glm::vec3(worldA.p.x, worldA.p.y, worldA.p.z), glm::vec4(1, 1, 1, 1));
 }
+
+//void D6Joint::Serialize(nlohmann::json& componentObj) const
+//{
+//    Joint::Serialize(componentObj);
+//
+//    nlohmann::json motionsArr = nlohmann::json::array();
+//    for (int i = 0; i < 6; ++i)
+//        motionsArr.push_back((int)motions[i]);
+//    componentObj["motions"] = motionsArr;
+//
+//    componentObj["linearLimit"] = linearLimit;
+//    componentObj["twistMin"] = twistMin;
+//    componentObj["twistMax"] = twistMax;
+//    componentObj["swingY"] = swingY;
+//    componentObj["swingZ"] = swingZ;
+//}
+//
+//void D6Joint::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Joint::Deserialize(componentObj);
+//
+//    if (componentObj.contains("motions")) {
+//        const auto& arr = componentObj["motions"];
+//        for (int i = 0; i < 6 && i < (int)arr.size(); ++i)
+//            motions[i] = (physx::PxD6Motion::Enum)arr[i].get<int>();
+//    }
+//
+//    if (componentObj.contains("linearLimit"))
+//        SetLinearLimit(componentObj["linearLimit"].get<float>());
+//
+//    float tMin = twistMin, tMax = twistMax;
+//    if (componentObj.contains("twistMin")) tMin = componentObj["twistMin"].get<float>();
+//    if (componentObj.contains("twistMax")) tMax = componentObj["twistMax"].get<float>();
+//    SetTwistLimit(tMin, tMax);
+//
+//    float sY = swingY, sZ = swingZ;
+//    if (componentObj.contains("swingY")) sY = componentObj["swingY"].get<float>();
+//    if (componentObj.contains("swingZ")) sZ = componentObj["swingZ"].get<float>();
+//    SetSwingLimit(sY, sZ);
+//}

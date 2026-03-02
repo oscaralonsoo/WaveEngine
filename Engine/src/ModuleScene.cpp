@@ -1,9 +1,8 @@
 ﻿#include "ModuleScene.h"
 #include "Renderer.h"
-#include "FileSystem.h"
+#include "ModuleLoader.h"
 #include "GameObject.h"
 #include "Application.h"
-#include "ModuleEditor.h"
 #include "Transform.h"
 #include <float.h>
 #include <functional>
@@ -37,7 +36,6 @@ bool ModuleScene::Awake()
 bool ModuleScene::Start()
 {
     LOG_DEBUG("Initializing Scene");
-    renderer->DrawScene();
     root = new GameObject("Root");
     LOG_CONSOLE("Scene ready");
 
@@ -48,8 +46,8 @@ void ModuleScene::RebuildOctree()
 {
     LOG_DEBUG("[ModuleScene] Starting full octree rebuild");
 
-    glm::vec3 sceneMin(std::numeric_limits<float>::max());
-    glm::vec3 sceneMax(std::numeric_limits<float>::lowest());
+    AABB sceneAABB;
+    sceneAABB.SetNegativeInfinity();
 
     bool hasObjects = false;
 
@@ -60,11 +58,11 @@ void ModuleScene::RebuildOctree()
         ComponentMesh* mesh = static_cast<ComponentMesh*>(obj->GetComponent(ComponentType::MESH));
         if (mesh && mesh->IsActive() && mesh->HasMesh())
         {
-            glm::vec3 objMin, objMax;
-            mesh->GetWorldAABB(objMin, objMax);
+            AABB objectAABB;
+            mesh->GetGlobalAABB();
 
-            sceneMin = glm::min(sceneMin, objMin);
-            sceneMax = glm::max(sceneMax, objMax);
+            sceneAABB.min = glm::min(sceneAABB.min, objectAABB.min);
+            sceneAABB.max = glm::max(sceneAABB.max, objectAABB.max);
             hasObjects = true;
         }
 
@@ -82,26 +80,26 @@ void ModuleScene::RebuildOctree()
     // If no objects with mesh, use default bounds
     if (!hasObjects)
     {
-        sceneMin = glm::vec3(-10.0f, -10.0f, -10.0f);
-        sceneMax = glm::vec3(10.0f, 10.0f, 10.0f);
+        sceneAABB.min = glm::vec3(-10.0f, -10.0f, -10.0f);
+        sceneAABB.max = glm::vec3(10.0f, 10.0f, 10.0f);
     }
     else
     {
         // Expand bounds significantly (50% margin)
-        glm::vec3 size = sceneMax - sceneMin;
+        glm::vec3 size = sceneAABB.max - sceneAABB.min;
         glm::vec3 margin = size * 0.5f;
-        sceneMin -= margin;
-        sceneMax += margin;
+        sceneAABB.min -= margin;
+        sceneAABB.max += margin;
     }
 
     if (!octree)
     {
-        octree = std::make_unique<Octree>(sceneMin, sceneMax, 4, 5);
+        octree = std::make_unique<Octree>(sceneAABB.min, sceneAABB.max, 4, 5);
     }
     else
     {
         octree->Clear();
-        octree->Create(sceneMin, sceneMax, 4, 5);
+        octree->Create(sceneAABB.min, sceneAABB.max, 4, 5);
     }
 
     // Insert all game objects
@@ -226,15 +224,6 @@ void ModuleScene::CleanupMarkedObjects(GameObject* parent)
     {
         if (child->IsMarkedForDeletion())
         {
-            // Scene Camera
-            ComponentCamera* cam = static_cast<ComponentCamera*>(child->GetComponent(ComponentType::CAMERA));
-            if (cam && cam == Application::GetInstance().camera->GetSceneCamera())
-            {
-                Application::GetInstance().camera->SetSceneCamera(nullptr);
-            }
-
-            Application::GetInstance().selectionManager->RemoveFromSelection(child);
-
             parent->RemoveChild(child);
             delete child;
 
@@ -323,27 +312,32 @@ bool ModuleScene::LoadScene(const std::string& filepath)
         }
     }
 
-    // Relink Scene Camera
-    if (root) {
-        ComponentCamera* foundCamera = FindCameraInHierarchy(root);
-        if (foundCamera) {
-            
-            Application::GetInstance().camera->SetSceneCamera(foundCamera);
-            
-            
-            if (foundCamera->owner && !foundCamera->owner->GetComponent(ComponentType::LISTENER)) {
-                foundCamera->owner->CreateComponent(ComponentType::LISTENER);
-                LOG_DEBUG("AudioListener automatically attached to loaded Scene Camera");
-            }
-            
-        }
-    }
+    if (root) 
+        root->SolveReferences();
 
     // Force full rebuild after loading scene
     needsOctreeRebuild = true;
 
     LOG_CONSOLE("Scene loaded successfully");
     return true;
+}
+
+void ModuleScene::NewScene()
+{
+    ClearScene();
+
+    if (root)
+    {
+        Transform* transform = static_cast<Transform*>(root->GetComponent(ComponentType::TRANSFORM));
+        if (transform)
+        {
+            transform->SetPosition(glm::vec3(0.0f));
+            transform->SetRotation(glm::vec3(0.0f));
+            transform->SetScale(glm::vec3(1.0f));
+        }
+    }
+
+    LOG_CONSOLE("New Scene created");
 }
 
 void ModuleScene::ClearScene()
@@ -354,9 +348,6 @@ void ModuleScene::ClearScene()
 
     // Selection
     Application::GetInstance().selectionManager->ClearSelection();
-
-    // Scene Camera
-    Application::GetInstance().camera->SetSceneCamera(nullptr);
 
     // Childrens
     std::vector<GameObject*> children = root->GetChildren();
@@ -371,6 +362,16 @@ void ModuleScene::ClearScene()
     }
 
     LOG_CONSOLE("Scene cleared");
+}
+
+GameObject* ModuleScene::FindObject(const UID uid) 
+{ 
+    return root->FindChild(uid); 
+}
+
+GameObject* ModuleScene::FindObject(const std::string& name)
+{ 
+    return root->FindChild(name); 
 }
 
 ComponentCamera* ModuleScene::FindCameraInHierarchy(GameObject* obj)

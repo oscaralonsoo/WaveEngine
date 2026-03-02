@@ -42,10 +42,11 @@ public:
     virtual bool IsType(ComponentType type) override = 0;
     bool IsIncompatible(ComponentType type) override { return false; };
 
-    //virtual void Save(Config& componentNode) override {};
-    //void SaveBase(Config& componentNode);
-    //virtual void Load(Config& componentNode) override {};
-    //void LoadBase(Config& componentNode) ;
+    virtual void Serialize(nlohmann::json& componentObj) const override { SerializeBase(componentObj); };
+    void SerializeBase(nlohmann::json& componentObj) const;
+    virtual void Deserialize(const nlohmann::json& componentObj) override { DeserializeBase(componentObj); };
+    void DeserializeBase(const nlohmann::json& componentObj);
+
     virtual void OnEditor() override = 0;
     void OnEditorBase();
     
@@ -68,6 +69,9 @@ public:
     virtual void OnGameObjectEvent(GameObjectEvent event, Component* component) override;
 
     Rigidbody* attachedRigidbody = nullptr;
+
+    //void Serialize(nlohmann::json& componentObj) const override;
+    //void Deserialize(const nlohmann::json& componentObj) override;
 
 protected:
     

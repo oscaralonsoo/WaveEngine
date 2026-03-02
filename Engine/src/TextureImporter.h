@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "Globals.h"
 #include <string>
 #include <glm/glm.hpp>
 
@@ -79,8 +80,8 @@ public:
 
     static TextureData ImportFromFile(const std::string& filepath);
 
-    static bool SaveToCustomFormat(const TextureData& texture, const std::string& filename);
-    static TextureData LoadFromCustomFormat(const std::string& filename);
+    static bool SaveToCustomFormat(const TextureData& texture, const UID& uid);
+    static TextureData LoadFromCustomFormat(const UID& uid);
     static std::string GenerateTextureFilename(const std::string& originalPath);
     static unsigned int GetOpenGLFormat(unsigned int channels);
 

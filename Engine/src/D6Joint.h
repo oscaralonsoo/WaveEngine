@@ -16,10 +16,16 @@ public:
     void SetTwistLimit(float minAngle, float maxAngle);
     void SetSwingLimit(float yAngle, float zAngle);
 
+    virtual void Serialize(nlohmann::json& componentObj) const;
+    virtual void Deserialize(const nlohmann::json& componentObj);
+
     //void Save(Config& config) override;
     //void Load(Config& config) override;
     void OnEditor() override;
     void DrawDebug() override;
+
+    //void Serialize(nlohmann::json& componentObj) const override;
+    //void Deserialize(const nlohmann::json& componentObj) override;
 
 private:
     physx::PxD6Motion::Enum motions[6];

@@ -30,6 +30,7 @@ void BoxCollider::Update()
 
 void BoxCollider::OnEditor()
 {
+    #ifndef WAVE_GAME
     OnEditorBase();
     ImGui::Separator();
 
@@ -39,21 +40,33 @@ void BoxCollider::OnEditor()
     {
         SetSize(s);
     }
+    #endif
 }
 
-//void BoxCollider::Save(Config& config)
-//{
-//    SaveBase(config);
-//    config.SetVector3("Size", size);
-//}
-//
-//void BoxCollider::Load(Config& config)
-//{
-//    LoadBase(config);
-//    size = config.GetVector3("Size", glm::vec3(1.0f, 1.0f, 1.0f));
-//    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
-//    if (rb) rb->CreateBody();
-//}
+void BoxCollider::Serialize(nlohmann::json& componentObj) const
+{
+    SerializeBase(componentObj);
+
+    componentObj["Size"] = { size.x, size.y, size.z };
+}
+
+void BoxCollider::Deserialize(const nlohmann::json& componentObj)
+{
+    DeserializeBase(componentObj);
+
+    if (componentObj.contains("Size")) {
+        auto s = componentObj["Size"];
+        size = glm::vec3(s[0], s[1], s[2]);
+    }
+    else {
+        size = glm::vec3(1.0f);
+    }
+
+    Rigidbody* rb = static_cast<Rigidbody*>(owner->GetComponentInParent(ComponentType::RIGIDBODY));
+    if (rb) {
+        rb->CreateBody();
+    }
+}
 
 void BoxCollider::SetSize(glm::vec3 size)
 {
@@ -110,3 +123,18 @@ void BoxCollider::DebugShape()
         render->DrawLine(v[i], v[i + 4], color);
     }
 }
+
+//void BoxCollider::Serialize(nlohmann::json& componentObj) const
+//{
+//    Collider::Serialize(componentObj);
+//    componentObj["size"] = { size.x, size.y, size.z };
+//}
+//
+//void BoxCollider::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Collider::Deserialize(componentObj);
+//    if (componentObj.contains("size")) {
+//        const auto& s = componentObj["size"];
+//        SetSize(glm::vec3(s[0].get<float>(), s[1].get<float>(), s[2].get<float>()));
+//    }
+//}

@@ -12,6 +12,7 @@ ResourceMesh::~ResourceMesh() {
 }
 
 bool ResourceMesh::LoadInMemory() {
+    
     if (loadedInMemory) {
         return true;
     }
@@ -29,7 +30,7 @@ bool ResourceMesh::LoadInMemory() {
     }
 
     // load using meshimporter
-    mesh = MeshImporter::LoadFromCustomFormat(filename);
+    mesh = MeshImporter::LoadFromCustomFormat(uid);
 
     if (mesh.vertices.empty() || mesh.indices.empty()) {
         LOG_DEBUG("[ResourceMesh] ERROR: Failed to load mesh data");
@@ -71,6 +72,16 @@ bool ResourceMesh::LoadInMemory() {
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
         (void*)offsetof(Vertex, texCoords));
 
+    // Bones
+    glEnableVertexAttribArray(3);
+    glVertexAttribIPointer(3, 4, GL_INT, sizeof(Vertex),
+        (void*)offsetof(Vertex, boneIDs));
+
+    // Weights
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+        (void*)offsetof(Vertex, weights));
+
     glBindVertexArray(0);
 
     loadedInMemory = true;
@@ -101,6 +112,7 @@ void ResourceMesh::UnloadFromMemory() {
     mesh.vertices.clear();
     mesh.indices.clear();
     mesh.textures.clear();
+    mesh.bones.clear();
 
     loadedInMemory = false;
 }

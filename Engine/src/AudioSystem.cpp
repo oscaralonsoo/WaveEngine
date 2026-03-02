@@ -15,6 +15,7 @@
 #include "Log.h"
 #include "ReverbZone.h"
 #include "AudioListener.h"
+#include "LibraryManager.h"
 
 #include <AK/SoundEngine/Common/AkSoundEngine.h>
 #include <AK/SpatialAudio/Common/AkSpatialAudio.h>
@@ -98,7 +99,6 @@ bool AudioSystem::InitStreamingManager() {
     wchar_t cwd[MAX_PATH];
     _wgetcwd(cwd, MAX_PATH);
     if (enableDebugLogs) LOG_CONSOLE("Current Working Directory: %ls", cwd);
-    
     AkStreamMgrSettings stmSettings;
     AK::StreamMgr::GetDefaultSettings(stmSettings);
 
@@ -110,10 +110,10 @@ bool AudioSystem::InitStreamingManager() {
     // Initializing the Deferred hook
     if (g_lowLevelIO.Init(deviceSettings) != AK_Success) return false;
 
-    g_lowLevelIO.SetBasePath(L"..\\Assets\\Audio\\GeneratedSoundBanks\\Windows\\");
-
-    //const wchar_t* finalPath = L"..\\Assets\\Audio\\GeneratedSoundBanks\\Windows\\";
-    //g_lowLevelIO.SetBasePath(finalPath);
+    std::string assetsRoot = LibraryManager::GetAssetsRoot();
+    std::wstring wAssetsRoot(assetsRoot.begin(), assetsRoot.end());
+    std::wstring bankPath = wAssetsRoot + L"\\Audio\\GeneratedSoundBanks\\Windows\\";
+    g_lowLevelIO.SetBasePath(bankPath.c_str());
 
     return true;
 }
@@ -538,7 +538,7 @@ void AudioSystem::DiscoverAuxBuses()
 {
     auxBusNames.clear();
 
-    std::string path = "..\\Assets\\Audio\\GeneratedSoundBanks\\Windows\\MainSoundBank.json";
+    std::string path = LibraryManager::GetAssetsRoot() + "\\Audio\\GeneratedSoundBanks\\Windows\\MainSoundBank.json";
     std::ifstream file(path);
     if (!file.is_open()) {
         LOG_CONSOLE("Audio Error: Could not open MainSoundBank.json at %s", path.c_str());
@@ -598,7 +598,7 @@ void AudioSystem::EventCallBack(AkCallbackType in_eType, AkEventCallbackInfo* in
 void AudioSystem::DiscoverEvents() {
     // Clear existing names to avoid duplicates
     eventNames.clear();
-    std::string path = "..\\Assets\\Audio\\GeneratedSoundBanks\\Windows\\MainSoundBank.json";
+    std::string path = LibraryManager::GetAssetsRoot() + "\\Audio\\GeneratedSoundBanks\\Windows\\MainSoundBank.json";
 
     std::ifstream file(path);
     if (!file.is_open()) {

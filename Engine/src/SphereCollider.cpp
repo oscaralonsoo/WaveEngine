@@ -29,6 +29,7 @@ void SphereCollider::Update()
 
 void SphereCollider::OnEditor()
 {
+#ifndef WAVE_GAME
     OnEditorBase();
 
     ImGui::Separator();
@@ -39,20 +40,27 @@ void SphereCollider::OnEditor()
     {
         SetRadius(r);
     }
+#endif
 }
 
-//void SphereCollider::Save(Config& config)
-//{
-//    SaveBase(config);
-//    config.SetFloat("Radius", radius);
-//}
-//
-//void SphereCollider::Load(Config& config)
-//{
-//    LoadBase(config);
-//    SetRadius(config.GetFloat("Radius", 1.0f));
-//    
-//}
+void SphereCollider::Serialize(nlohmann::json& componentObj) const
+{
+    SerializeBase(componentObj);
+
+    componentObj["Radius"] = radius;
+}
+
+void SphereCollider::Deserialize(const nlohmann::json& componentObj)
+{
+    DeserializeBase(componentObj);
+
+    SetRadius(componentObj.value("Radius", 1.0f));
+
+    Rigidbody* rb = static_cast<Rigidbody*>(owner->GetComponentInParent(ComponentType::RIGIDBODY));
+    if (rb) {
+        rb->CreateBody();
+    }
+}
 
 void SphereCollider::SetRadius(float radius)
 {
@@ -97,3 +105,16 @@ void SphereCollider::DebugShape()
     render->DrawCircle(pos, rot, finalRadius, segments, color, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
     render->DrawCircle(pos, rot, finalRadius, segments, color, glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
 }
+
+//void SphereCollider::Serialize(nlohmann::json& componentObj) const
+//{
+//    Collider::Serialize(componentObj);
+//    componentObj["radius"] = radius;
+//}
+//
+//void SphereCollider::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Collider::Deserialize(componentObj);
+//    if (componentObj.contains("radius"))
+//        SetRadius(componentObj["radius"].get<float>());
+//}

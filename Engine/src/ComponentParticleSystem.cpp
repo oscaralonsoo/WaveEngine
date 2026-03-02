@@ -21,9 +21,12 @@ ComponentParticleSystem::ComponentParticleSystem(GameObject* owner)
     name = "Particle System";
     emitter = new EmitterInstance();
     emitter->Init(); // Initialize default modules
+    Application::GetInstance().renderer.get()->AddParticle(this);
 }
 
 ComponentParticleSystem::~ComponentParticleSystem() {
+    
+    Application::GetInstance().renderer.get()->RemoveParticle(this);
     // Release texture resource reference
     if (textureResourceUID != 0) {
         Application::GetInstance().resources->ReleaseResource(textureResourceUID);
@@ -75,6 +78,7 @@ void ComponentParticleSystem::Update() {
 }
 
 void ComponentParticleSystem::Draw(ComponentCamera* camera) {
+    
     if (!active || !emitter) return;
 
     glUseProgram(0);
@@ -100,10 +104,12 @@ void ComponentParticleSystem::Draw(ComponentCamera* camera) {
     }
     // In WORLD, we don't apply the object's matrix Identity, because particles already have absolute world positions calculated in Update()
     // Draw particles
-    emitter->Draw(camera->GetPosition());
+    emitter->Draw(camera->owner->transform->GetGlobalPosition());
 }
 
 void ComponentParticleSystem::OnEditor() {
+
+    #ifndef WAVE_GAME
     if (ImGui::CollapsingHeader("Particle System", ImGuiTreeNodeFlags_DefaultOpen)) {
         // Control buttons
         ImGui::Checkbox("Active", &active);
@@ -323,6 +329,7 @@ void ComponentParticleSystem::OnEditor() {
         ImGui::Separator();
         ImGui::TextColored(ImVec4(0, 1, 1, 1), "Particles Alive: %d", (int)emitter->particles.size());
     }
+    #endif 
 }
 
 void ComponentParticleSystem::SetTexture(const std::string& path) {
@@ -364,7 +371,7 @@ void ComponentParticleSystem::Serialize(nlohmann::json& componentObj) const {
     componentObj["simulationSpace"] = (int)emitter->simulationSpace;
     componentObj["prewarm"] = emitter->prewarm;
     componentObj["texturePath"] = emitter->texturePath;
-
+    if (textureResourceUID != 0) componentObj["textureUID"] = textureResourceUID;
     componentObj["additive"] = emitter->additiveBlending;
     componentObj["textureRows"] = emitter->textureRows;
     componentObj["textureCols"] = emitter->textureCols;
@@ -433,9 +440,17 @@ void ComponentParticleSystem::Deserialize(const nlohmann::json& componentObj) {
     if (componentObj.contains("emissionRateDist")) emitter->emissionRateDistance = componentObj["emissionRateDist"];
     if (componentObj.contains("simulationSpace")) emitter->simulationSpace = (SimulationSpace)componentObj["simulationSpace"];
     if (componentObj.contains("prewarm")) emitter->prewarm = componentObj["prewarm"];
-
-    if (componentObj.contains("texturePath")) SetTexture(componentObj["texturePath"]);
-
+    if (componentObj.contains("textureUID")) {
+        UID uid = componentObj["textureUID"].get<UID>();
+        if (uid != 0) {
+            const auto& allResources = Application::GetInstance().resources->GetAllResources();
+            auto it = allResources.find(uid);
+            if (it != allResources.end()) {
+                SetTexture(it->second->GetAssetFile());
+            }
+        }
+    }
+    if (emitter->textureID == 0 && componentObj.contains("texturePath")) SetTexture(componentObj["texturePath"]);
     if (componentObj.contains("additive")) emitter->additiveBlending = componentObj["additive"];
     if (componentObj.contains("textureRows")) emitter->textureRows = componentObj["textureRows"];
     if (componentObj.contains("textureCols")) emitter->textureCols = componentObj["textureCols"];

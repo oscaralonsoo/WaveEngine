@@ -4,17 +4,15 @@
 #include <SDL3/SDL_error.h>      // SDL_GetError
 #include <SDL3/SDL.H>
 #include "Module.h"
+#include "EventListener.h"
 
-class Window : public Module
+class Window : public Module, public EventListener
 {
 public:
     Window();
     ~Window();
 
     bool Start() override; 
-
-    // Handle events (returns false if quit requested)
-    bool Update() override;
 
     // Clear screen and present
     void Render();
@@ -29,6 +27,8 @@ public:
     int GetScale() const;
 
     SDL_Window* GetWindow() const { return window; }
+
+    void OnEvent(const Event& event);
 
 private:
     SDL_Window* window;

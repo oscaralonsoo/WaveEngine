@@ -12,17 +12,17 @@ public:
 
     virtual ~EditorWindow() = default;
 
-    // Pure virtual function 
     virtual void Draw() = 0;
 
-    // Window state management
     void SetOpen(bool open) { isOpen = open; }
     bool IsOpen() const { return isOpen; }
     const std::string& GetName() const { return name; }
     bool IsHovered() const { return isHovered; }
+    bool IsFocused() const { return isFocused; }
 
 protected:
     std::string name;
     bool isOpen;
     bool isHovered;
+    bool isFocused;
 };

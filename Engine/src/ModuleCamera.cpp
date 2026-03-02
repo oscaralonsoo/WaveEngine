@@ -1,87 +1,27 @@
 #include "ModuleCamera.h"
+#include "ModuleEvents.h"
 #include "GameObject.h"
 #include "Transform.h"
 #include "Application.h"
 #include "Input.h"
 #include "Window.h"
 
-ModuleCamera::ModuleCamera() : 
-    Module(),
-    editorCameraGO(nullptr),
-    editorCamera(nullptr),
-    sceneCamera(nullptr),
-    useEditorCamera(true)
+ModuleCamera::ModuleCamera() :
+    Module()
 {
+    name = "Camera";
+    mainCamera = nullptr;
+    
 }
 
 ModuleCamera::~ModuleCamera()
 {
+   
 }
 
-bool ModuleCamera::Start()
+bool ModuleCamera::Start() 
 {
-    LOG_DEBUG("Initializing Camera Module");
-
-    editorCameraGO = new GameObject("Editor Camera");
-
-    // Set initial position for editorcamera
-    Transform* transform = static_cast<Transform*>(editorCameraGO->GetComponent(ComponentType::TRANSFORM));
-    if (transform)
-    {
-        transform->SetPosition(glm::vec3(0.0f, 1.5f, 10.0f));
-    }
-
-    editorCamera = static_cast<ComponentCamera*>(editorCameraGO->CreateComponent(ComponentType::CAMERA));
-
-    // Set aspect ratio from window
-    Application& app = Application::GetInstance();
-    int width, height;
-    app.window->GetWindowSize(width, height);
-
-    if (editorCamera && height > 0)
-    {
-        float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
-        editorCamera->SetAspectRatio(aspectRatio);
-    }
-
-    LOG_DEBUG("Camera Module initialized");
-    return true;
-}
-
-bool ModuleCamera::Update()
-{
-    Application& app = Application::GetInstance();
-
-    int width, height;
-    app.window->GetWindowSize(width, height);
-
-    ComponentCamera* activeCamera = GetActiveCamera();
-    if (activeCamera && height > 0)
-    {
-        float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
-        if (aspectRatio != activeCamera->GetAspectRatio())
-        {
-            activeCamera->SetAspectRatio(aspectRatio);
-        }
-    }
-
-    if (useEditorCamera)
-    {
-        HandleEditorControls();
-    }
-
-    // Update active camera
-    if (activeCamera)
-    {
-        activeCamera->Update();
-    }
-
-	// Update scene camera if different from active
-    if (sceneCamera && sceneCamera != activeCamera && sceneCamera->owner)
-    {
-        sceneCamera->Update();
-    }
-
+    Application::GetInstance().events.get()->Subscribe(Event::Type::GameObjectDestroyed, this);
     return true;
 }
 
@@ -89,41 +29,48 @@ bool ModuleCamera::CleanUp()
 {
     LOG_DEBUG("Cleaning up Camera Module");
 
-    if (editorCameraGO)
-    {
-        delete editorCameraGO;
-        editorCameraGO = nullptr;
-        editorCamera = nullptr;
-    }
-
-    sceneCamera = nullptr;
+    Application::GetInstance().events.get()->UnsubscribeAll(this);
+    cameras.clear();
+    mainCamera = nullptr;
 
     return true;
 }
 
-ComponentCamera* ModuleCamera::GetActiveCamera() const
+void ModuleCamera::AddCamera(ComponentCamera* cam) {
+    
+    cameras.push_back(cam);
+}
+
+void ModuleCamera::RemoveCamera(ComponentCamera* cam)
 {
-    if (useEditorCamera)
+    auto it = std::find(cameras.begin(), cameras.end(), cam);
+
+    if (it != cameras.end())
     {
-        return editorCamera;
-    }
-    else
-    {
-        return sceneCamera;
+        cameras.erase(it);
+        LOG_DEBUG("Camera removed from ModuleCamera");
     }
 }
 
-void ModuleCamera::HandleEditorControls()
+
+
+void ModuleCamera::SetMainCamera(ComponentCamera* camera)
 {
-    if (!editorCamera)
-        return;
+    mainCamera = camera;
+}
 
-    Application& app = Application::GetInstance();
+void ModuleCamera::OnEvent(const Event& event)
+{
+    switch (event.type)
+    {
+    case Event::Type::GameObjectDestroyed:
+    {
+        GameObject* deletedObject = event.data.gameObject.gameObject;
+        if (mainCamera && mainCamera->owner == deletedObject) SetMainCamera(nullptr);
+        break;
+    }
 
-    // Mouse wheel for zoom (scroll)
-    // This is already handled in Input.cpp
-
-    // Right mouse button - Handled in Input.cpp
-    // Middle mouse button - Handled in Input.cpp
-    // F key - Focus - Handled in Input.cpp
+    default:
+        break;
+    }
 }

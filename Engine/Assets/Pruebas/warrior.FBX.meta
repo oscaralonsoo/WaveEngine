@@ -1,9 +1,19 @@
-uid: 7031227031558198933
-type: 1
-lastModified: 134153939908809034
-importScale: 1
-generateNormals: 1
-flipUVs: 1
-optimizeMeshes: 1
-upAxis: 0
-frontAxis: 0
+{
+    "animations": {
+        "Take 001": 2464042632846681574
+    },
+    "fileHash": 85876180,
+    "importSettings": {
+        "flipUVs": true,
+        "frontAxis": 0,
+        "generateNormals": true,
+        "importScale": 1.0,
+        "optimizeMeshes": true,
+        "upAxis": 0
+    },
+    "meshes": {
+        "RPG-Character-Mesh": 5434502072278581913
+    },
+    "type": 1,
+    "uid": 1532824112105547964
+}

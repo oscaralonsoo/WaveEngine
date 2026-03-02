@@ -24,6 +24,8 @@ public:
     ReverbZone(GameObject* owner);
     virtual ~ReverbZone();
 
+    void Update() override;
+
     std::string GetBusNameFromID(AkUniqueID id) const;
    
     AkUniqueID GetIDFromBusName(const std::string& name) const;
@@ -38,6 +40,8 @@ public:
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;
     void OnEditor() override;
+
+    void DrawDebug();
 
 public:
     Shape shape = Shape::SPHERE;

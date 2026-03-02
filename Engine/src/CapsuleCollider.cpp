@@ -31,6 +31,7 @@ void CapsuleCollider::Update()
 
 void CapsuleCollider::OnEditor()
 {
+    #ifndef WAVE_GAME
     OnEditorBase();
 
     ImGui::Separator();
@@ -48,21 +49,29 @@ void CapsuleCollider::OnEditor()
     {
         SetHeight(h);
     }
+#endif
 }
 
-//void CapsuleCollider::Save(Config& config)
-//{
-//    SaveBase(config);
-//    config.SetFloat("Radius", radius);
-//    config.SetFloat("Height", height);
-//}
-//
-//void CapsuleCollider::Load(Config& config)
-//{
-//    LoadBase(config);
-//    SetRadius(config.GetFloat("Radius", 0.5f));
-//    SetHeight(config.GetFloat("Height", 1.0f));
-//}
+void CapsuleCollider::Serialize(nlohmann::json& componentObj) const
+{
+    SerializeBase(componentObj);
+
+    componentObj["Radius"] = radius;
+    componentObj["Height"] = height;
+}
+
+void CapsuleCollider::Deserialize(const nlohmann::json& componentObj)
+{
+    DeserializeBase(componentObj);
+
+    SetRadius(componentObj.value("Radius", 0.5f));
+    SetHeight(componentObj.value("Height", 1.0f));
+
+    Rigidbody* rb = static_cast<Rigidbody*>(owner->GetComponentInParent(ComponentType::RIGIDBODY));
+    if (rb) {
+        rb->CreateBody();
+    }
+}
 
 void CapsuleCollider::SetRadius(float radius)
 {
@@ -138,3 +147,18 @@ void CapsuleCollider::DebugShape()
     render->DrawArc(bottomCenter, rot, finalRadius, 8, color, localForward, -localUp);
 }
 
+//void CapsuleCollider::Serialize(nlohmann::json& componentObj) const
+//{
+//    Collider::Serialize(componentObj);
+//    componentObj["radius"] = radius;
+//    componentObj["height"] = height;
+//}
+//
+//void CapsuleCollider::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Collider::Deserialize(componentObj);
+//    if (componentObj.contains("radius"))
+//        SetRadius(componentObj["radius"].get<float>());
+//    if (componentObj.contains("height"))
+//        SetHeight(componentObj["height"].get<float>());
+//}

@@ -17,10 +17,16 @@ public:
     void EnableMotor(bool b);
     void SetDriveVelocity(float v);
 
+    virtual void Serialize(nlohmann::json& componentObj) const;
+    virtual void Deserialize(const nlohmann::json& componentObj);
+
     //void Save(Config& config) override;
     //void Load(Config& config) override;
     void OnEditor() override;
     void DrawDebug() override;
+
+    //void Serialize(nlohmann::json& componentObj) const override;
+    //void Deserialize(const nlohmann::json& componentObj) override;
 
 private:
 

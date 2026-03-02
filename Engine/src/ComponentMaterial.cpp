@@ -9,6 +9,7 @@
 #include "Log.h"
 #include <glad/glad.h>
 #include <SDL3/SDL_timer.h>
+#include "imgui.h" 
 
 ComponentMaterial::ComponentMaterial(GameObject* owner)
     : Component(owner, ComponentType::MATERIAL),
@@ -37,6 +38,7 @@ void ComponentMaterial::Update()
 
 void ComponentMaterial::OnEditor()
 {
+    #ifndef WAVE_GAME
     if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
     {
         // Unified Shader Selector
@@ -354,6 +356,7 @@ void ComponentMaterial::OnEditor()
             changed = true;
         }
     }
+    #endif // !1
 }
 
 void ComponentMaterial::ReleaseCurrentTexture()
@@ -700,3 +703,5 @@ void ComponentMaterial::ReloadTexture()
     LOG_DEBUG("[ComponentMaterial] Texture reloaded successfully (GPU_ID: %u)",
         texResource->GetGPU_ID());
 }
+
+

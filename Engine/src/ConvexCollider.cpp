@@ -12,6 +12,7 @@ ConvexCollider::ConvexCollider(GameObject* owner) : Collider(owner) {
     
     name = "Convex Collider";
     cookedMesh = nullptr;
+    type = ComponentType::CONVEX_COLLIDER;
     CookMesh();
 }
 
@@ -42,7 +43,7 @@ void ConvexCollider::CookMesh() {
     
     ComponentMesh* meshRenderer = (ComponentMesh*)owner->GetComponent(ComponentType::MESH);
 
-    bool hasValidMesh = meshRenderer && meshRenderer->HasMesh() && !meshRenderer->GetNumVertices() == 0;
+    bool hasValidMesh = meshRenderer && meshRenderer->HasMesh() && meshRenderer->GetNumVertices() != 0;
 
     if (cookedMesh) {
         cookedMesh->release();
@@ -69,6 +70,7 @@ void ConvexCollider::CookMesh() {
 }
 
 void ConvexCollider::OnEditor() {
+#ifndef WAVE_GAME
     OnEditorBase();
     ImGui::Separator();
 
@@ -85,16 +87,19 @@ void ConvexCollider::OnEditor() {
         CookMesh();
         if (attachedRigidbody) attachedRigidbody->CreateBody();
     }
+#endif
 }
 
-//void ConvexCollider::Save(Config& config)
-//{
-//
-//}
-//void ConvexCollider::Load(Config& config)
-//{
-//
-//}
+void ConvexCollider::Serialize(nlohmann::json& componentObj) const {
+    SerializeBase(componentObj);
+}
+
+void ConvexCollider::Deserialize(const nlohmann::json& componentObj) {
+    DeserializeBase(componentObj);
+    CookMesh();
+    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::RIGIDBODY);
+    if (rb) rb->CreateBody();
+}
 
 void ConvexCollider::DebugShape() {
     
@@ -150,3 +155,14 @@ void ConvexCollider::OnGameObjectEvent(GameObjectEvent event, Component* compone
 
     Collider::OnGameObjectEvent(event, component);
 }
+
+//void ConvexCollider::Serialize(nlohmann::json& componentObj) const
+//{
+//    Collider::Serialize(componentObj);
+//}
+//
+//void ConvexCollider::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Collider::Deserialize(componentObj);
+//    CookMesh();
+//}

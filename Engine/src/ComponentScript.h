@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <variant>
+#include "glm/glm.hpp"
 
 extern "C" {
 #include <lua.h>

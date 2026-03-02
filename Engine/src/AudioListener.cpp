@@ -72,6 +72,7 @@ void AudioListener::Deserialize(const nlohmann::json& componentObj) {
 }
 
 void AudioListener::OnEditor() {
+    #ifndef WAVE_GAME
     ImGui::Text("This object is acting as the 3D ears of the scene.");
 
     if (ImGui::Checkbox("Is Default Listener", &isDefault)) {
@@ -83,4 +84,6 @@ void AudioListener::OnEditor() {
     if (ImGui::Button("Set as Default Listener (Now)")) {
         SetAsDefaultListener();
     }
+
+    #endif 
 }

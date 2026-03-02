@@ -24,6 +24,8 @@ public:
     void Serialize(nlohmann::json& componentObj) const override;
     void Deserialize(const nlohmann::json& componentObj) override;
 
+    EmitterInstance* GetEmitter() { return emitter; }
+
     // Resource Management
     void SetTexture(const std::string& path);
 

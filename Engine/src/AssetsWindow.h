@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "EventListener.h"
 #include "EditorWindow.h"
 #include <string>
 #include <vector>
@@ -31,7 +32,7 @@ struct AssetEntry
     // Para FBX expandibles
     bool isFBX;
     bool isExpanded;
-    std::vector<AssetEntry> subMeshes;
+    std::vector<AssetEntry> subResources;
 
     // Preview/thumbnail
     unsigned int previewTextureID = 0;
@@ -46,25 +47,27 @@ enum class DragDropAssetType
     MESH,           // Mesh individual
     TEXTURE,        // Texture (PNG, JPG, DDS, etc)
     SCRIPT,         // Lua script
-    PREFAB
+    PREFAB,
+    ANIMATION
 };
 
 // Payload para drag & drop interno
 struct DragDropPayload
 {
     std::string assetPath;
-    unsigned long long assetUID;
+    UID assetUID;
     DragDropAssetType assetType;
 };
 
-class AssetsWindow : public EditorWindow
+class AssetsWindow : public EditorWindow, public EventListener
 {
 public:
     AssetsWindow();
     ~AssetsWindow();
 
     void Draw() override;
-
+    
+    ScriptEditorWindow* scriptEditorWindow;  
 private:
     void RefreshAssets();
     void ScanDirectory(const fs::path& directory, std::vector<AssetEntry>& outAssets);
@@ -82,7 +85,7 @@ private:
     bool DeleteDirectory(const fs::path& dirPath);
 
     // Funciones para expandir FBX
-    void LoadFBXSubMeshes(AssetEntry& fbxAsset);
+    void LoadFBXSubresources(AssetEntry& fbxAsset);
     void DrawExpandableAssetItem(AssetEntry& asset, std::string& pathPendingToLoad);
 
     // Preview/Thumbnail system
@@ -92,24 +95,18 @@ private:
     unsigned int RenderMultipleMeshesToTexture(const std::vector<const Mesh*>& meshes, int width, int height);
 
     // Drag & Drop from external files
-    void HandleExternalDragDrop();
+    void HandleExternalDragDrop(const std::string& filePath);
     bool ProcessDroppedFile(const std::string& sourceFilePath);
     bool CopyFileToAssets(const std::string& sourceFilePath, std::string& outDestPath);
-    bool ImportAssetToLibrary(const std::string& assetPath);
-
-    // Import helpers
-    bool ImportTextureToLibrary(const std::string& assetPath, const MetaFile& meta);
-    bool ImportFBXToLibrary(const std::string& assetPath, const MetaFile& meta);
 
     // Script management
     void CreateNewScript(const std::string& scriptName);
     std::string GetDefaultScriptTemplate();
 
-    // Test function (temporal)
-    bool TestImportSystem();
-
     void HandlePrefabCreationDrop(const std::string& prefabName);
     bool CreatePrefabFromGameObject(GameObject* obj, const std::string& prefabPath);
+    
+    void OnEvent(const Event& event) override;
 
     std::string assetsRootPath;
     std::string currentPath;
@@ -127,5 +124,5 @@ private:
     std::unordered_set<std::string> expandedFBXPaths;
 
     ImportSettingsWindow* importSettingsWindow;
-    ScriptEditorWindow* scriptEditorWindow;  
+
 };

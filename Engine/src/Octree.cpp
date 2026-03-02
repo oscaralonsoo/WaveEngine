@@ -14,9 +14,36 @@
 
 // OctreeNode Implementation
 
+inline bool RayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir,
+    const glm::vec3& aabbMin, const glm::vec3& aabbMax,
+    float& distance)
+{
+    // Compute inverse direction to avoid division in loop
+    glm::vec3 invDir;
+    invDir.x = (std::abs(rayDir.x) > 0.0001f) ? 1.0f / rayDir.x : std::numeric_limits<float>::max();
+    invDir.y = (std::abs(rayDir.y) > 0.0001f) ? 1.0f / rayDir.y : std::numeric_limits<float>::max();
+    invDir.z = (std::abs(rayDir.z) > 0.0001f) ? 1.0f / rayDir.z : std::numeric_limits<float>::max();
+
+    glm::vec3 t0 = (aabbMin - rayOrigin) * invDir;
+    glm::vec3 t1 = (aabbMax - rayOrigin) * invDir;
+
+    glm::vec3 tmin = glm::min(t0, t1);
+    glm::vec3 tmax = glm::max(t0, t1);
+
+    float tNear = glm::max(glm::max(tmin.x, tmin.y), tmin.z);
+    float tFar = glm::min(glm::min(tmax.x, tmax.y), tmax.z);
+
+    if (tNear > tFar || tFar < 0.0f)
+    {
+        return false;
+    }
+
+    distance = (tNear > 0.0f) ? tNear : tFar;
+    return true;
+}
+
 OctreeNode::OctreeNode(const glm::vec3& min, const glm::vec3& max, int maxObjects, int maxDepth, int currentDepth)
-    : box_min(min)
-    , box_max(max)
+    : box(AABB{ min, max })
     , max_objects(maxObjects)
     , max_depth(maxDepth)
     , current_depth(currentDepth)
@@ -44,8 +71,8 @@ bool OctreeNode::GetObjectWorldAABB(GameObject* obj, glm::vec3& outMin, glm::vec
         return false;
 
     // Get AABB in local space
-    glm::vec3 localMin = mesh->GetAABBMin();
-    glm::vec3 localMax = mesh->GetAABBMax();
+    glm::vec3 localMin = mesh->GetAABB().min;
+    glm::vec3 localMax = mesh->GetAABB().max;
 
     // Transform to world space (transform all 8 corners and recalculate AABB)
     glm::mat4 globalMatrix = transform->GetGlobalMatrix();
@@ -98,9 +125,9 @@ bool OctreeNode::Insert(GameObject* obj)
         return false;
 
     // Check if object is completely outside this node
-    if (worldMax.x < box_min.x || worldMin.x > box_max.x ||
-        worldMax.y < box_min.y || worldMin.y > box_max.y ||
-        worldMax.z < box_min.z || worldMin.z > box_max.z)
+    if (worldMax.x < box.min.x || worldMin.x > box.max.x ||
+        worldMax.y < box.min.y || worldMin.y > box.max.y ||
+        worldMax.z < box.min.z || worldMin.z > box.max.z)
     {
         return false; // Object is outside this node
     }
@@ -256,56 +283,56 @@ void OctreeNode::CollapseIfPossible()
 
 void OctreeNode::Subdivide()
 {
-    glm::vec3 center = (box_min + box_max) * 0.5f;
+    glm::vec3 center = (box.min + box.max) * 0.5f;
 
     // Create 8 children
     // Bottom 4 (lower half in Y)
     children[0] = new OctreeNode(
-        glm::vec3(box_min.x, box_min.y, box_min.z),
+        glm::vec3(box.min.x, box.min.y, box.min.z),
         glm::vec3(center.x, center.y, center.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[1] = new OctreeNode(
-        glm::vec3(center.x, box_min.y, box_min.z),
-        glm::vec3(box_max.x, center.y, center.z),
+        glm::vec3(center.x, box.min.y, box.min.z),
+        glm::vec3(box.max.x, center.y, center.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[2] = new OctreeNode(
-        glm::vec3(box_min.x, box_min.y, center.z),
-        glm::vec3(center.x, center.y, box_max.z),
+        glm::vec3(box.min.x, box.min.y, center.z),
+        glm::vec3(center.x, center.y, box.max.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[3] = new OctreeNode(
-        glm::vec3(center.x, box_min.y, center.z),
-        glm::vec3(box_max.x, center.y, box_max.z),
+        glm::vec3(center.x, box.min.y, center.z),
+        glm::vec3(box.max.x, center.y, box.max.z),
         max_objects, max_depth, current_depth + 1
     );
 
     // Top 4 (upper half in Y)
     children[4] = new OctreeNode(
-        glm::vec3(box_min.x, center.y, box_min.z),
-        glm::vec3(center.x, box_max.y, center.z),
+        glm::vec3(box.min.x, center.y, box.min.z),
+        glm::vec3(center.x, box.max.y, center.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[5] = new OctreeNode(
-        glm::vec3(center.x, center.y, box_min.z),
-        glm::vec3(box_max.x, box_max.y, center.z),
+        glm::vec3(center.x, center.y, box.min.z),
+        glm::vec3(box.max.x, box.max.y, center.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[6] = new OctreeNode(
-        glm::vec3(box_min.x, center.y, center.z),
-        glm::vec3(center.x, box_max.y, box_max.z),
+        glm::vec3(box.min.x, center.y, center.z),
+        glm::vec3(center.x, box.max.y, box.max.z),
         max_objects, max_depth, current_depth + 1
     );
 
     children[7] = new OctreeNode(
         glm::vec3(center.x, center.y, center.z),
-        glm::vec3(box_max.x, box_max.y, box_max.z),
+        glm::vec3(box.max.x, box.max.y, box.max.z),
         max_objects, max_depth, current_depth + 1
     );
 }
@@ -458,7 +485,7 @@ GameObject* OctreeNode::RayPick(const Ray& ray, float& outDistance) const
 {
     // Check if ray intersects this node's AABB
     float distance;
-    if (!RayIntersectsAABB(ray.origin, ray.direction, box_min, box_max, distance))
+    if (!RayIntersectsAABB(ray.origin, ray.direction, box.min, box.max, distance))
     {
         return nullptr;
     }
@@ -515,155 +542,46 @@ int OctreeNode::GetObjectCount() const
 
 void OctreeNode::DebugDraw() const
 {
-    // Skip drawing empty leaf nodes
     if (IsLeaf() && objects.empty())
         return;
 
-    // Crear las 8 esquinas del AABB
+    glm::vec4 color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+
     glm::vec3 corners[8] = {
-        // Bottom face
-        glm::vec3(box_min.x, box_min.y, box_min.z), // 0
-        glm::vec3(box_max.x, box_min.y, box_min.z), // 1
-        glm::vec3(box_max.x, box_min.y, box_max.z), // 2
-        glm::vec3(box_min.x, box_min.y, box_max.z), // 3
-        // Top face
-        glm::vec3(box_min.x, box_max.y, box_min.z), // 4
-        glm::vec3(box_max.x, box_max.y, box_min.z), // 5
-        glm::vec3(box_max.x, box_max.y, box_max.z), // 6
-        glm::vec3(box_min.x, box_max.y, box_max.z)  // 7
+        glm::vec3(box.min.x, box.min.y, box.min.z),
+        glm::vec3(box.max.x, box.min.y, box.min.z),
+        glm::vec3(box.max.x, box.min.y, box.max.z),
+        glm::vec3(box.min.x, box.min.y, box.max.z),
+
+        glm::vec3(box.min.x, box.max.y, box.min.z),
+        glm::vec3(box.max.x, box.max.y, box.min.z),
+        glm::vec3(box.max.x, box.max.y, box.max.z),
+        glm::vec3(box.min.x, box.max.y, box.max.z)
     };
 
-    std::vector<float> lineVertices;
-    lineVertices.reserve(24 * 3); // 12 edges * 2 points * 3 coords
+    auto* renderer = Application::GetInstance().renderer.get();
 
-    // Bottom face edges (4 lines)
     for (int i = 0; i < 4; ++i)
     {
-        int next = (i + 1) % 4;
-        lineVertices.insert(lineVertices.end(), {
-            corners[i].x, corners[i].y, corners[i].z,
-            corners[next].x, corners[next].y, corners[next].z
-            });
+        renderer->DrawLine(corners[i], corners[(i + 1) % 4], color);
     }
 
-    // Top face edges (4 lines)
     for (int i = 4; i < 8; ++i)
     {
         int next = 4 + ((i - 4 + 1) % 4);
-        lineVertices.insert(lineVertices.end(), {
-            corners[i].x, corners[i].y, corners[i].z,
-            corners[next].x, corners[next].y, corners[next].z
-            });
+        renderer->DrawLine(corners[i], corners[next], color);
     }
 
-    // Vertical edges (4 lines)
     for (int i = 0; i < 4; ++i)
     {
-        lineVertices.insert(lineVertices.end(), {
-            corners[i].x, corners[i].y, corners[i].z,
-            corners[i + 4].x, corners[i + 4].y, corners[i + 4].z
-            });
+        renderer->DrawLine(corners[i], corners[i + 4], color);
     }
-
-    // Crear VAO/VBO temporal para las líneas
-    GLuint vao, vbo;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, lineVertices.size() * sizeof(float),
-        lineVertices.data(), GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-
-    // Obtener cámara y renderer
-    ComponentCamera* camera = Application::GetInstance().camera->GetActiveCamera();
-    if (!camera)
-    {
-        glBindVertexArray(0);
-        glDeleteBuffers(1, &vbo);
-        glDeleteVertexArrays(1, &vao);
-        return;
-    }
-
-    Renderer* renderer = Application::GetInstance().renderer.get();
-    if (!renderer)
-    {
-        glBindVertexArray(0);
-        glDeleteBuffers(1, &vbo);
-        glDeleteVertexArrays(1, &vao);
-        return;
-    }
-
-    Shader* lineShader = renderer->GetLineShader();
-
-    if (lineShader)
-    {
-        lineShader->Use();
-        GLuint shaderProgram = lineShader->GetProgramID();
-
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
-            1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
-            1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"),
-            1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-
-        // Color based on node depth and occupancy
-        float colorFactor = 1.0f - (current_depth / (float)max_depth);
-        glm::vec3 color;
-
-        if (!objects.empty())
-        {
-            // Nodes with objects are more visible
-            color = glm::vec3(1.0f, colorFactor * 0.5f + 0.5f, 0.0f); // Orange to yellow
-        }
-        else
-        {
-            // Empty nodes are dimmer
-            color = glm::vec3(0.3f, colorFactor * 0.3f, 0.0f); // Dark orange
-        }
-
-        GLint colorLoc = glGetUniformLocation(shaderProgram, "color");
-        if (colorLoc == -1)
-            colorLoc = glGetUniformLocation(shaderProgram, "tintColor");
-
-        if (colorLoc != -1)
-        {
-            glUniform3fv(colorLoc, 1, glm::value_ptr(color));
-        }
-
-        glDisable(GL_DEPTH_TEST);
-
-        float lineWidth = !objects.empty() ? 2.0f : 1.0f;
-        glLineWidth(lineWidth);
-        glDrawArrays(GL_LINES, 0, lineVertices.size() / 3);
-        glLineWidth(1.0f);
-
-        glEnable(GL_DEPTH_TEST);
-    }
-
-    // Cleanup
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
 
     if (!IsLeaf())
     {
         for (int i = 0; i < 8; ++i)
         {
-            if (children[i] != nullptr)
-            {
-                children[i]->DebugDraw();
-            }
+            if (children[i]) children[i]->DebugDraw();
         }
-    }
-
-    // Restore default shader
-    if (renderer)
-    {
-        renderer->GetDefaultShader()->Use();
     }
 }

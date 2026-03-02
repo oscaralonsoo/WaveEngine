@@ -15,6 +15,7 @@ HingeJoint::HingeJoint(GameObject* owner) : Joint(owner)
 HingeJoint::~HingeJoint() {}
 
 void HingeJoint::CreateJoint() {
+
     auto* physics = Application::GetInstance().physics->GetPhysics();
 
     if (!physics || !bodyA || !bodyA->GetActor()) return;
@@ -110,25 +111,42 @@ void HingeJoint::SetDriveVelocity(float v) {
     }
 }
 
-//void HingeJoint::Save(Config& config) {
-//    SaveBase(config);
-//    config.SetBool("EnableLimits", limitsEnabled);
-//    config.SetFloat("MinAngle", minAngle);
-//    config.SetFloat("MaxAngle", maxAngle);
-//    config.SetBool("EnableMotor", motorEnabled);
-//    config.SetFloat("DriveVelocity", driveVelocity);
-//}
-//
-//void HingeJoint::Load(Config& config) {
-//    LoadBase(config);
-//    EnableLimits(config.GetBool("EnableLimits"));
-//    SetMinAngle(config.GetFloat("MinAngle"));
-//    SetMaxAngle(config.GetFloat("MaxAngle"));
-//    EnableMotor(config.GetBool("EnableMotor"));
-//    SetDriveVelocity(config.GetFloat("DriveVelocity"));
-//}
+void HingeJoint::Serialize(nlohmann::json& componentObj) const
+{
+    SerializeBase(componentObj);
+
+    componentObj["Limits"] = {
+        {"Enabled", limitsEnabled},
+        {"Min", minAngle},
+        {"Max", maxAngle}
+    };
+
+    componentObj["Motor"] = {
+        {"Enabled", motorEnabled},
+        {"Velocity", driveVelocity}
+    };
+}
+
+void HingeJoint::Deserialize(const nlohmann::json& componentObj)
+{
+    DeserializeBase(componentObj);
+    if (componentObj.contains("Limits")) {
+        auto limits = componentObj["Limits"];
+        EnableLimits(limits.value("Enabled", false));
+        SetMinAngle(limits.value("Min", -45.0f));
+        SetMaxAngle(limits.value("Max", 45.0f));
+    }
+
+    if (componentObj.contains("Motor")) {
+        auto motor = componentObj["Motor"];
+        EnableMotor(motor.value("Enabled", false));
+        SetDriveVelocity(motor.value("Velocity", 0.0f));
+    }
+    RefreshJoint();
+}
 
 void HingeJoint::OnEditor() {
+#ifndef WAVE_GAME
     OnEditorBase();
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -147,6 +165,7 @@ void HingeJoint::OnEditor() {
         if (ImGui::InputFloat("Velocity", &driveVelocity)) SetDriveVelocity(driveVelocity);
         ImGui::TreePop();
     }
+#endif 
 }
 
 void HingeJoint::DrawDebug() 
@@ -208,3 +227,30 @@ void HingeJoint::DrawDebug()
         render->DrawLine(pRef, pRef + dirNeedle * (radius * 0.8f), glm::vec4(1, 1, 0, 1));
     }
 }
+
+//void HingeJoint::Serialize(nlohmann::json& componentObj) const
+//{
+//    Joint::Serialize(componentObj);
+//    componentObj["limitsEnabled"] = limitsEnabled;
+//    componentObj["minAngle"] = minAngle;
+//    componentObj["maxAngle"] = maxAngle;
+//    componentObj["motorEnabled"] = motorEnabled;
+//    componentObj["driveVelocity"] = driveVelocity;
+//}
+//
+//void HingeJoint::Deserialize(const nlohmann::json& componentObj)
+//{
+//    Joint::Deserialize(componentObj);
+//
+//    if (componentObj.contains("minAngle"))
+//        SetMinAngle(componentObj["minAngle"].get<float>());
+//    if (componentObj.contains("maxAngle"))
+//        SetMaxAngle(componentObj["maxAngle"].get<float>());
+//    if (componentObj.contains("limitsEnabled"))
+//        EnableLimits(componentObj["limitsEnabled"].get<bool>());
+//
+//    if (componentObj.contains("driveVelocity"))
+//        SetDriveVelocity(componentObj["driveVelocity"].get<float>());
+//    if (componentObj.contains("motorEnabled"))
+//        EnableMotor(componentObj["motorEnabled"].get<bool>());
+//}

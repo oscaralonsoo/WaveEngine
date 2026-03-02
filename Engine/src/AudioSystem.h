@@ -64,11 +64,6 @@ public:
 	
 	*/
 
-	////audio engine functions
-	//void PlayEngine();
-	//void PauseEngine();
-	//void StopEngine();
-
 
 	void SetGlobalVolume(float volume);
 	float GetGlobalVolume() { return globalVolume; }
@@ -95,9 +90,7 @@ public:
 		}
 	}
 
-	//void RegisterGameObject(AkGameObjectID id, const char* name);
-	//void UnregisterGameObject(AkGameObjectID id);
-	//void SetPosition(AkGameObjectID id, const glm::vec3& pos, const glm::vec3& front, const glm::vec3& top);
+	std::vector<AudioEvent*> GetAudioEvents() { return audioEvents; }
 
 	// Reverb zone registration
 	void RegisterReverbZone(ReverbZone* zone);
@@ -134,6 +127,7 @@ private:
 	// set aux send helper
 	void SetGameObjectAuxSend(AkGameObjectID id, AkUniqueID busId, float controlValue);
 	
+	
 	float globalVolume = 100.0f;
 
 	std::vector<AkGameObjectID> gameObjectIDs;
@@ -145,6 +139,7 @@ public:
 
 	// list of events
 	std::vector<std::string> eventNames;
+	
 
 	// registered reverb zones
 	std::vector<ReverbZone*> reverbZones;
