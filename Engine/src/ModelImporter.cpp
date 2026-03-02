@@ -168,31 +168,46 @@ Model ModelImporter::ImportFromFile(const std::string& file_path)
 
     return model;
 }
+
 GameObject* ModelImporter::ProcessNode(aiNode* node, const aiScene* scene, const std::string& directory, std::map<std::string, UID>& referedMeshes)
 {
-    std::string nodeName = node->mName.C_Str();
+    aiMatrix4x4 accumulatedTransform = node->mTransformation;
+    aiNode* currentNode = node;
+
+    while (currentNode->mNumChildren == 1 &&
+        std::string(currentNode->mChildren[0]->mName.C_Str()).find("_$AssimpFbx$_") != std::string::npos)
+    {
+        currentNode = currentNode->mChildren[0];
+        accumulatedTransform = accumulatedTransform * currentNode->mTransformation;
+    }
+
+    std::string nodeName = currentNode->mName.C_Str();
+
     if (nodeName.empty()) nodeName = "Unnamed";
 
     GameObject* gameObject = new GameObject(nodeName);
-    gameObject->objectUID = 0;
+
+    if (gameObject->name.find("_$AssimpFbx$_") != std::string::npos) {
+        
+        gameObject->name = "Pivot Node";
+    }
 
     Transform* transform = static_cast<Transform*>(gameObject->GetComponent(ComponentType::TRANSFORM));
 
-    if (transform != nullptr)
-    {
-        aiVector3D position, scaling;
-        aiQuaternion rotation;
-        node->mTransformation.Decompose(scaling, rotation, position);
+    if (transform) {
+        aiVector3D pos, sca;
+        aiQuaternion rot;
+        accumulatedTransform.Decompose(sca, rot, pos);
 
-        transform->SetPosition(glm::vec3(position.x, position.y, position.z));
-        transform->SetScale(glm::vec3(scaling.x, scaling.y, scaling.z));
-        transform->SetRotationQuat(glm::quat(rotation.w, rotation.x, rotation.y, rotation.z));
+        transform->SetPosition(glm::vec3(pos.x, pos.y, pos.z));
+        transform->SetScale(glm::vec3(sca.x, sca.y, sca.z));
+        transform->SetRotationQuat(glm::quat(rot.w, rot.x, rot.y, rot.z));
     }
 
-    // Process meshes for this node
-    for (unsigned int i = 0; i < node->mNumMeshes; i++)
+
+    for (unsigned int i = 0; i < currentNode->mNumMeshes; i++)
     {
-        unsigned int meshIndex = node->mMeshes[i];
+        unsigned int meshIndex = currentNode->mMeshes[i];
         aiMesh* aiMesh = scene->mMeshes[meshIndex];
         std::string meshName = aiMesh->mName.C_Str();
         if (meshName.empty()) {
@@ -341,9 +356,9 @@ GameObject* ModelImporter::ProcessNode(aiNode* node, const aiScene* scene, const
     }
 
     // Process child nodes recursively
-    for (unsigned int i = 0; i < node->mNumChildren; i++)
+    for (unsigned int i = 0; i < currentNode->mNumChildren; i++)
     {
-        GameObject* child = ProcessNode(node->mChildren[i], scene, directory, referedMeshes);
+        GameObject* child = ProcessNode(currentNode->mChildren[i], scene, directory, referedMeshes);
         if (child != nullptr)
         {
             gameObject->AddChild(child);

@@ -356,7 +356,7 @@ target_link_libraries(Engine PRIVATE
     "${WWISE_LIB_DIR}/AkStreamMgr.lib"
     "${WWISE_LIB_DIR}/AkSpatialAudio.lib"
     $<$<CONFIG:Debug>:${WWISE_LIB_DIR}/CommunicationCentral.lib>
-    $<$<NOT:<CONFIG:Release>>:${WWISE_LIB_DIR}/CommunicationCentral.lib>
+    $<$<NOT:<CONFIG:Release>>:${WWISE_LIB_DIR}/CommunicationCentral.lib>   
     "${WWISE_LIB_DIR}/AkRoomVerbFX.lib"
     ws2_32.lib 
     mswsock.lib 

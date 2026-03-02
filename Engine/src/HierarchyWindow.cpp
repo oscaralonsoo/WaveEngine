@@ -32,7 +32,7 @@ void HierarchyWindow::Draw()
         for (GameObject* child : root->GetChildren())
         {
             if (child != nullptr)
-            {
+            {   
                 DrawGameObjectNode(child);
 
                 if (ImGui::BeginDragDropTarget())
