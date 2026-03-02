@@ -56,18 +56,16 @@ bool ModuleEditor::Start()
     LOG_DEBUG("Initializing Editor");
 
     IMGUI_CHECKVERSION();
-    std::string layoutPath = layoutDirectory + currentLayoutFile;
-    fs::copy_file(layoutDirectory + defaultLayoutFile, layoutPath, fs::copy_options::overwrite_existing);
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    ImGui::LoadIniSettingsFromDisk(io.IniFilename);
-
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
     std::filesystem::create_directories(layoutDirectory);
     std::filesystem::create_directories("../Scene");
 
     // Setup layout file path
+    std::string layoutPath = layoutDirectory + currentLayoutFile;
     static std::string layoutPathStatic = layoutPath;
     io.IniFilename = autoSaveLayout ? layoutPathStatic.c_str() : nullptr;
 
@@ -391,8 +389,7 @@ void ModuleEditor::ShowMenuBar()
 
         if (ImGui::BeginMenu("GameObject"))
         {
-
-            if (ImGui::BeginMenu("3D Primitives"))
+            if (ImGui::BeginMenu("Create Primitive"))
             {
                 if (ImGui::MenuItem("Cube"))
                 {
@@ -419,21 +416,7 @@ void ModuleEditor::ShowMenuBar()
 
             ImGui::Separator();
 
-            if (ImGui::BeginMenu("UI"))
-            {
-                if (ImGui::MenuItem("Create Canvas"))
-                {
-                    GameObject* canvasGO = new GameObject("Canvas");
-                    canvasGO->CreateComponent(ComponentType::CANVAS);
-                    Application::GetInstance().scene->GetRoot()->AddChild(canvasGO);
-                    LOG_CONSOLE("Canvas GameObject created");
-				}
-                ImGui::EndMenu();
-            }
-
-            ImGui::Separator();
- 
-            if (ImGui::MenuItem("Empty GameObject"))
+            if (ImGui::MenuItem("Create Empty"))
             {
                 GameObject* empty = Application::GetInstance().scene->CreateGameObject("GameObject");
                 commandHistory->ExecuteCommand(std::make_unique<CreateCommand>(empty));

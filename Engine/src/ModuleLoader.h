@@ -27,7 +27,7 @@ public:
     bool CleanUp() override;
     
     bool LoadTextureToGameObject(GameObject* obj, const std::string& texturePath);
-    GameObject* LoadFbx(const std::string& assetPath);
+    bool LoadFbx(const std::string& assetPath);
 
 private:
     

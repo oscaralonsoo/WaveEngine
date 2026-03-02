@@ -156,12 +156,11 @@ void SceneWindow::HandleAssetDropTarget()
             {
             case DragDropAssetType::FBX_MODEL:
             {
-                GameObject* loadedModel = Application::GetInstance().loader->LoadFbx(dropData->assetPath);
+                LOG_CONSOLE("Loading FBX model...");
+                bool loadedModel = Application::GetInstance().loader->LoadFbx(dropData->assetPath);
+
                 if (loadedModel)
                 {
-                    Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
-                        std::make_unique<CreateCommand>(loadedModel)
-                    );
                     LOG_CONSOLE("FBX model loaded successfully");
                 }
                 else
@@ -213,7 +212,7 @@ void SceneWindow::HandleAssetDropTarget()
 
                     GameObject* root = Application::GetInstance().scene->GetRoot();
                     root->AddChild(meshObject);
-                    Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+                    Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
                         std::make_unique<CreateCommand>(meshObject)
                     );
                     Application::GetInstance().scene->RebuildOctree();

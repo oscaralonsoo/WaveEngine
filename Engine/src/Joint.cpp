@@ -31,8 +31,6 @@ Joint::Joint(GameObject* owner) : Component(owner, ComponentType::JOINT) {
     if (bodyA) {
         bodyA->RegisterJoint(this);
     }
-
-    Application::GetInstance().physics->RegisterJoint(this);
 }
 
 void Joint::Update()
@@ -52,7 +50,6 @@ void Joint::CleanUp()
         bodyB->UnregisterJoint(this);
     }
 
-    Application::GetInstance().physics->UnregisterJoint(this);
     bodyA = nullptr;
     bodyB = nullptr;
 }
@@ -226,13 +223,6 @@ void Joint::SyncFrames()
 void Joint::OnEditorBase()
 {
     #ifndef WAVE_GAME
-    ImGui::PushID(this);
-
-    ImGui::Checkbox("##ShowDebug", &showDebug);
-    ImGui::SameLine();
-    ImGui::Text("Show Debug");
-    ImGui::Separator();
-
     ImGui::Text("Connections:");
     ImGui::Separator();
 
@@ -337,8 +327,6 @@ void Joint::OnEditorBase()
 
         ImGui::TreePop();
     }
-
-    ImGui::PopID();
     #endif
 }
 

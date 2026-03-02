@@ -39,6 +39,8 @@ void ComponentMaterial::Update()
 void ComponentMaterial::OnEditor()
 {
     #ifndef WAVE_GAME
+    if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+    {
         // Unified Shader Selector
         std::string currentSelection = "Standard";
         if (shaderUID != 0) {
@@ -353,6 +355,7 @@ void ComponentMaterial::OnEditor()
         if (ImGui::Combo("##LightingMode", &lightingMode, modes, IM_ARRAYSIZE(modes))) {
             changed = true;
         }
+    }
     #endif // !1
 }
 

@@ -10,7 +10,6 @@
 #include "ComponentCamera.h"
 #include "ComponentRotate.h"
 #include "ComponentScript.h"
-#include "ComponentCanvas.h"
 #include "Rigidbody.h"
 #include "BoxCollider.h"
 #include "SphereCollider.h"
@@ -45,7 +44,8 @@ GameObject::~GameObject() {
     MarkCleaning();
 
     for (auto* component : components) {
-        componentOwners.clear();
+        component->CleanUp();
+        delete component;
         component = nullptr;
     }
 
@@ -154,9 +154,6 @@ Component* GameObject::CreateComponent(ComponentType type) {
         newComponent = new ComponentNavigation(this);
         break;
 
-    case ComponentType::CANVAS:
-        newComponent = new ComponentCanvas(this);
-	    break;
     case ComponentType::ANIMATION:
         newComponent = new ComponentAnimation(this);
         break;
@@ -167,7 +164,6 @@ Component* GameObject::CreateComponent(ComponentType type) {
     }
 
     if (newComponent) {
-        componentOwners.push_back(std::unique_ptr<Component>(newComponent));
         components.push_back(newComponent);
     }
     

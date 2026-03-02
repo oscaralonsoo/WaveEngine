@@ -44,10 +44,7 @@ void HierarchyWindow::Draw()
                             GameObject* draggedObject = *(GameObject**)payload->Data;
                             if (draggedObject != root)
                             {
-                                int newIndex = static_cast<int>(root->GetChildren().size());
-                                Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
-                                    std::make_unique<ReparentCommand>(draggedObject, root, newIndex)
-                                );
+                                draggedObject->SetParent(root);
                             }
                         }
                         else

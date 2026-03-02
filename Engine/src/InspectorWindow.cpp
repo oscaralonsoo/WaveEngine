@@ -13,7 +13,6 @@
 #include "ComponentCamera.h"
 #include "CameraLens.h"
 #include "ComponentRotate.h"
-#include "ComponentCanvas.h"
 #include "ComponentAnimation.h"
 #include "ResourceTexture.h"
 #include "ComponentParticleSystem.h"
@@ -38,13 +37,6 @@
 #include "TransformCommand.h"
 #include "ModuleEditor.h"
 #include "ComponentCommand.h"
-#include "Joint.h"
-#include "FixedJoint.h"
-#include "DistanceJoint.h"
-#include "HingeJoint.h"
-#include "SphericalJoint.h"
-#include "PrismaticJoint.h"
-#include "D6Joint.h"
 #include "ComponentStateCommand.h"
 #include "CreateCommand.h"
 #include "DeleteCommand.h"
@@ -58,15 +50,8 @@
 
 static nlohmann::json copiedComponentData;
 static ComponentType copiedComponentType = static_cast<ComponentType>(-1);
-//Helpers
-static glm::vec3 JointQuatToEuler(const glm::quat& q) {
-    return glm::degrees(glm::eulerAngles(q));
-}
-static glm::quat JointEulerToQuat(const glm::vec3& deg) {
-    return glm::quat(glm::radians(deg));
-}
 
-void InspectorWindow::DrawComponentContextMenu(Component* component, bool canRemove)
+static void DrawComponentContextMenu(Component* component, bool canRemove = true)
 {
     if (ImGui::BeginPopupContextItem())
     {
@@ -95,11 +80,11 @@ void InspectorWindow::DrawComponentContextMenu(Component* component, bool canRem
 
         if (canRemove)
         {
-            ImGui::Separator();
-            if (ImGui::MenuItem("Remove Component"))
-            {
-                m_PendingRemoval.push_back(component);
-            }
+            //ImGui::Separator();
+            //if (ImGui::MenuItem("Remove Component"))
+            //{
+            //    component->markedForRemoval = true;
+            //}
         }
 
         ImGui::EndPopup();
@@ -112,7 +97,6 @@ InspectorWindow::InspectorWindow()
     Application::GetInstance().events.get()->Subscribe(Event::Type::GameObjectDestroyed, this);
   
 }
-
 InspectorWindow::~InspectorWindow()
 {
     Application::GetInstance().events.get()->UnsubscribeAll(this);
@@ -180,41 +164,6 @@ void InspectorWindow::Draw()
     ImGui::Separator();
     DrawGizmoSettings();
     ImGui::Separator();
-
-    bool isAnyActive = ImGui::IsAnyItemActive();
-
-    if (isAnyActive && !m_WasAnyItemActive)
-    {
-        m_ComponentSnapshots.clear();
-        for (Component* comp : selectedObject->GetComponents())
-        {
-            if (comp->GetType() == ComponentType::TRANSFORM) continue;
-            nlohmann::json snap;
-            comp->Serialize(snap);
-            m_ComponentSnapshots[comp] = snap;
-        }
-    }
-    else if (!isAnyActive && m_WasAnyItemActive)
-    {
-        for (Component* comp : selectedObject->GetComponents())
-        {
-            auto it = m_ComponentSnapshots.find(comp);
-            if (it == m_ComponentSnapshots.end()) continue;
-
-            nlohmann::json after;
-            comp->Serialize(after);
-
-            if (it->second != after)
-            {
-                Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
-                    std::make_unique<ComponentStateCommand>(comp, it->second, after)
-                );
-            }
-        }
-        m_ComponentSnapshots.clear();
-    }
-
-    m_WasAnyItemActive = isAnyActive;
 
     for (Component* component : selectedObject->GetComponents())
     {
@@ -316,13 +265,8 @@ void InspectorWindow::Draw()
             DrawReverbZoneComponent(component);
             break;
 
-            // --- UI ---
-        case ComponentType::CANVAS:
-            DrawCanvasComponent(component);
-			break;
-
-		case ComponentType::UNKNOWN:
-            break;
+            // --- OTROS ---
+        case ComponentType::UNKNOWN:
         default:
             LOG_DEBUG("WARNING: Trying to serialize an UNKNOWN or unhandled component type.");
         }
@@ -333,14 +277,6 @@ void InspectorWindow::Draw()
     ImGui::Spacing();
 
     DrawAddComponentButton(selectedObject);
-
-    for (Component* comp : m_PendingRemoval)
-    {
-        Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
-            std::make_unique<RemoveComponentCommand>(selectedObject, comp)
-        );
-    }
-    m_PendingRemoval.clear();
 
     ImGui::End();
 }
@@ -565,14 +501,12 @@ void InspectorWindow::DrawTransformComponent(Component* component)
 
 void InspectorWindow::DrawCameraComponent(Component* component)
 {
-    ComponentCamera* cameraComp = static_cast<ComponentCamera*>(component);
+    ComponentCamera* cameraComp = (ComponentCamera*)component;
+
     if (cameraComp == nullptr) return;
 
-    // Aplicamos el patrón de salida rápida
-    bool open = ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen);
-    DrawComponentContextMenu(cameraComp, true);
-    if (!open) return;
-
+    if (ImGui::CollapsingHeader("Camera"))
+    {
         float fov = cameraComp->GetLens()->GetFov();
         if (ImGui::DragFloat("FOV", &fov, 0.1f, 1.0f, 160.0f))
         {
@@ -614,6 +548,7 @@ void InspectorWindow::DrawCameraComponent(Component* component)
 
         ImGui::Separator();
         ImGui::Image((ImTextureID)(intptr_t)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+    }
 }
 
 void InspectorWindow::DrawMeshComponent(Component* component)
@@ -622,7 +557,7 @@ void InspectorWindow::DrawMeshComponent(Component* component)
     if (meshComp == nullptr || meshComp->IsType(ComponentType::SKINNED_MESH)) return;
 
     bool open = ImGui::CollapsingHeader("Mesh", ImGuiTreeNodeFlags_DefaultOpen);
-    DrawComponentContextMenu(meshComp, true);
+    DrawComponentContextMenu(meshComp);
     if (open)
     {
         ImGui::Text("Mesh:");
@@ -761,7 +696,6 @@ void InspectorWindow::DrawSkinnedMeshComponent(Component* component)
 
     if (ImGui::CollapsingHeader("Skinned Mesh", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        DrawComponentContextMenu(meshComp, true);
         ImGui::Text("Mesh:");
         ImGui::SameLine();
 
@@ -904,7 +838,7 @@ void InspectorWindow::DrawMaterialComponent(Component* component)
     if (materialComp == nullptr) return;
 
     bool open = ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen);
-    DrawComponentContextMenu(materialComp, true);
+    DrawComponentContextMenu(materialComp);
     if (open) materialComp->OnEditor();
 }
 
@@ -915,7 +849,7 @@ void InspectorWindow::DrawRotateComponent(Component* component)
     if (rotateComp == nullptr) return;
 
     bool open = ImGui::CollapsingHeader("Auto Rotate", ImGuiTreeNodeFlags_DefaultOpen);
-    DrawComponentContextMenu(rotateComp,true);
+    DrawComponentContextMenu(rotateComp);
     if (open)
     {
         bool active = rotateComp->IsActive();
@@ -931,11 +865,11 @@ void InspectorWindow::DrawRotateComponent(Component* component)
 void InspectorWindow::DrawParticleComponent(Component* component)
 {
     ComponentParticleSystem* particleComp = static_cast<ComponentParticleSystem*>(component);
-    if (!particleComp) return;
 
-    bool open = ImGui::CollapsingHeader("Particle System", ImGuiTreeNodeFlags_DefaultOpen);
-    DrawComponentContextMenu(particleComp, true);
-    if (open) particleComp->OnEditor();
+    if (particleComp != nullptr)
+    {
+        particleComp->OnEditor();
+    }
 }
 
 void  InspectorWindow::DrawRigidodyComponent(Component* component)
@@ -945,7 +879,7 @@ void  InspectorWindow::DrawRigidodyComponent(Component* component)
     if (rigidbody != nullptr)
     {
         if (ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(rigidbody, true);
+            // Delegate the ui to the component
             rigidbody->OnEditor();
         }
     }
@@ -958,7 +892,7 @@ void  InspectorWindow::DrawBoxColliderComponent(Component* component)
     if (boxCollider != nullptr)
     {
         if (ImGui::CollapsingHeader("Box Collider", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(boxCollider, true);
+            // Delegate the ui to the component
             boxCollider->OnEditor();
         }
     }
@@ -971,7 +905,7 @@ void  InspectorWindow::DrawSphereColliderComponent(Component* component)
     if (Collider != nullptr)
     {
         if (ImGui::CollapsingHeader("Sphere Collider", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(Collider, true);
+            // Delegate the ui to the component
             Collider->OnEditor();
         }
     }
@@ -984,7 +918,7 @@ void  InspectorWindow::DrawCapsuleColliderComponent(Component* component)
     if (Collider != nullptr)
     {
         if (ImGui::CollapsingHeader("Capsule Collider", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(Collider, true);
+            // Delegate the ui to the component
             Collider->OnEditor();
         }
         
@@ -998,12 +932,11 @@ void  InspectorWindow::DrawPlaneColliderComponent(Component* component)
     if (Collider != nullptr)
     {
         if (ImGui::CollapsingHeader("Plane Collider", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(Collider, true);
+            // Delegate the ui to the component
             Collider->OnEditor();
         }
     }
 }
-
 void  InspectorWindow::DrawInfinitePlaneColliderComponent(Component* component)
 {
     InfinitePlaneCollider* Collider = static_cast<InfinitePlaneCollider*>(component);
@@ -1011,13 +944,12 @@ void  InspectorWindow::DrawInfinitePlaneColliderComponent(Component* component)
     if (Collider != nullptr)
     {
         if (ImGui::CollapsingHeader("Infinite Plane Collider", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(Collider, true);
+            // Delegate the ui to the component
             Collider->OnEditor();
         }
         
     }
 }
-
 void  InspectorWindow::DrawMeshColliderComponent(Component* component)
 {
     MeshCollider* Collider = static_cast<MeshCollider*>(component);
@@ -1025,12 +957,11 @@ void  InspectorWindow::DrawMeshColliderComponent(Component* component)
     if (Collider != nullptr)
     {
         if (ImGui::CollapsingHeader("Mesh Collider", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(Collider, true);
+            // Delegate the ui to the component
             Collider->OnEditor();
         }
     }
 }
-
 void  InspectorWindow::DrawConvexColliderComponent(Component* component)
 {
     ConvexCollider* Collider = static_cast<ConvexCollider*>(component);
@@ -1038,7 +969,7 @@ void  InspectorWindow::DrawConvexColliderComponent(Component* component)
     if (Collider != nullptr)
     {
         if (ImGui::CollapsingHeader("Convex Collider", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(Collider, true);
+            // Delegate the ui to the component
             Collider->OnEditor();
         }
     }
@@ -1051,7 +982,7 @@ void  InspectorWindow::DrawFixedJointComponent(Component* component)
     if (Joint != nullptr)
     {
         if (ImGui::CollapsingHeader("Fixed Joint", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(Joint, true);
+            // Delegate the ui to the component
             Joint->OnEditor();
         }
     }
@@ -1064,7 +995,7 @@ void  InspectorWindow::DrawDistanceJointComponent(Component* component)
     if (Joint != nullptr)
     {
         if (ImGui::CollapsingHeader("Distance Joint", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(Joint, true);
+            // Delegate the ui to the component
             Joint->OnEditor();
         }
     }
@@ -1090,7 +1021,7 @@ void  InspectorWindow::DrawPrismaticJointComponent(Component* component)
     if (Joint != nullptr)
     {
         if (ImGui::CollapsingHeader("Prismatic Joint", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(Joint, true);
+            // Delegate the ui to the component
             Joint->OnEditor();
         }
     }
@@ -1103,7 +1034,7 @@ void  InspectorWindow::DrawSphericalJointComponent(Component* component)
     if (Joint != nullptr)
     {
         if (ImGui::CollapsingHeader("Spherical Joint", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(Joint, true);
+            // Delegate the ui to the component
             Joint->OnEditor();
         }
     }
@@ -1116,89 +1047,22 @@ void  InspectorWindow::DrawD6JointComponent(Component* component)
     if (Joint != nullptr)
     {
         if (ImGui::CollapsingHeader("D6 Joint", ImGuiTreeNodeFlags_DefaultOpen)) {
-            DrawComponentContextMenu(Joint, true);
+            // Delegate the ui to the component
             Joint->OnEditor();
         }
     }
 }
 
+
 void InspectorWindow::DrawAudioSourceComponent(Component* component) {
     AudioSource* source = static_cast<AudioSource*>(component);
     if (!source) return;
 
-    std::string popupID = source->name + "ComponentPopup##" + std::to_string((uintptr_t)component);
-    ImGui::PushID(popupID.c_str());
-    bool open = ImGui::CollapsingHeader(source->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-    DrawComponentContextMenu(source, true);
-    if (open) source->OnEditor();
-    ImGui::PopID();
-}
-
-void InspectorWindow::DrawCanvasComponent(Component* component)
-{
-    ComponentCanvas* canvasComp = static_cast<ComponentCanvas*>(component);
-    if (!canvasComp) return;
-
-    bool open = ImGui::CollapsingHeader("Canvas", ImGuiTreeNodeFlags_DefaultOpen);
-    DrawComponentContextMenu(canvasComp, true);
-    if (!open) return;
-
-    // Scan valid XAML files (skip ResourceDictionary files)
-    std::vector<std::string> xamlFiles;
-    if (std::filesystem::exists("../Assets/UI"))
-    {
-        for (const auto& entry : std::filesystem::directory_iterator("../Assets/UI"))
-        {
-            if (!entry.is_regular_file() || entry.path().extension() != ".xaml") continue;
-            std::ifstream file(entry.path());
-            std::string line;
-            bool valid = false;
-            while (std::getline(file, line))
-            {
-                if (line.find("ResourceDictionary") != std::string::npos) break;
-                if (line.find("FrameworkElement") != std::string::npos ||
-                    line.find("UserControl") != std::string::npos ||
-                    line.find("Window") != std::string::npos ||
-                    line.find("Grid") != std::string::npos ||
-                    line.find("Canvas") != std::string::npos ||
-                    line.find("StackPanel") != std::string::npos)
-                {
-                    valid = true; break;
-                }
-            }
-            if (valid) xamlFiles.push_back(entry.path().filename().string());
-        }
+    bool open = ImGui::CollapsingHeader("Audio Source", ImGuiTreeNodeFlags_DefaultOpen);
+    DrawComponentContextMenu(source);
+    if (open) {
+        source->OnEditor();
     }
-
-    std::string currentName = canvasComp->GetCurrentXAML().empty() ? "None"
-        : std::filesystem::path(canvasComp->GetCurrentXAML()).filename().string();
-
-    ImGui::Text("XAML File:");
-    ImGui::SetNextItemWidth(-1);
-    if (ImGui::BeginCombo("##XAMLSelector", currentName.c_str()))
-    {
-        if (ImGui::Selectable("None", canvasComp->GetCurrentXAML().empty())) canvasComp->UnloadXAML();
-        for (const auto& file : xamlFiles)
-        {
-            bool sel = (currentName == file);
-            if (ImGui::Selectable(file.c_str(), sel))
-                LOG_CONSOLE(canvasComp->LoadXAML(file.c_str()) ? "[Canvas] Loaded: %s" : "[Canvas] Failed: %s", file.c_str());
-            if (sel) ImGui::SetItemDefaultFocus();
-        }
-        if (xamlFiles.empty()) ImGui::TextDisabled("No valid .xaml files found");
-        ImGui::EndCombo();
-    }
-
-    float opacity = canvasComp->GetOpacity();
-    if (ImGui::SliderFloat("Opacity", &opacity, 0.0f, 1.0f)) canvasComp->SetOpacity(opacity);
-
-    ImGui::Separator();
-
-    unsigned int texID = canvasComp->GetTextureID();
-    if (texID != 0)
-        ImGui::Image((ImTextureID)(uintptr_t)texID, ImVec2(256, 144), ImVec2(0, 1), ImVec2(1, 0));
-    else
-        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "No XAML loaded");
 }
 
 void InspectorWindow::DrawAudioListenerComponent(Component* component) {
@@ -1206,7 +1070,7 @@ void InspectorWindow::DrawAudioListenerComponent(Component* component) {
     if (!listener) return;
 
     bool open = ImGui::CollapsingHeader("Audio Listener", ImGuiTreeNodeFlags_DefaultOpen);
-    DrawComponentContextMenu(listener,true);
+    DrawComponentContextMenu(listener);
     if (open) {
         listener->OnEditor();
     }
@@ -1217,12 +1081,11 @@ void InspectorWindow::DrawReverbZoneComponent(Component* component)
     ReverbZone* zone = static_cast<ReverbZone*>(component);
     if (!zone) return;
 
-    std::string popupID = zone->name + "ComponentPopup##" + std::to_string((uintptr_t)component);
-    ImGui::PushID(popupID.c_str());
-    bool open = ImGui::CollapsingHeader(zone->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-	DrawComponentContextMenu(zone, true);
-    if (open) zone->OnEditor();
-    ImGui::PopID();
+    bool open = ImGui::CollapsingHeader("Reverb Zone", ImGuiTreeNodeFlags_DefaultOpen);
+    DrawComponentContextMenu(zone);
+    if (open) {
+        zone->OnEditor();
+    }
 }
 
 void InspectorWindow::DrawNavigationComponent(Component* component)
@@ -1239,125 +1102,130 @@ void InspectorWindow::DrawAnimationComponent(Component* component)
     ComponentAnimation* animation = static_cast<ComponentAnimation*>(component);
     if (!animation) return;
 
-    bool open = ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen);
-    DrawComponentContextMenu(animation, true);
-    if (!open) return;
+    if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Separator();
+        ImGui::Text("Library:");
 
-    ImGui::Separator();
-    ImGui::Text("Library:");
-
-    int i = 0;
-    for (auto it = animation->animationsLibrary.begin(); it != animation->animationsLibrary.end(); )
-    {
-        ImGui::PushID(it->first.c_str());
-
-        bool deleteRequested = false;
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-        bool isNodeOpen = ImGui::TreeNodeEx(it->first.c_str(), flags);
-
-        ImGui::SameLine();
-
-        float buttonWidth = 20.0f;
-        float availableWidth = ImGui::GetContentRegionAvail().x;
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableWidth - buttonWidth);
-
-        if (ImGui::SmallButton("X"))
+        int i = 0;
+        for (auto it = animation->animationsLibrary.begin(); it != animation->animationsLibrary.end(); )
         {
-            deleteRequested = true;
-        }
+            ImGui::PushID(it->first.c_str());
 
-        if (isNodeOpen)
-        {
-            if (!deleteRequested)
+            bool deleteRequested = false;
+
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+            bool isNodeOpen = ImGui::TreeNodeEx(it->first.c_str(), flags);
+
+            ImGui::SameLine();
+
+            float buttonWidth = 20.0f;
+            float availableWidth = ImGui::GetContentRegionAvail().x;
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableWidth - buttonWidth);
+
+            if (ImGui::SmallButton("X"))
             {
-                ImGui::Unindent();
-                ImGui::Text("UID: %d", it->second.uid);
-
-                ImGui::Text("Speed");
-                ImGui::SameLine();
-                float speed = it->second.speed;
-                if (ImGui::InputFloat("##Speed", &speed))
-                {
-                    animation->SetAnimationSpeed(it->first, speed);
-                }
-
-                ImGui::Text("Loop");
-                ImGui::SameLine();
-                bool loop = it->second.loop;
-                if (ImGui::Checkbox("##Loop", &loop))
-                {
-                    animation->SetAnimationLoop(it->first, loop);
-                }
-
-                if (ImGui::Button("Play", ImVec2(-1, 0)))
-                {
-                    animation->Play(it->first, 0.5f);
-                }
-                ImGui::Indent();
+                deleteRequested = true;
             }
 
-            ImGui::TreePop();
-        }
-
-        ImGui::PopID();
-
-        if (deleteRequested)
-        {
-            auto nextIt = it;
-            ++nextIt;
-            animation->RemoveAnimation(it->first);
-            it = nextIt;
-        }
-        else
-        {
-            ++it;
-        }
-        i++;
-    }
-
-    if (i == 0)
-    {
-        ImGui::SameLine();
-        ImGui::Text("empty");
-    }
-
-    ImGui::Separator();
-
-    static char nameBuffer[64] = "New Animation";
-    float availableWidth = ImGui::GetContentRegionAvail().x;
-
-    ImGui::InputText(" ", nameBuffer, 64);
-    ImGui::Button("Drop animation", ImVec2(availableWidth, 20));
-
-    if (ImGui::BeginDragDropTarget())
-    {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_ITEM"))
-        {
-            DragDropPayload* dropData = (DragDropPayload*)payload->Data;
-            UID droppedUID = dropData->assetUID;
-
-            const Resource* res = Application::GetInstance().resources->PeekResource(droppedUID);
-            if (res && res->GetType() == Resource::Type::ANIMATION)
+            if (isNodeOpen)
             {
-                animation->AddAnimation(nameBuffer, droppedUID);
+                if (!deleteRequested)
+                {
+                    ImGui::Unindent();
+                    ImGui::Text("UID: %d", it->second.uid);
+
+
+                    ImGui::Text("Speed");
+                    ImGui::SameLine();
+                    float speed = it->second.speed;
+                    if (ImGui::InputFloat("##Speed", &speed))
+                    {
+                        animation->SetAnimationSpeed(it->first, speed);
+                    }
+
+                    ImGui::Text("Loop");
+                    ImGui::SameLine();
+                    bool loop = it->second.loop;
+                    if (ImGui::Checkbox("##Loop", &loop))
+                    {
+                        animation->SetAnimationLoop(it->first, loop);
+                    }
+
+                    if (ImGui::Button("Play", ImVec2(-1, 0)))
+                    {
+                        animation->Play(it->first, 0.5f);
+                    }
+                    ImGui::Indent();
+                }
+
+                ImGui::TreePop();
             }
+
+            ImGui::PopID();
+
+            if (deleteRequested)
+            {
+                auto nextIt = it;
+                ++nextIt;
+
+                animation->RemoveAnimation(it->first);
+
+                it = nextIt;
+            }
+            else
+            {
+                ++it;
+            }
+            i++;
         }
-        ImGui::EndDragDropTarget();
+
+        if (i == 0)
+        {
+            ImGui::SameLine();
+            ImGui::Text("empty");
+        }
+
+        ImGui::Separator();
+
+        static char nameBuffer[64] = "New Animation";
+        int availableWidth = ImGui::GetContentRegionAvail().x;
+
+        ImGui::InputText(" ", nameBuffer, 64);
+        ImGui::Button("Drop animation", ImVec2(availableWidth, 20));
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_ITEM"))
+            {
+                DragDropPayload* dropData = (DragDropPayload*)payload->Data;
+                UID droppedUID = dropData->assetUID;
+
+                const Resource* res = Application::GetInstance().resources->PeekResource(droppedUID);
+                if (res && res->GetType() == Resource::Type::ANIMATION)
+                {
+                    animation->AddAnimation(nameBuffer, droppedUID);
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
     }
 }
+
 
 bool InspectorWindow::DrawGameObjectSection(GameObject* selectedObject)
 {
     bool objectDeleted = false;
+
     if (ImGui::CollapsingHeader("GameObject", ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::Text("Actions:");
         ImGui::Spacing();
+
         // Delete button
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.1f, 0.1f, 1.0f));
+
         if (ImGui::Button("Delete GameObject", ImVec2(-1, 0)))
         {
             if (selectedObject != Application::GetInstance().scene->GetRoot())
@@ -1375,7 +1243,9 @@ bool InspectorWindow::DrawGameObjectSection(GameObject* selectedObject)
                 LOG_CONSOLE("Cannot delete Root GameObject!");
             }
         }
+
         ImGui::PopStyleColor(3);
+
         if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
@@ -1385,11 +1255,14 @@ bool InspectorWindow::DrawGameObjectSection(GameObject* selectedObject)
             ImGui::Text("Shortcut: Backspace key");
             ImGui::EndTooltip();
         }
+
         ImGui::Spacing();
+
         // Create empty child button
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.3f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.1f, 1.0f));
+
         if (ImGui::Button("Create Empty Child", ImVec2(-1, 0)))
         {
             GameObject* newChild = Application::GetInstance().scene->CreateGameObject("Empty");
@@ -1398,10 +1271,13 @@ bool InspectorWindow::DrawGameObjectSection(GameObject* selectedObject)
                 std::make_unique<CreateCommand>(newChild)
             );
             Application::GetInstance().selectionManager->SetSelectedObject(newChild);
+
             LOG_DEBUG("Created empty child for '%s'", selectedObject->GetName().c_str());
             LOG_CONSOLE("Created empty child '%s' under '%s'", newChild->GetName().c_str(), selectedObject->GetName().c_str());
         }
+
         ImGui::PopStyleColor(3);
+
         if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
@@ -1412,8 +1288,10 @@ bool InspectorWindow::DrawGameObjectSection(GameObject* selectedObject)
             ImGui::EndTooltip();
         }
     }
+
     return objectDeleted;
 }
+
 
 void InspectorWindow::GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects)
 {
@@ -1454,7 +1332,7 @@ void InspectorWindow::DrawScriptComponent(Component* component)
     if (scriptComp == nullptr) return;
 
     bool open = ImGui::CollapsingHeader("Script", ImGuiTreeNodeFlags_DefaultOpen);
-    DrawComponentContextMenu(scriptComp,true);
+    DrawComponentContextMenu(scriptComp);
     if (open)
     {
         ImGui::Indent();
@@ -1747,35 +1625,6 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
         {
             ImGui::BeginTooltip();
             ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Already has a Camera component");
-            ImGui::EndTooltip();
-        }
-
-        // Canvas Component
-        bool hasCanvas = (selectedObject->GetComponent(ComponentType::CANVAS) != nullptr);
-        if (hasCanvas)
-        {
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-        }
-        if (ImGui::Selectable("Canvas", false, hasCanvas ? ImGuiSelectableFlags_Disabled : 0))
-        {
-            selectedObject->CreateComponent(ComponentType::CANVAS);
-            LOG_CONSOLE("[Inspector] Canvas component added to: %s", selectedObject->GetName().c_str());
-            ImGui::CloseCurrentPopup();
-        }
-        if (hasCanvas)
-        {
-            ImGui::PopStyleColor();
-        }
-        if (ImGui::IsItemHovered() && !hasCanvas)
-        {
-            ImGui::BeginTooltip();
-            ImGui::Text("Add a Canvas to this GameObject");
-            ImGui::EndTooltip();
-        }
-        else if (ImGui::IsItemHovered() && hasCanvas)
-        {
-            ImGui::BeginTooltip();
-            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Already has a Canvas component");
             ImGui::EndTooltip();
         }
 
@@ -2282,7 +2131,7 @@ void InspectorWindow::OnEvent(const Event& event)
     switch (event.type)
     {
     case Event::Type::GameObjectDestroyed:
-        if (lockedObject == event.data.gameObject.gameObject)
+        if (lockedObject = event.data.gameObject.gameObject)
         {
             inspectorLocked = false;
             lockedObject = nullptr;
@@ -2291,9 +2140,4 @@ void InspectorWindow::OnEvent(const Event& event)
     default:
         break;
     }
-}
-
-bool InspectorWindow::IsPendingRemoval(Component* comp) const
-{
-    return std::find(m_PendingRemoval.begin(), m_PendingRemoval.end(), comp) != m_PendingRemoval.end();
 }

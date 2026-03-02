@@ -111,8 +111,6 @@ public:
 private:
 	// Keyboard and mouse
 	bool windowEvents[WE_COUNT];
-
-	//Mouse & Keyboard state
 	KeyState* keyboard;
 	KeyState  mouseButtons[NUM_MOUSE_BUTTONS];
 	int   mouseMotionX = 0;

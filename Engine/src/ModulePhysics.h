@@ -1,6 +1,5 @@
 #pragma once
 #include "Module.h"
-#include <vector>
 #include <PxPhysicsAPI.h>
 
 enum class PhysicsEventType {
@@ -13,8 +12,6 @@ enum class PhysicsEventType {
 };
 
 #define INFINITY_PHYSIC 3.402823466e+38f
-class Collider;
-class Joint;
 
 class ModulePhysics : public Module, public physx::PxSimulationEventCallback
 {
@@ -29,12 +26,6 @@ public:
     bool CleanUp() override;
 
     void DrawDebug();
-    void SetDebugAll(bool value);
-
-    void RegisterCollider(Collider* col);
-    void UnregisterCollider(Collider* col);
-    void RegisterJoint(Joint* joint);
-    void UnregisterJoint(Joint* joint);
 
     physx::PxPhysics* GetPhysics() { return gPhysics; }
     physx::PxScene* GetScene() { return gScene; } 
@@ -59,6 +50,4 @@ private:
     physx::PxMaterial* gMaterial = nullptr;
 
     bool debugPhysics = true;
-    std::vector<Collider*> registeredColliders;
-    std::vector<Joint*> registeredJoints;
 };
