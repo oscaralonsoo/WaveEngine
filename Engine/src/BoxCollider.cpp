@@ -25,7 +25,7 @@ physx::PxGeometry* BoxCollider::GetGeometry()
 
 void BoxCollider::Update()
 {
-    DebugShape();
+
 }
 
 void BoxCollider::OnEditor()

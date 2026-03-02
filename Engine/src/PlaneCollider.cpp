@@ -25,7 +25,7 @@ physx::PxGeometry* PlaneCollider::GetGeometry()
 
 void PlaneCollider::Update()
 {
-    DebugShape();
+
 }
 
 void PlaneCollider::OnEditor()

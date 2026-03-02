@@ -10,6 +10,7 @@
 #include "ResourceShader.h"
 #include "ComponentParticleSystem.h"
 #include "CameraLens.h"
+#include "ModulePhysics.h"
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <stack>
@@ -490,6 +491,7 @@ bool Renderer::RenderScene(CameraLens* camera)
     //RENDER DEBUG
     if (camera->GetDebugCamera())
     {
+        Application::GetInstance().physics->DrawDebug();
         DrawStencilList(camera);
         DrawNormalsList(camera);
         DrawMeshLinesList(camera);

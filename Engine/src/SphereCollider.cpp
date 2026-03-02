@@ -24,7 +24,7 @@ physx::PxGeometry* SphereCollider::GetGeometry()
 
 void SphereCollider::Update()
 {
-    DebugShape();
+
 }
 
 void SphereCollider::OnEditor()
