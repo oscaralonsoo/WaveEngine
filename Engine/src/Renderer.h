@@ -137,6 +137,7 @@ private:
     std::unique_ptr<Shader> normalsShader;
     std::unique_ptr<Shader> meshShader;
     std::unique_ptr<Shader> pickingShader;
+    std::unique_ptr<Shader> uiShader;
 
     // Default assets
     std::unique_ptr<Texture> defaultTexture;
@@ -166,6 +167,10 @@ private:
         GLint hasBonesLoc = -1;
         GLint meshInverseLoc = -1;
     } defaultUniforms, lineUniforms, outlineUniforms;
+
+    // UI overlay quad
+    GLuint quadVAO = 0;
+    GLuint quadVBO = 0;
 
     // zBuffer visualization
     bool showZBuffer = false;

@@ -1,5 +1,4 @@
 #pragma once
-
 #include "EditorWindow.h"
 #include "EventListener.h"
 
@@ -15,24 +14,22 @@ class GameObject;
 class InspectorWindow : public EditorWindow, public EventListener
 {
 public:
+
     InspectorWindow();
     ~InspectorWindow() override;
 
     void Draw() override;
 
-    // Gizmo management
     ImGuizmo::OPERATION GetCurrentGizmoOperation() const { return currentGizmoOperation; }
     ImGuizmo::MODE GetCurrentGizmoMode() const { return currentGizmoMode; }
-
     void SetGizmoOperation(ImGuizmo::OPERATION op) { currentGizmoOperation = op; }
     void SetGizmoMode(ImGuizmo::MODE mode) { currentGizmoMode = mode; }
-
     bool ShouldShowVertexNormals() const { return showVertexNormals; }
     bool ShouldShowFaceNormals() const { return showFaceNormals; }
-
     void OnEvent(const Event& event);
 
 private:
+    void DrawComponentContextMenu(Component* component, bool canRemove);
     bool DrawGameObjectSection(GameObject* selectedObject);
     void DrawGizmoSettings();
     void DrawAddComponentButton(GameObject* selectedObject);
@@ -61,27 +58,26 @@ private:
     void DrawPrismaticJointComponent(Component* component);
     void DrawSphericalJointComponent(Component* component);
     void DrawAudioSourceComponent(Component* component);
+    void DrawCanvasComponent(Component* selectedObject);
     void DrawAudioListenerComponent(Component* component);
     void DrawReverbZoneComponent(Component* component);
     void DrawAnimationComponent(Component* component);
     void DrawNavigationComponent(Component* component);
 
-    // Helper methods
-    // Helper methods
     void GetAllGameObjects(GameObject* root, std::vector<GameObject*>& outObjects);
     bool IsDescendantOf(GameObject* potentialDescendant, GameObject* potentialAncestor);
 
+    bool IsPendingRemoval(Component* comp) const;
+
     AudioSystem* audioSystem;
 
-    //QOL
     bool m_WasAnyItemActive = false;
     std::unordered_map<Component*, nlohmann::json> m_ComponentSnapshots;
+    std::vector<Component*> m_PendingRemoval;
 
-    // Gizmo state
     ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
     ImGuizmo::MODE currentGizmoMode = ImGuizmo::WORLD;
 
-    // Normals visualization
     bool showVertexNormals = false;
     bool showFaceNormals = false;
 

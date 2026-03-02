@@ -15,12 +15,11 @@ namespace AK
     {
         static const AkUniqueID PLAY_ACTALKINGSFX = 822131113U;
         static const AkUniqueID PLAY_AMBIENCE = 278617630U;
-        static const AkUniqueID PLAY_BIGMANTALKINGSFX = 1527952419U;
         static const AkUniqueID PLAY_CLUBPENGUIN = 2681289886U;
         static const AkUniqueID PLAY_LOOKINFRESH = 111646406U;
         static const AkUniqueID PLAY_RADIOSTATIC = 111273809U;
-        static const AkUniqueID PLAY_SANSTALKINGSFX = 3021003768U;
         static const AkUniqueID PLAY_TENNATALKINGSFX = 3711469543U;
+        static const AkUniqueID PLAY_TORCHFIRE = 3738480268U;
     } // namespace EVENTS
 
     namespace STATES

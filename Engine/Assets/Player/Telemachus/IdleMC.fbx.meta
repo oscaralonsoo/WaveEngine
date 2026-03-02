@@ -1,0 +1,24 @@
+{
+    "animations": {
+        "Armature|mixamo.com": 11554202078028794331
+    },
+    "fileHash": 3414027758,
+    "importSettings": {
+        "flipUVs": true,
+        "frontAxis": 0,
+        "generateNormals": true,
+        "importScale": 1.0,
+        "optimizeMeshes": true,
+        "upAxis": 0
+    },
+    "meshes": {
+        "Cube.001": 13253913986113718750,
+        "Cube.002": 5837214578719240480,
+        "Cube.003": 4710701512567187715,
+        "Cube.004": 7716435505040771869,
+        "Cube.005": 606057996812984507,
+        "Cube.007": 12872502973219334713
+    },
+    "type": 1,
+    "uid": 2866171240018552575
+}

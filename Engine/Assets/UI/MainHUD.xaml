@@ -1,0 +1,34 @@
+<Grid
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
+  xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+  xmlns:noesis="clr-namespace:NoesisGUIExtensions;assembly=Noesis.GUI.Extensions"
+  d:DesignWidth="1920" d:DesignHeight="1080">
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100*"/>
+            <RowDefinition Height="300*"/>
+            <RowDefinition Height="120*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="268*"/>
+            <ColumnDefinition Width="678*"/>
+            <ColumnDefinition Width="334*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.Background>
+            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Offset="0" Color="#000089FF"/>
+                <GradientStop Offset="0.05" Color="#003FA7FF"/>
+                <GradientStop Offset="1" Color="#00123859"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+        <Viewbox x:Name="Life_HUD" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Uniform" Grid.RowSpan="2" Margin="4,0,81,516">
+            <Image x:Name="Life_Image" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Top" Source="HUD_Player.png"/>
+        </Viewbox>
+        <Viewbox x:Name="Bottom_HUD" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="2" Grid.Row="2" Stretch="Uniform">
+            <Image Margin="0,56,0,0" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Source="Bottom_HUD.png"/>
+        </Viewbox>
+    </Grid>
+
+</Grid>

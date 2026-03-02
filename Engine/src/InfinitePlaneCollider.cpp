@@ -18,7 +18,7 @@ physx::PxGeometry* InfinitePlaneCollider::GetGeometry()
 
 void InfinitePlaneCollider::Update()
 {
-    DebugShape();
+
 }
 
 void InfinitePlaneCollider::OnEditor() 

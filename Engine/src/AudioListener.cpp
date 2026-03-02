@@ -51,6 +51,9 @@ void AudioListener::SetTransform() {
 
         AK::SoundEngine::SetPosition(this->goID, listenerPos);
     }
+    else {
+        LOG_CONSOLE("ERROR: Could not find the listener's transform component");
+    }
 }
 
 void AudioListener::SetAsDefaultListener()

@@ -13,6 +13,7 @@
 #include "ModuleResources.h"
 #include "PrefabManager.h"
 #include "ResourcePrefab.h"
+#include "ComponentCanvas.h"
 #include "ComponentCamera.h" 
 #include "Window.h"        
 #include "ModuleCamera.h"   
@@ -552,8 +553,8 @@ static int Lua_Animation_Play(lua_State* L)
     ComponentAnimation* anim = *static_cast<ComponentAnimation**>(lua_touserdata(L, 1));
 
     const char* animName = lua_tostring(L, 2);
-
-    anim->Play(std::string(animName));
+    if (anim->currentAnimation.name != animName)
+        anim->Play(std::string(animName));
 
     return 0; 
 }
@@ -831,6 +832,19 @@ static int Lua_ComponentMaterial_SetTexture(lua_State* L) {
     return 0;
 }
 
+// Helper for ComponentCanvas.SetOpacity
+static int Lua_ComponentCanvas_SetOpacity(lua_State* L) {
+    ComponentCanvas* canvas = static_cast<ComponentCanvas*>(lua_touserdata(L, lua_upvalueindex(1)));
+    float opacity = static_cast<float>(luaL_checknumber(L, 1));
+
+    auto& app = Application::GetInstance();
+    app.scripts->EnqueueOperation([canvas, opacity]() {
+        canvas->SetOpacity(opacity);
+        });
+
+    return 0;
+}
+
 static int Lua_GameObject_GetComponent(lua_State* L) {
     GameObject** objPtr = static_cast<GameObject**>(luaL_checkudata(L, 1, "GameObject"));
 
@@ -852,7 +866,6 @@ static int Lua_GameObject_GetComponent(lua_State* L) {
         }
 
         lua_newtable(L);
-
         lua_pushlightuserdata(L, mesh);
         lua_pushcclosure(L, Lua_ComponentMesh_SetMesh, 1);
         lua_setfield(L, -2, "SetMesh");
@@ -869,10 +882,25 @@ static int Lua_GameObject_GetComponent(lua_State* L) {
         }
 
         lua_newtable(L);
-
         lua_pushlightuserdata(L, mat);
         lua_pushcclosure(L, Lua_ComponentMaterial_SetTexture, 1);
         lua_setfield(L, -2, "SetTexture");
+
+        return 1;
+    }
+
+    if (strcmp(componentType, "Canvas") == 0) {
+        Component* comp = obj->GetComponent(ComponentType::CANVAS);
+        ComponentCanvas* canvas = static_cast<ComponentCanvas*>(comp);
+        if (!canvas) {
+            lua_pushnil(L);
+            return 1;
+        }
+
+        lua_newtable(L);
+        lua_pushlightuserdata(L, canvas);
+        lua_pushcclosure(L, Lua_ComponentCanvas_SetOpacity, 1);
+        lua_setfield(L, -2, "SetOpacity");
 
         return 1;
     }
@@ -885,13 +913,11 @@ static int Lua_GameObject_GetComponent(lua_State* L) {
             return 1;
         }
 
-        // Crear userdata con el puntero
         ComponentAnimation** udata = static_cast<ComponentAnimation**>(
             lua_newuserdata(L, sizeof(ComponentAnimation*))
-            );
+        );
         *udata = anim;
 
-        // Asignar la metatable de Animation
         luaL_getmetatable(L, "Animation");
         lua_setmetatable(L, -2);
 

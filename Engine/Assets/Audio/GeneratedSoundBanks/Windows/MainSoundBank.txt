@@ -3,10 +3,9 @@ Event	ID	Name			Wwise Object Path	Notes
 	111646406	Play_LookinFresh			\Default Work Unit\Play_LookinFresh	
 	278617630	Play_Ambience			\Default Work Unit\Play_Ambience	
 	822131113	Play_ACTalkingSFX			\Default Work Unit\Play_ACTalkingSFX	
-	1527952419	Play_BigManTalkingSFX			\Default Work Unit\Play_BigManTalkingSFX	
 	2681289886	Play_ClubPenguin			\Default Work Unit\Play_ClubPenguin	
-	3021003768	Play_SansTalkingSFX			\Default Work Unit\Play_SansTalkingSFX	
 	3711469543	Play_TennaTalkingSFX			\Default Work Unit\Play_TennaTalkingSFX	
+	3738480268	Play_TorchFire			\Default Work Unit\Play_TorchFire	
 
 State Group	ID	Name			Wwise Object Path	Notes
 	3086301423	BGM_State			\Default Work Unit\BGM_State	
@@ -54,9 +53,8 @@ In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
 	146790378	radio-static	.cache\44\{4423CA7D-EAEC-F92E-6D77-5A4C31819A68}.wem		\Containers\Default Work Unit\Objects\radio-static		1428576
 	335686779	tennaTalking	.cache\3A\{3A4D06D9-395A-5903-26CE-370498E6703B}.wem		\Containers\Default Work Unit\Objects\tennaTalking		2703456
 	352851221	coffeeShop	.cache\2B\{2B154332-6CDB-A031-4D10-CA2E596ED15D}.wem		\Containers\Default Work Unit\CPMusic_Switch\coffeeShop\coffeeShop		558934
-	397602422	sansTalking	.cache\E4\{E450C7D6-9FBA-64F4-3E37-49018B425729}.wem		\Containers\Default Work Unit\Objects\sansTalking		1493604
 	516869498	Charlies Here - Pizza Parlor _ Club Penguin OST	.cache\12\{12D22832-71FA-5C42-6CAD-FFA7A59033CD}.wem		\Containers\Default Work Unit\CPMusic_Switch\pizzaParlor\Charlies Here - Pizza Parlor _ Club Penguin OST		29114464
+	647640996	torchFire	.cache\20\{20DABBE4-F077-B298-C8B6-0B4896B582A5}.wem		\Containers\Default Work Unit\Objects\torchFire		6258284
 	994023216	mansionAmbience	.cache\EA\{EABADB62-DAC5-87D8-AD5F-5D59E3617E1C}.wem		\Containers\Default Work Unit\Objects\mansionAmbience		9346668
-	997234372	bigManTalking	.cache\0E\{0E8963D8-B4A7-938D-CFBE-BCFDDAFF4B39}.wem		\Containers\Default Work Unit\Objects\bigManTalking		2599248
 	1051818920	Lookin' Fresh (Shrimp Kicks)_stereo	.cache\D9\{D9640CFF-5305-D424-6B0B-03D6AC8E899D}.wem		\Containers\Default Work Unit\LookinFresh_Switch\Lookin' Fresh (Shrimp Kicks)_stereo\Lookin' Fresh (Shrimp Kicks)_stereo		16162912
 

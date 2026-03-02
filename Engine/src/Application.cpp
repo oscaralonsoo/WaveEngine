@@ -29,6 +29,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     time = std::make_shared<Time>();
     grid = std::make_shared<Grid>();
     resources = std::make_shared<ModuleResources>();
+    ui = std::make_shared<UI>();
     scripts = std::make_shared<ScriptManager>();  
     physics = std::make_shared<ModulePhysics>();  
     navMesh = std::make_shared<ModuleNavMesh>();
@@ -48,6 +49,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     AddModule(std::static_pointer_cast<Module>(loader));
     AddModule(std::static_pointer_cast<Module>(time));
     AddModule(std::static_pointer_cast<Module>(grid));
+    AddModule(std::static_pointer_cast<Module>(ui));
     AddModule(std::static_pointer_cast<Module>(renderer));
 #ifndef WAVE_GAME
     AddModule(std::static_pointer_cast<Module>(editor));

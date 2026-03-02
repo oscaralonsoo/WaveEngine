@@ -33,6 +33,7 @@ enum class ComponentType {
     PRISMATIC_JOINT,
     SPHERICAL_JOINT,
     NAVIGATION,
+    CANVAS,
     LISTENER,
     AUDIOSOURCE,
     REVERBZONE,
@@ -45,7 +46,7 @@ public:
 
     Component(GameObject* owner, ComponentType type);
     virtual ~Component() = default;
-
+    
     virtual void Enable() {};
     virtual void Update() {};
     virtual void FixedUpdate() {};

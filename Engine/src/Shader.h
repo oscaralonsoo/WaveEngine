@@ -18,7 +18,7 @@ public:
     bool CreateNormalShader(); 
     bool CreateMeshShader(); 
     bool CreatePickingShader(); 
-
+    bool CreateUIOverlay();
     bool LoadFromSource(const char* vSource, const char* fSource, const char* gSource = nullptr);
 
     void Use() const;

@@ -37,7 +37,7 @@ bool Input::Start()
 
     if (SDL_InitSubSystem(SDL_INIT_GAMEPAD) == false)
     {
-        LOG_DEBUG("[Input] WARNING: SDL_INIT_GAMEPAD failed: %s — gamepad support disabled", SDL_GetError());
+        LOG_DEBUG("[Input] WARNING: SDL_INIT_GAMEPAD failed: %s ï¿½ gamepad support disabled", SDL_GetError());
         // Prevent crash: Keyboard and mouse still work
     }
     else
@@ -57,7 +57,6 @@ bool Input::Start()
     scale = 1;
     return true;
 }
-
 bool Input::PreUpdate()
 {
     static SDL_Event event;

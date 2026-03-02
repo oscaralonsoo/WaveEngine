@@ -25,9 +25,8 @@ physx::PxGeometry* CapsuleCollider::GetGeometry() {
 
 void CapsuleCollider::Update()
 {
-    DebugShape();
-}
 
+}
 
 void CapsuleCollider::OnEditor()
 {

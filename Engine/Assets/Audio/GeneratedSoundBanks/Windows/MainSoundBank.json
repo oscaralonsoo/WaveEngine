@@ -10,7 +10,7 @@
     "Type": "User",
     "GUID": "{7C55CBAC-5186-4208-888F-0BCE02308A98}",
     "Language": "SFX",
-    "Hash": "{2EE45C0A-F0D4-A1F5-B036-D240C6058E36}",
+    "Hash": "{E3FEF539-AA9D-203A-890C-FBB80E5166FB}",
     "ObjectPath": "\\SoundBanks\\Default Work Unit\\MainSoundBank",
     "ShortName": "MainSoundBank",
     "Path": "MainSoundBank.bnk",
@@ -56,14 +56,6 @@
       "CachePath": "2B/{2B154332-6CDB-A031-4D10-CA2E596ED15D}.wem"
      },
      {
-      "Id": "397602422",
-      "Language": "SFX",
-      "Streaming": "false",
-      "Location": "Memory",
-      "ShortName": "sans talking.wav",
-      "CachePath": "E4/{E450C7D6-9FBA-64F4-3E37-49018B425729}.wem"
-     },
-     {
       "Id": "516869498",
       "Language": "SFX",
       "Streaming": "false",
@@ -72,20 +64,20 @@
       "CachePath": "12/{12D22832-71FA-5C42-6CAD-FFA7A59033CD}.wem"
      },
      {
+      "Id": "647640996",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Memory",
+      "ShortName": "Fire_Sound_Placeholder.wav",
+      "CachePath": "20/{20DABBE4-F077-B298-C8B6-0B4896B582A5}.wem"
+     },
+     {
       "Id": "994023216",
       "Language": "SFX",
       "Streaming": "false",
       "Location": "Memory",
       "ShortName": "mansionAmbience.wav",
       "CachePath": "EA/{EABADB62-DAC5-87D8-AD5F-5D59E3617E1C}.wem"
-     },
-     {
-      "Id": "997234372",
-      "Language": "SFX",
-      "Streaming": "false",
-      "Location": "Memory",
-      "ShortName": "big man talking.wav",
-      "CachePath": "0E/{0E8963D8-B4A7-938D-CFBE-BCFDDAFF4B39}.wem"
      },
      {
       "Id": "1051818920",
@@ -188,19 +180,6 @@
       "MediaRefs": [
        {
         "Id": "994023216"
-       }
-      ]
-     },
-     {
-      "Id": "1527952419",
-      "Name": "Play_BigManTalkingSFX",
-      "ObjectPath": "\\Events\\Default Work Unit\\Play_BigManTalkingSFX",
-      "GUID": "{9CD2CCFE-FDBA-4F9B-AA7D-2C5F60B35903}",
-      "MaxAttenuation": "20",
-      "DurationType": "Infinite",
-      "MediaRefs": [
-       {
-        "Id": "997234372"
        }
       ]
      },
@@ -314,19 +293,6 @@
       ]
      },
      {
-      "Id": "3021003768",
-      "Name": "Play_SansTalkingSFX",
-      "ObjectPath": "\\Events\\Default Work Unit\\Play_SansTalkingSFX",
-      "GUID": "{A08F0DC8-4B98-48D7-86CD-7A2BD10BF58E}",
-      "MaxAttenuation": "20",
-      "DurationType": "Infinite",
-      "MediaRefs": [
-       {
-        "Id": "397602422"
-       }
-      ]
-     },
-     {
       "Id": "3711469543",
       "Name": "Play_TennaTalkingSFX",
       "ObjectPath": "\\Events\\Default Work Unit\\Play_TennaTalkingSFX",
@@ -336,6 +302,19 @@
       "MediaRefs": [
        {
         "Id": "335686779"
+       }
+      ]
+     },
+     {
+      "Id": "3738480268",
+      "Name": "Play_TorchFire",
+      "ObjectPath": "\\Events\\Default Work Unit\\Play_TorchFire",
+      "GUID": "{D448BFDB-F7C2-4599-97EF-D05104A452FB}",
+      "MaxAttenuation": "20",
+      "DurationType": "Infinite",
+      "MediaRefs": [
+       {
+        "Id": "647640996"
        }
       ]
      }
@@ -528,6 +507,6 @@
     ]
    }
   ],
-  "FileHash": "{F5E3B643-3AE6-8816-E127-190AC0F118D8}"
+  "FileHash": "{87429671-77D8-FDE3-484D-9B6BE1C99074}"
  }
 }

@@ -207,18 +207,18 @@ bool Shader::CreateNormalShader()
         "const float LINE_LENGTH = 0.3;\n"
         "\n"
         "void main() {\n"
-        "    // 1. Transformamos la normal a espacio de mundo (usando solo la rotación del modelo)\n"
+        "    // 1. Transformamos la normal a espacio de mundo (usando solo la rotaciï¿½n del modelo)\n"
         "    // Evitamos inverse() para mayor estabilidad\n"
         "    vec3 worldNormal = normalize(mat3(model) * gs_in[0].normal);\n"
         "    \n"
-        "    // 2. Transformamos la posición a espacio de mundo\n"
+        "    // 2. Transformamos la posiciï¿½n a espacio de mundo\n"
         "    vec4 worldPos = model * gl_in[0].gl_Position;\n"
         "\n"
-        "    // Punto inicial: El vértice\n"
+        "    // Punto inicial: El vï¿½rtice\n"
         "    gl_Position = projection * view * worldPos;\n"
         "    EmitVertex();\n"
         "\n"
-        "    // Punto final: Vértice + normal estirada\n"
+        "    // Punto final: Vï¿½rtice + normal estirada\n"
         "    gl_Position = projection * view * (worldPos + vec4(worldNormal * LINE_LENGTH, 0.0));\n"
         "    EmitVertex();\n"
         "\n"
@@ -549,6 +549,33 @@ bool Shader::CreatePickingShader()
         "void main()\n"
         "{\n"
         "    FragColor = pickingColor;\n"
+        "}\n";
+
+    return LoadFromSource(vert.c_str(), frag.c_str());
+}
+
+bool Shader::CreateUIOverlay()
+{
+    std::string vert =
+        "#version 460 core\n"
+        "layout(location = 0) in vec2 aPos;\n"
+        "layout(location = 1) in vec2 aUV;\n"
+        "out vec2 vUV;\n"
+        "void main() {\n"
+        "    vUV = aUV;\n"
+        "    gl_Position = vec4(aPos, 0.0, 1.0);\n"
+        "}\n";
+
+    std::string frag =
+        "#version 460 core\n"
+        "in vec2 vUV;\n"
+        "out vec4 FragColor;\n"
+        "uniform sampler2D uTexture;\n"
+        "uniform float uOpacity;\n"
+        "void main() {\n"
+        "    vec4 col = texture(uTexture, vUV);\n"
+        "    col.a *= uOpacity;\n"
+        "    FragColor = col;\n"
         "}\n";
 
     return LoadFromSource(vert.c_str(), frag.c_str());

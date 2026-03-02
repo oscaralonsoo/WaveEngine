@@ -5,6 +5,7 @@
 class RenderContext : public Module
 {
 public:
+
     RenderContext();
     ~RenderContext();
 

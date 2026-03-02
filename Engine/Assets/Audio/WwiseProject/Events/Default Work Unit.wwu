@@ -14,17 +14,6 @@
 						</Action>
 					</ChildrenList>
 				</Event>
-				<Event Name="Play_CoffeeShop" ID="{C7BE46E3-438B-401F-96DD-E8F317BBE48A}">
-					<ChildrenList>
-						<Action Name="" ID="{C7EFC138-D4EA-40BC-A69A-6F17E15E854F}" ShortID="272998514">
-							<ReferenceList>
-								<Reference Name="Target">
-									<ObjectRef Name="coffeeShop" ID="{2C733244-9812-447E-A09E-A06DA0044FD4}" WorkUnitID="{E6B49273-C487-4B59-8546-E4217EE02E56}"/>
-								</Reference>
-							</ReferenceList>
-						</Action>
-					</ChildrenList>
-				</Event>
 				<Event Name="Play_ClubPenguin" ID="{6921382D-4CAF-4D5A-B5F9-AF66E9C46744}">
 					<ChildrenList>
 						<Action Name="" ID="{1BDD5B17-C974-4BF2-82FD-97E0B885C09F}" ShortID="435868749">
@@ -80,23 +69,12 @@
 						</Action>
 					</ChildrenList>
 				</Event>
-				<Event Name="Play_SansTalkingSFX" ID="{A08F0DC8-4B98-48D7-86CD-7A2BD10BF58E}">
+				<Event Name="Play_TorchFire" ID="{D448BFDB-F7C2-4599-97EF-D05104A452FB}">
 					<ChildrenList>
-						<Action Name="" ID="{A559B036-0D0F-41D3-BA86-9EE8B3F0C8E3}" ShortID="525202763">
+						<Action Name="" ID="{5B2D8497-B733-4185-A283-2988CC739027}" ShortID="13757879">
 							<ReferenceList>
 								<Reference Name="Target">
-									<ObjectRef Name="sansTalking" ID="{EE5FABCE-8FC5-46F9-B7BF-CCA2911316AA}" WorkUnitID="{E6B49273-C487-4B59-8546-E4217EE02E56}"/>
-								</Reference>
-							</ReferenceList>
-						</Action>
-					</ChildrenList>
-				</Event>
-				<Event Name="Play_BigManTalkingSFX" ID="{9CD2CCFE-FDBA-4F9B-AA7D-2C5F60B35903}">
-					<ChildrenList>
-						<Action Name="" ID="{B335CC07-4BEB-43C6-8D39-5AD0CA0A5073}" ShortID="286876022">
-							<ReferenceList>
-								<Reference Name="Target">
-									<ObjectRef Name="bigManTalking" ID="{9CD1B288-2007-49E6-8712-97A39528C7A4}" WorkUnitID="{E6B49273-C487-4B59-8546-E4217EE02E56}"/>
+									<ObjectRef Name="torchFire" ID="{C844522A-26DF-4303-B498-96C8CD6D71E0}" WorkUnitID="{E6B49273-C487-4B59-8546-E4217EE02E56}"/>
 								</Reference>
 							</ReferenceList>
 						</Action>

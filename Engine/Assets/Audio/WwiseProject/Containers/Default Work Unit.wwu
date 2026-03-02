@@ -854,31 +854,6 @@
 						</Reference>
 					</ReferenceList>
 					<ChildrenList>
-						<Sound Name="HelpMe" ID="{5834A212-7E22-4362-B41A-82A3A690E991}" ShortID="80399166">
-							<PropertyList>
-								<Property Name="OverrideOutput" Type="bool" Value="True"/>
-							</PropertyList>
-							<ReferenceList>
-								<Reference Name="Conversion">
-									<ObjectRef Name="Default Conversion Settings" ID="{6D1B890C-9826-4384-BF07-C15223E9FB56}" WorkUnitID="{FB418BE9-1BF2-46F3-B748-3C670469BE90}"/>
-								</Reference>
-								<Reference Name="OutputBus">
-									<ObjectRef Name="SFX Bus" ID="{E901AF86-38FB-46EA-B16A-DDF987F9D27D}" WorkUnitID="{F0D31CEB-8F9E-4AA4-B822-589F2A4A8993}"/>
-								</Reference>
-							</ReferenceList>
-							<ChildrenList>
-								<AudioFileSource Name="Help Me_ - Sound Effect HD" ID="{B9945CD4-7B68-4368-AB3C-A662F5DD73E2}">
-									<Language>SFX</Language>
-									<AudioFile>Help Me_ - Sound Effect HD.wav</AudioFile>
-									<MediaIDList>
-										<MediaID ID="597016523"/>
-									</MediaIDList>
-								</AudioFileSource>
-							</ChildrenList>
-							<ActiveSourceList>
-								<ActiveSource Name="Help Me_ - Sound Effect HD" ID="{B9945CD4-7B68-4368-AB3C-A662F5DD73E2}" Platform="Linked"/>
-							</ActiveSourceList>
-						</Sound>
 						<Sound Name="mansionAmbience" ID="{55E2BD47-9FE7-4121-B881-B1B9E7BE7336}" ShortID="680231188">
 							<PropertyList>
 								<Property Name="IsLoopingEnabled" Type="bool" Value="True"/>
@@ -1020,12 +995,16 @@
 								<ActiveSource Name="tenna talking" ID="{641CE19D-6FA7-42B5-BA6A-652851759169}" Platform="Linked"/>
 							</ActiveSourceList>
 						</Sound>
-						<Sound Name="sansTalking" ID="{EE5FABCE-8FC5-46F9-B7BF-CCA2911316AA}" ShortID="634729504">
+						<Sound Name="torchFire" ID="{C844522A-26DF-4303-B498-96C8CD6D71E0}" ShortID="182806143">
 							<PropertyList>
+								<Property Name="3DSpatialization" Type="int16" Value="2"/>
 								<Property Name="IsLoopingEnabled" Type="bool" Value="True"/>
 								<Property Name="OverrideOutput" Type="bool" Value="True"/>
 							</PropertyList>
 							<ReferenceList>
+								<Reference Name="Attenuation">
+									<ObjectRef Name="WaveEngine" ID="{80A4D82D-8F91-4941-9D09-8EF01DD073FB}" WorkUnitID="{0404EC19-9B42-430B-8E41-87D911DF6FFB}"/>
+								</Reference>
 								<Reference Name="Conversion">
 									<ObjectRef Name="Default Conversion Settings" ID="{6D1B890C-9826-4384-BF07-C15223E9FB56}" WorkUnitID="{FB418BE9-1BF2-46F3-B748-3C670469BE90}"/>
 								</Reference>
@@ -1034,42 +1013,16 @@
 								</Reference>
 							</ReferenceList>
 							<ChildrenList>
-								<AudioFileSource Name="sans talking" ID="{5EBC5E32-745C-45FE-92AC-FD3E2EEED6C4}">
+								<AudioFileSource Name="Fire_Sound_Placeholder" ID="{157B39C0-3FB7-416D-8153-6647F162FF18}">
 									<Language>SFX</Language>
-									<AudioFile>sans talking.wav</AudioFile>
+									<AudioFile>Fire_Sound_Placeholder.wav</AudioFile>
 									<MediaIDList>
-										<MediaID ID="397602422"/>
+										<MediaID ID="647640996"/>
 									</MediaIDList>
 								</AudioFileSource>
 							</ChildrenList>
 							<ActiveSourceList>
-								<ActiveSource Name="sans talking" ID="{5EBC5E32-745C-45FE-92AC-FD3E2EEED6C4}" Platform="Linked"/>
-							</ActiveSourceList>
-						</Sound>
-						<Sound Name="bigManTalking" ID="{9CD1B288-2007-49E6-8712-97A39528C7A4}" ShortID="30329825">
-							<PropertyList>
-								<Property Name="IsLoopingEnabled" Type="bool" Value="True"/>
-								<Property Name="OverrideOutput" Type="bool" Value="True"/>
-							</PropertyList>
-							<ReferenceList>
-								<Reference Name="Conversion">
-									<ObjectRef Name="Default Conversion Settings" ID="{6D1B890C-9826-4384-BF07-C15223E9FB56}" WorkUnitID="{FB418BE9-1BF2-46F3-B748-3C670469BE90}"/>
-								</Reference>
-								<Reference Name="OutputBus">
-									<ObjectRef Name="SFX Bus" ID="{E901AF86-38FB-46EA-B16A-DDF987F9D27D}" WorkUnitID="{F0D31CEB-8F9E-4AA4-B822-589F2A4A8993}"/>
-								</Reference>
-							</ReferenceList>
-							<ChildrenList>
-								<AudioFileSource Name="big man talking" ID="{94453B1D-C857-404F-80C3-895A055A237D}">
-									<Language>SFX</Language>
-									<AudioFile>big man talking.wav</AudioFile>
-									<MediaIDList>
-										<MediaID ID="997234372"/>
-									</MediaIDList>
-								</AudioFileSource>
-							</ChildrenList>
-							<ActiveSourceList>
-								<ActiveSource Name="big man talking" ID="{94453B1D-C857-404F-80C3-895A055A237D}" Platform="Linked"/>
+								<ActiveSource Name="Fire_Sound_Placeholder" ID="{157B39C0-3FB7-416D-8153-6647F162FF18}" Platform="Linked"/>
 							</ActiveSourceList>
 						</Sound>
 					</ChildrenList>

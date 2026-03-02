@@ -16,6 +16,7 @@
 #endif
 #include "SelectionManager.h"
 #include "ModuleCamera.h" 
+#include "UI.h"
 #include "ModuleResources.h"
 #include "ScriptManager.h"  
 #include "ModulePhysics.h"
@@ -81,6 +82,7 @@ public:
     std::shared_ptr<ModuleAudio> audio;
     std::shared_ptr<Grid> grid;
     std::shared_ptr<ModuleResources> resources;
+    std::shared_ptr<UI> ui;
     std::shared_ptr<ScriptManager> scripts; 
     std::shared_ptr<ModuleNavMesh> navMesh;
     std::shared_ptr<ModulePhysics> physics; 

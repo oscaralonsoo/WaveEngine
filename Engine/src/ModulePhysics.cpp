@@ -3,6 +3,8 @@
 #include "Application.h"
 #include "Renderer.h"
 #include "Rigidbody.h"
+#include "Collider.h"
+#include "Joint.h"
 
 using namespace physx;
 
@@ -76,6 +78,7 @@ bool ModulePhysics::FixedUpdate() {
 
     gScene->fetchResults(true);
 
+    DrawDebug();
     return true;
 }
 
@@ -137,4 +140,48 @@ void ModulePhysics::onTrigger(PxTriggerPair* pairs, PxU32 count)
         rbTrigger->CastPhysicsEvent(eventType, rbOther);
         rbOther->CastPhysicsEvent(eventType, rbTrigger);
     }
+}
+
+void ModulePhysics::RegisterCollider(Collider* col)
+{
+    if (col) registeredColliders.push_back(col);
+}
+
+void ModulePhysics::UnregisterCollider(Collider* col)
+{
+    auto it = std::find(registeredColliders.begin(), registeredColliders.end(), col);
+    if (it != registeredColliders.end())
+        registeredColliders.erase(it);
+}
+
+void ModulePhysics::DrawDebug()
+{
+    for (Collider* col : registeredColliders)
+    {
+        if (col && col->showDebug)
+            col->DebugShape();
+    }
+
+    for (Joint* joint : registeredJoints)
+        if (joint && joint->showDebug) joint->DrawDebug();
+}
+
+void ModulePhysics::SetDebugAll(bool value)
+{
+    for (Collider* col : registeredColliders)
+    {
+        if (col) col->showDebug = value;
+    }
+}
+
+void ModulePhysics::RegisterJoint(Joint* joint)
+{
+    if (joint) registeredJoints.push_back(joint);
+}
+
+void ModulePhysics::UnregisterJoint(Joint* joint)
+{
+    auto it = std::find(registeredJoints.begin(), registeredJoints.end(), joint);
+    if (it != registeredJoints.end())
+        registeredJoints.erase(it);
 }

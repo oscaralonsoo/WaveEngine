@@ -58,6 +58,8 @@ set(RENDERING_SRC
     src/ComponentSkinnedMesh.cpp
     src/CameraLens.h
     src/CameraLens.cpp
+    src/UI.h
+    src/UI.cpp 
 )
 
 set(VFX_SRC
@@ -151,6 +153,8 @@ set(COMPONENTS_SRC
     src/ComponentRotate.h
     src/ComponentParticleSystem.h
     src/ComponentParticleSystem.cpp
+    src/ComponentCanvas.h
+    src/ComponentCanvas.cpp
     src/AudioComponent.h
     src/AudioSource.h
     src/AudioSource.cpp
@@ -378,6 +382,98 @@ target_link_libraries(Engine PRIVATE
 
 target_include_directories(Engine PRIVATE ${LUA_INCLUDE_DIR})
 
+
+# ============= NoesisGUI =============
+
+# AUTO-DOWNLOAD
+
+set(NOESIS_SDK_DIR "${CMAKE_SOURCE_DIR}/External/NoesisGUI")
+
+if(NOT EXISTS "${NOESIS_SDK_DIR}/Lib/windows_x86/Noesis.lib")
+    message(STATUS "NoesisGUI SDK not found. Downloading...")
+    
+    file(DOWNLOAD 
+        "https://drive.usercontent.google.com/download?id=1KyGAq3gMaqE6nTexLKW_bBL8ZE7Qydbd&export=download&authuser=0&confirm=t&uuid=7d0cd1ad-694b-4b8d-831d-277f0019f001&at=APcXIO1GH_qglCnlDpFe4uf3p5hE%3A1771545574705"
+        "${CMAKE_BINARY_DIR}/NoesisGUI.zip"
+        SHOW_PROGRESS
+        STATUS DOWNLOAD_STATUS
+    )
+    
+    list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+    if(NOT STATUS_CODE EQUAL 0)
+        message(FATAL_ERROR "Failed to download NoesisGUI SDK. Please download manually from: [https://drive.usercontent.google.com/download?id=1KyGAq3gMaqE6nTexLKW_bBL8ZE7Qydbd&export=download&authuser=0&confirm=t&uuid=7d0cd1ad-694b-4b8d-831d-277f0019f001&at=APcXIO1GH_qglCnlDpFe4uf3p5hE%3A1771545574705]")
+    endif()
+    
+    message(STATUS "Extracting NoesisGUI SDK...")
+
+    file(ARCHIVE_EXTRACT 
+        INPUT "${CMAKE_BINARY_DIR}/NoesisGUI.zip"
+        DESTINATION "${NOESIS_SDK_DIR}"
+    )
+    
+    message(STATUS "NoesisGUI SDK installed!")
+endif()
+
+
+# INTEGRATION
+
+file(GLOB NOESIS_APP_PROVIDERS_SOURCES
+    "${NOESIS_SDK_DIR}/Src/Packages/App/Providers/Src/*.cpp"
+)
+file(GLOB NOESIS_RENDER_SOURCES
+    "${NOESIS_SDK_DIR}/Src/Packages/Render/GLRenderDevice/Src/*.cpp"
+)
+file(GLOB NOESIS_INTERACTIVITY_SOURCES
+    "${NOESIS_SDK_DIR}/Src/Packages/App/Interactivity/Src/*.cpp"
+)
+file(GLOB NOESIS_MEDIAELEMENT_SOURCES
+    "${NOESIS_SDK_DIR}/Src/Packages/App/MediaElement/Src/*.cpp"
+)
+
+target_sources(Engine PRIVATE
+    ${NOESIS_APP_PROVIDERS_SOURCES}
+    ${NOESIS_RENDER_SOURCES}
+    ${NOESIS_INTERACTIVITY_SOURCES}
+    ${NOESIS_MEDIAELEMENT_SOURCES}
+)
+
+file(GLOB NOESIS_PACKAGE_INCLUDE_DIRS
+    LIST_DIRECTORIES true
+    "${NOESIS_SDK_DIR}/Src/Packages/*/Include"
+    "${NOESIS_SDK_DIR}/Src/Packages/*/*/Include"
+    "${NOESIS_SDK_DIR}/Src/Packages/*/Src"
+    "${NOESIS_SDK_DIR}/Src/Packages/*/*/Src"
+)
+target_include_directories(Engine PRIVATE
+    "${NOESIS_SDK_DIR}/Include"
+    ${NOESIS_PACKAGE_INCLUDE_DIRS}
+)
+
+target_compile_definitions(Engine PRIVATE
+    NS_APP_PROVIDERS_API=
+    NS_APP_FRAMEWORK_API=
+    NS_APP_INTERACTIVITY_API=
+    NS_RENDER_GLRENDERDEVICE_API=
+    NS_APP_MEDIAELEMENT_API=
+)
+
+if(MSVC)
+    target_compile_options(Engine PRIVATE /FS)
+endif()
+if(WIN32)
+    set(NOESIS_LIB "${NOESIS_SDK_DIR}/Lib/windows_x86_64/Noesis.lib")
+    set(NOESIS_DLL "${NOESIS_SDK_DIR}/Bin/windows_x86_64/Noesis.dll")
+
+    target_link_libraries(Engine PRIVATE ${NOESIS_LIB})
+
+    add_custom_command(TARGET Engine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${NOESIS_DLL}"
+        $<TARGET_FILE_DIR:Engine>
+    )
+endif()
+
+# =========== End NoesisGUI ===========
 # Game (standalone)
 set(GAME_SRC ${CORE_SRC} ${RENDERING_SRC} ${UTILS_SRC} ${GAMEOBJECTS_SRC} ${COMPONENTS_SRC} ${LOADERS_SRC} ${IMPORTERS_SRC} ${SCRIPTING_SRC} ${PHYSICS_SRC} ${VFX_SRC} ${AUDIO_SRC} ${EVENTS_SRC} ${NAVIGATION_SRC})
 
@@ -434,4 +530,39 @@ target_include_directories(Game PRIVATE BEFORE
     "${WWISE_SDK_DIR}/include/Common"
     "${WWISE_SDK_DIR}/include/Win32"
 )
+
+target_sources(Game PRIVATE
+    ${NOESIS_APP_PROVIDERS_SOURCES}
+    ${NOESIS_RENDER_SOURCES}
+    ${NOESIS_INTERACTIVITY_SOURCES}
+    ${NOESIS_MEDIAELEMENT_SOURCES}
+) 
+target_include_directories(Game PRIVATE
+    "${NOESIS_SDK_DIR}/Include"
+    ${NOESIS_PACKAGE_INCLUDE_DIRS}
+)
+
+target_compile_definitions(Game PRIVATE
+    NS_APP_PROVIDERS_API=
+    NS_APP_FRAMEWORK_API=
+    NS_APP_INTERACTIVITY_API=
+    NS_RENDER_GLRENDERDEVICE_API=
+    NS_APP_MEDIAELEMENT_API=
+)
+
+if(MSVC)
+    target_compile_options(Game PRIVATE /FS)
+endif()
+if(WIN32)
+    set(NOESIS_LIB "${NOESIS_SDK_DIR}/Lib/windows_x86_64/Noesis.lib")
+    set(NOESIS_DLL "${NOESIS_SDK_DIR}/Bin/windows_x86_64/Noesis.dll")
+
+    target_link_libraries(Game PRIVATE ${NOESIS_LIB})
+
+    add_custom_command(TARGET Game POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${NOESIS_DLL}"
+        $<TARGET_FILE_DIR:Game>
+    )
+endif()
 

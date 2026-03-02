@@ -10,12 +10,14 @@
 Collider::Collider(GameObject* owner) : Component(owner, ComponentType::COLLIDER)
 {
     name = "Collider";
+    Application::GetInstance().physics->RegisterCollider(this);
     Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::RIGIDBODY);
     if (rb) rb->CreateBody();
 }
 
 Collider::~Collider()
 {
+    Application::GetInstance().physics->UnregisterCollider(this);
     if (attachedRigidbody) attachedRigidbody->UnattachCollider(this);
 }
 
@@ -64,6 +66,22 @@ void Collider::OnEditorBase()
 {
     #ifndef WAVE_GAME
     //ATRIBUTES
+    ImGui::PushID(this);
+
+    ImGui::Checkbox("##ShowDebug", &showDebug);
+    ImGui::SameLine();
+    ImGui::Text("Show Debug");
+    ImGui::SameLine();
+
+    static bool showAll = false;
+    if (ImGui::Checkbox("##ShowAll", &showAll))
+    {
+        Application::GetInstance().physics->SetDebugAll(showAll);
+    }
+    ImGui::SameLine();
+    ImGui::Text("Show All");
+    ImGui::Separator();
+
     ImGui::Text("Trigger");
     bool trigger = isTrigger;
     if (ImGui::Checkbox("##Trigger", &trigger))
@@ -98,6 +116,8 @@ void Collider::OnEditorBase()
     {
         SetRestitution(restitution);
     }
+
+    ImGui::PopID();
     #endif
 }
 

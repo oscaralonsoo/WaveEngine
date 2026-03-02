@@ -23,6 +23,9 @@ AudioSource::AudioSource(GameObject* containerGO)
 
 AudioSource::~AudioSource()
 {
+
+    
+    AK::SoundEngine::StopAll(this->goID);
     Application::GetInstance().audio->audioSystem->UnregisterAudioComponent(this);
     AK::SoundEngine::UnregisterGameObj(this->goID);
 }
@@ -93,29 +96,34 @@ void AudioSource::OnEditor() {
     auto& events = Application::GetInstance().audio->audioSystem->eventNames;
     auto& wwiseEvents = Application::GetInstance().audio->audioSystem->GetAudioEvents();
 
-    if (ImGui::BeginCombo("Wwise Event", eventName.c_str())) {
+    if (ImGui::BeginCombo("##Wwise Event", eventName.c_str())) {
         for (int i = 0; i < events.size(); ++i) {
             const string name = events[i];
             const AudioEvent* event = wwiseEvents[i];
 
             bool isSelected = (eventName == name);
             if (ImGui::Selectable(name.c_str(), isSelected)) {
+                if (eventName != name) {
+                    bool hadPreviousEvent = !eventName.empty();
 
-                if (eventName != name) {  // Stop playing the event if you switch to another  
-                    if (event->playingID == 1L) AK::SoundEngine::StopAll(goID);
-                    
-                    std::wstring wideName(name.begin(), name.end());
-                    AkUniqueID eventID = AK::SoundEngine::GetIDFromString(wideName.c_str());
-
-                    if (eventID == AK_INVALID_UNIQUE_ID)    {
-                        LOG_CONSOLE("Wwise Error: Event name '%s' not found!", name.c_str());
+                    if (hadPreviousEvent) {
+                        // Stop previous event
+                        AK::SoundEngine::StopAll(goID);
                     }
-                    else {
-                        if(event->playingID == 1L)
+
+                    eventName = name;
+
+                    // Only auto-play if switching (not first selection)
+                    if (hadPreviousEvent) {
+                        std::wstring wideName(name.begin(), name.end());
+                        AkUniqueID eventID = AK::SoundEngine::GetIDFromString(wideName.c_str());
+                        if (eventID != AK_INVALID_UNIQUE_ID) {
                             Application::GetInstance().audio->PlayAudio(this, eventID);
+                        }
                     }
                 }
-                eventName = name;
+               
+                
                 
             }
             if (isSelected) {

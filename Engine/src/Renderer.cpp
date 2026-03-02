@@ -3,12 +3,14 @@
 #include "GameObject.h"
 #include "Transform.h"
 #include "ComponentMesh.h"
+#include "ComponentCanvas.h"
 #include "ComponentSkinnedMesh.h"
 #include "ComponentMaterial.h"
 #include "ModuleEditor.h"
 #include "ResourceShader.h"
 #include "ComponentParticleSystem.h"
 #include "CameraLens.h"
+#include "ModulePhysics.h"
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <stack>
@@ -30,7 +32,6 @@ bool Renderer::Start()
     LOG_DEBUG("=== Initializing Renderer Module ===");
     LOG_CONSOLE("Initializing renderer and shaders...");
 
-    // Enable required OpenGL features for 3D rendering
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -38,9 +39,7 @@ bool Renderer::Start()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Initialize default shader
     defaultShader = make_unique<Shader>();
-
     if (!defaultShader->CreateNoTexture())
     {
         LOG_DEBUG("ERROR: Failed to create default shader");
@@ -53,9 +52,7 @@ bool Renderer::Start()
         LOG_CONSOLE("OpenGL shaders compiled successfully");
     }
 
-    // Initialize line shader for debug visualization
     lineShader = make_unique<Shader>();
-
     if (!lineShader->CreateLinesShader())
     {
         LOG_DEBUG("ERROR: Failed to create line shader");
@@ -68,9 +65,7 @@ bool Renderer::Start()
         LOG_CONSOLE("Line shader compiled successfully");
     }
 
-    // Initialize outline shader for selection highlighting
     outlineShader = make_unique<Shader>();
-
     if (!outlineShader->CreateSingleColor())
     {
         LOG_DEBUG("ERROR: Failed to create outline shader");
@@ -83,7 +78,6 @@ bool Renderer::Start()
         LOG_CONSOLE("Outline shader compiled successfully");
     }
 
-    // Initialize water shader
     waterShader = make_unique<Shader>();
     if (!waterShader->CreateWater())
     {
@@ -137,7 +131,8 @@ bool Renderer::Start()
     }
 
     pickingShader = make_unique<Shader>();
-    if (!pickingShader->CreatePickingShader()) {
+    if (!pickingShader->CreatePickingShader())
+    {
         LOG_DEBUG("ERROR: Failed to create picking shader");
         LOG_CONSOLE("ERROR: Failed to compile picking shader");
     }
@@ -147,6 +142,39 @@ bool Renderer::Start()
         LOG_CONSOLE("picking shader compiled successfully");
     }
 
+    // UI overlay shader
+    uiShader = make_unique<Shader>();
+    if (!uiShader->CreateUIOverlay())
+    {
+        LOG_DEBUG("ERROR: Failed to create UI overlay shader");
+        LOG_CONSOLE("ERROR: Failed to compile UI overlay shader");
+        return false;
+    }
+    else
+    {
+        LOG_DEBUG("UI overlay shader created successfully - Program ID: %d", uiShader->GetProgramID());
+        LOG_CONSOLE("UI overlay shader compiled successfully");
+    }
+
+    // Fullscreen quad VAO for UI overlay
+    float quadVerts[] = {
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f,
+        -1.0f,  1.0f,  0.0f, 1.0f,
+    };
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVerts), quadVerts, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glBindVertexArray(0);
 
     glGenBuffers(1, &ssboBones);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboBones);
@@ -159,15 +187,10 @@ bool Renderer::Start()
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, uboMatrices);
 
-    // Generate default checkerboard texture for untextured objects
     defaultTexture = make_unique<Texture>();
     defaultTexture->CreateCheckerboard();
     LOG_DEBUG("Default checkerboard texture created");
 
-    LOG_DEBUG("Renderer initialized successfully");
-    LOG_CONSOLE("Renderer ready");
-
-    // Cache uniform locations to avoid repeated string lookups
     defaultUniforms.projection = glGetUniformLocation(defaultShader->GetProgramID(), "projection");
     defaultUniforms.view = glGetUniformLocation(defaultShader->GetProgramID(), "view");
     defaultUniforms.model = glGetUniformLocation(defaultShader->GetProgramID(), "model");
@@ -176,6 +199,9 @@ bool Renderer::Start()
     outlineUniforms.projection = glGetUniformLocation(outlineShader->GetProgramID(), "projection");
     outlineUniforms.view = glGetUniformLocation(outlineShader->GetProgramID(), "view");
     outlineUniforms.model = glGetUniformLocation(outlineShader->GetProgramID(), "model");
+
+    LOG_DEBUG("Renderer initialized successfully");
+    LOG_CONSOLE("Renderer ready");
 
     return true;
 }
@@ -320,8 +346,6 @@ void Renderer::RemoveCamera(CameraLens* camera)
     activeCameras.erase(it, activeCameras.end());
 }
 
-
-
 bool Renderer::PostUpdate()
 {
     bool ret = true;
@@ -351,18 +375,53 @@ bool Renderer::PostUpdate()
             {
                 GLuint savedFBO = mainLens->fboID;
                 mainLens->fboID = 0;
-
                 RenderScene(mainLens);
-
                 mainLens->fboID = savedFBO;
             }
         }
     }
+
+    int winWidth = 0, winHeight = 0;
+    Application::GetInstance().window->GetWindowSize(winWidth, winHeight);
+    // Update y render de todos los canvas a sus texturas
+    auto& canvasList = Application::GetInstance().ui->GetCanvas();
+    for (ComponentCanvas* c : canvasList)
+    {
+        c->Resize(winWidth, winHeight);
+        if (!c->IsActive() || !c->GetOwner()->IsActive()) continue;
+        c->Update();
+        c->RenderToTexture();
+    }
+
+    // Dibujar canvas como overlay encima del framebuffer 0
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    uiShader->Use();
+    glBindVertexArray(quadVAO);
+
+    for (ComponentCanvas* c : canvasList)
+    {
+        if (!c->IsActive() || !c->GetOwner()->IsActive()) continue;
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, c->GetTextureID());
+        uiShader->SetInt("uTexture", 0);
+        uiShader->SetFloat("uOpacity", c->GetOpacity());
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+
+    glBindVertexArray(0);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+    glUseProgram(0);
 #endif
 
     return ret;
 }
-
 bool Renderer::RenderScene(CameraLens* camera)
 {
     if (!camera) return false;
@@ -432,6 +491,7 @@ bool Renderer::RenderScene(CameraLens* camera)
     //RENDER DEBUG
     if (camera->GetDebugCamera())
     {
+        Application::GetInstance().physics->DrawDebug();
         DrawStencilList(camera);
         DrawNormalsList(camera);
         DrawMeshLinesList(camera);
@@ -714,36 +774,23 @@ bool Renderer::CleanUp()
 {
     LOG_DEBUG("Cleaning up Renderer");
 
-
-
-    // Release primitive meshes
     UnloadMesh(sphere);
     UnloadMesh(cylinder);
     UnloadMesh(pyramid);
 
-    if (defaultShader)
-    {
-        defaultShader->Delete();
-    }
+    if (defaultShader)  defaultShader->Delete();
+    if (lineShader)     lineShader->Delete();
+    if (outlineShader)  outlineShader->Delete();
+    if (depthShader)    depthShader->Delete();
+    if (waterShader)    waterShader->Delete();
+    if (uiShader)       uiShader->Delete();
 
-    if (lineShader)
+    if (quadVAO != 0)
     {
-        lineShader->Delete();
-    }
-
-    if (outlineShader)
-    {
-        outlineShader->Delete();
-    }
-
-    if (depthShader)
-    {
-        depthShader->Delete();
-    }
-
-    if (waterShader)
-    {
-        waterShader->Delete();
+        glDeleteVertexArrays(1, &quadVAO);
+        glDeleteBuffers(1, &quadVBO);
+        quadVAO = 0;
+        quadVBO = 0;
     }
 
     if (normalLinesVAO != 0)
@@ -751,7 +798,6 @@ bool Renderer::CleanUp()
         glDeleteVertexArrays(1, &normalLinesVAO);
         glDeleteBuffers(1, &normalLinesVBO);
     }
-
 
     meshes.clear();
     activeCameras.clear();

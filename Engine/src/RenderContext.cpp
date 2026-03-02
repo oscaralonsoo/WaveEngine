@@ -32,6 +32,11 @@ bool RenderContext::Start()
     }
 
 
+    if (SDL_GL_SetSwapInterval(0) < 0)
+    {
+        LOG_DEBUG("Warning: No se pudo establecer el Swap Interval: %s", SDL_GetError());
+    }
+
     if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
     {
         std::cerr << "Failed to initialize GLAD" << std::endl;

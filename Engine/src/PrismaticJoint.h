@@ -13,7 +13,6 @@ public:
     void EnableLimits(bool b);
     void SetMinLimit(float m);
     void SetMaxLimit(float m);
-
     void EnableSoftLimit(bool b);
     void SetStiffness(float s);
     void SetDamping(float d);
