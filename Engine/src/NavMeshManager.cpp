@@ -3,7 +3,6 @@
 #include "GameObject.h"
 #include "ComponentMesh.h"
 #include "Transform.h"
-#include "FileSystem.h"
 #include "Log.h"
 #include "NavMeshManager.h"
 #include "ComponentNavigation.h"
@@ -252,8 +251,8 @@ rcConfig ModuleNavMesh::CreateDefaultConfig(const float* minBounds, const float*
     rcConfig cfg;
     memset(&cfg, 0, sizeof(cfg));
 
-    cfg.cs = 0.3f; // Cell size
-    cfg.ch = 0.2f; // Cell height
+    cfg.cs = 0.3f; 
+    cfg.ch = 0.2f; 
     cfg.walkableSlopeAngle = 45.0f;
     cfg.walkableHeight = 10;
     cfg.walkableClimb = 2;
@@ -359,10 +358,15 @@ bool ModuleNavMesh::IsBlockedByObstacle(const glm::vec3& min, const glm::vec3& m
         ComponentMesh* meshComp = static_cast<ComponentMesh*>(obs->GetComponent(ComponentType::MESH));
         if (!meshComp || !meshComp->HasMesh()) continue;
 
-        glm::vec3 obsMin, obsMax;
-        meshComp->GetWorldAABB(obsMin, obsMax);
+        // Use GetGlobalAABB instead of the non-existent GetWorldAABB
+        const AABB& globalAABB = meshComp->GetGlobalAABB();
 
-        // AABB check
+        // Assuming your AABB class uses 'minPoint' and 'maxPoint' or 'min' and 'max'
+        // Adjust these member names to match your AABB.h definition
+        glm::vec3 obsMin = globalAABB.min;
+        glm::vec3 obsMax = globalAABB.max;
+
+        // AABB Collision check
         if ((min.x <= obsMax.x && max.x >= obsMin.x) &&
             (min.y <= obsMax.y && max.y >= obsMin.y) &&
             (min.z <= obsMax.z && max.z >= obsMin.z))

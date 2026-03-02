@@ -1088,9 +1088,9 @@ void InspectorWindow::DrawReverbZoneComponent(Component* component)
     }
 }
 
-void InspectorWindow::DrawNavigationSection(GameObject* selectedObject)
+void InspectorWindow::DrawNavigationComponent(Component* component)
 {
-    ComponentNavigation* navComp = static_cast<ComponentNavigation*>(selectedObject->GetComponent(ComponentType::NAVIGATION));
+    ComponentNavigation* navComp = static_cast<ComponentNavigation*>(component);
 
     if (navComp != nullptr)
     {

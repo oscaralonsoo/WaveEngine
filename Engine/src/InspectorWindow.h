@@ -64,7 +64,7 @@ private:
     void DrawAudioListenerComponent(Component* component);
     void DrawReverbZoneComponent(Component* component);
     void DrawAnimationComponent(Component* component);
-    void DrawNavigationSection(Component* component);
+    void DrawNavigationComponent(Component* component);
 
     // Helper methods
     // Helper methods

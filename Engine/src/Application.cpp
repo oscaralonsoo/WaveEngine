@@ -44,7 +44,6 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     AddModule(std::static_pointer_cast<Module>(audio));
     AddModule(std::static_pointer_cast<Module>(resources));
     AddModule(std::static_pointer_cast<Module>(navMesh));
-    AddModule(std::static_pointer_cast<Module>(filesystem));
     AddModule(std::static_pointer_cast<Module>(scripts));  
     AddModule(std::static_pointer_cast<Module>(loader));
     AddModule(std::static_pointer_cast<Module>(time));

@@ -367,7 +367,7 @@ target_link_libraries(Engine PRIVATE
     "${WWISE_LIB_DIR}/AkStreamMgr.lib"
     "${WWISE_LIB_DIR}/AkSpatialAudio.lib"
     $<$<CONFIG:Debug>:${WWISE_LIB_DIR}/CommunicationCentral.lib>
-    $<$<NOT:<CONFIG:Release>>:${WWISE_LIB_DIR}/CommunicationCentral.lib>
+    $<$<NOT:$<CONFIG:Release>>:${WWISE_LIB_DIR}/CommunicationCentral.lib>
     "${WWISE_LIB_DIR}/AkRoomVerbFX.lib"
     ws2_32.lib 
     mswsock.lib 
@@ -379,7 +379,7 @@ target_link_libraries(Engine PRIVATE
 target_include_directories(Engine PRIVATE ${LUA_INCLUDE_DIR})
 
 # Game (standalone)
-set(GAME_SRC ${CORE_SRC} ${RENDERING_SRC} ${UTILS_SRC} ${GAMEOBJECTS_SRC} ${COMPONENTS_SRC} ${LOADERS_SRC} ${IMPORTERS_SRC} ${SCRIPTING_SRC} ${PHYSICS_SRC} ${VFX_SRC} ${AUDIO_SRC} ${EVENTS_SRC})
+set(GAME_SRC ${CORE_SRC} ${RENDERING_SRC} ${UTILS_SRC} ${GAMEOBJECTS_SRC} ${COMPONENTS_SRC} ${LOADERS_SRC} ${IMPORTERS_SRC} ${SCRIPTING_SRC} ${PHYSICS_SRC} ${VFX_SRC} ${AUDIO_SRC} ${EVENTS_SRC} ${NAVIGATION_SRC})
 
 add_executable(Game ${GAME_SRC})
 
@@ -395,6 +395,15 @@ target_link_libraries(Game PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(Game PRIVATE Tracy::TracyClient)
 target_link_libraries(Game PRIVATE unofficial::omniverse-physx-sdk::sdk)
 target_link_libraries(Game PRIVATE ${LUA_LIBRARIES})
+target_link_libraries(Engine PRIVATE 
+    RecastNavigation::Recast 
+    RecastNavigation::Detour 
+    RecastNavigation::DetourCrowd
+)
+target_include_directories(Engine PRIVATE 
+    $<TARGET_PROPERTY:RecastNavigation::Recast,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:RecastNavigation::Detour,INTERFACE_INCLUDE_DIRECTORIES>
+)
 
 
 target_include_directories(Game PRIVATE ${LUA_INCLUDE_DIR})

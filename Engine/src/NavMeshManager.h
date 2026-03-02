@@ -46,7 +46,6 @@ public:
         const glm::vec3& end,
         std::vector<glm::vec3>& outPath);
 
-
 private:
 
     void RecollectGeometry(GameObject* obj, std::vector<float>& vertices, std::vector<int>& indices);
