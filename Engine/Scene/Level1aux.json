@@ -7,9 +7,9 @@
                 {
                     "active": true,
                     "position": [
-                        -9.0,
-                        18.200000762939453,
-                        27.819656372070313
+                        -48.01900100708008,
+                        10.200000762939453,
+                        152.0469970703125
                     ],
                     "rotation": [
                         -45.0,
@@ -25,7 +25,7 @@
                 },
                 {
                     "active": true,
-                    "aspectRatio": 4.722891330718994,
+                    "aspectRatio": 2.1605136394500732,
                     "farPlane": 1000.0,
                     "fov": 60.0,
                     "nearPlane": 0.30000001192092896,
@@ -39,24 +39,19 @@
                     "active": true,
                     "publicVariables": [
                         {
-                            "name": "zoomMin",
+                            "name": "shakeMagnitude",
                             "type": 0,
                             "value": 0.30000001192092896
                         },
                         {
-                            "name": "shakeFrequency",
+                            "name": "followSpeed",
                             "type": 0,
-                            "value": 25.0
+                            "value": 5.0
                         },
                         {
-                            "name": "zoomMax",
+                            "name": "zoomMin",
                             "type": 0,
-                            "value": 3.0
-                        },
-                        {
-                            "name": "playerName",
-                            "type": 1,
-                            "value": "Player"
+                            "value": 0.30000001192092896
                         },
                         {
                             "name": "shakeDuration",
@@ -64,9 +59,14 @@
                             "value": 0.4000000059604645
                         },
                         {
-                            "name": "shakeMagnitude",
+                            "name": "playerName",
+                            "type": 1,
+                            "value": "Player"
+                        },
+                        {
+                            "name": "zoomMax",
                             "type": 0,
-                            "value": 0.30000001192092896
+                            "value": 3.0
                         },
                         {
                             "name": "zoomSpeed",
@@ -74,9 +74,9 @@
                             "value": 3.0
                         },
                         {
-                            "name": "followSpeed",
+                            "name": "shakeFrequency",
                             "type": 0,
-                            "value": 5.0
+                            "value": 25.0
                         }
                     ],
                     "scriptUID": 3302217500676688058,
@@ -1572,9 +1572,9 @@
                 {
                     "active": true,
                     "position": [
-                        -6.277731418609619,
-                        2.7992788091069087e-05,
-                        3.257009506225586
+                        -29.27773094177246,
+                        -15.80750846862793,
+                        121.25701141357422
                     ],
                     "rotation": [
                         0.0,
@@ -1590,8 +1590,8 @@
                 },
                 {
                     "active": true,
-                    "eventName": "",
-                    "playOnAwake": false,
+                    "eventName": "Play_TorchFire",
+                    "playOnAwake": true,
                     "type": 26,
                     "volume": 100.0
                 }
@@ -31839,19 +31839,19 @@
                     "active": true,
                     "publicVariables": [
                         {
-                            "name": "rollDuration",
-                            "type": 0,
-                            "value": 0.05000000074505806
-                        },
-                        {
                             "name": "speed",
                             "type": 0,
                             "value": 10.0
                         },
                         {
-                            "name": "tiredMultiplier",
+                            "name": "stamina",
                             "type": 0,
-                            "value": 0.699999988079071
+                            "value": 4.0
+                        },
+                        {
+                            "name": "rollDuration",
+                            "type": 0,
+                            "value": 0.05000000074505806
                         },
                         {
                             "name": "sprintMultiplier",
@@ -31859,17 +31859,55 @@
                             "value": 1.5
                         },
                         {
-                            "name": "stamina",
+                            "name": "tiredMultiplier",
                             "type": 0,
-                            "value": 4.0
+                            "value": 0.699999988079071
                         }
                     ],
                     "scriptUID": 8002383071243665151,
                     "type": 6
+                },
+                {
+                    "active": true,
+                    "isDefault": true,
+                    "type": 25
                 }
             ],
             "name": "Player",
             "uid": 17184423464013482683
+        },
+        {
+            "active": true,
+            "children": [],
+            "components": [
+                {
+                    "active": true,
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": 0
+                },
+                {
+                    "active": true,
+                    "opacity": 1.0,
+                    "type": 29,
+                    "xamlPath": "MainHUD.xaml"
+                }
+            ],
+            "name": "Canvas",
+            "uid": 11415510623607170543
         }
     ],
     "version": 1
