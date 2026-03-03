@@ -33,7 +33,9 @@ void CreateCommand::Execute()
     if (!restored) return;
 
     restored->SolveReferences();
-    parent->InsertChildAt(restored, m_ChildIndex);
+    int childCount = (int)parent->GetChildren().size();
+    int safeIndex = (m_ChildIndex >= 0 && m_ChildIndex <= childCount) ? m_ChildIndex : childCount;
+    parent->InsertChildAt(restored, safeIndex);
     m_ObjectUID = restored->GetUID();
 
     Application::GetInstance().selectionManager->ClearSelection();
