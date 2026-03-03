@@ -44,10 +44,18 @@ public:
         , m_Index(object->GetComponentIndex(component))
     {}
 
+
     void Undo() override
     {
         if (!m_Object || !m_Component) return;
         m_Owned = m_Object->ExtractComponent(m_Component);
+        ComponentType compType = m_Component->GetType();
+		if (compType == ComponentType::D6_JOINT || compType == ComponentType::JOINT || compType == ComponentType::DISTANCE_JOINT
+        || compType == ComponentType::FIXED_JOINT || compType == ComponentType::HINGE_JOINT || compType == ComponentType::PRISMATIC_JOINT 
+        || compType == ComponentType::SPHERICAL_JOINT) {
+            m_Component->CleanUp();
+		}
+
     }
 
     void Execute() override

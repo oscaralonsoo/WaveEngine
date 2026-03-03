@@ -23,12 +23,20 @@ void DeleteCommand::Execute()
     GameObject* parent = Application::GetInstance().scene->FindObject(m_ParentUID);
 
     if (!obj || !parent) return;
+    obj->MarkForDeletion();
+    std::vector<Component*> objComps= obj->GetComponents();
 
+	for (auto& comp : objComps) {
+		if (comp->GetType() == ComponentType::D6_JOINT || comp->GetType() == ComponentType::JOINT || comp->GetType() == ComponentType::DISTANCE_JOINT
+			|| comp->GetType() == ComponentType::FIXED_JOINT || comp->GetType() == ComponentType::HINGE_JOINT || comp->GetType() == ComponentType::PRISMATIC_JOINT
+			|| comp->GetType() == ComponentType::SPHERICAL_JOINT) {
+			comp->CleanUp();
+		}
+	}
     Application::GetInstance().selectionManager->RemoveFromSelection(obj);
     Application::GetInstance().selectionManager->ClearSelection();
 
-    parent->RemoveChild(obj);
-    delete obj;
+    //parent->RemoveChild(obj);
     m_Object = nullptr;
 
     Application::GetInstance().scene->MarkOctreeForRebuild();
