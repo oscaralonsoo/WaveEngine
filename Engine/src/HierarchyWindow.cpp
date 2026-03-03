@@ -1,4 +1,4 @@
-#include "HierarchyWindow.h"
+﻿#include "HierarchyWindow.h"
 #include <imgui.h>
 #include <SDL3/SDL.h>
 #include "Application.h"
@@ -9,10 +9,135 @@
 #include "ResourcePrefab.h"
 #include "ReparentCommand.h"
 #include "ModuleEditor.h"
+#include "DeleteCommand.h"
+#include "CreateCommand.h"
+#include "Transform.h"
+#include "ComponentCamera.h"
+#include "ComponentCanvas.h"
 
 HierarchyWindow::HierarchyWindow()
     : EditorWindow("Hierarchy")
 {
+}
+
+GameObject* HierarchyWindow::CreateAndRegisterGameObject(const std::string& name, GameObject* parent)
+{
+    GameObject* obj = Application::GetInstance().scene->CreateGameObject(name);
+
+    if (parent)
+        obj->SetParent(parent);
+
+    Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+        std::make_unique<CreateCommand>(obj));
+
+    Application::GetInstance().selectionManager->SetSelectedObject(obj);
+
+    return obj;
+}
+
+void HierarchyWindow::DrawBackgroundContextMenu()
+{
+    if (!ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+        return;
+
+    if (ImGui::MenuItem("Create Empty"))
+        CreateAndRegisterGameObject("GameObject");
+
+    DrawCreate3DObjectSubmenu();
+
+    if (ImGui::MenuItem("Create Camera"))
+    {
+        GameObject* camera = CreateAndRegisterGameObject("Camera");
+        camera->CreateComponent(ComponentType::CAMERA);
+    }
+
+    if (ImGui::MenuItem("Create Canvas"))
+    {
+        GameObject* canvas = CreateAndRegisterGameObject("Canvas");
+        canvas->CreateComponent(ComponentType::CANVAS);
+    }
+
+    ImGui::EndPopup();
+}
+
+
+void HierarchyWindow::DrawGameObjectContextMenu(GameObject* gameObject)
+{
+    if (!ImGui::BeginPopupContextItem())
+        return;
+
+    // Rename
+    if (ImGui::MenuItem("Rename"))
+    {
+        renamingObject = gameObject;
+        strncpy(renameBuffer, gameObject->GetName().c_str(), sizeof(renameBuffer) - 1);
+    }
+
+    // Duplicate
+    if (ImGui::MenuItem("Duplicate"))
+    {
+        GameObject* clone = Application::GetInstance().editor->CloneGameObject(gameObject);
+        GameObject* parent = gameObject->GetParent()
+            ? gameObject->GetParent()
+            : Application::GetInstance().scene->GetRoot();
+        parent->AddChild(clone);
+
+        Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+            std::make_unique<CreateCommand>(clone));
+        Application::GetInstance().selectionManager->SetSelectedObject(clone);
+    }
+
+    // Delete
+    if (ImGui::MenuItem("Delete"))
+    {
+        Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+            std::make_unique<DeleteCommand>(gameObject));
+    }
+
+    ImGui::Separator();
+
+    // Create Empty child
+    if (ImGui::MenuItem("Create Empty"))
+        CreateAndRegisterGameObject("GameObject", gameObject);
+
+    // Create Empty Parent
+    if (ImGui::MenuItem("Create Empty Parent"))
+    {
+        GameObject* newParent = Application::GetInstance().scene->CreateGameObject("GameObject");
+
+        // Match position/rotation to child
+        auto* childTransform = static_cast<Transform*>(gameObject->GetComponent(ComponentType::TRANSFORM));
+        auto* parentTransform = static_cast<Transform*>(newParent->GetComponent(ComponentType::TRANSFORM));
+        if (childTransform && parentTransform)
+        {
+            parentTransform->SetGlobalPosition(childTransform->GetGlobalPosition());
+            parentTransform->SetGlobalRotation(childTransform->GetGlobalRotation());
+        }
+
+        if (gameObject->GetParent())
+            newParent->SetParent(gameObject->GetParent());
+
+        Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+            std::make_unique<CreateCommand>(newParent));
+        Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+            std::make_unique<ReparentCommand>(gameObject, newParent, -1));
+
+        Application::GetInstance().selectionManager->SetSelectedObject(newParent);
+    }
+
+    ImGui::EndPopup();
+}
+
+void HierarchyWindow::DrawCreate3DObjectSubmenu()
+{
+    if (!ImGui::BeginMenu("3D Object"))
+        return;
+
+    if (ImGui::MenuItem("Cube"))   LOG_CONSOLE("Create Cube not implemented");
+    if (ImGui::MenuItem("Sphere")) LOG_CONSOLE("Create Sphere not implemented");
+    if (ImGui::MenuItem("Plane"))  LOG_CONSOLE("Create Plane not implemented");
+
+    ImGui::EndMenu();
 }
 
 void HierarchyWindow::Draw()
@@ -21,7 +146,7 @@ void HierarchyWindow::Draw()
 
     ImGui::Begin(name.c_str(), &isOpen);
 
-    isHovered = (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows));
+    isHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows);
 
     HandleAutoScroll();
 
@@ -31,55 +156,44 @@ void HierarchyWindow::Draw()
     {
         for (GameObject* child : root->GetChildren())
         {
-            if (child != nullptr)
-            {
-                DrawGameObjectNode(child);
+            if (child == nullptr) continue;
 
-                if (ImGui::BeginDragDropTarget())
+            DrawGameObjectNode(child);
+
+            // Drop onto root level
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_GAMEOBJECT"))
                 {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_GAMEOBJECT"))
+                    if (!dragCancelled)
                     {
-                        if (!dragCancelled)
+                        GameObject* dragged = *(GameObject**)payload->Data;
+                        if (dragged != root)
                         {
-                            GameObject* draggedObject = *(GameObject**)payload->Data;
-                            if (draggedObject != root)
-                            {
-                                int newIndex = static_cast<int>(root->GetChildren().size());
-                                Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
-                                    std::make_unique<ReparentCommand>(draggedObject, root, newIndex)
-                                );
-                            }
-                        }
-                        else
-                        {
-                            LOG_DEBUG("Drop to root cancelled by user");
-                            dragCancelled = false;
+                            int newIndex = static_cast<int>(root->GetChildren().size());
+                            Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+                                std::make_unique<ReparentCommand>(dragged, root, newIndex));
                         }
                     }
-                    ImGui::EndDragDropTarget();
+                    else
+                    {
+                        LOG_DEBUG("Drop to root cancelled by user");
+                        dragCancelled = false;
+                    }
                 }
+                ImGui::EndDragDropTarget();
             }
         }
     }
 
-    // Context menu for creating empty GameObject
-    if (ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
-    {
-        if (ImGui::MenuItem("Create Empty"))
-        {
-            GameObject* empty = Application::GetInstance().scene->CreateGameObject("GameObject");
-            Application::GetInstance().selectionManager->SetSelectedObject(empty);
-        }
-        ImGui::EndPopup();
-    }
+    DrawBackgroundContextMenu();
 
     ImGui::End();
 }
 
 void HierarchyWindow::DrawGameObjectNode(GameObject* gameObject, int childIndex)
 {
-    if (gameObject == nullptr)
-        return;
+    if (gameObject == nullptr) return;
 
     const std::vector<GameObject*>& children = gameObject->GetChildren();
     bool hasChildren = !children.empty();
@@ -88,21 +202,15 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* gameObject, int childIndex)
 
     SelectionManager* selectionManager = Application::GetInstance().selectionManager;
     if (selectionManager->IsSelected(gameObject))
-    {
         nodeFlags |= ImGuiTreeNodeFlags_Selected;
-    }
 
     if (!hasChildren)
-    {
         nodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-    }
 
-    bool isRenaming = (renamingObject == gameObject);
-
-    if (isRenaming)
+    if (renamingObject == gameObject)
     {
         ImGui::SetNextItemWidth(-1);
-        if (ImGui::InputText("##", renameBuffer, sizeof(renameBuffer),
+        if (ImGui::InputText("##rename", renameBuffer, sizeof(renameBuffer),
             ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
         {
             if (strlen(renameBuffer) > 0)
@@ -114,313 +222,199 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* gameObject, int childIndex)
         }
 
         if (!ImGui::IsItemActive() && (ImGui::IsMouseClicked(0) || ImGui::IsKeyPressed(ImGuiKey_Escape)))
-        {
             renamingObject = nullptr;
+
+        return;
+    }
+
+    // Active checkbox
+    bool isActive = gameObject->IsActive();
+    ImGui::PushID(gameObject);
+    if (ImGui::Checkbox("##active", &isActive))
+        gameObject->SetActive(isActive);
+    ImGui::PopID();
+
+    ImGui::SameLine();
+
+    bool nodeOpen = ImGui::TreeNodeEx(gameObject, nodeFlags, "%s", gameObject->GetName().c_str());
+
+    // Selection on click
+    if (ImGui::IsItemClicked())
+    {
+        const bool* keys = SDL_GetKeyboardState(NULL);
+        bool shiftPressed = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT];
+
+        if (shiftPressed)
+        {
+            selectionManager->ToggleSelection(gameObject);
+        }
+        else
+        {
+            if (hasChildren)
+            {
+                selectionManager->ClearSelection();
+                SelectGameObjectAndChildren(gameObject);
+            }
+            else
+            {
+                selectionManager->SetSelectedObject(gameObject);
+            }
         }
     }
-    else
+
+    // Right-click → select before opening menu
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+        selectionManager->SetSelectedObject(gameObject);
+
+    DrawGameObjectContextMenu(gameObject);
+
+    // Double-click → rename
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
     {
-        // Checkbox for active state
-        bool isActive = gameObject->IsActive();
-        ImGui::PushID(gameObject);
-        if (ImGui::Checkbox("##active", &isActive))
+        renamingObject = gameObject;
+        strncpy(renameBuffer, gameObject->GetName().c_str(), sizeof(renameBuffer) - 1);
+    }
+
+    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+    {
+        static bool dragStarted = false;
+        if (!dragStarted) { dragCancelled = false; dragStarted = true; }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+            dragCancelled = true;
+
+        ImGui::SetDragDropPayload("HIERARCHY_GAMEOBJECT", &gameObject, sizeof(GameObject*));
+        ImGui::Text("Moving: %s", gameObject->GetName().c_str());
+
+        if (dragCancelled)
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "CANCELLED - Release to finish");
+        else
+            ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "(Press ESC to cancel)");
+
+        ImGui::EndDragDropSource();
+
+        if (!ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+            dragStarted = false;
+    }
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        const ImGuiPayload* payload = ImGui::GetDragDropPayload();
+        if (payload && payload->IsDataType("HIERARCHY_GAMEOBJECT"))
         {
-            gameObject->SetActive(isActive);
-        }
-        ImGui::PopID();
+            GameObject* dragged = *(GameObject**)payload->Data;
+            DropPosition dropPos = GetDropPosition(dragged, gameObject);
 
-        ImGui::SameLine();
+            // Visual feedback
+            ImVec2 itemMin = ImGui::GetItemRectMin();
+            ImVec2 itemMax = ImGui::GetItemRectMax();
 
-        // Display the node
-        bool nodeOpen = ImGui::TreeNodeEx(gameObject, nodeFlags, "%s", gameObject->GetName().c_str());
-
-        // Handle selection
-        if (ImGui::IsItemHovered())
-        {
-            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-            {
-                if (!ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-                {
-                    const bool* keys = SDL_GetKeyboardState(NULL);
-                    bool shiftPressed = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT];
-
-                    if (shiftPressed)
-                    {
-                        selectionManager->ToggleSelection(gameObject);
-                    }
-                    else
-                    {
-                        if (hasChildren)
-                        {
-                            selectionManager->ClearSelection();
-                            SelectGameObjectAndChildren(gameObject);
-                        }
-                        else
-                        {
-                            selectionManager->SetSelectedObject(gameObject);
-                        }
-                    }
-                }
-            }
-        }
-       /* if (ImGui::IsItemClicked())
-        {
-            const bool* keys = SDL_GetKeyboardState(NULL);
-            bool shiftPressed = keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT];
-
-            if (shiftPressed)
-            {
-                selectionManager->ToggleSelection(gameObject);
-            }
-            else
-            {
-                if (hasChildren)
-                {
-                    selectionManager->ClearSelection();
-                    SelectGameObjectAndChildren(gameObject);
-                }
-                else
-                {
-                    selectionManager->SetSelectedObject(gameObject);
-                }
-            }
-        }*/
-
-        // Handle renaming on double click
-        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-        {
-            renamingObject = gameObject;
-            strncpy(renameBuffer, gameObject->GetName().c_str(), sizeof(renameBuffer) - 1);
+            if (dropPos == DropPosition::BEFORE)
+                DrawInsertionLine({ itemMin.x, itemMin.y }, { itemMax.x, itemMin.y });
+            else if (dropPos == DropPosition::AFTER)
+                DrawInsertionLine({ itemMin.x, itemMax.y }, { itemMax.x, itemMax.y });
+            else if (dropPos == DropPosition::ON)
+                ImGui::GetWindowDrawList()->AddRect(itemMin, itemMax, IM_COL32(0, 255, 0, 180), 0.0f, 0, 2.0f);
         }
 
-        // Drag 
-        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+        if (const ImGuiPayload* accepted = ImGui::AcceptDragDropPayload("HIERARCHY_GAMEOBJECT"))
         {
-            static bool dragStarted = false;
-            if (!dragStarted)
-            {
-                dragCancelled = false;
-                dragStarted = true;
-            }
-
-            // Cancel drag
-            if (ImGui::IsKeyPressed(ImGuiKey_Escape))
-            {
-                dragCancelled = true;
-            }
-
-            ImGui::SetDragDropPayload("HIERARCHY_GAMEOBJECT", &gameObject, sizeof(GameObject*));
             if (dragCancelled)
             {
-                ImGui::Text("Moving: %s", gameObject->GetName().c_str());
-                ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "CANCELLED - Release mouse to finish");
+                LOG_DEBUG("Drop cancelled by user");
+                dragCancelled = false;
+                ImGui::EndDragDropTarget();
+                return;
             }
-            else
-            {
-                ImGui::Text("Moving: %s", gameObject->GetName().c_str());
-                ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "(Press ESC to cancel)");
-            }
-            ImGui::EndDragDropSource();
 
-            if (!ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+            GameObject* dragged = *(GameObject**)accepted->Data;
+            DropPosition dropPos = GetDropPosition(dragged, gameObject);
+            GameObject* parent = gameObject->GetParent();
+
+            if (dropPos == DropPosition::BEFORE && parent)
             {
-                dragStarted = false;
+                Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+                    std::make_unique<ReparentCommand>(dragged, parent, childIndex));
+            }
+            else if (dropPos == DropPosition::AFTER && parent)
+            {
+                Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+                    std::make_unique<ReparentCommand>(dragged, parent, childIndex + 1));
+            }
+            else if (dropPos == DropPosition::ON)
+            {
+                int newIndex = static_cast<int>(gameObject->GetChildren().size());
+                Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
+                    std::make_unique<ReparentCommand>(dragged, gameObject, newIndex));
             }
         }
 
-        // Drop 
-        if (ImGui::BeginDragDropTarget())
-        {
-            const ImGuiPayload* payload = ImGui::GetDragDropPayload();
-            if (payload && payload->IsDataType("HIERARCHY_GAMEOBJECT"))
-            {
-                GameObject* draggedObject = *(GameObject**)payload->Data;
-                DropPosition dropPos = GetDropPosition(draggedObject, gameObject);
+        ImGui::EndDragDropTarget();
+    }
 
-                // Visual feedback
-                if (dropPos != DropPosition::NONE)
-                {
-                    ImVec2 itemMin = ImGui::GetItemRectMin();
-                    ImVec2 itemMax = ImGui::GetItemRectMax();
-
-                    if (dropPos == DropPosition::BEFORE)
-                    {
-                        // Line above item
-                        DrawInsertionLine(ImVec2(itemMin.x, itemMin.y), ImVec2(itemMax.x, itemMin.y));
-                    }
-                    else if (dropPos == DropPosition::AFTER)
-                    {
-                        // Line below item
-                        DrawInsertionLine(ImVec2(itemMin.x, itemMax.y), ImVec2(itemMax.x, itemMax.y));
-                    }
-                    else if (dropPos == DropPosition::ON)
-                    {
-                        // Rectangle around item
-                        ImDrawList* drawList = ImGui::GetWindowDrawList();
-                        drawList->AddRect(itemMin, itemMax, IM_COL32(0, 255, 0, 180), 0.0f, 0, 2.0f);
-                    }
-                }
-            }
-
-            // Check for cancellation
-            if (const ImGuiPayload* acceptPayload = ImGui::AcceptDragDropPayload("HIERARCHY_GAMEOBJECT"))
-            {
-                GameObject* draggedObject = *(GameObject**)acceptPayload->Data;
-
-                if (dragCancelled)
-                {
-                    LOG_DEBUG("Drop cancelled by user");
-                    dragCancelled = false;
-                    ImGui::EndDragDropTarget();
-                    return;
-                }
-
-                DropPosition dropPos = GetDropPosition(draggedObject, gameObject);
-
-                if (dropPos == DropPosition::BEFORE)
-                {
-                    GameObject* parent = gameObject->GetParent();
-                    if (parent)
-                    {
-                        Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
-                            std::make_unique<ReparentCommand>(draggedObject, parent, childIndex)
-                        );
-                    }
-                }
-                else if (dropPos == DropPosition::AFTER)
-                {
-                    GameObject* parent = gameObject->GetParent();
-                    if (parent)
-                    {
-                        Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
-                            std::make_unique<ReparentCommand>(draggedObject, parent, childIndex + 1)
-                        );
-                    }
-                }
-                else if (dropPos == DropPosition::ON)
-                {
-                    int newIndex = static_cast<int>(gameObject->GetChildren().size());
-                    Application::GetInstance().editor->GetCommandHistory()->ExecuteCommand(
-                        std::make_unique<ReparentCommand>(draggedObject, gameObject, newIndex)
-                    );
-                }
-                else
-                {
-                    LOG_DEBUG("Invalid drop position");
-                }
-            }
-            ImGui::EndDragDropTarget();
-        }
-
-        // Recursively draw children
-        if (nodeOpen && hasChildren)
-        {
-            for (int i = 0; i < static_cast<int>(children.size()); ++i)
-            {
-                DrawGameObjectNode(children[i], i);
-            }
-            ImGui::TreePop();
-        }
+    if (nodeOpen && hasChildren)
+    {
+        for (int i = 0; i < static_cast<int>(children.size()); ++i)
+            DrawGameObjectNode(children[i], i);
+        ImGui::TreePop();
     }
 }
 
 void HierarchyWindow::SelectGameObjectAndChildren(GameObject* gameObject)
 {
-    if (gameObject == nullptr)
-        return;
+    if (gameObject == nullptr) return;
 
-    SelectionManager* selectionManager = Application::GetInstance().selectionManager;
-    selectionManager->AddToSelection(gameObject);
-
-    const std::vector<GameObject*>& children = gameObject->GetChildren();
-    for (GameObject* child : children)
-    {
+    Application::GetInstance().selectionManager->AddToSelection(gameObject);
+    for (GameObject* child : gameObject->GetChildren())
         SelectGameObjectAndChildren(child);
-    }
 }
 
 bool HierarchyWindow::IsDescendantOf(GameObject* potentialDescendant, GameObject* potentialAncestor)
 {
-    if (potentialDescendant == nullptr || potentialAncestor == nullptr)
-        return false;
+    if (!potentialDescendant || !potentialAncestor) return false;
 
     GameObject* current = potentialDescendant->GetParent();
-    while (current != nullptr)
+    while (current)
     {
-        if (current == potentialAncestor)
-            return true;
+        if (current == potentialAncestor) return true;
         current = current->GetParent();
     }
-
     return false;
 }
 
 DropPosition HierarchyWindow::GetDropPosition(GameObject* draggedObject, GameObject* targetObject)
 {
-    if (draggedObject == nullptr || targetObject == nullptr)
-        return DropPosition::NONE;
+    if (!draggedObject || !targetObject)          return DropPosition::NONE;
+    if (draggedObject == targetObject)            return DropPosition::NONE;
+    if (IsDescendantOf(targetObject, draggedObject)) return DropPosition::NONE;
 
-    if (draggedObject == targetObject)
-        return DropPosition::NONE;
-
-    if (IsDescendantOf(targetObject, draggedObject))
-        return DropPosition::NONE;
-
-    // Mouse position relative to item
     ImVec2 itemMin = ImGui::GetItemRectMin();
     ImVec2 itemMax = ImGui::GetItemRectMax();
-    ImVec2 mousePos = ImGui::GetMousePos();
+    float  relativeY = ImGui::GetMousePos().y - itemMin.y;
+    float  height = itemMax.y - itemMin.y;
 
-    float itemHeight = itemMax.y - itemMin.y;
-    float relativeY = mousePos.y - itemMin.y;
-
-    // Top 25% = BEFORE, middle 50% = ON, bottom 25% = AFTER
-    if (relativeY < itemHeight * 0.25f)
-    {
-        return DropPosition::BEFORE;
-    }
-    else if (relativeY > itemHeight * 0.75f)
-    {
-        return DropPosition::AFTER;
-    }
-    else
-    {
-        return DropPosition::ON;
-    }
+    if (relativeY < height * 0.25f) return DropPosition::BEFORE;
+    if (relativeY > height * 0.75f) return DropPosition::AFTER;
+    return DropPosition::ON;
 }
 
 void HierarchyWindow::DrawInsertionLine(const ImVec2& start, const ImVec2& end)
 {
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
-    drawList->AddLine(start, end, IM_COL32(255, 200, 0, 255), 2.0f);
+    ImGui::GetWindowDrawList()->AddLine(start, end, IM_COL32(255, 200, 0, 255), 2.0f);
 }
 
 void HierarchyWindow::HandleAutoScroll()
 {
-    if (!ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-        return;
+    if (!ImGui::IsMouseDragging(ImGuiMouseButton_Left)) return;
 
     ImVec2 mousePos = ImGui::GetMousePos();
     ImVec2 windowPos = ImGui::GetWindowPos();
     ImVec2 windowSize = ImGui::GetWindowSize();
+    float  scrollY = ImGui::GetScrollY();
+    float  maxScrollY = ImGui::GetScrollMaxY();
 
-    float scrollY = ImGui::GetScrollY();
-    float maxScrollY = ImGui::GetScrollMaxY();
-
-    // Scroll up if near top
-    if (mousePos.y < windowPos.y + AUTO_SCROLL_MARGIN)
-    {
-        if (scrollY > 0)
-        {
-            ImGui::SetScrollY(scrollY - AUTO_SCROLL_SPEED);
-        }
-    }
-    // Scroll down if near bottom
-    else if (mousePos.y > windowPos.y + windowSize.y - AUTO_SCROLL_MARGIN)
-    {
-        if (scrollY < maxScrollY)
-        {
-            ImGui::SetScrollY(scrollY + AUTO_SCROLL_SPEED);
-        }
-    }
+    if (mousePos.y < windowPos.y + AUTO_SCROLL_MARGIN && scrollY > 0)
+        ImGui::SetScrollY(scrollY - AUTO_SCROLL_SPEED);
+    else if (mousePos.y > windowPos.y + windowSize.y - AUTO_SCROLL_MARGIN && scrollY < maxScrollY)
+        ImGui::SetScrollY(scrollY + AUTO_SCROLL_SPEED);
 }

@@ -17,6 +17,13 @@ class HierarchyWindow : public EditorWindow
 public:
     HierarchyWindow();
     ~HierarchyWindow() override = default;
+    GameObject* CreateAndRegisterGameObject(const std::string& name, GameObject* parent = nullptr);
+
+    void DrawBackgroundContextMenu();
+
+    void DrawGameObjectContextMenu(GameObject* gameObject);
+
+    void DrawCreate3DObjectSubmenu();
 
     void Draw() override;
 

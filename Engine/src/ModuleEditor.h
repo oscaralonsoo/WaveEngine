@@ -78,6 +78,7 @@ public:
     //EVENTS
     void OnEvent(const Event& event) override;
 
+    GameObject* CloneGameObject(GameObject* original);
 private:
     void ShowMenuBar();
     void ShowPlayToolbar();
@@ -136,7 +137,7 @@ private:
     void HandleUndoRedo();
 
     void HandleCopyPaste();
-    GameObject* CloneGameObject(GameObject* original);
+
     std::vector<GameObject*> ObjectsCopy;
     bool ischild = false;
 
