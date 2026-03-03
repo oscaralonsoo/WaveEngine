@@ -1893,23 +1893,13 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         if (ImGui::Selectable("Rigidbody", false, hasRigidbody ? ImGuiSelectableFlags_Disabled : 0))
         {
-            for (GameObject* gameObjcet : Application::GetInstance().selectionManager->GetSelectedObjects())
-            {
-                Component* newComp = gameObjcet->CreateComponent(ComponentType::RIGIDBODY);
-                if (newComp)
-                    Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
-                        std::make_unique<AddComponentCommand>(gameObjcet, newComp)
-                    );
-                LOG_CONSOLE("[Inspector] Rigidbody component added to: %s", gameObjcet->GetName().c_str());
-                ImGui::CloseCurrentPopup();
-            }
-            /*Component* newComp = selectedObject->CreateComponent(ComponentType::RIGIDBODY);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::RIGIDBODY);
             if (newComp)
                 Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
                     std::make_unique<AddComponentCommand>(selectedObject, newComp)
                 );
             LOG_CONSOLE("[Inspector] Rigidbody component added to: %s", selectedObject->GetName().c_str());
-            ImGui::CloseCurrentPopup();*/
+            ImGui::CloseCurrentPopup();
         }
 
         if (hasRigidbody) ImGui::PopStyleColor();
@@ -2038,23 +2028,13 @@ void InspectorWindow::DrawAddComponentButton(GameObject* selectedObject)
 
         if (ImGui::Selectable("Convex Collider", false))
         {
-            for (GameObject* gameObjcet : Application::GetInstance().selectionManager->GetSelectedObjects())
-            {
-                Component* newComp = gameObjcet->CreateComponent(ComponentType::CONVEX_COLLIDER);
-                if (newComp)
-                    Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
-                        std::make_unique<AddComponentCommand>(gameObjcet, newComp)
-                    );
-                LOG_CONSOLE("[Inspector] Convex Collider component added to: %s", gameObjcet->GetName().c_str());
-                ImGui::CloseCurrentPopup();
-            }
-            /*Component* newComp = selectedObject->CreateComponent(ComponentType::CONVEX_COLLIDER);
+            Component* newComp = selectedObject->CreateComponent(ComponentType::CONVEX_COLLIDER);
             if (newComp)
                 Application::GetInstance().editor->GetCommandHistory()->PushWithoutExecute(
                     std::make_unique<AddComponentCommand>(selectedObject, newComp)
                 );
             LOG_CONSOLE("[Inspector] Convex Collider component added to: %s", selectedObject->GetName().c_str());
-            ImGui::CloseCurrentPopup();*/
+            ImGui::CloseCurrentPopup();
         }
 
         if (ImGui::IsItemHovered())
