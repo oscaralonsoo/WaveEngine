@@ -1356,9 +1356,8 @@ GameObject* ModuleEditor::CloneGameObject(GameObject* original)
 
         ComponentMesh* newMesh =
             (ComponentMesh*)clone->CreateComponent(ComponentType::MESH);
-
-        newMesh->SetMesh(originalMesh->GetMesh());
-        newMesh->SetPrimitiveType(name);
+       
+        newMesh->LoadMeshByUID(originalMesh->GetMeshUID());
     }
 
     if (original->GetComponent(ComponentType::MATERIAL))
