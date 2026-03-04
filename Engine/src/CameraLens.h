@@ -13,14 +13,18 @@ public:
     void SetRenderTarget(int width, int height);
     void SetPerspective(float fovDegrees, float aspectRatio, float nearPlane, float farPlane);
     void UpdatePerspective();
+    
     void SetFov(float fovDegress);
     void SetAspectRatio(float aspectRatio);
     void SetNearPlane(float nearPlane);
-    void SetFarPlane(float farPlane);
+    void SetFarPlane(float farPlane);    
     float GetFov() { return fov; }
     float GetAspectRatio() { return aspectRatio; }
     float GetNearPlane() { return zNear; }
     float GetFarPlane() { return zFar; }
+
+    void SetUsesPostProcessing(bool uses) { usesPostProcessing = uses; }
+    bool IsUsingPostProcessing() const { return usesPostProcessing; }
 
     void SetProjectionMatrix(glm::mat4 projectionMatrix);
     void SetViewMatrix(glm::mat4 viewMatrix);
@@ -72,6 +76,7 @@ private:
     float zNear;
     float zFar;
 
+    bool usesPostProcessing = false;
     bool activeCamera;
-    bool debugCamera;
+    bool debugCamera = false;
 };

@@ -601,6 +601,14 @@ void InspectorWindow::DrawCameraComponent(Component* component)
             cameraComp->GetLens()->depth = glm::clamp(depth, 0, 100000);
         }
 
+        bool usesPP = cameraComp->GetLens()->IsUsingPostProcessing();
+        if (ImGui::Checkbox("Use Post Processing", &usesPP))
+        {
+            cameraComp->GetLens()->SetUsesPostProcessing(usesPP);
+        }
+
+        ImGui::Separator();
+
         bool isMain = cameraComp->IsMainCamera();
         if (ImGui::Checkbox("Is Main Camera", &isMain))
         {
