@@ -513,7 +513,7 @@ bool Renderer::PostUpdate()
     bool ret = true;
 
 #ifndef WAVE_GAME
-    
+
     for (CameraLens* camera : activeCameras)
     {
         RenderScene(camera);
@@ -526,7 +526,12 @@ bool Renderer::PostUpdate()
     glDisable(GL_SCISSOR_TEST);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
 #else
+
+    int winWidth = 0, winHeight = 0;
+    Application::GetInstance().window->GetWindowSize(winWidth, winHeight);
+
     auto* cameraModule = Application::GetInstance().camera.get();
     if (cameraModule)
     {
@@ -536,6 +541,10 @@ bool Renderer::PostUpdate()
             CameraLens* mainLens = mainCam->GetLens();
             if (mainLens)
             {
+                mainLens->textureWidth = winWidth;
+                mainLens->textureHeight = winHeight;
+                mainLens->SetAspectRatio((float)winWidth / (float)winHeight);
+
                 GLuint savedFBO = mainLens->fboID;
                 mainLens->fboID = 0;
                 RenderScene(mainLens);
@@ -544,8 +553,6 @@ bool Renderer::PostUpdate()
         }
     }
 
-    int winWidth = 0, winHeight = 0;
-    Application::GetInstance().window->GetWindowSize(winWidth, winHeight);
     // Update y render de todos los canvas a sus texturas
     auto& canvasList = Application::GetInstance().ui->GetCanvas();
     for (ComponentCanvas* c : canvasList)
@@ -581,6 +588,7 @@ bool Renderer::PostUpdate()
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glUseProgram(0);
+
 #endif
 
     return ret;
@@ -703,7 +711,7 @@ bool Renderer::RenderScene(CameraLens* camera)
         GLuint targetFBO = (camera->fboID != 0) ? camera->fboID : 0;
         glBindFramebuffer(GL_FRAMEBUFFER, targetFBO);
         glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         postProcessShader->Use();
 
@@ -1045,6 +1053,11 @@ bool Renderer::CleanUp()
         glDeleteFramebuffers(1, &postProcessFBO);
         glDeleteTextures(1, &postProcessTexture);
         glDeleteRenderbuffers(1, &postProcessRBO);
+        postProcessFBO = 0;
+        postProcessTexture = 0;
+        postProcessRBO = 0;
+        postProcessCurrentW = 0;  
+        postProcessCurrentH = 0;
     }
     if (postProcessShader) postProcessShader->Delete();
 
@@ -1070,12 +1083,11 @@ void Renderer::ResizePostProcessingBuffer(int width, int height)
         glGenFramebuffers(1, &postProcessFBO);
         glGenTextures(1, &postProcessTexture);
         glGenRenderbuffers(1, &postProcessRBO);
+        postProcessCurrentW = 0;
+        postProcessCurrentH = 0;
     }
 
-    static int currentW = 0;
-    static int currentH = 0;
-
-    if (currentW != width || currentH != height) {
+    if (postProcessCurrentW != width || postProcessCurrentH != height) {
         glBindFramebuffer(GL_FRAMEBUFFER, postProcessFBO);
 
         glBindTexture(GL_TEXTURE_2D, postProcessTexture);
@@ -1092,8 +1104,8 @@ void Renderer::ResizePostProcessingBuffer(int width, int height)
         if (status != GL_FRAMEBUFFER_COMPLETE)
             LOG_DEBUG("ERROR: postProcessFBO incomplete: 0x%x", status);
 
-        currentW = width;
-        currentH = height;
+        postProcessCurrentW = width;
+        postProcessCurrentH = height;
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

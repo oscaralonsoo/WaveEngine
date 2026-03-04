@@ -204,6 +204,8 @@ private:
     std::vector<RenderLine> linesList;
 
     // Post Processing
+    int postProcessCurrentW = 0;
+    int postProcessCurrentH = 0;
     GLuint postProcessFBO = 0;
     GLuint postProcessTexture = 0;
     GLuint postProcessRBO = 0;
