@@ -45,6 +45,9 @@ public:
     GameObject* GetOwner() const { return owner; }
     const std::string& GetCurrentXAML() const { return currentXAML; }
 
+    void SetUILayer(int layer) { uiLayer = layer; }
+    int GetUILayer() const { return uiLayer; }
+
     float opacity = 1.0f;
 
 private:
@@ -70,4 +73,6 @@ private:
     static constexpr float  STICK_THRESHOLD = 0.5f;
     static constexpr double STICK_INITIAL_DELAY = 0.4;
     static constexpr double STICK_REPEAT_RATE = 0.15;
+
+    int uiLayer = 0;
 };

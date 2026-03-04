@@ -595,10 +595,10 @@ void InspectorWindow::DrawCameraComponent(Component* component)
             cameraComp->GetLens()->SetFarPlane(zFar);
         }
 
-        int depth = cameraComp->GetLens()->depth;
-        if (ImGui::InputInt("Depth", &depth))
+        int uiCullingMask = cameraComp->GetLens()->GetUiCullingMask();
+        if (ImGui::InputInt("UI Culling Mask", &uiCullingMask))
         {
-            cameraComp->GetLens()->depth = glm::clamp(depth, 0, 100000);
+            cameraComp->GetLens()->SetUICullingMask(uiCullingMask);
         }
 
         bool usesPP = cameraComp->GetLens()->IsUsingPostProcessing();
@@ -1203,6 +1203,12 @@ void InspectorWindow::DrawCanvasComponent(Component* component)
 
     float opacity = canvasComp->GetOpacity();
     if (ImGui::SliderFloat("Opacity", &opacity, 0.0f, 1.0f)) canvasComp->SetOpacity(opacity);
+
+    int UILayer = canvasComp->GetUILayer();
+    if (ImGui::InputInt("UI Layer", &UILayer))
+    {
+        canvasComp->SetUILayer(UILayer);
+    }
 
     ImGui::Separator();
 

@@ -597,6 +597,7 @@ bool Renderer::RenderScene(CameraLens* camera)
     opaqueList.clear();
     transparentList.clear();
     particlesList.clear();
+    canvasList.clear();
     BuildRenderLists(camera);
 
     if (showZBuffer) {
@@ -711,6 +712,17 @@ void Renderer::BuildRenderLists(const CameraLens* camera)
         float distanceToCamera = glm::distance(pos, camera->position);
 
         particlesList.emplace(distanceToCamera, pObj);
+    }
+
+    for (ComponentCanvas* canvas : activeCanvas)
+    {
+        if (!canvas->IsActive() || !canvas->GetOwner()->IsActive()) continue;
+        if (canvas->GetUILayer() != camera->GetUiCullingMask()) continue;
+
+        CanvasObject canvasObject;
+        canvasObject.canvas = canvas;
+
+        canvasList.push_back(canvasObject);
     }
 }
 
@@ -862,23 +874,7 @@ void Renderer::DrawParticlesList(const CameraLens* camera)
 
 void Renderer::DrawCanvasList(const CameraLens* camera)
 {
-    if (activeCanvas.empty()) return;
-
-    ComponentCamera* mainCamera = Application::GetInstance().camera.get()->GetMainCamera();
-
-    if (!mainCamera) return;
-
-    CameraLens* mainLens = mainCamera->GetLens();
-
-    if (!mainLens || mainLens != camera) return;
-
-    for (ComponentCanvas* c : activeCanvas)
-    {
-        if (!c->IsActive() || !c->GetOwner()->IsActive()) continue;
-        c->Resize(camera->textureWidth, camera->textureHeight);
-        c->Update();
-        c->RenderToTexture();
-    }
+    if (canvasList.empty()) return;
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -888,13 +884,19 @@ void Renderer::DrawCanvasList(const CameraLens* camera)
     uiShader->Use();
     glBindVertexArray(quadVAO);
 
-    for (ComponentCanvas* c : activeCanvas)
+    for (CanvasObject& canvasObject : canvasList)
     {
-        if (!c->IsActive() || !c->GetOwner()->IsActive()) continue;
+        ComponentCanvas* c = canvasObject.canvas;
+
+        c->Resize(camera->textureWidth, camera->textureHeight);
+        c->Update();
+        c->RenderToTexture();
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, c->GetTextureID());
         uiShader->SetInt("uTexture", 0);
         uiShader->SetFloat("uOpacity", c->GetOpacity());
+
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 

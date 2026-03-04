@@ -260,6 +260,8 @@ void ComponentCanvas::Serialize(nlohmann::json& componentObj) const
 {
     componentObj["xamlPath"] = currentXAML;
     componentObj["opacity"] = opacity;
+    componentObj["uiLayer"] = uiLayer;
+
 }
 void ComponentCanvas::Deserialize(const nlohmann::json& componentObj)
 {
@@ -272,6 +274,8 @@ void ComponentCanvas::Deserialize(const nlohmann::json& componentObj)
         if (!path.empty())
             LoadXAML(path.c_str());
     }
+
+    componentObj.value("uiLayer", 0);
 }
 
 void ComponentCanvas::UnloadXAML()

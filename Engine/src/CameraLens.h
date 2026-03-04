@@ -26,6 +26,9 @@ public:
     void SetUsesPostProcessing(bool uses) { usesPostProcessing = uses; }
     bool IsUsingPostProcessing() const { return usesPostProcessing; }
 
+    void SetUICullingMask(int mask) { uiCullingMask = mask; }
+    int GetUiCullingMask() const { return uiCullingMask; }
+
     void SetProjectionMatrix(glm::mat4 projectionMatrix);
     void SetViewMatrix(glm::mat4 viewMatrix);
     void LookAt(const glm::vec3& eye, const glm::vec3& center, const glm::vec3& up);
@@ -79,4 +82,6 @@ private:
     bool usesPostProcessing = false;
     bool activeCamera;
     bool debugCamera = false;
+    
+    int uiCullingMask = 0;
 };

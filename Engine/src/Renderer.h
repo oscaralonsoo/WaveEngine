@@ -32,6 +32,11 @@ class Renderer : public Module
         glm::mat4 modelMatrix;
     };
 
+    struct CanvasObject
+    {
+        ComponentCanvas* canvas;
+    };
+
     struct RenderLine {
         glm::vec3 start;
         glm::vec3 end;
@@ -206,6 +211,7 @@ private:
     std::vector<RenderObject> normalsList;
     std::vector<RenderObject> meshLinesList;
     std::vector<RenderLine> linesList;
+    std::vector<CanvasObject> canvasList;
 
     // Post Processing
     int postProcessCurrentW = 0;
