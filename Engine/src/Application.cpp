@@ -22,17 +22,19 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     scene = std::make_shared<ModuleScene>();
     camera = std::make_shared<ModuleCamera>();
     audio = std::make_shared<ModuleAudio>();
-#ifndef WAVE_GAME
-    editor = std::make_shared<ModuleEditor>();
-#endif
     loader = std::make_shared<ModuleLoader>();
     time = std::make_shared<Time>();
     grid = std::make_shared<Grid>();
     resources = std::make_shared<ModuleResources>();
     ui = std::make_shared<UI>();
     scripts = std::make_shared<ScriptManager>();  
-    physics = std::make_shared<ModulePhysics>();  
+    physics = std::make_shared<ModulePhysics>();
     navMesh = std::make_shared<ModuleNavMesh>();
+#ifndef WAVE_GAME
+    editor = std::make_shared<ModuleEditor>();
+#else
+    game = std::make_shared<ModuleGame>();
+#endif
 
     AddModule(std::static_pointer_cast<Module>(window));
     AddModule(std::static_pointer_cast<Module>(events));
@@ -53,6 +55,8 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     AddModule(std::static_pointer_cast<Module>(renderer));
 #ifndef WAVE_GAME
     AddModule(std::static_pointer_cast<Module>(editor));
+#else
+    AddModule(std::static_pointer_cast<Module>(game));
 #endif
 
     selectionManager = new SelectionManager();

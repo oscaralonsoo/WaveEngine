@@ -30,6 +30,8 @@ set(CORE_SRC
     src/Module.h 
     src/Window.cpp 
     src/Window.h
+    src/ModuleGame.cpp 
+    src/ModuleGame.h
 )
 
 set(EVENTS_SRC 
