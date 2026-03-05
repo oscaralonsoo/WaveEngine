@@ -25,12 +25,14 @@ ComponentCanvas::ComponentCanvas(GameObject* owner) : Component(owner, Component
     opacity = 1.0f;
     GenerateFramebuffer(width, height);
     Application::GetInstance().ui->RegisterCanvas(this);
+    Application::GetInstance().renderer->AddCanvas(this);
 }
 
 ComponentCanvas::~ComponentCanvas()
 {
-    Application::GetInstance().ui->UnregisterCanvas(this);
-    ShutdownView();
+    Application::GetInstance().ui->UnregisterCanvas(this); 
+    Application::GetInstance().renderer->RemoveCanvas(this);
+    ShutdownView();               
     device.Reset();
 
     if (fbo)       glDeleteFramebuffers(1, &fbo);
@@ -139,6 +141,7 @@ void ComponentCanvas::RenderToTexture()
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glViewport(0, 0, width, height);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -295,6 +298,8 @@ void ComponentCanvas::Serialize(nlohmann::json& componentObj) const
 {
     componentObj["xamlPath"] = currentXAML;
     componentObj["opacity"] = opacity;
+    componentObj["uiLayer"] = uiLayer;
+
 }
 
 void ComponentCanvas::Deserialize(const nlohmann::json& componentObj)
@@ -308,6 +313,8 @@ void ComponentCanvas::Deserialize(const nlohmann::json& componentObj)
         if (!path.empty())
             LoadXAML(path.c_str());
     }
+
+    componentObj.value("uiLayer", 0);
 }
 
 void ComponentCanvas::UnloadXAML()
