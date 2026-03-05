@@ -131,6 +131,8 @@ set(UTILS_SRC
     src/Octree.cpp
     src/FileUtils.h
     src/FileUtils.cpp
+    src/Backup.h
+    src/Backup.cpp
 )
 
 set(GAMEOBJECTS_SRC 

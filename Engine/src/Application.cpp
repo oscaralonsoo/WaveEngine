@@ -24,6 +24,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     audio = std::make_shared<ModuleAudio>();
 #ifndef WAVE_GAME
     editor = std::make_shared<ModuleEditor>();
+    backup = std::make_shared<Backup>();
 #endif
     loader = std::make_shared<ModuleLoader>();
     time = std::make_shared<Time>();
@@ -53,6 +54,7 @@ Application::Application() : isRunning(true), playState(PlayState::EDITING)
     AddModule(std::static_pointer_cast<Module>(renderer));
 #ifndef WAVE_GAME
     AddModule(std::static_pointer_cast<Module>(editor));
+    AddModule(std::static_pointer_cast<Backup>(backup));
 #endif
 
     selectionManager = new SelectionManager();

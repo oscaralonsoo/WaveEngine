@@ -23,6 +23,7 @@
 #include "NavMeshManager.h"
 #include "ModuleAudio.h"
 #include "ModuleEvents.h"
+#include "Backup.h"
 
 class Module;
 
@@ -78,6 +79,7 @@ public:
     std::shared_ptr<ModuleCamera> camera;
 #ifndef WAVE_GAME
     std::shared_ptr<ModuleEditor> editor;
+    std::shared_ptr<Backup> backup;
 #endif
     std::shared_ptr<ModuleAudio> audio;
     std::shared_ptr<Grid> grid;
@@ -86,7 +88,6 @@ public:
     std::shared_ptr<ScriptManager> scripts; 
     std::shared_ptr<ModuleNavMesh> navMesh;
     std::shared_ptr<ModulePhysics> physics; 
-    
 
     SelectionManager* selectionManager;
 
