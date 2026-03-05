@@ -43,6 +43,13 @@ void ComponentCanvas::ShutdownView()
     if (!view) return;
     view->GetRenderer()->Shutdown();
     view.Reset();
+
+    GLint prevFBO = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 }
 
 void ComponentCanvas::CleanUp()
@@ -241,9 +248,9 @@ void ComponentCanvas::TryNavigateStick(float x, float y)
     if (fabs(y) >= fabs(x))
     {
         if (y > STICK_THRESHOLD)
-            view->KeyDown(Noesis::Key_GamepadDown);   
+            view->KeyDown(Noesis::Key_GamepadDown);
         else
-            view->KeyDown(Noesis::Key_GamepadUp);   
+            view->KeyDown(Noesis::Key_GamepadUp);
     }
     else
     {
