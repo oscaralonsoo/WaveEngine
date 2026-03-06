@@ -575,3 +575,8 @@ if(WIN32)
     )
 endif()
 
+add_custom_command(TARGET Engine POST_BUILD
+    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}" --target Game --config $<CONFIG>
+    COMMENT "[WaveEngine] Building Game..."
+    VERBATIM
+)
