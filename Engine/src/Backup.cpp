@@ -18,7 +18,7 @@ bool Backup::Start()
 {
 	std::filesystem::path tempScenePath = std::filesystem::current_path().parent_path() / "TempScene";
 
-	/*if (!std::filesystem::exists(tempScenePath)) 
+	if (!std::filesystem::exists(tempScenePath)) 
 	{
 		std::filesystem::create_directory(tempScenePath);
 		LOG_CONSOLE("[BACKUP] TempScene directory created.");
@@ -26,7 +26,7 @@ bool Backup::Start()
 	else 
 	{
 		LOG_CONSOLE("[BACKUP] TempScene directory already exists.");
-	}*/
+	}
 
 	tempSceneDir = tempScenePath.string();
 	timeSinceLastBackup = 0.0f;
