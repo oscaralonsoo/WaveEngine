@@ -6,6 +6,9 @@ local abs   = math.abs
 local atan2 = math.atan2
 local pi    = math.pi
 
+local attackCol
+local attackTimer = 0
+
 local INPUT_SCALE = 10
 
 -- STATES
@@ -30,7 +33,8 @@ public = {
     rollDuration        = 0.05,
     sprintMultiplier    = 1.5,
     stamina             = 4,
-    tiredMultiplier     = 0.7
+    tiredMultiplier     = 0.7,  
+    attackDuration      = 0.1
 }
 
 local function normalizeInput(x, z)
@@ -60,6 +64,11 @@ local function GetMovementInput()
     local inputLen = sqrt(moveX*moveX + moveZ*moveZ)
     
     return moveX, moveZ, inputLen
+end
+
+local function GetAttackInput()
+    if Input.GetKey("E") then return 1 end
+    return 0
 end
 
 local function ApplyMovementAndRotation(self, dt, moveX, moveZ)
@@ -111,8 +120,12 @@ States[State.IDLE] = {
         -- TRANSITION, se usa 0.1 por el drift
         if inputLen > 0.1 then
             ChangeState(self, State.WALK)
+            
         end
         
+        if GetAttackInput() == 1 then
+            ChangeState(self, State.ATTACK_LIGHT)
+        end
         -- Check if can trasition to Roll, AttackLight, Charging y todo eso
     end
 }
@@ -138,6 +151,10 @@ States[State.WALK] = {
             return
         end
         
+        if GetAttackInput() == 1 then
+            ChangeState(self, State.ATTACK_LIGHT)
+            return
+        end
         -- Check if can trasition to Roll, AttackLight, Charging y todo eso
         
         -- Movement and rotation
@@ -184,14 +201,27 @@ States[State.ATTACK_HEAVY] = {
 States[State.ATTACK_LIGHT] = {
     Enter = function(self)
         -- Anim attacklight
+        attackTimer = 0
+        if attackCol then attackCol:Enable() end
     end,
     Update = function(self, dt)
         -- wait anim end and return idle
+        attackTimer = attackTimer + dt
+        if attackTimer >= self.public.attackDuration then
+            ChangeState(self, State.IDLE)
+        end
+    end,
+    Exit = function(self)
+        if attackCol then attackCol:Disable() end
     end
 }
 
 function Start(self)
     Engine.Log("Player inicializado")
+
+    attackCol = self.gameObject:GetComponent("Box Collider")
+    if attackCol then attackCol:Disable() end 
+
     ChangeState(self, State.IDLE)
 end
 

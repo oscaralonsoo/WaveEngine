@@ -905,6 +905,31 @@ static int Lua_ComponentCanvas_SetOpacity(lua_State* L) {
     return 0;
 }
 
+static int Lua_Collider_Enable(lua_State* L) {
+    Component* comp = static_cast<Component*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (comp) 
+    {
+        Application::GetInstance().scripts->EnqueueOperation([comp]() {
+            comp->Enable();
+            comp->SetActive(true);
+            });
+    }
+    return 0;
+}
+
+static int Lua_Collider_Disable(lua_State* L) {
+    Component* comp = static_cast<Component*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (comp) 
+    {
+        Application::GetInstance().scripts->EnqueueOperation([comp]() 
+            {
+            comp->Disable();
+            comp->SetActive(false);
+            });
+    }
+    return 0;
+}
+
 static int Lua_GameObject_GetComponent(lua_State* L) {
     GameObject** objPtr = static_cast<GameObject**>(luaL_checkudata(L, 1, "GameObject"));
 
@@ -995,6 +1020,34 @@ static int Lua_GameObject_GetComponent(lua_State* L) {
 
         luaL_getmetatable(L, "Animation");
         lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    if (strcmp(componentType, "Box Collider") == 0 ||
+        strcmp(componentType, "Sphere Collider") == 0 ||
+        strcmp(componentType, "Capsule Collider") == 0)
+    {
+        ComponentType ctype = ComponentType::BOX_COLLIDER;
+        if (strcmp(componentType, "Sphere Collider") == 0)   ctype = ComponentType::SPHERE_COLLIDER;
+        if (strcmp(componentType, "Capsule Collider") == 0)  ctype = ComponentType::CAPSULE_COLLIDER;
+
+        Component* comp = obj->GetComponent(ctype);
+        if (!comp) 
+        {
+            lua_pushnil(L);
+            return 1;
+        }
+
+        lua_newtable(L);
+
+        lua_pushlightuserdata(L, comp);
+        lua_pushcclosure(L, Lua_Collider_Enable, 1);
+        lua_setfield(L, -2, "Enable");
+
+        lua_pushlightuserdata(L, comp);
+        lua_pushcclosure(L, Lua_Collider_Disable, 1);
+        lua_setfield(L, -2, "Disable");
 
         return 1;
     }

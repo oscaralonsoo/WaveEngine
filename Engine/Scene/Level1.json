@@ -25,11 +25,13 @@
                 },
                 {
                     "active": true,
-                    "aspectRatio": 1.8526829481124878,
+                    "aspectRatio": 1.93756103515625,
                     "farPlane": 1000.0,
                     "fov": 60.0,
                     "nearPlane": 0.30000001192092896,
-                    "type": 4
+                    "type": 4,
+                    "uiCullingMask": 0,
+                    "usesPostProcessing": false
                 },
                 {
                     "active": true,
@@ -39,9 +41,9 @@
                     "active": true,
                     "publicVariables": [
                         {
-                            "name": "shakeMagnitude",
+                            "name": "zoomSpeed",
                             "type": 0,
-                            "value": 0.30000001192092896
+                            "value": 3.0
                         },
                         {
                             "name": "playerName",
@@ -54,14 +56,14 @@
                             "value": 0.30000001192092896
                         },
                         {
-                            "name": "followSpeed",
-                            "type": 0,
-                            "value": 5.0
-                        },
-                        {
                             "name": "shakeFrequency",
                             "type": 0,
                             "value": 25.0
+                        },
+                        {
+                            "name": "shakeMagnitude",
+                            "type": 0,
+                            "value": 0.30000001192092896
                         },
                         {
                             "name": "shakeDuration",
@@ -69,9 +71,9 @@
                             "value": 0.4000000059604645
                         },
                         {
-                            "name": "zoomSpeed",
+                            "name": "followSpeed",
                             "type": 0,
-                            "value": 3.0
+                            "value": 5.0
                         },
                         {
                             "name": "zoomMax",
@@ -40041,14 +40043,14 @@
                         {
                             "active": true,
                             "position": [
-                                0.0,
-                                0.0,
-                                0.0
+                                -0.00048828125,
+                                0.0001220703125,
+                                0.0009765625
                             ],
                             "rotation": [
                                 -90.00000762939453,
-                                0.0,
-                                0.0
+                                -1.1464246219006213e-11,
+                                8.319060907811468e-14
                             ],
                             "scale": [
                                 100.0,
@@ -44149,19 +44151,9 @@
                     "active": true,
                     "publicVariables": [
                         {
-                            "name": "sprintMultiplier",
-                            "type": 0,
-                            "value": 1.5
-                        },
-                        {
                             "name": "rollDuration",
                             "type": 0,
                             "value": 0.05000000074505806
-                        },
-                        {
-                            "name": "tiredMultiplier",
-                            "type": 0,
-                            "value": 0.699999988079071
                         },
                         {
                             "name": "speed",
@@ -44172,6 +44164,16 @@
                             "name": "stamina",
                             "type": 0,
                             "value": 4.0
+                        },
+                        {
+                            "name": "tiredMultiplier",
+                            "type": 0,
+                            "value": 0.699999988079071
+                        },
+                        {
+                            "name": "sprintMultiplier",
+                            "type": 0,
+                            "value": 1.5
                         }
                     ],
                     "scriptUID": 8002383071243665151,
@@ -44181,6 +44183,24 @@
                     "active": true,
                     "isDefault": true,
                     "type": 25
+                },
+                {
+                    "Center": [
+                        0.0,
+                        170.0,
+                        200.0
+                    ],
+                    "DynamicFriction": 0.5,
+                    "Restitution": 0.6000000238418579,
+                    "Size": [
+                        300.0,
+                        300.0,
+                        300.0
+                    ],
+                    "StaticFriction": 0.5,
+                    "Trigger": false,
+                    "active": true,
+                    "type": 10
                 }
             ],
             "name": "Player",
@@ -44211,9 +44231,54 @@
                 },
                 {
                     "active": true,
-                    "opacity": 1.0,
-                    "type": 29,
-                    "xamlPath": ""
+                    "bloom": {
+                        "clamp": 65472.0,
+                        "diffusion": 7.0,
+                        "enabled": true,
+                        "intensity": 1.0,
+                        "softKnee": 0.5,
+                        "threshold": 1.0,
+                        "tint": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "colorGrading": {
+                        "colorFilter": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "contrast": 1.0,
+                        "enabled": true,
+                        "exposure": 1.0,
+                        "gamma": 1.0,
+                        "saturation": 1.0,
+                        "temperature": 0.0,
+                        "tint": 0.0,
+                        "toneMapper": 0
+                    },
+                    "grain": {
+                        "animated": true,
+                        "enabled": false,
+                        "intensity": 0.0,
+                        "scale": 1.0
+                    },
+                    "lens": {
+                        "caEnabled": false,
+                        "caIntensity": 0.0,
+                        "vigColor": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "vigEnabled": false,
+                        "vigIntensity": 0.4000000059604645,
+                        "vigRoundness": 1.0,
+                        "vigSmoothness": 0.20000000298023224
+                    },
+                    "type": 29
                 }
             ],
             "name": "Canvas",
