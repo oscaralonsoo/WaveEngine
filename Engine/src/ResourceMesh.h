@@ -76,6 +76,7 @@ struct Bone {
 
 // Mesh container with vertex data and OpenGL buffer IDs
 struct Mesh {
+    
     std::vector<Vertex> vertices = {};
     std::vector<unsigned int> indices = {};
     std::vector<Bone> bones = {};

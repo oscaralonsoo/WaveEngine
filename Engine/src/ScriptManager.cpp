@@ -28,7 +28,8 @@
 #include "ComponentAnimation.h"
 
 #include <filesystem>
-#include <cmath>            
+#include <cmath>
+
 ScriptManager::ScriptManager() : Module(), L(nullptr) {
     name = "ScriptManager";
 }

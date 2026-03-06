@@ -6,6 +6,7 @@
 #include "ResourceModel.h"
 #include "MetaFile.h"
 #include "ComponentMaterial.h"
+#include "ComponentCamera.h"
 
 ModuleLoader::ModuleLoader() : Module() {}
 ModuleLoader::~ModuleLoader() {}
