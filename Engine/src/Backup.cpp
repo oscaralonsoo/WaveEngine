@@ -18,15 +18,15 @@ bool Backup::Start()
 {
 	std::filesystem::path tempScenePath = std::filesystem::current_path().parent_path() / "TempScene";
 
-	if (!std::filesystem::exists(tempScenePath)) 
+	/*if (!std::filesystem::exists(tempScenePath))
 	{
 		std::filesystem::create_directory(tempScenePath);
 		LOG_CONSOLE("[BACKUP] TempScene directory created.");
 	}
-	else 
+	else
 	{
 		LOG_CONSOLE("[BACKUP] TempScene directory already exists.");
-	}
+	}*/
 
 	tempSceneDir = tempScenePath.string();
 	timeSinceLastBackup = 0.0f;
@@ -39,6 +39,10 @@ bool Backup::Start()
 
 bool Backup::Update()
 {
+	// Don't generate backups while in Play or Paused mode
+	if (Application::GetInstance().GetPlayState() != Application::PlayState::EDITING)
+		return true;
+
 	timeSinceLastBackup += Application::GetInstance().time->GetRealDeltaTime();
 
 	if (timeSinceLastBackup >= backupInterval)
@@ -63,7 +67,7 @@ bool Backup::CleanUp()
 	return true;
 }
 
-void Backup::PerformBackup() 
+void Backup::PerformBackup()
 {
 	std::string timestamp = GetTimestamp();
 	std::string backupFilename = tempSceneDir + "/backup_" + timestamp + ".json";
@@ -111,7 +115,7 @@ void Backup::CleanOldBackups()
 
 		// obtain last write time
 		auto lastWrite = entry.last_write_time();
-		
+
 		// file_clock::time_point  -->  system_clock::time_point  -->  time_t  -->  long long
 		auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
 			lastWrite - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now()
