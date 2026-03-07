@@ -1,6 +1,10 @@
 local NEXT_XAML     = "HUD.xaml"
 local FADE_DURATION = 0.4
 
+public = {
+    updateWhenPaused = true
+}
+
 local canvas    = nil
 local fading    = false
 local fadeTimer = 0.0
@@ -54,6 +58,10 @@ function Start(self)
         Engine.Log("[Transition] WARN: Canvas sin XAML, usando fallback HUD")
     end
     Engine.Log("[Transition] XAML inicial: " .. current)
+
+    if current ~= "HUD.xaml" then
+        Game.Pause()
+    end
 
     canvas:SetOpacity(1.0)
     SetPhase("idle")
@@ -145,6 +153,13 @@ function Update(self, dt)
     elseif phase == "swap" then
         canvas:LoadXAML(NEXT_XAML)
         current = NEXT_XAML
+
+        if current == "HUD.xaml" then
+            Game.Resume()
+        else
+            Game.Pause()
+        end
+
         Engine.Log("[Transition] Cargado: " .. NEXT_XAML)
         SetPhase("fadeIn")
     end
